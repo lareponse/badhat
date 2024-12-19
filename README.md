@@ -30,7 +30,6 @@ While IRSA’s mission suggests they would prioritize accessibility, a thorough 
 The information presented seems credible, authoritative, and maintained by a reputable institution. The level of detail on services, staff qualifications, and supportive frameworks suggests a well-established and well-organized body. However, from a user perspective, additional personal stories, testimonials, or interactive content (such as short videos, parent forums, or virtual tours) could enhance engagement and trust.
 
 **Potential Areas of Improvement**  
-- **Multilingual Support:** Offering content in multiple languages (French, Dutch, English) would broaden accessibility, especially in a multilingual country like Belgium.  
 - **Enhanced Media:** Incorporating more videos, accessible galleries, or audio descriptions could provide richer experiences for users with sensory impairments.  
 - **Clearer Calls to Action:** More obvious “Get in Touch” buttons, inquiry forms, or direct contact information could help visitors quickly find the assistance they need.  
 - **User-Centric Resources:** Providing FAQs, downloadable brochures in accessible formats (e.g., large print, braille-ready documents, or audio files), and clear guides to navigating the services can further improve user experience.
