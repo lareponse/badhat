@@ -19,6 +19,7 @@
 
 ### Compatibilité avec les Technologies d’Assistance
 - Intégration de dispositifs tels que lecteurs d’écran, logiciels d’agrandissement, ou autres aides adaptées.
+- [Liste des technologies assistives par groupes](assistive_technologies.md)
 
 ---
 
