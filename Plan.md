@@ -1,150 +1,151 @@
-# Structural Plan for IRSA Website Rewrite
+# Plan Structurel pour la Refonte du Site IRSA
 
-## 1. **Goals and Objectives**
-- **Performance**:
-  - Achieve FCP < 2 seconds and LCP < 2.5 seconds.
-  - Keep total page size < 2 MB.
-  - Reduce the number of HTTP requests to < 30.
-- **User Experience**:
-  - Create a mobile-first, responsive design.
-  - Ensure smooth navigation with CLS < 0.1.
-- **Accessibility**:
-  - Meet WCAG 2.1 Level AA compliance.
-- **SEO**:
-  - Optimize for Core Web Vitals.
-  - Improve crawlability and indexing.
-- **Maintainability**:
-  - Use modular and reusable components.
+## 1. **Objectifs et Buts**
 
----
-
-## 2. **Core Pages**
-
-### 2.1 Homepage
-- **Purpose**: Provide a concise overview of IRSA’s mission, services, and key information.
-- **Key Features**:
-  - Lightweight hero section with minimal animations.
-  - Prominent call-to-action buttons.
-  - Quick links to services and contact information.
-
-### 2.2 Services Page
-- **Purpose**: Showcase the services offered by IRSA in detail.
-- **Key Features**:
-  - Section for each service with descriptive text and images.
-  - Option to add downloadable PDFs or links to related content.
-
-### 2.3 Contact Page
-- **Purpose**: Enable users to easily reach out.
-- **Key Features**:
-  - Contact form with validation.
-  - Google Maps integration for location (loaded on-demand).
-  - FAQ section for common inquiries.
-
-### 2.4 About Page
-- **Purpose**: Provide an overview of IRSA’s mission and team.
-- **Key Features**:
-  - Timeline or milestones section.
-  - Team member profiles with photos and bios.
-
-### 2.5 Blog/News Page
-- **Purpose**: Share updates, articles, and news.
-- **Key Features**:
-  - Search and filtering options.
-  - Paginated list of posts with summaries.
+- **Performance** :
+  - Atteindre un FCP < 2 secondes et un LCP < 2,5 secondes.
+  - Maintenir la taille totale de la page à moins de 2 Mo.
+  - Réduire le nombre de requêtes HTTP à moins de 30.
+- **Expérience Utilisateur** :
+  - Créer un design responsive orienté mobile.
+  - Assurer une navigation fluide avec un CLS < 0,1.
+- **Accessibilité** :
+  - Respecter les critères de conformité WCAG 2.1 Niveau AA.
+- **SEO** :
+  - Optimiser pour les Core Web Vitals.
+  - Améliorer l'exploration et l'indexation.
+- **Maintenabilité** :
+  - Utiliser des composants modulaires et réutilisables.
 
 ---
 
-## 3. **Design and Layout**
+## 2. **Pages Principales**
 
-### 3.1 Framework and Styling
-- Use **Tailwind CSS** or custom CSS for lightweight and maintainable styling.
-- Focus on a clean, minimalistic design.
-- Implement a mobile-first, responsive layout.
+### 2.1 Page d'Accueil
+- **Objectif** : Fournir un aperçu concis de la mission d'IRSA, de ses services et des informations clés.
+- **Caractéristiques Clés** :
+  - Section héro légère avec des animations minimales.
+  - Boutons d'appel à l'action bien en évidence.
+  - Liens rapides vers les services et les informations de contact.
+
+### 2.2 Page des Services
+- **Objectif** : Présenter en détail les services offerts par IRSA.
+- **Caractéristiques Clés** :
+  - Section pour chaque service avec un texte descriptif et des images.
+  - Possibilité d'ajouter des PDF téléchargeables ou des liens vers des contenus connexes.
+
+### 2.3 Page de Contact
+- **Objectif** : Permettre aux utilisateurs de contacter facilement IRSA.
+- **Caractéristiques Clés** :
+  - Formulaire de contact avec validation.
+  - Intégration de Google Maps pour la localisation (chargé à la demande).
+  - Section FAQ pour les questions fréquentes.
+
+### 2.4 Page À Propos
+- **Objectif** : Présenter un aperçu de la mission d'IRSA et de son équipe.
+- **Caractéristiques Clés** :
+  - Section chronologique ou des jalons.
+  - Profils des membres de l'équipe avec photos et biographies.
+
+### 2.5 Page Blog / Actualités
+- **Objectif** : Partager des mises à jour, des articles et des actualités.
+- **Caractéristiques Clés** :
+  - Options de recherche et de filtrage.
+  - Liste paginée des articles avec des résumés.
+
+---
+
+## 3. **Design et Mise en Page**
+
+### 3.1 Framework et Style
+- Utiliser **Tailwind CSS** ou du CSS personnalisé pour un style léger et facile à maintenir.
+- Opter pour un design épuré et minimaliste.
+- Mettre en place une mise en page responsive orientée mobile.
 
 ### 3.2 Navigation
-- Sticky header with links to key pages.
-- Mobile menu with collapsible sections.
-- Breadcrumbs for secondary pages.
+- En-tête fixe avec des liens vers les pages principales.
+- Menu mobile avec sections déroulantes.
+- Fil d'Ariane pour les pages secondaires.
 
-### 3.3 Footer
-- Key links (e.g., Terms, Privacy, Contact).
-- Social media icons.
-- Small description of IRSA’s mission.
+### 3.3 Pied de Page
+- Liens clés (par exemple : Conditions, Confidentialité, Contact).
+- Icônes de réseaux sociaux.
+- Brève description de la mission d'IRSA.
 
 ---
 
-## 4. **Technology Stack**
+## 4. **Pile Technologique**
 
 ### 4.1 Frontend
-- **Languages**: HTML5, CSS3, JavaScript (Vanilla or Alpine.js).
-- **Styling**: Tailwind CSS or custom lightweight CSS.
-- **Assets**: Self-hosted fonts and optimized images (WebP format).
+- **Langages** : HTML5, CSS3, JavaScript (Vanilla ou Alpine.js).
+- **Style** : Tailwind CSS ou CSS personnalisé léger.
+- **Ressources** : Polices auto-hébergées et images optimisées (format WebP).
 
 ### 4.2 Backend
-- **Language**: PHP (for simplicity) or Node.js.
-- **Framework**: None or lightweight framework to minimize complexity.
-- **Database**: MySQL or PostgreSQL for structured data.
+- **Langage** : PHP (pour sa simplicité) ou Node.js.
+- **Framework** : Aucun ou un framework léger afin de minimiser la complexité.
+- **Base de données** : MySQL ou PostgreSQL pour les données structurées.
 
-### 4.3 Hosting and Deployment
-- Use a modern CDN (e.g., Cloudflare) for asset delivery.
-- Enable HTTP/2 or HTTP/3 for faster resource loading.
-- Employ automated deployment pipelines.
-
----
-
-## 5. **Performance Optimization**
-
-### 5.1 Asset Optimization
-- Compress and serve images in WebP format.
-- Minify and combine CSS/JS files.
-- Remove unused CSS/JS (e.g., tools like PurgeCSS).
-
-### 5.2 Lazy Loading
-- Images, videos, and maps should be lazy-loaded.
-
-### 5.3 Caching
-- Set proper caching headers for static assets.
-- Use server-side caching (e.g., Redis).
+### 4.3 Hébergement et Déploiement
+- Utiliser un CDN moderne (par exemple : Cloudflare) pour la distribution des ressources.
+- Activer HTTP/2 ou HTTP/3 pour un chargement plus rapide des ressources.
+- Mettre en place des pipelines de déploiement automatisés.
 
 ---
 
-## 6. **Accessibility Compliance**
-- Use semantic HTML for all components.
-- Ensure sufficient color contrast ratios.
-- Add `alt` attributes to all images.
-- Make navigation keyboard-accessible.
+## 5. **Optimisation des Performances**
+
+### 5.1 Optimisation des Ressources
+- Compresser et servir les images au format WebP.
+- Minifier et combiner les fichiers CSS/JS.
+- Supprimer le CSS/JS inutilisé (par exemple avec des outils comme PurgeCSS).
+
+### 5.2 Chargement Paresseux (Lazy Loading)
+- Charger en différé les images, vidéos et cartes.
+
+### 5.3 Mise en Cache
+- Définir les en-têtes de mise en cache appropriés pour les ressources statiques.
+- Utiliser la mise en cache côté serveur (par exemple : Redis).
 
 ---
 
-## 7. **Testing and Deployment**
-
-### 7.1 Testing
-- Use Lighthouse for performance, accessibility, and SEO audits.
-- Test across modern browsers and devices (mobile, tablet, desktop).
-- Conduct manual usability testing.
-
-### 7.2 Deployment
-- Use a staging environment for testing changes.
-- Monitor performance post-launch and make iterative improvements.
+## 6. **Conformité en Matière d'Accessibilité**
+- Utiliser du HTML sémantique pour tous les composants.
+- Assurer des ratios de contraste de couleur suffisants.
+- Ajouter des attributs `alt` à toutes les images.
+- Rendre la navigation accessible au clavier.
 
 ---
 
-## 8. **Timeline**
+## 7. **Tests et Déploiement**
 
-### Phase 1: Planning and Audit
-- Duration: 2 weeks.
-- Tasks:
-  - Audit existing content.
-  - Define performance and user experience goals.
+### 7.1 Tests
+- Utiliser Lighthouse pour les audits de performance, d'accessibilité et de SEO.
+- Tester sur les navigateurs et appareils modernes (mobile, tablette, desktop).
+- Réaliser des tests manuels d'ergonomie.
 
-### Phase 2: Development
-- Duration: 6 weeks.
-- Tasks:
-  - Build core pages and implement the design.
-  - Optimize performance and test iteratively.
+### 7.2 Déploiement
+- Utiliser un environnement de pré-production pour tester les modifications.
+- Surveiller les performances après le lancement et effectuer des améliorations itératives.
 
-### Phase 3: Testing and Launch
-- Duration: 2 weeks.
-- Tasks:
-  - Finalize testing on staging.
-  - Deploy to production and monitor post-launch performance.
+---
+
+## 8. **Calendrier**
+
+### Phase 1 : Planification et Audit
+- **Durée** : 2 semaines.
+- **Tâches** :
+  - Auditer le contenu existant.
+  - Définir les objectifs en termes de performance et d'expérience utilisateur.
+
+### Phase 2 : Développement
+- **Durée** : 6 semaines.
+- **Tâches** :
+  - Construire les pages principales et implémenter le design.
+  - Optimiser la performance et tester de manière itérative.
+
+### Phase 3 : Tests et Lancement
+- **Durée** : 2 semaines.
+- **Tâches** :
+  - Finaliser les tests en pré-production.
+  - Déployer en production et surveiller les performances après le lancement.
