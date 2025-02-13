@@ -25,6 +25,8 @@
    - [ ] Salarié(e)  
    - [ ] Travailleur indépendant  
    - [ ] En recherche d'emploi  
-   - [ ] Retraité(e)  
+   - [ ] Retraité(e)
+   - [ ] Sans activité professionnelle
+   - [ ] En situation d'invalidité
    - [ ] Autre (précisez) : __________
    - [ ] Je préfère ne pas répondre
