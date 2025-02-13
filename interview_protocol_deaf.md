@@ -32,7 +32,7 @@
 ### Introduction (10 minutes)
 1. Accueil et présentations
 2. Expliquer l'objectif de l'étude :
-   "Nous remanions le site web de l'institut pour le rendre plus accessible et convivial. Vos expériences et points de vue nous aideront à créer un meilleur site web pour tous."
+   "Nous remanions le site web de l'institut pour le rendre plus accessible et convivial. Vos expériences et points de vue nous aideront à créer un meilleur site web pour tous en identifiant les obstacles actuels et en proposant des améliorations adaptées. Les retours recueillis seront analysés pour orienter la conception, tester de nouvelles fonctionnalités et garantir une accessibilité optimale."
 3. Revoir et signer les formulaires de consentement
 4. Établir la méthode de communication préférée
 5. Confirmer l'accord pour l'enregistrement/prise de notes
