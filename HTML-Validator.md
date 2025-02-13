@@ -1,32 +1,46 @@
-Below is a summary of the validation report for **http://www.irsa.be/** based on the W3C Nu HTML Checker output:
+# Rapport de Validation HTML pour [http://www.irsa.be/](http://www.irsa.be/)
 
-**General Findings:**  
-- Multiple instances of trailing slashes on void elements (e.g., `<meta ... />`, `<link ... />`, `<img ... />`, `<source ... />`). According to HTML5 specifications, void elements should not include a trailing slash.
-- Repeated warnings about unnecessary `type` attributes for JavaScript resources (e.g., `<script type="text/javascript">`). The `type` attribute may be safely omitted for JavaScript in HTML5.
+Ce résumé présente les principales observations issues de la vérification du site par le W3C Nu HTML Checker.
 
-**Structural and Attribute Issues:**
-- Duplicate IDs: The ID `header-dons` appears more than once, which violates the uniqueness requirement for element IDs.
-- Missing spaces between attributes: Some attributes are concatenated without a space (e.g., `target="_blank"rel="alternate"`).
+## Constatations Générales
+- **Barres obliques finales sur les éléments vides :**  
+  De multiples instances montrent des barres obliques finales sur des éléments vides (par exemple, `<meta ... />`, `<link ... />`, `<img ... />`, `<source ... />`). Selon les spécifications HTML5, ces éléments ne doivent pas comporter de barre oblique finale.
+- **Attributs `type` superflus pour les scripts :**  
+  Des avertissements récurrents indiquent l'utilisation inutile de l'attribut `type` pour les ressources JavaScript (par exemple, `<script type="text/javascript">`), car il peut être omis en HTML5.
 
-**Content Model and Tag Nesting Errors:**
-- Certain elements appear in invalid contexts (e.g., `<input>` directly within `<ul>` instead of inside `<li>` elements, `<label>` and `<div>` used improperly within a `<ul>`). This compromises the intended semantic structure.
-- A `<main>` element appears as a descendant of a `<section>`, which is not advisable.
+## Problèmes Structurels et d'Attributs
+- **Duplication d'IDs :**  
+  L'ID `header-dons` apparaît plusieurs fois, ce qui contrevient à l'unicité requise pour les identifiants.
+- **Espaces manquants entre les attributs :**  
+  Certains attributs sont collés sans espace (par exemple, `target="_blank"rel="alternate"`).
 
-**CSS and Styling:**
-- A CSS error was noted: `text-decoration: bold;` is invalid. `text-decoration` values should not include `bold`, as bold is handled by `font-weight`.
+## Erreurs de Modèle de Contenu et de Structure
+- **Placement incorrect des éléments :**  
+  - Un `<input>` est directement placé à l'intérieur d'un `<ul>` au lieu d'être contenu dans un `<li>`.
+  - Les balises `<label>` et `<div>` sont utilisées de manière inappropriée dans un `<ul>`.
+- **Nesting inapproprié :**  
+  Un élément `<main>` se trouve imbriqué dans une `<section>`, ce qui n'est pas recommandé.
 
-**Heading and Accessibility Warnings:**
-- Some `<section>` elements lack headings. Sections without headings are discouraged as they hinder accessibility and navigational clarity.
-- Multiple `<h1>` elements used at various levels may confuse tools that treat all `<h1>` elements as top-level headings.
+## Problèmes CSS et de Mise en Forme
+- **Erreur CSS :**  
+  La déclaration `text-decoration: bold;` est invalide car la mise en gras doit être gérée par la propriété `font-weight`.
 
-**Recommendations for Improvement:**
-1. Remove trailing slashes from void elements.
-2. Ensure each ID is unique and used only once.
-3. Insert required spaces between attributes.
-4. Review the DOM structure so that elements are correctly placed. For example, `<input>` and `<label>` should be inside `<li>` when within a list, and `<main>` should not be nested within `<section>` improperly.
-5. Remove unnecessary `type="text/javascript"` attributes from `<script>` elements.
-6. Correct the invalid CSS `text-decoration` property value.
-7. Add headings to all sections or replace them with `<div>` if no heading is required.
-8. Limit the use of multiple `<h1>` elements and adhere to a logical heading structure.
+## Avertissements sur les Titres et l'Accessibilité
+- **Sections sans titres :**  
+  Certaines balises `<section>` ne contiennent pas de titre, ce qui nuit à l'accessibilité et à la navigation.
+- **Utilisation multiple des `<h1>` :**  
+  L'emploi de plusieurs balises `<h1>` à différents niveaux peut entraîner une confusion, car chaque `<h1>` est généralement considéré comme un titre principal.
 
-Addressing these issues will improve HTML5 compliance, semantic accuracy, and accessibility.
+## Recommandations pour l'Amélioration
+1. **Supprimer les barres obliques finales** des éléments vides.
+2. **Assurer l'unicité des IDs** en s'assurant que chaque identifiant est utilisé une seule fois.
+3. **Ajouter les espaces requis** entre les attributs.
+4. **Réviser la structure du DOM :**  
+   - Placer les `<input>` et `<label>` dans des `<li>` lorsqu'ils sont inclus dans une liste.
+   - Éviter que l'élément `<main>` soit imbriqué de manière inappropriée dans une `<section>`.
+5. **Retirer les attributs `type="text/javascript"`** inutiles des balises `<script>`.
+6. **Corriger la valeur CSS invalide** `text-decoration: bold;`.
+7. **Ajouter des titres à toutes les sections** ou utiliser des `<div>` lorsque l'usage d'un titre n'est pas nécessaire.
+8. **Limiter l'usage des balises `<h1>`** en adoptant une hiérarchie logique des titres.
+
+La mise en œuvre de ces recommandations améliorera la conformité HTML5, la sémantique et l'accessibilité du site.
