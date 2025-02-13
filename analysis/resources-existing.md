@@ -187,4 +187,4 @@
 
 ---
 
-En supprimant ou en remplaçant ces ressources redondantes et obsolètes, le site peut améliorer ses temps de chargement, simplifier sa maintenance et réduire l'utilisation de la bande passante.
+En conclusion, la rationalisation des ressources utilisées sur le site IRSA apparaît comme une étape essentielle pour améliorer à la fois les performances et la maintenabilité du site. La suppression de bibliothèques obsolètes ou redondantes, telles que MooTools, ainsi que la consolidation des scripts liés à Google Maps et à jQuery, permettra de réduire le temps de chargement et d'éviter des conflits inutiles. De plus, l'optimisation des fichiers CSS et des polices, combinée à une compression judicieuse des images, contribuera à offrir une expérience utilisateur plus fluide et réactive. En adoptant ces recommandations, IRSA sera mieux préparé à intégrer de nouvelles technologies et à répondre efficacement aux exigences futures en matière de développement web.
