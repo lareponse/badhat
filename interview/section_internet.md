@@ -32,8 +32,6 @@
 **Quels technologies assistives utilisez-vous?**
 [Liste des technologies assistives](assistive_technologies.md)
 
-
-
 ---
 
 ## Partie 2 : Expérience du Site Web (qualif)
@@ -86,7 +84,7 @@
 - [ ] Je quitte immédiatement le site  
 - [ ] J’essaie de trouver une solution alternative  
 - [ ] Je contacte le support du site  
-- [ ] Autre (précisez) : __________  
+- [ ] Autre (précisez) :   
 
 **L’accessibilité du web a-t-elle évolué ces dernières années ?**  
 - [ ] Forte amélioration  
@@ -94,21 +92,18 @@
 - [ ] Pas de changement  
 - [ ] Légère détérioration  
 - [ ] Forte détérioration  
-- **Pourquoi ?** __________
-
+- **Pourquoi ?** 
 
 **Avez-vous déjà renoncé à un service ou un achat à cause de problèmes d'accessibilité ?**  
-- [ ] Oui (expliquez pourquoi) : __________  
+- [ ] Oui (pourquoi) :  
 - [ ] Non  
 
-**Comment l’accessibilité du web impacte-t-elle votre quotidien ?**  
-    __________  
+**Quels conseils donneriez-vous aux développeurs web pour améliorer l'accessibilité ?**  
+
+**Comment l’accessibilité du web impacte-t-elle votre quotidien ?**
 
 **Quels changements récents en matière d'accessibilité web vous ont particulièrement aidé ?**  
 - [ ] Compatibilité avec les lecteurs d’écran  
 - [ ] Meilleur contraste des couleurs  
 - [ ] Accessibilité améliorée des formulaires  
-- [ ] Autre (précisez) : __________  
-
-**Quels conseils donneriez-vous aux développeurs web pour améliorer l'accessibilité ?**  
-    __________  
+- [ ] Autre (précisez) : 
