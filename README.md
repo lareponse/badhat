@@ -4,19 +4,19 @@ Ce document regroupe divers éléments d'analyse et de recommandations pour le s
 
 1. **Aperçu de l'IRSA et de son Site Web**  
    Ce document offre une vue d'ensemble du site IRSA, ses forces, ses points faibles et les axes d'amélioration envisagés.  
-   - **Fichier :** [analysis/quick_review.md](quick_review.md)
+   - **Fichier :** [quick_review.md](analysis/quick_review.md)
 
 2. **irsa.be**  
    Cette section regroupe plusieurs validations et contrôles techniques indispensables pour garantir la conformité et l’optimisation du site.
    - **Validation HTML :**  
      Analyse de la conformité du code HTML via des outils comme le W3C Nu HTML Checker pour s’assurer que le site respecte les normes du web.  
-     - **Fichier :** [analysis/HTML-Validator.md](HTML-Validator.md)
+     - **Fichier :** [HTML-Validator.md](analysis/HTML-Validator.md)
    - **Validation WAVE :**  
      Évaluation de l’accessibilité du site à l’aide de l’outil WAVE, afin d’identifier et de corriger les problèmes qui pourraient empêcher certains utilisateurs d’accéder pleinement au contenu.  
-     - **Fichier :** [analysis/WAVE-validation.md](WAVE-validation.md)
+     - **Fichier :** [WAVE-validation.md](analysis/WAVE-validation.md)
    - **Validation Technique :**  
      Revue des ressources existantes et de l’architecture technique du site pour détecter d’éventuelles redondances ou des points d’optimisation.  
-     - **Fichier :** [analysis/resources-existing.md](resources-existing.md)
+     - **Fichier :** [resources-existing.md](analysis/resources-existing.md)
 
 3. **Un site idéal ?**  
    Ce document explore les caractéristiques d’un site web exemplaire, en termes d’accessibilité, de performance et d’ergonomie. Il propose des pistes pour transformer le site IRSA en une référence dans son domaine.  
