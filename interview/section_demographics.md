@@ -7,7 +7,8 @@
    - [ ] 35–44 ans  
    - [ ] 45–54 ans  
    - [ ] 55–64 ans  
-   - [ ] 65 ans et plus  
+   - [ ] 65 ans et plus
+   - [ ] Je préfère ne pas répondre
 
 2. **Quel est votre niveau d'études le plus élevé ?**  
    - [ ] École primaire  
@@ -16,7 +17,8 @@
    - [ ] Bac +2/3  
    - [ ] Bac +4/5  
    - [ ] Doctorat  
-   - [ ] Autre (précisez) : __________  
+   - [ ] Autre (précisez) : __________
+   - [ ] Je préfère ne pas répondre
 
 3. **Quelle est votre situation professionnelle actuelle ?**  
    - [ ] Étudiant(e)  
@@ -24,4 +26,5 @@
    - [ ] Travailleur indépendant  
    - [ ] En recherche d'emploi  
    - [ ] Retraité(e)  
-   - [ ] Autre (précisez) : __________  
+   - [ ] Autre (précisez) : __________
+   - [ ] Je préfère ne pas répondre
