@@ -82,13 +82,12 @@
 - **Ressources** : Polices auto-hébergées et images optimisées (format WebP).
 
 ### 4.2 Backend
-- **Langage** : PHP (pour sa simplicité) ou Node.js.
-- **Framework** : Aucun ou un framework léger afin de minimiser la complexité.
-- **Base de données** : MySQL ou PostgreSQL pour les données structurées.
+- **Langage** : PHP 
+- **Framework** : Framework léger afin de minimiser la complexité.
+- **Base de données** : MySQL pour les données structurées.
 
 ### 4.3 Hébergement et Déploiement
-- Utiliser un CDN moderne (par exemple : Cloudflare) pour la distribution des ressources.
-- Activer HTTP/2 ou HTTP/3 pour un chargement plus rapide des ressources.
+- Activer HTTP/2 pour un chargement plus rapide des ressources.
 - Mettre en place des pipelines de déploiement automatisés.
 
 ---
