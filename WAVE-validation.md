@@ -1,42 +1,56 @@
+# Rapport d'Accessibilité
 
-**Errors (Critical Accessibility Issues)**  
-- **Empty links (3 instances):** Links without text or meaningful content are present. These need descriptive link text or proper ARIA labeling to provide context.
+## Erreurs (Problèmes d'accessibilité critiques)
+- **Liens vides (3 occurrences) :**  
+  Des liens sans texte ou contenu significatif sont présents. Ils doivent comporter un texte descriptif ou une étiquette ARIA appropriée pour fournir un contexte.
 
-**Contrast Errors (45 instances)**  
-- **Very low contrast:** Multiple text elements have insufficient color contrast with the background, making it difficult for users with visual impairments to read. Adjusting text or background colors to meet contrast guidelines is recommended.
+## Erreurs de Contraste (45 occurrences)
+- **Contraste très faible :**  
+  Plusieurs éléments textuels présentent un contraste insuffisant avec l'arrière-plan, rendant la lecture difficile pour les personnes ayant une déficience visuelle. Il est recommandé d'ajuster les couleurs du texte ou de l'arrière-plan pour respecter les directives de contraste.
 
-**Alerts (47 instances)**  
-- **Skipped heading level (1 instance):** A heading level has been skipped, which can disrupt the logical reading order for assistive technologies. Reorganize headings to ensure a consistent structure (e.g., from h2 to h3 without skipping levels).
-- **Redundant link (1 instance):** A link text is repeated adjacent to another link with the same destination or text. Combine or clarify these links to avoid confusion.
-- **Link to PDF document (7 instances):** Links point directly to PDF files. Consider providing an indication (e.g., “(PDF)”) or ensuring the PDF is accessible.
-- **Noscript element (1 instance):** The presence of `<noscript>` can indicate content may not be fully accessible without JavaScript. Ensure fallback content is usable.
-- **Redundant title text (32 instances):** Some elements have title attributes identical to their text content. These are not necessary and may create redundancy for screen reader users.
-- **Layout tables (4 instances):** Tables used for layout can be confusing. Use CSS for layout and reserve tables for data.
-- **HTML5 video or audio (1 instance):** Ensure multimedia elements provide captions, transcripts, or audio descriptions as needed.
+## Alertes (47 occurrences)
+- **Niveau de titre sauté (1 occurrence) :**  
+  Un niveau de titre a été sauté, ce qui peut perturber l'ordre logique de lecture pour les technologies d'assistance. Réorganisez les titres pour garantir une structure cohérente (par exemple, passer de h2 à h3 sans sauter de niveaux).
+- **Lien redondant (1 occurrence) :**  
+  Un texte de lien est répété à côté d'un autre lien ayant la même destination ou le même texte. Fusionnez ou clarifiez ces liens pour éviter toute confusion.
+- **Lien vers un document PDF (7 occurrences) :**  
+  Des liens pointent directement vers des fichiers PDF. Envisagez d'ajouter une indication (par exemple, « (PDF) ») ou de vérifier que le PDF est accessible.
+- **Élément `<noscript>` (1 occurrence) :**  
+  La présence de `<noscript>` peut indiquer que le contenu n'est pas entièrement accessible sans JavaScript. Assurez-vous que le contenu de secours est utilisable.
+- **Texte de titre redondant (32 occurrences) :**  
+  Certains éléments possèdent des attributs title identiques à leur contenu textuel. Ces attributs ne sont pas nécessaires et peuvent créer une redondance pour les utilisateurs de lecteurs d'écran.
+- **Tableaux de mise en page (4 occurrences) :**  
+  Les tableaux utilisés pour la mise en page peuvent prêter à confusion. Utilisez CSS pour la mise en page et réservez les tableaux aux données.
+- **Vidéo ou audio HTML5 (1 occurrence) :**  
+  Assurez-vous que les éléments multimédias offrent des sous-titres, des transcriptions ou des descriptions audio selon les besoins.
 
-**Features (20 instances)**  
-- **Null or empty alternative text (7 instances):** Several images have empty or missing alt attributes. Provide meaningful alt text or mark decorative images with `alt=""`.
-- **Linked image with alternative text (3 instances):** Images that are linked and have alt text should ensure their alt text describes the link’s purpose.
-- **Form label (2 instances):** Some form fields may lack clear labels. Add explicit and descriptive labels for all form controls.
-- **Language (8 instances):** Ensure the page’s language is properly defined and any language changes within the page are identified.
+## Fonctionnalités (20 occurrences)
+- **Texte alternatif nul ou vide (7 occurrences) :**  
+  Plusieurs images ont des attributs alt vides ou manquants. Fournissez un texte alternatif significatif ou marquez les images décoratives avec `alt=""`.
+- **Image liée avec texte alternatif (3 occurrences) :**  
+  Les images liées qui possèdent un texte alternatif doivent s'assurer que celui-ci décrit bien l'objectif du lien.
+- **Étiquette de formulaire (2 occurrences) :**  
+  Certains champs de formulaire peuvent manquer d'étiquettes claires. Ajoutez des étiquettes explicites et descriptives pour tous les contrôles de formulaire.
+- **Langue (8 occurrences) :**  
+  Assurez-vous que la langue de la page est correctement définie et que tout changement de langue au sein de la page est identifié.
 
-**Structural Elements (43 instances)**  
-- Multiple heading levels are used (6 h1s, 1 h2, 3 h3, 12 h4), multiple unordered lists (16), and landmark elements (header, navigation, main, footer). Ensure headings follow a logical outline and that landmarks are used correctly to enhance navigation.
+## Éléments Structurels (43 occurrences)
+Différents niveaux de titres sont utilisés (6 h1, 1 h2, 3 h3, 12 h4), plusieurs listes non ordonnées (16) et des éléments de repère (header, navigation, main, footer). Veillez à ce que les titres suivent une hiérarchie logique et que les repères soient utilisés correctement pour améliorer la navigation.
 
-**ARIA (10 instances)**  
-- **ARIA usage (1 instance), ARIA label (2 instances), ARIA hidden (6 instances), ARIA expanded (1 instance):** Verify ARIA attributes are used correctly and consistently to enhance rather than confuse accessibility. ARIA attributes should match the content and context.
+## ARIA (10 occurrences)
+- **Utilisation d'ARIA (1 occurrence), étiquette ARIA (2 occurrences), ARIA hidden (6 occurrences), ARIA expanded (1 occurrence) :**  
+  Vérifiez que les attributs ARIA sont utilisés correctement et de manière cohérente pour améliorer l'accessibilité sans la compliquer. Ils doivent correspondre au contenu et au contexte.
 
-**Key Recommendations:**
-1. Provide descriptive text for empty links and null-alt images.
-2. Improve color contrast for text against backgrounds.
-3. Use headings in a logical order without skipping levels.
-4. Consolidate redundant links and properly label form elements.
-5. Ensure PDF documents and media files have appropriate accessibility features.
-6. Remove redundant title attributes and use ARIA attributes judiciously.
-7. Confirm that language, ARIA roles, and landmarks are correctly implemented for better navigation and understanding.
+## Recommandations Clés
+1. Fournir un texte descriptif pour les liens vides et les images avec attribut alt vide.
+2. Améliorer le contraste des couleurs entre le texte et l'arrière-plan.
+3. Utiliser des titres dans un ordre logique sans sauter de niveaux.
+4. Consolider les liens redondants et étiqueter correctement les éléments de formulaire.
+5. Veiller à ce que les documents PDF et les fichiers multimédias disposent de fonctionnalités d'accessibilité appropriées.
+6. Supprimer les attributs title redondants et utiliser les attributs ARIA de manière judicieuse.
+7. Vérifier que la langue, les rôles ARIA et les éléments de repère sont correctement implémentés pour une meilleure navigation et compréhension.
 
+## Contraste
 
-** Constrast **
-
-WCAG AA: Fail
-WCAG AAA: Fail
+- **WCAG AA : Échoué**
+- **WCAG AAA : Échoué**
