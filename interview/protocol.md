@@ -39,7 +39,7 @@
 
 ### [Profil Démographique](section_demographics.md) (5 minutes)
 
-### Questions de [Contexte](section_internet.md) (10 minutes)
+### Questions sur [l’Utilisation et l’Accessibilité du Web](section_internet.md) (10 minutes)
 
 ### [Discussion sur les Fonctionnalités Spécifiques](interview_features.md) (20 minutes)
 
