@@ -1,190 +1,190 @@
-# Libraries Used in IRSA Website
+# Bibliothèques Utilisées sur le Site IRSA
 
-## CSS Libraries
+## Bibliothèques CSS
 
 1. **Font Awesome**
-   - File: [font-awesome.min.css](http://www.irsa.be/media/gantry5/assets/css/font-awesome.min.css)
-   - Purpose: Icon library for web projects.
+   - Fichier : [font-awesome.min.css](http://www.irsa.be/media/gantry5/assets/css/font-awesome.min.css)
+   - Objectif : Bibliothèque d'icônes pour projets web.
 
 2. **Bootstrap**
-   - File: [bootstrap-gantry.css](http://www.irsa.be/media/gantry5/assets/css/bootstrap-gantry.css)
-   - Purpose: CSS framework for responsive design and layout.
+   - Fichier : [bootstrap-gantry.css](http://www.irsa.be/media/gantry5/assets/css/bootstrap-gantry.css)
+   - Objectif : Framework CSS pour un design réactif et une mise en page optimisée.
 
 3. **UIkit**
-   - File: [uikit.min.css](http://www.irsa.be/templates/g5_hydrogen/custom/uikit/css/uikit.min.css)
-   - Purpose: Lightweight modular framework for modern web interfaces.
+   - Fichier : [uikit.min.css](http://www.irsa.be/templates/g5_hydrogen/custom/uikit/css/uikit.min.css)
+   - Objectif : Framework modulaire léger pour des interfaces web modernes.
 
 4. **IcoMoon**
-   - File: [icomoon.css](http://www.irsa.be/media/jui/css/icomoon.css)
-   - Purpose: Icon font library.
+   - Fichier : [icomoon.css](http://www.irsa.be/media/jui/css/icomoon.css)
+   - Objectif : Bibliothèque d'icônes en police.
 
 ---
 
-## JavaScript Libraries
+## Bibliothèques JavaScript
 
 1. **Google Maps API**
-   - File: [Google Maps API](https://maps.googleapis.com/maps/api/js?v=3&key=AIzaSyB0qWVOvQvLp2Qe9-ZR9iZ8NrP5gZj7AU0&language=fr-FR&libraries=places)
-   - Purpose: Interactive map functionalities and geolocation services.
+   - Fichier : [Google Maps API](https://maps.googleapis.com/maps/api/js?v=3&key=AIzaSyB0qWVOvQvLp2Qe9-ZR9iZ8NrP5gZj7AU0&language=fr-FR&libraries=places)
+   - Objectif : Fournir des fonctionnalités interactives de cartographie et des services de géolocalisation.
 
 2. **jQuery**
-   - Files:
+   - Fichiers :
      - [jquery.min.js](http://www.irsa.be/media/jui/js/jquery.min.js)
      - [jquery-noconflict.js](http://www.irsa.be/media/jui/js/jquery-noconflict.js)
      - [jquery-migrate.min.js](http://www.irsa.be/media/jui/js/jquery-migrate.min.js)
-   - Purpose: Simplifies DOM manipulation, event handling, and AJAX calls.
+   - Objectif : Simplifier la manipulation du DOM, la gestion des événements et les appels AJAX.
 
 3. **MooTools**
-   - Files:
+   - Fichiers :
      - [mootools-core.js](http://www.irsa.be/media/system/js/mootools-core.js)
      - [mootools-more.js](http://www.irsa.be/media/system/js/mootools-more.js)
-   - Purpose: JavaScript framework for building advanced user interfaces.
+   - Objectif : Framework JavaScript pour la création d'interfaces utilisateur avancées.
 
 4. **Bootstrap**
-   - File: [bootstrap.min.js](http://www.irsa.be/media/jui/js/bootstrap.min.js)
-   - Purpose: Provides responsive design elements and components.
+   - Fichier : [bootstrap.min.js](http://www.irsa.be/media/jui/js/bootstrap.min.js)
+   - Objectif : Fournir des éléments et composants pour un design réactif.
 
 5. **RokSprocket**
-   - Files:
+   - Fichiers :
      - [rokmediaqueries.js](http://www.irsa.be/components/com_roksprocket/assets/js/rokmediaqueries.js)
      - [roksprocket.js](http://www.irsa.be/components/com_roksprocket/assets/js/roksprocket.js)
      - [features.js](http://www.irsa.be/components/com_roksprocket/layouts/features/assets/js/features.js)
      - [slideshow2.js](http://www.irsa.be/components/com_roksprocket/layouts/features/themes/slideshow2/slideshow2.js)
      - [basic.js](http://www.irsa.be/components/com_roksprocket/layouts/grids/themes/basic/basic.js)
-   - Purpose: Joomla content module for advanced layouts and animations.
+   - Objectif : Module de contenu Joomla pour des mises en page et animations avancées.
 
 6. **UIkit**
-   - File: [uikit.min.js](http://www.irsa.be/templates/g5_hydrogen/custom/uikit/js/uikit.min.js)
-   - Purpose: JavaScript framework for modern web interfaces.
+   - Fichier : [uikit.min.js](http://www.irsa.be/templates/g5_hydrogen/custom/uikit/js/uikit.min.js)
+   - Objectif : Framework JavaScript pour des interfaces web modernes.
 
-7. **Google Maps Plugin**
-   - Files:
+7. **Plugin Google Maps**
+   - Fichiers :
      - [googlemapsv3.js](http://www.irsa.be/media/plugin_googlemap3/site/googlemaps/googlemapsv3.js)
      - [modalbox1.3hackv3.js](http://www.irsa.be/media/plugin_googlemap3/site/moodalbox/js/modalbox1.3hackv3.js)
-   - Purpose: Adds Google Maps functionalities to Joomla-based websites.
+   - Objectif : Intégrer des fonctionnalités Google Maps aux sites basés sur Joomla.
 
 ---
 
-## Fonts
+## Polices
 
 1. **Font Awesome**
-   - File: [fontawesome-webfont.woff2](http://www.irsa.be/media/gantry5/assets/fonts/fontawesome-webfont.woff2?v=4.7.0)
-   - Purpose: Icon library for modern web applications.
+   - Fichier : [fontawesome-webfont.woff2](http://www.irsa.be/media/gantry5/assets/fonts/fontawesome-webfont.woff2?v=4.7.0)
+   - Objectif : Bibliothèque d'icônes pour les applications web modernes.
 
 2. **Google Fonts**
-   - File: [Arimo](https://fonts.googleapis.com/css?family=Arimo)
-   - Purpose: Web-safe typography.
+   - Fichier : [Arimo](https://fonts.googleapis.com/css?family=Arimo)
+   - Objectif : Typographie web sécurisée.
 
+---
 
+# Recommandations de Suppression
 
-# Removal recommandations
-
-## 1. Redundant or Outdated Libraries
+## 1. Bibliothèques Redondantes ou Obsolètes
 
 ### **MooTools**
-- **Files**:
+- **Fichiers** :
   - [mootools-core.js](http://www.irsa.be/media/system/js/mootools-core.js)
   - [mootools-more.js](http://www.irsa.be/media/system/js/mootools-more.js)
-- **Reason**:
-  - MooTools is outdated and no longer widely supported. Modern JavaScript libraries like jQuery or vanilla JavaScript can handle the same functionality more efficiently.
-  - It adds unnecessary weight to the page.
-- **Action**:
-  - Audit and replace any functionality relying on MooTools with modern alternatives.
+- **Raison** :
+  - MooTools est obsolète et n'est plus largement supporté. Des bibliothèques modernes comme jQuery ou du JavaScript natif offrent une alternative plus efficace.
+  - Il ajoute un poids inutile à la page.
+- **Action** :
+  - Auditer et remplacer les fonctionnalités reposant sur MooTools par des alternatives modernes.
 
-### **Google Maps Plugin Redundancy**
-- **Files**:
+### **Redondance du Plugin Google Maps**
+- **Fichiers** :
   - [googlemapsv3.js](http://www.irsa.be/media/plugin_googlemap3/site/googlemaps/googlemapsv3.js)
   - [modalbox1.3hackv3.js](http://www.irsa.be/media/plugin_googlemap3/site/moodalbox/js/modalbox1.3hackv3.js)
-- **Reason**:
-  - Duplicate Google Maps-related scripts are loaded (e.g., [Google Maps API](https://maps.googleapis.com/maps/api/js)).
-  - This causes redundancy and slower load times.
-- **Action**:
-  - Consolidate all map functionality into a single script using the official Google Maps API.
+- **Raison** :
+  - Des scripts liés à Google Maps sont chargés en double (ex. : [Google Maps API](https://maps.googleapis.com/maps/api/js)).
+  - Cela provoque une redondance et ralentit le chargement de la page.
+- **Action** :
+  - Consolider toutes les fonctionnalités de cartographie en un seul script utilisant l'API officielle de Google Maps.
 
 ---
 
-## 2. Unused or Excessive CSS
+## 2. CSS Inutilisé ou Excessif
 
 ### **Font Awesome**
-- **File**: [font-awesome.min.css](http://www.irsa.be/media/gantry5/assets/css/font-awesome.min.css)
-- **Reason**:
-  - If only a few icons are used, the entire library is unnecessary overhead.
-  - Using inline SVGs or a subset of Font Awesome can replace this heavy file.
-- **Action**:
-  - Subset the icons required or replace them with inline SVGs.
+- **Fichier** : [font-awesome.min.css](http://www.irsa.be/media/gantry5/assets/css/font-awesome.min.css)
+- **Raison** :
+  - Si seule une poignée d'icônes est utilisée, l'ensemble de la bibliothèque représente une surcharge inutile.
+  - L'utilisation de SVG en ligne ou d'un sous-ensemble de Font Awesome peut remplacer ce fichier volumineux.
+- **Action** :
+  - Extraire uniquement les icônes nécessaires ou les remplacer par des SVG en ligne.
 
 ### **Bootstrap**
-- **File**: [bootstrap-gantry.css](http://www.irsa.be/media/gantry5/assets/css/bootstrap-gantry.css)
-- **Reason**:
-  - If the site uses UIkit for its framework, Bootstrap might be redundant.
-- **Action**:
-  - Audit the CSS to determine whether Bootstrap can be removed entirely.
+- **Fichier** : [bootstrap-gantry.css](http://www.irsa.be/media/gantry5/assets/css/bootstrap-gantry.css)
+- **Raison** :
+  - Si le site utilise UIkit comme framework principal, Bootstrap peut être redondant.
+- **Action** :
+  - Auditer le CSS pour déterminer si Bootstrap peut être entièrement supprimé.
 
 ### **IcoMoon**
-- **File**: [icomoon.css](http://www.irsa.be/media/jui/css/icomoon.css)
-- **Reason**:
-  - This may be redundant if Font Awesome or inline SVGs are already being used for icons.
-- **Action**:
-  - Replace or consolidate icon usage.
+- **Fichier** : [icomoon.css](http://www.irsa.be/media/jui/css/icomoon.css)
+- **Raison** :
+  - Peut être redondant si Font Awesome ou des SVG en ligne sont déjà utilisés pour les icônes.
+- **Action** :
+  - Remplacer ou consolider l'utilisation des icônes.
 
 ---
 
-## 3. Duplicate and Unnecessary Fonts
+## 3. Polices Duplicates et Inutiles
 
 ### **Google Fonts Arimo**
-- **Files**:
+- **Fichiers** :
   - [Arimo (HTTP)](http://fonts.gstatic.com/s/arimo/v29/P5sfzZCDf9_T_3cV7NCUECyoxNk37cxcABrB.woff2)
   - [Arimo (HTTPS)](https://fonts.gstatic.com/s/arimo/v29/P5sfzZCDf9_T_3cV7NCUECyoxNk37cxcABrB.woff2)
-- **Reason**:
-  - Loading fonts over both HTTP and HTTPS creates redundancy and potential security issues.
-- **Action**:
-  - Use a single, HTTPS-secure source for the font.
+- **Raison** :
+  - Charger les polices via HTTP et HTTPS crée une redondance et peut poser des problèmes de sécurité.
+- **Action** :
+  - Utiliser une seule source sécurisée en HTTPS pour la police.
 
 ---
 
-## 4. Consolidate or Remove Redundant JavaScript
+## 4. Consolidation ou Suppression de JavaScript Redondant
 
-### **jQuery Duplicates**
-- **Files**:
+### **Doublons de jQuery**
+- **Fichiers** :
   - [jquery.min.js](http://www.irsa.be/media/jui/js/jquery.min.js)
   - [jquery-noconflict.js](http://www.irsa.be/media/jui/js/jquery-noconflict.js)
   - [jquery-migrate.min.js](http://www.irsa.be/media/jui/js/jquery-migrate.min.js)
-- **Reason**:
-  - Multiple versions of jQuery-related scripts increase load time and may cause conflicts.
-- **Action**:
-  - Use a single, latest version of jQuery and remove `jquery-noconflict.js` and `jquery-migrate.min.js` unless necessary.
+- **Raison** :
+  - Plusieurs versions de scripts liés à jQuery augmentent le temps de chargement et peuvent provoquer des conflits.
+- **Action** :
+  - Utiliser une seule version récente de jQuery et supprimer `jquery-noconflict.js` et `jquery-migrate.min.js` sauf si leur présence est absolument nécessaire.
 
 ---
 
-## 5. Heavy or Redundant Images
+## 5. Images Lourdes ou Redondantes
 
-### **Cached Images**
-- **Files**:
+### **Images en Cache**
+- **Fichiers** :
   - [cache/mod_roksprocket](e.g., `3b0989e261bbe0ea3a4ad82e59b31282_630_1680.png`)
-- **Reason**:
-  - These images may be outdated or generated unnecessarily by extensions like Roksprocket.
-- **Action**:
-  - Remove unused images or replace them with optimized ones.
+- **Raison** :
+  - Ces images peuvent être obsolètes ou générées inutilement par des extensions comme Roksprocket.
+- **Action** :
+  - Supprimer les images non utilisées ou les remplacer par des versions optimisées.
 
-### **Large Gallery Images**
-- **Files**:
-  - [Gallery Image 1](http://www.irsa.be/media/rokgallery/f/f2ed79a5-0880-41ad-9276-022f42973a4a/68ddd7cb-3fdb-4616-d382-ec220aeb066f.jpg)
-  - [Gallery Image 2](http://www.irsa.be/media/rokgallery/f/f15db25f-e729-4312-dda2-8d58fa347d92/96e9323d-256e-4b85-b5aa-0f2438ad75cf.jpg)
-- **Reason**:
-  - Large images significantly increase page load time.
-- **Action**:
-  - Compress these images and serve them in next-gen formats (e.g., WebP).
+### **Images de Galerie de Grande Taille**
+- **Fichiers** :
+  - [Image de Galerie 1](http://www.irsa.be/media/rokgallery/f/f2ed79a5-0880-41ad-9276-022f42973a4a/68ddd7cb-3fdb-4616-d382-ec220aeb066f.jpg)
+  - [Image de Galerie 2](http://www.irsa.be/media/rokgallery/f/f15db25f-e729-4312-dda2-8d58fa347d92/96e9323d-256e-4b85-b5aa-0f2438ad75cf.jpg)
+- **Raison** :
+  - Des images volumineuses augmentent significativement le temps de chargement de la page.
+- **Action** :
+  - Compresser ces images et les servir dans des formats de nouvelle génération (ex. : WebP).
 
 ---
 
-## 6. Unused RokSprocket Files
-- **Files**:
+## 6. Fichiers RokSprocket Inutilisés
+- **Fichiers** :
   - [rokmediaqueries.js](http://www.irsa.be/components/com_roksprocket/assets/js/rokmediaqueries.js)
   - [roksprocket.js](http://www.irsa.be/components/com_roksprocket/assets/js/roksprocket.js)
-- **Reason**:
-  - If RokSprocket is not actively used for content, its files add unnecessary weight.
-- **Action**:
-  - Remove these files if they are not critical to the site’s functionality.
+- **Raison** :
+  - Si RokSprocket n'est pas activement utilisé pour le contenu, ces fichiers ajoutent un poids superflu.
+- **Action** :
+  - Supprimer ces fichiers s'ils ne sont pas essentiels au fonctionnement du site.
 
 ---
 
-By removing or replacing these redundant and outdated resources, the website can improve load times, simplify maintenance, and reduce bandwidth usage.
+En supprimant ou en remplaçant ces ressources redondantes et obsolètes, le site peut améliorer ses temps de chargement, simplifier sa maintenance et réduire l'utilisation de la bande passante.
