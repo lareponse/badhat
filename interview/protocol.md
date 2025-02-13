@@ -63,7 +63,7 @@
    - Recevoir des mises à jour ou notifications ?
    - Contacter le personnel de l'organisation ?"
 
-### [Discussion sur les Fonctionnalités Spécifiques](interview_group_questions.md) (20 minutes)
+### [Discussion sur les Fonctionnalités Spécifiques](interview_features.md) (20 minutes)
 1. **Pour le contenu multimédia :**
    - "Comment préférez-vous consommer le contenu vidéo ?"
    - "Qu'est-ce qui rend les sous-titres utiles ou inutiles ?"
@@ -79,22 +79,7 @@
    - "Comment aimez-vous recevoir les réponses ?"
    - "Qu'est-ce qui rend les fonctionnalités de chat en ligne accessibles ou inaccessibles ?"
 
-### Questions Spécifiques par Groupe d'Utilisateurs
-
-#### Pour les Utilisateurs Sourds Utilisant la Langue des Signes
-1. "Quelle est l'importance du contenu en langue des signes sur les sites web ?"
-2. "Que pensez-vous de la navigation basée sur la vidéo ?"
-3. "Comment préférez-vous que le contenu écrit soit présenté ?"
-
-#### Pour les Utilisateurs Malentendants
-1. "Quelles adaptations audio sont les plus utiles ?"
-2. "Comment préférez-vous recevoir les notifications audio ?"
-3. "Quelles fonctionnalités de sous-titrage fonctionnent le mieux pour vous ?"
-
-#### Pour les Utilisateurs avec des Difficultés de Traitement du Langage
-1. "Qu'est-ce qui rend le contenu écrit plus facile à comprendre ?"
-2. "Comment préférez-vous que l'information soit organisée ?"
-3. "Quelles aides visuelles sont les plus utiles ?"
+### [Questions Spécifiques par Groupe d'Utilisateurs](interview_group_questions.md) (10min)
 
 ### Conclusion (15 minutes)
 1. "Quelles autres fonctionnalités aimeriez-vous voir sur notre nouveau site web ?"
