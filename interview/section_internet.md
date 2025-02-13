@@ -32,27 +32,24 @@
 **Quels technologies assistives utilisez-vous?**
 [Liste des technologies assistives](assistive_technologies.md)
 
-### Questions Complémentaires
 
-3.   
-4. "Quelles sont vos principales raisons de visiter le site web de l'institut ?"
 
 ---
 
 ## Partie 2 : Expérience du Site Web (qualif)
 
-### Expérience du Site Web Actuel (15 minutes)
+### Expérience du Site Web Actuel 
 0. "Utilisez-vous le site web actuel de l'institut ?"
    1. Si oui, a quelle fréquence et dans quel but ?
    2. Si non, pourquoi ?
-      
+1. "Quelles sont vos principales raisons de visiter le site web de l'institut ?"      
 2. "Pouvez-vous décrire votre expérience d'utilisation de notre site web actuel ?"  
 3. "Quelles fonctionnalités fonctionnent bien pour vous ?"  
 4. "Quels défis rencontrez-vous ?"  
 5. "Comment gérez-vous [fonctionnalité spécifique] sur notre site ?"  
 6. "Quelles informations sont les plus difficiles à trouver ?"
 
-### Expérience Web Générale (20 minutes)
+### Expérience Web Générale 
 0. "Quels sites web visitez-vous le plus fréquemment ?"  
 1. "Qu'est-ce qui rend un site web facile à utiliser pour vous ?"  
 2. "Pouvez-vous me montrer un exemple de site web que vous trouvez accessible ?"  
@@ -100,19 +97,18 @@
 - **Pourquoi ?** __________
 
 
-
 **Avez-vous déjà renoncé à un service ou un achat à cause de problèmes d'accessibilité ?**  
-    - [ ] Oui (expliquez pourquoi) : __________  
-    - [ ] Non  
+- [ ] Oui (expliquez pourquoi) : __________  
+- [ ] Non  
 
 **Comment l’accessibilité du web impacte-t-elle votre quotidien ?**  
     __________  
 
 **Quels changements récents en matière d'accessibilité web vous ont particulièrement aidé ?**  
-    - [ ] Compatibilité avec les lecteurs d’écran  
-    - [ ] Meilleur contraste des couleurs  
-    - [ ] Accessibilité améliorée des formulaires  
-    - [ ] Autre (précisez) : __________  
+- [ ] Compatibilité avec les lecteurs d’écran  
+- [ ] Meilleur contraste des couleurs  
+- [ ] Accessibilité améliorée des formulaires  
+- [ ] Autre (précisez) : __________  
 
 **Quels conseils donneriez-vous aux développeurs web pour améliorer l'accessibilité ?**  
     __________  
