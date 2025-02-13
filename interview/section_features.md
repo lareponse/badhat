@@ -1,5 +1,3 @@
-# Enquête sur l'Accessibilité Numérique
-
 ## Contenu Multimédia
 
 ### Préférences Vidéo
