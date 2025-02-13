@@ -38,9 +38,8 @@
 
 ### Questionnaire
 - [Profil démographique](section_demographics.md)
-- [Questions sur l’utilisation et l’accessibilité du web](section_internet.md) 
-- [Discussion sur les fonctionnalités spécifiques](section_features.md) 
-- [Questions spécifiques par groupe d'utilisateurs](section_handicap.md)
+- [Utilisation et l’accessibilité du web](section_internet.md) 
+- [Fonctionnalités spécifiques](section_features.md) 
 
 ### Conclusion (15 minutes)
 

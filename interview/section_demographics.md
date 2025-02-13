@@ -1,5 +1,9 @@
 # Étude pour la refonte du site web de l'Institut Royal des Sourds et Aveugles
 
+## **Questionnaire sur l’Utilisation et l’Accessibilité du Web**
+- [ ] Je reponds pour moi même
+- [ ] Je réponds pour un tiers (précisez la relation) : __________
+
 ## **Profil Démographique**  
 
 1. **Groupe d'age**  
@@ -46,29 +50,45 @@
 6. **Langue(s) parlée(s) couramment ?**
 
 
-7. **Combien de temps passez-vous en moyenne sur Internet par jour ?**  
-- [ ] Moins d'1 heure  
-- [ ] 1-3 heures  
-- [ ] 4-6 heures  
-- [ ] 7-9 heures  
-- [ ] Plus de 9 heures  
-
-8. **Dans quel contexte utilisez-vous principalement Internet ?**  
-- [ ] Personnel uniquement  
-- [ ] Principalement personnel  
-- [ ] Équilibré entre personnel et professionnel  
-- [ ] Principalement professionnel  
-- [ ] Professionnel uniquement  
-
-9. **Quels appareils utilisez-vous principalement pour naviguer sur Internet ?**  
-- [ ] Ordinateur  
-- [ ] Smartphone  
-- [ ] Tablette  
-- [ ] Autre (précisez) : __________  
-
-10. **Quels navigateurs utilisez-vous principalement pour naviguer sur Internet ?**
-- [ ] Google Chrome
-- [ ] Mozilla Firefox
-- [ ] Safari
-- [ ] Microsoft Edge
-- [ ] Autre (précisez) : __________
+## Handicap(s)
+- [ ] **Aucun**
+- [ ] **Auditif**
+  - [ ] Malentendant(e)
+  - [ ] Légère (perte auditive entre 20 et 40 dB)
+  - [ ] Modérée (perte auditive entre 41 et 70 dB)
+  - [ ] Sévère (perte auditive entre 71 et 90 dB)
+  - [ ] Profonde (perte auditive supérieure à 90 dB)
+  - [ ] Surdité
+  - [ ] **Autre (précisez) :**
+- [ ] **Visuel**
+  - [ ] Malvoyant(e)
+    - [ ] Légère (acuité visuelle entre 3/10 et 6/10 après correction)
+    - [ ] Modérée (acuité visuelle entre 1/10 et 3/10 après correction)
+    - [ ] Sévère (acuité visuelle entre 1/20 et 1/10 après correction)
+    - [ ] Profonde (acuité visuelle inférieure à 1/20 après correction)
+    - [ ] Cécité presque totale (acuité inférieure à 1/50 mais perception de la lumière)
+  - [ ] Cécité totale (absence de perception de la lumière)
+  - [ ] Daltonisme (précisez) :
+  - [ ] **Autre (précisez) :**
+- [ ] **Moteur**
+  - [ ] **Difficultés motrices / Mobilité réduite (précisez le type et le degré) :**
+    - [ ] Légère (difficultés mineures affectant certaines activités)
+    - [ ] Modérée (impact notable sur la mobilité quotidienne)
+    - [ ] Sévère (mobilité fortement restreinte, nécessitant souvent une assistance)
+  - [ ] **Paralysie** (précisez le type et la zone concernée) :
+  - [ ] **Troubles de la coordination / Tremblements** (précisez le type et le degré) : 
+- [ ] **Neurologique**
+  - [ ] Autisme
+  - [ ] TDAH (Trouble du Déficit de l'Attention avec ou sans hyperactivité)
+  - [ ] Épilepsie photosensible
+  - [ ] Migraines avec aura
+  - [ ] **Autre (précisez) :**
+- [ ] **Cognitif**
+  - [ ] Dyslexie
+  - [ ] Dyspraxie
+  - [ ] Troubles de la mémoire
+  - [ ] Troubles d'apprentissage
+  - [ ] Déficience intellectuelle / Retard mental
+  - [ ] **Autre (précisez) :**
+- [ ] **Autre** (précisez) :
+- [ ] **Je préfère ne pas répondre**

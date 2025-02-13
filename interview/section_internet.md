@@ -2,6 +2,18 @@
 
 ## Partie 1 : Utilisation d’Internet (quanti)
 
+**Quels navigateurs utilisez-vous et quelles sont leurs fonctionnalités d’accessibilité activées ?** 
+- [ ] Google Chrome | Accessibilité : __________  
+- [ ] Mozilla Firefox | Accessibilité : __________  
+- [ ] Safari | Accessibilité : __________  
+- [ ] Microsoft Edge | Accessibilité : __________  
+- [ ] Autre: __________  
+
+**Quels technologies assistives utilisez-vous?**
+[Liste des technologies assistives](assistive_technologies.md)
+
+
+
 **Combien de temps passez-vous en moyenne sur Internet par jour ?**  
 - [ ] Moins d'1 heure  
 - [ ] 1-3 heures  
@@ -22,15 +34,12 @@
 - [ ] Tablette  
 - [ ] Autre (précisez) : __________  
 
-**Quels navigateurs utilisez-vous et quelles sont leurs fonctionnalités d’accessibilité activées ?** 
-- [ ] Google Chrome | Accessibilité : __________  
-- [ ] Mozilla Firefox | Accessibilité : __________  
-- [ ] Safari | Accessibilité : __________  
-- [ ] Microsoft Edge | Accessibilité : __________  
-- [ ] Autre: __________  
-
-**Quels technologies assistives utilisez-vous?**
-[Liste des technologies assistives](assistive_technologies.md)
+**Quels navigateurs utilisez-vous principalement pour naviguer sur Internet ?**
+- [ ] Google Chrome
+- [ ] Mozilla Firefox
+- [ ] Safari
+- [ ] Microsoft Edge
+- [ ] Autre (précisez) : __________
 
 ---
 
