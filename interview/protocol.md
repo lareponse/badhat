@@ -39,29 +39,7 @@
 
 ### [Profil Démographique](section_demographics.md) (5 minutes)
 
-### Questions de [Contexte](section_context.md) (10 minutes)
-1. "Comment accédez-vous généralement à Internet ? (Types d'appareils, technologies d'assistance)"
-2. "Quels sites web visitez-vous le plus fréquemment ?"
-3. "À quelle fréquence utilisez-vous le site web actuel de l'institut ?"
-4. "Quelles sont vos principales raisons de visiter le site web de l'institut ?"
-
-### Expérience du Site Web Actuel (15 minutes)
-1. "Pouvez-vous décrire votre expérience d'utilisation de notre site web actuel ?"
-2. "Quelles fonctionnalités fonctionnent bien pour vous ?"
-3. "Quels défis rencontrez-vous ?"
-4. "Comment gérez-vous [fonctionnalité spécifique] sur notre site ?"
-5. "Quelles informations sont les plus difficiles à trouver ?"
-
-### Expérience Web Générale (20 minutes)
-1. "Qu'est-ce qui rend un site web facile à utiliser pour vous ?"
-2. "Pouvez-vous me montrer un exemple de site web que vous trouvez accessible ?"
-3. "Quelles fonctionnalités recherchez-vous lorsque vous visitez un nouveau site web ?"
-4. "Comment préférez-vous :
-   - Regarder des vidéos en ligne ?
-   - Remplir des formulaires ?
-   - Naviguer entre les pages ?
-   - Recevoir des mises à jour ou notifications ?
-   - Contacter le personnel de l'organisation ?"
+### Questions de [Contexte](section_internet.md) (10 minutes)
 
 ### [Discussion sur les Fonctionnalités Spécifiques](interview_features.md) (20 minutes)
 
