@@ -77,7 +77,7 @@
 ## 4. **Pile Technologique**
 
 ### 4.1 Frontend
-- **Langages** : HTML5, CSS3, JavaScript (Vanilla ou Alpine.js).
+- **Langages** : HTML5, CSS3, JavaScript (all vanilla).
 - **Style** : Tailwind CSS ou CSS personnalisé léger.
 - **Ressources** : Polices auto-hébergées et images optimisées (format WebP).
 
