@@ -31,7 +31,7 @@
 
 ### Introduction (10 minutes)
 1. Accueil et présentations
-2. Expliquer [l'objectif de l'étude](interview_objectif.md) :
+2. Expliquer [l'objectif de l'étude](section_intro.md) :
 3. Revoir et signer les formulaires de consentement
 4. Établir la méthode de communication préférée
 5. Confirmer l'accord pour l'enregistrement/prise de notes
@@ -40,9 +40,9 @@
 
 ### Questions sur [l’Utilisation et l’Accessibilité du Web](section_internet.md) (10 minutes)
 
-### [Discussion sur les Fonctionnalités Spécifiques](interview_features.md) (20 minutes)
+### [Discussion sur les Fonctionnalités Spécifiques](section_features.md) (20 minutes)
 
-### [Questions Spécifiques par Groupe d'Utilisateurs](interview_group_questions.md) (10min)
+### [Questions Spécifiques par Groupe d'Utilisateurs](section_handicap.md) (10min)
 
 ### Conclusion (15 minutes)
 
