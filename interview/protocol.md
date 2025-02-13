@@ -37,9 +37,9 @@
 4. Établir la méthode de communication préférée
 5. Confirmer l'accord pour l'enregistrement/prise de notes
 
-### [Profil Démographique et Contexte](section_demographics.md) (5 minutes)
+### [Profil Démographique](section_demographics.md) (5 minutes)
 
-### Questions de Contexte (10 minutes)
+### Questions de [Contexte](section_context.md) (10 minutes)
 1. "Comment accédez-vous généralement à Internet ? (Types d'appareils, technologies d'assistance)"
 2. "Quels sites web visitez-vous le plus fréquemment ?"
 3. "À quelle fréquence utilisez-vous le site web actuel de l'institut ?"
