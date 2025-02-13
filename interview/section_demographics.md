@@ -12,10 +12,9 @@
 
 2. **Quel est votre niveau d'études le plus élevé ?**  
    - [ ] École primaire  
-   - [ ] Collège  
-   - [ ] Lycée  
-   - [ ] Bac +2/3  
-   - [ ] Bac +4/5  
+   - [ ] École secondaire  
+   - [ ] Graduat
+   - [ ] Master
    - [ ] Doctorat  
    - [ ] Autre (précisez) : __________
    - [ ] Je préfère ne pas répondre
