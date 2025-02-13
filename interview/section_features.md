@@ -1,21 +1,43 @@
-Pour le contenu multimédia :
+# Enquête sur l'Accessibilité Numérique
 
-"Comment préférez-vous consommer le contenu vidéo ?"
-"Qu'est-ce qui rend les sous-titres utiles ou inutiles ?"
-"Que pensez-vous de l'interprétation en langue des signes dans les vidéos ?"
-Pour les éléments interactifs :
+## Contenu Multimédia
 
-"Comment préférez-vous recevoir des retours lors de la soumission de formulaires ?"
-"Qu'est-ce qui vous aide à savoir quand vous avez fait une erreur ?"
-"Comment aimez-vous naviguer entre différentes sections ?"
-Pour les fonctionnalités de communication :
+### Préférences Vidéo
+1. Comment préférez-vous consommer le contenu vidéo ?
+   _____________________________________
 
-"Quelle est votre méthode préférée pour contacter les organisations en ligne ?"
-"Comment aimez-vous recevoir les réponses ?"
-"Qu'est-ce qui rend les fonctionnalités de chat en ligne accessibles ou inaccessibles ?"
+2. Qu'est-ce qui rend les sous-titres utiles ou inutiles ?
+   _____________________________________
 
+3. Que pensez-vous de l'interprétation en langue des signes dans les vidéos ?
+   _____________________________________
 
-**Quelles personnalisations de l'interface utilisez-vous régulièrement ?**
+## Éléments Interactifs
+
+### Expérience Utilisateur
+1. Comment préférez-vous recevoir des retours lors de la soumission de formulaires ?
+   _____________________________________
+
+2. Qu'est-ce qui vous aide à savoir quand vous avez fait une erreur ?
+   _____________________________________
+
+3. Comment aimez-vous naviguer entre différentes sections ?
+   _____________________________________
+
+## Fonctionnalités de Communication
+
+1. Quelle est votre méthode préférée pour contacter les organisations en ligne ?
+   _____________________________________
+
+2. Comment aimez-vous recevoir les réponses ?
+   _____________________________________
+
+3. Qu'est-ce qui rend les fonctionnalités de chat en ligne accessibles ou inaccessibles ?
+   _____________________________________
+
+## Personnalisation de l'Interface
+
+### Options utilisées régulièrement
 - [ ] Modification de la taille du texte
 - [ ] Ajustement du contraste
 - [ ] Thèmes sombres/clairs
@@ -24,69 +46,74 @@ Pour les fonctionnalités de communication :
 - [ ] Zoom de la page
 - [ ] Autres (précisez) : __________
 
-**À quelle fréquence modifiez-vous ces paramètres ?**
+### Fréquence de modification
 - [ ] À chaque visite
 - [ ] Occasionnellement
 - [ ] Rarement
 - [ ] Jamais
 
-**Utilisez-vous les raccourcis clavier pour naviguer ?**
+## Navigation au Clavier
+
+### Utilisation des raccourcis
 - [ ] Systématiquement
 - [ ] Souvent
 - [ ] Parfois
 - [ ] Jamais
 
-**Quels raccourcis clavier utilisez-vous le plus souvent ?**
+### Raccourcis les plus utilisés
 - [ ] Navigation entre les liens (Tab)
 - [ ] Recherche dans la page (Ctrl+F)
 - [ ] Navigation par titres (H)
 - [ ] Autres (précisez) : __________
 
-**Comment évaluez-vous l'accessibilité sur différents appareils ?**
+## Évaluation Multi-Supports
 
-Sur ordinateur :
-- Très satisfaisante [ ]
-- Satisfaisante [ ]
-- Moyenne [ ]
-- Insatisfaisante [ ]
-- Très insatisfaisante [ ]
+### Sur ordinateur
+- [ ] Très satisfaisante
+- [ ] Satisfaisante
+- [ ] Moyenne
+- [ ] Insatisfaisante
+- [ ] Très insatisfaisante
 
-Sur mobile :
-- Très satisfaisante [ ]
-- Satisfaisante [ ]
-- Moyenne [ ]
-- Insatisfaisante [ ]
-- Très insatisfaisante [ ]
+### Sur mobile
+- [ ] Très satisfaisante
+- [ ] Satisfaisante
+- [ ] Moyenne
+- [ ] Insatisfaisante
+- [ ] Très insatisfaisante
 
-**Quelles fonctionnalités d'accessibilité manquent le plus sur mobile ?**
-__________
+### Questions ouvertes sur mobile
+1. Quelles fonctionnalités d'accessibilité manquent le plus sur mobile ?
+   _____________________________________
 
-**Quelles applications mobiles considérez-vous comme exemplaires en termes d'accessibilité ?**
-__________
+2. Quelles applications mobiles considérez-vous comme exemplaires en termes d'accessibilité ?
+   _____________________________________
 
+## Aspects Linguistiques
 
-**Dans quelles langues consultez-vous habituellement le web ?**
-__________
+1. Dans quelles langues consultez-vous habituellement le web ?
+   _____________________________________
 
-**Rencontrez-vous des difficultés particulières avec le contenu multilingue ?**
+### Difficultés avec le contenu multilingue
 - [ ] Traductions automatiques de mauvaise qualité
 - [ ] Absence de traduction pour certains contenus
 - [ ] Lecteurs d'écran ne gérant pas bien certaines langues
 - [ ] Autres (précisez) : __________
 
-**Les outils d'accessibilité que vous utilisez fonctionnent-ils aussi bien dans toutes les langues ?**
+### Compatibilité des outils d'accessibilité
 - [ ] Oui
 - [ ] Non (précisez les différences) : __________
 
+## Préférences de Format
 
-**Quel format de contenu vous est le plus accessible ?**
+### Format le plus accessible
 - [ ] Texte
 - [ ] Audio
 - [ ] Vidéo
 - [ ] Infographies
 - [ ] Présentations interactives
 
-**Pour les contenus vidéo, que préférez-vous ?**
+### Préférences pour les contenus vidéo
 - [ ] Sous-titres
 - [ ] Transcription
 - [ ] Description audio
