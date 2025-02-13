@@ -1,4 +1,4 @@
-## **Section 1 : Profil Démographique**  
+## **Profil Démographique**  
 
 1. **Quel est votre groupe d'âge ?**  
    - [ ] Moins de 18 ans  
