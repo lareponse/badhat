@@ -31,43 +31,7 @@ Une barre de progression vous indiquera votre avancement. Vous pouvez sauvegarde
 
 ## **Section 2 : [Usage d'Internet](section_internet.md) et Technologies**  
 
-
----
-
 ## **Section 3 : Expérience et Défis d'Accessibilité**  
-
-10. **À quelle fréquence rencontrez-vous des sites web difficiles à utiliser ?**  
-    - [ ] Plusieurs fois par jour  
-    - [ ] Une fois par jour  
-    - [ ] Quelques fois par semaine  
-    - [ ] Une fois par semaine  
-    - [ ] Quelques fois par mois  
-    - [ ] Rarement  
-    - [ ] Jamais  
-
-11. **Quels sont les éléments qui rendent un site difficile à utiliser pour vous ?**  
-    (Classez de 1 à 5, 1 étant le plus fréquent)  
-    - [ ] Images sans description textuelle  
-    - [ ] Navigation au clavier impossible  
-    - [ ] Formulaires mal conçus  
-    - [ ] Vidéos sans sous-titres  
-    - [ ] Pop-ups intrusifs  
-
-12. **Comment réagissez-vous lorsque vous rencontrez un site inaccessible ?**  
-    - [ ] Je quitte immédiatement le site  
-    - [ ] J’essaie de trouver une solution alternative  
-    - [ ] Je contacte le support du site  
-    - [ ] Autre (précisez) : __________  
-
-13. **L’accessibilité du web a-t-elle évolué ces dernières années ?**  
-    - [ ] Forte amélioration  
-    - [ ] Légère amélioration  
-    - [ ] Pas de changement  
-    - [ ] Légère détérioration  
-    - [ ] Forte détérioration  
-    - **Pourquoi ?** __________  
-
----
 
 ## **Section 4 : Impact et Solutions**  
 
