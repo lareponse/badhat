@@ -98,3 +98,21 @@
 - [ ] Légère détérioration  
 - [ ] Forte détérioration  
 - **Pourquoi ?** __________
+
+
+
+**Avez-vous déjà renoncé à un service ou un achat à cause de problèmes d'accessibilité ?**  
+    - [ ] Oui (expliquez pourquoi) : __________  
+    - [ ] Non  
+
+**Comment l’accessibilité du web impacte-t-elle votre quotidien ?**  
+    __________  
+
+**Quels changements récents en matière d'accessibilité web vous ont particulièrement aidé ?**  
+    - [ ] Compatibilité avec les lecteurs d’écran  
+    - [ ] Meilleur contraste des couleurs  
+    - [ ] Accessibilité améliorée des formulaires  
+    - [ ] Autre (précisez) : __________  
+
+**Quels conseils donneriez-vous aux développeurs web pour améliorer l'accessibilité ?**  
+    __________  
