@@ -45,11 +45,13 @@
 ### [Questions Spécifiques par Groupe d'Utilisateurs](interview_group_questions.md) (10min)
 
 ### Conclusion (15 minutes)
+
 1. "Quelles autres fonctionnalités aimeriez-vous voir sur notre nouveau site web ?"
 2. "Y a-t-il autre chose que vous aimeriez partager sur l'amélioration de l'accessibilité des sites web ?"
 3. "Seriez-vous intéressé(e) à tester notre nouvelle conception de site web ?"
-4. Remercier le participant et fournir les coordonnées pour le suivi
 
+**Remercier le participant et fournir les coordonnées pour le suivi**
+    __________  
 ## Protocole Post-Entretien
 - Revoir et organiser les notes
 - Documenter les problèmes techniques
