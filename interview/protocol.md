@@ -1,24 +1,24 @@
-# Protocole d'Entretien pour la Recherche sur l'Accessibilité Web
+# Étude pour la refonte du site web de l'Institut Royal des Sourds et Aveugles
 
-## Étude pour la Refonte du Site Web de l'Institut Royal des Sourds et Aveugles
+## Protocole d'entretien
 
-### Préparation Pré-Entretien
+### Préparation pré-entretien
 
-#### Environnement Physique
+#### Environnement physique
 - Salle calme avec bon éclairage
 - Distractions visuelles minimales
 - Places assises confortables arrangées pour faciliter la visibilité
 - Bon contraste entre l'interprète (si présent) et l'arrière-plan
 - Éclairage de secours en cas de problèmes techniques
 
-#### Installation Communication
+#### Installation communication
 - Interprète en langue des signes programmé (si nécessaire)
 - Ordinateur portable/tablette pour communication écrite
 - Bloc-notes et stylo pour communication écrite
 - Matériel d'enregistrement (si consentement obtenu)
 - Masques transparents disponibles si nécessaire pour la lecture labiale
 
-#### Matériel Nécessaire
+#### Matériel nécessaire
 - Formulaires de consentement en plusieurs formats
 - Fiche d'information du participant
 - Guide d'entretien
@@ -27,39 +27,37 @@
 - Eau et rafraîchissements
 - Liste des services de soutien locaux
 
-## Structure de l'Entretien
+## Structure de l'entretien
 
-### Introduction (10 minutes)
+### Introduction
 1. Accueil et présentations
-2. Expliquer [l'objectif de l'étude](section_intro.md) :
-3. Revoir et signer les formulaires de consentement
-4. Établir la méthode de communication préférée
+2. Établir la méthode de communication préférée
+3. Expliquer [l'objectif de l'étude](section_intro.md) :
+4. Revoir et signer les formulaires de consentement
 5. Confirmer l'accord pour l'enregistrement/prise de notes
 
-### [Profil Démographique](section_demographics.md) (5 minutes)
-
-### Questions sur [l’Utilisation et l’Accessibilité du Web](section_internet.md) (10 minutes)
-
-### [Discussion sur les Fonctionnalités Spécifiques](section_features.md) (20 minutes)
-
-### [Questions Spécifiques par Groupe d'Utilisateurs](section_handicap.md) (10min)
+### Questionnaire
+- [Profil démographique](section_demographics.md)
+- [Questions sur l’utilisation et l’accessibilité du web](section_internet.md) 
+- [Discussion sur les fonctionnalités spécifiques](section_features.md) 
+- [Questions spécifiques par groupe d'utilisateurs](section_handicap.md)
 
 ### Conclusion (15 minutes)
 
-1. "Quelles autres fonctionnalités aimeriez-vous voir sur notre nouveau site web ?"
+1. ""
 2. "Y a-t-il autre chose que vous aimeriez partager sur l'amélioration de l'accessibilité des sites web ?"
 3. "Seriez-vous intéressé(e) à tester notre nouvelle conception de site web ?"
 
 **Remercier le participant et fournir les coordonnées pour le suivi**
     __________  
-## Protocole Post-Entretien
+## Protocole post-entretien
 - Revoir et organiser les notes
 - Documenter les problèmes techniques
 - Identifier les tendances et points critiques
 - Sauvegarder les enregistrements
 - Planifier les suivis
 
-## Directives d'Analyse des Données
+## Directives d'analyse des données
 - Transcrire et coder les entretiens
 - Identifier les problèmes prioritaires
 - Documenter les exigences d'accessibilité
