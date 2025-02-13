@@ -28,4 +28,4 @@ Ce document regroupe divers éléments d'analyse et de recommandations pour le s
 
 5. **Protocole d'entretien**  
    Guide détaillé pour la conduite d'entretiens avec les utilisateurs. Ce protocole permet de recueillir des retours précieux sur l’expérience utilisateur et l’accessibilité du site, afin d’orienter les améliorations futures.  
-   - **Fichier :** [interview_protocol.md](interview_protocol.md)
+   - **Fichier :** [interview_protocol.md](interview/protocol.md)
