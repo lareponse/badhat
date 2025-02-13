@@ -37,8 +37,7 @@
 4. Établir la méthode de communication préférée
 5. Confirmer l'accord pour l'enregistrement/prise de notes
 
-### [Profil Démographique et Contexte](interview_demographics.md)
-
+### [Profil Démographique et Contexte](interview_demographics.md) (5 minutes)
 
 ### Questions de Contexte (10 minutes)
 1. "Comment accédez-vous généralement à Internet ? (Types d'appareils, technologies d'assistance)"
@@ -64,7 +63,7 @@
    - Recevoir des mises à jour ou notifications ?
    - Contacter le personnel de l'organisation ?"
 
-### Discussion sur les Fonctionnalités Spécifiques (20 minutes)
+### [Discussion sur les Fonctionnalités Spécifiques](interview_group_questions.md) (20 minutes)
 1. **Pour le contenu multimédia :**
    - "Comment préférez-vous consommer le contenu vidéo ?"
    - "Qu'est-ce qui rend les sous-titres utiles ou inutiles ?"
