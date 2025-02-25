@@ -1,4 +1,3 @@
-# Étude pour la refonte du site web de l'Institut Royal des Sourds et Aveugles
 
 ## **Questionnaire sur l’Utilisation et l’Accessibilité du Web**
 - [ ] Je reponds pour moi même
@@ -92,3 +91,8 @@
   - [ ] **Autre (précisez) :**
 - [ ] **Autre** (précisez) :
 - [ ] **Je préfère ne pas répondre**
+
+
+
+
+
