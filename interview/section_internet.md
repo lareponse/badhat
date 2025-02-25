@@ -1,4 +1,3 @@
-# Questionnaire sur l’Utilisation et l’Accessibilité du Web
 
 ## Partie 1 : Utilisation d’Internet (quanti)
 
@@ -11,8 +10,6 @@
 
 **Quels technologies assistives utilisez-vous?**
 [Liste des technologies assistives](assistive_technologies.md)
-
-
 
 **Combien de temps passez-vous en moyenne sur Internet par jour ?**  
 - [ ] Moins d'1 heure  
