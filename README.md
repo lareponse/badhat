@@ -194,6 +194,67 @@ No builder for DELETE. Ever.
 
 ---
 
+## Authentication & Access Control: SQLite
+
+ADDBAD uses **SQLite exclusively for authentication and ACL**.
+
+No ORM. No user model. No session.  
+Just raw SQL, a small database file, and signed cookies.
+
+---
+
+### Why SQLite?
+
+Because it's:
+
+- Secure by design (no network surface)
+- Durable (ACID-compliant, file-backed)
+- Simple (one file, one schema)
+- Not used for anything else
+
+No business data. No CMS.  
+Only auth. Only access control.
+
+---
+
+### How it works
+
+- `users.sqlite` stores usernames and password hashes
+- Authentication is read-only and stateless
+- `auth_token()` creates an HMAC-signed cookie
+- `validate_token()` parses and verifies it
+- `current_user()` gives you the username
+- ACL logic is yours to define (flat file, function, roles)
+
+---
+
+### No writes during login
+
+Login reads from `users.sqlite`. That's it.
+
+Log entries go elsewhere:
+
+- `auth.log` (flat text file)
+- or `logs.sqlite` (write-only, optional)
+
+This avoids database locking and keeps your system responsive under concurrent access.
+
+---
+
+### TL;DR
+
+| Purpose         | SQLite Used? |
+|-----------------|---------------|
+| Login auth      | Yes           |
+| Password hashes | Yes           |
+| Role/ACL checks | Yes (optional)|
+| Login logging   | No            |
+| App data        | No            |
+
+SQLite is your identity layer.  
+Nothing more. Nothing less.
+
+--- 
 ## License
 
 Use it, fork it, ignore it.
