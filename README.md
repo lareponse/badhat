@@ -8,7 +8,7 @@ No routing tables.
 No dependency injection.  
 No layers of abstraction you don’t need.
 
-It’s ~40 lines of core code that give you everything required to build real applications—and nothing you don’t ask for.
+It’s ~80 lines of core code that give you everything required to build real applications—and nothing you don’t ask for.
 
 ---
 
