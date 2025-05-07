@@ -117,23 +117,6 @@ ADDBAD is **not** for you if:
 
 ---
 
-## Project Structure
-
-```
-
-myapp/
-├─ public/                  ← Front controller
-│  └─ index.php
-├─ src/                     ← Core functions
-│  └─ core.php
-├─ app/
-│  ├─ controller/public/    ← Controllers (auto-dispatched)
-│  └─ view/                 ← Templates (layout + partials)
-
-````
-
----
-
 ## Routing
 
 - URL `/foo/bar/123` maps to:
@@ -253,6 +236,104 @@ This avoids database locking and keeps your system responsive under concurrent a
 
 SQLite is your identity layer.  
 Nothing more. Nothing less.
+
+---
+
+## Multiple Fronts: Public vs Secure
+
+Every real application has two surfaces:
+
+- **Public** — what everyone sees
+- **Secure** — what only authorized users should access
+
+ADDBAD doesn’t treat your secure interface like a plugin or sub-framework.  
+It’s just another controller directory—with structure and protection you define.
+
+---
+
+### File layout
+```
+addbad-app/
+├── app/
+│   ├── controller/
+│   │   ├── public/          # Public routes (open)
+│   │   │   ├── home.php     # function home($req)
+│   │   │   └── about.php
+│   │   └── secure/          # Protected routes (auth checks inside)
+│   │       ├── dashboard.php
+│   │       └── users.php
+│   ├── view/                # Layouts, views, and partials
+│   │   ├── layout.php       # Default layout (uses $content)
+│   │   ├── secure-layout.php
+│   │   ├── home.php
+│   │   ├── about.php
+│   │   └── _footer.php      # Partial: render('footer') → looks for _footer.php
+│   └── lib/                 # Helpers (auth.php, db.php, render.php, etc.)
+│       ├── auth.php
+│       ├── db.php
+│       ├── render.php
+│       ├── router.php
+│       └── slot.php
+├── db/
+│   ├── users.sqlite         # Auth-only SQLite DB
+│   └── logs.sqlite          # Optional write-only logs
+├── log/
+│   └── auth.log             # Flat file login activity (optional)
+├── public/                 # Web root
+│   ├── index.php            # Entry point
+│   ├── css/
+│   │   └── main.css
+│   └── js/
+│       └── app.js
+├── .env                     # Secrets and config
+├── .gitignore
+└── README.md
+```
+
+---
+
+### Protect the secure routes
+
+In any `controller/secure/*.php`:
+
+```php
+if (!is_authenticated()) {
+    return ['status' => 403, 'body' => 'Forbidden'];
+}
+```
+
+There is no middleware.
+No `@SecureOnly` decorator.
+No access config.
+If a route must be protected, **you protect it.**
+
+---
+
+### Secure layout
+
+If your secure interface has different structure, use:
+
+```php
+return render('secure/dashboard', ['user' => $user], layout: 'secure-layout');
+```
+
+No layout inheritance. No template engine. Just call the right file.
+
+---
+
+### TL;DR
+
+| Path                   | Controller File             | Notes              |
+| ---------------------- | --------------------------- | ------------------ |
+| `/about`               | `public/about.php`          | Open to all        |
+| `/secure/dashboard`    | `secure/dashboard.php`      | Must check auth    |
+| `/secure/users/edit/5` | `secure/users.php → edit()` | Enforce protection |
+
+This is ADDBAD's multi-surface architecture:
+**routing by structure, not by configuration.**
+
+`public/` is open.
+`secure/` is your responsibility.
 
 --- 
 ## License
