@@ -2,8 +2,9 @@
 
 **ADDBAD** is a micro-framework for PHP that refuses to pretend.
 
+No config.
 No classes.  
-No config.  
+No sessions.
 No routing tables.  
 No dependency injection.  
 No layers of abstraction you don’t need.
@@ -177,65 +178,20 @@ No builder for DELETE. Ever.
 
 ---
 
-## Authentication & Access Control: SQLite
+## Authentication & Access Control: Header-based
 
-ADDBAD uses **SQLite exclusively for authentication and ACL**.
+ADDBAD uses a **single HTTP header** for authentication and access control.
 
-No ORM. No user model. No session.  
-Just raw SQL, a small database file, and signed cookies.
+No login forms. No sessions. No cookie parsing. No database involved.  
+Just a signed reverse proxy or upstream service setting `X-AUTH-USER`, because it's:
+- Simple (one header, one identity)
+- Stateless (no session or DB lookup)
+- Flexible (can integrate with any SSO or auth provider)
+- Enforced upstream (reverse proxy, gateway, or load balancer)
 
----
-
-### Why SQLite?
-
-Because it's:
-
-- Secure by design (no network surface)
-- Durable (ACID-compliant, file-backed)
-- Simple (one file, one schema)
-- Not used for anything else
-
-No business data. No CMS.  
-Only auth. Only access control.
-
----
-
-### How it works
-
-- `users.sqlite` stores usernames and password hashes
-- Authentication is read-only and stateless
-- `auth_token()` creates an HMAC-signed cookie
-- `validate_token()` parses and verifies it
-- `current_user()` gives you the username
-- ACL logic is yours to define (flat file, function, roles)
-
----
-
-### No writes during login
-
-Login reads from `users.sqlite`. That's it.
-
-Log entries go elsewhere:
-
-- `auth.log` (flat text file)
-- or `logs.sqlite` (write-only, optional)
-
-This avoids database locking and keeps your system responsive under concurrent access.
-
----
-
-### TL;DR
-
-| Purpose         | SQLite Used? |
-|-----------------|---------------|
-| Login auth      | Yes           |
-| Password hashes | Yes           |
-| Role/ACL checks | Yes (optional)|
-| Login logging   | No            |
-| App data        | No            |
-
-SQLite is your identity layer.  
-Nothing more. Nothing less.
+Authentication is upstream.  
+ADDBAD trusts the header.
+This keeps your app fast, stateless, and focused.
 
 ---
 
