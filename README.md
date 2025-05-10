@@ -29,43 +29,29 @@ addbad is built on the belief that clarity, control, and constraint lead to bett
 
 ### Simplicity over abstraction
 
-- **No classes**  
+- **No classes, namespaces or autoloading**  
   Structure logic with directories and filenames. Not object hierarchies.
-
-- **No namespaces**
   If you need namespaces to avoid name collisions, your function names suck.
-
-- **No autoloading**  
   You use it, you include it. No composer. No magic. One line does the job.
-
----
 
 ### Routing is convention, not configuration
 
-- **No route registration**  
-  The URL `/user/show/42` maps to `user.php → show()`. That’s it.
-
-- **No middleware stack**  
+- **No routing tables or middleware stack**  
+  The URL `/user/show/42` maps to `user/show.php`. That’s it.
   You want code to run before something? Put it before it. Use the order of lines.
-
----
 
 ### No templating engines, ever
 
 - **No Blade, Twig, or template DSLs**  
-  PHP *is* your template engine. Use `render()`, `slot()`, `partial()`—nothing more.
+  PHP *is* your template engine. Use `render()`, `slot()`, `partial()` -nothing more.
 
 ---
 
 ### SQL is not the enemy
 
-- **No ORM**  
+- **No ORM, No SELECT builder, No DELETE helper**  
   SQL is a language. Respect it. Don’t wrap it in toys.
-
-- **No SELECT builder**  
   Writing a `SELECT` is not a problem. Stop pretending it is.
-
-- **No DELETE helper**  
   Destructive queries must be written by hand. If you automate `DELETE`, you don’t deserve root access.
 
 ---
