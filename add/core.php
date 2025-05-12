@@ -1,137 +1,171 @@
 <?php
 
+/**
+ * ADDBAD Core Routing & Dispatch
+ * Version: 1.2.0 (2025-05-12)
+ */
+
 declare(strict_types=1);
-define('SITE_ROOT', __DIR__ . '/../');
+
+// Maximum URL segments used for routing (extras become handler args)
+if (!defined('MAX_ROUTE_SEGMENTS')) {
+    define('MAX_ROUTE_SEGMENTS', 3);
+}
 
 /**
- * Phase 1: Find which file to run and what args to pass.
- * Returns either:
- *   - ['handler'=>string, 'args'=>array]
- *   - ['status'=>int, 'body'=>string] for 404 or scaffold
+ * Phase 1: Resolve handler file and args
+ *
+ * @param string $route_root Absolute path to the routes directory
+ * @return array ['handler' => string, 'args' => array, 'root' => string] or ['status'=>int,'body'=>string]
  */
 function route(string $route_root): array
 {
-    $segs = [];
+    // Extract and clean path
+    $path = $_SERVER['REQUEST_URI'] ?? '';
+    $raw  = urldecode(parse_url($path, PHP_URL_PATH) ?? '');
 
-    if (isset($_SERVER['REQUEST_URI'])) {
-        $_ = urldecode(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH));
-
-        if (preg_match('#(\.\.|[\\/]\.)#', $_)) {
-            return ['status' => 403, 'body' => 'directory traversal detected'];
-        }
-
-        
-        $_ = preg_replace('#/+#', '/', trim($_, '/')); //trim leading/trailing/consecutives slashes
-        $segs = explode('/', $_);
+    if (preg_match('#(\.{2}|[\\/]\.)#', $raw)) {
+        return ['status' => 403, 'body' => 'directory traversal'];
     }
 
+    $clean = preg_replace('#/+#', '/', trim($raw, '/'));
+    $segs  = $clean === '' ? ['home'] : explode('/', $clean);
+
+    // Whitelist each segment
+    foreach ($segs as $seg) {
+        if (!preg_match('/^[a-z0-9_\-]+$/', $seg)) {
+            return ['status' => 400, 'body' => 'Bad Request'];
+        }
+    }
+
+    // Build candidate list (deepest-first) using up to MAX_ROUTE_SEGMENTS
+    $limit      = min(count($segs), MAX_ROUTE_SEGMENTS);
     $candidates = [];
-    if (empty($segs)) {
-        $segs = ['home'];
-    } else {
-        $cur = '';
-        foreach ($segs as $depth => $seg) {
+    $cur        = '';
 
-            if ($seg === '..' || $seg === '.') {
-                return ['status' => 400, 'body' => 'Bad Request'];
-            }
-            $cur .= '/' . $seg;
-            $candidates[$depth] = $route_root . $cur . '.php';
-        }
-        // try deepest first
-        $candidates = array_reverse($candidates, true);
+    for ($i = 0; $i < $limit; $i++) {
+        $cur .= '/' . $segs[$i];
+        $candidates[$i] = $route_root . $cur . '.php';
     }
-    // build candidate files keyed by depth
 
+    krsort($candidates);
+
+    // Find matching handler
     foreach ($candidates as $depth => $file) {
         if (file_exists($file)) {
-            return [
-                'handler' => $file,
-                'args'    => array_slice($segs, $depth + 1),
-            ];
+            $real = realpath($file) ?: '';
+            if (strpos($real, realpath($route_root)) === 0) {
+                $args = array_slice($segs, $depth + 1);
+                return ['handler' => $real, 'args' => $args, 'root' => realpath($route_root)];
+            }
         }
     }
 
-    // missing route → scaffold or 404
-    // if (getenv('DEV_MODE')) {
-    scaffold($segs);
-    // }
+    // Route missing
+    if (getenv('DEV_MODE')) {
+        return scaffold($segs, $route_root);
+    }
     return ['status' => 404, 'body' => 'Not Found'];
 }
 
 /**
- * Phase 2: Execute prepares, handler, then concludes.
- * Consumes the array returned by route().
+ * Phase 2: Dispatch prepare hooks, handler, then conclude hooks
+ *
+ * @param array $info ['handler','args','root']
+ * @return array
  */
 function handle(array $info): array
 {
-    // early response
     if (isset($info['status'])) {
         return $info;
     }
 
-    $base    = SITE_ROOT . '/app/routes';
-    $handler = $info['handler'];
-    $args    = $info['args'];
+    $base     = $info['root'];
+    $handler  = $info['handler'];
+    $args     = $info['args'];
 
-    // derive segments/depth route_root handler path
-    $rel     = substr($handler, strlen($base) + 1);         // "foo/bar/baz.php"
-    $parts   = explode('/', dirname($rel));                 // ['foo','bar']
-    $curDir  = $base;
+    // Determine hook directories relative to base
+    $rel       = substr($handler, strlen($base) + 1);
+    $parts     = explode('/', dirname($rel));
+    $curDir    = $base;
     $concludes = [];
 
-    // run prepare.php (and collect conclude.php) at each level
+    // Prepare and collect conclude hooks
     foreach ($parts as $seg) {
         $curDir .= '/' . $seg;
 
-        // prepare hook
-        $fn = @include $curDir . '/prepare.php';
-        if (is_callable($fn) && ($res = $fn())) {
-            return $res;
+        $_ = $curDir . '/prepare.php';
+        if (file_exists($_)) {
+            ob_start();
+            $fn = include $_;
+            ob_end_clean();
+            if (is_callable($fn) && $res = $fn()) {
+                return $res;
+            }
         }
 
-        // conclude hook → collect
-        $fn2 = @include $curDir . '/conclude.php';
-        if (is_callable($fn2)) {
-            $concludes[] = $fn2;
+        $_ = $curDir . '/conclude.php';
+        if (file_exists($_)) {
+            ob_start();
+            $fn2 = include $_;
+            ob_end_clean();
+            if (is_callable($fn2)) {
+                $concludes[] = $fn2;
+            }
         }
     }
 
-    // invoke route handler
+    // Handler
     $fn = require $handler;
     if (!is_callable($fn)) {
         return ['status' => 500, 'body' => 'Invalid route handler'];
     }
     $res = $fn(...$args);
 
-    // run conclude hooks in reverse
-    foreach (array_reverse($concludes) as $fin) {
-        $res = $fin($res);
+    // Run conclude hooks in reverse
+    foreach (array_reverse($concludes) as $finish) {
+        $res = $finish($res);
     }
 
     return $res;
 }
 
 /**
- * Send the final response.
+ * Scaffold for missing routes (DEV_MODE only)
+ */
+function scaffold(array $parts, string $route_root): array
+{
+    $path       = implode('/', $parts);
+    $limit      = min(count($parts), MAX_ROUTE_SEGMENTS);
+    $routeSegs  = array_slice($parts, 0, $limit);
+    $handlerArgs = array_slice($parts, $limit);
+    $routePath  = implode('/', $routeSegs) ?: 'home';
+
+    $body  = "<pre>Missing route: /$path\n\n";
+    $body .= "Create route file: $route_root/$routePath.php\n\n";
+    $body .= htmlspecialchars("<?php
+return function (...\$args) {
+    return ['status' => 200, 'body' => __FILE__];
+};");
+    $body .= "\n\n";
+    $body .= "Expected argument values: function(" . htmlspecialchars(json_encode($handlerArgs)) . ")";
+    $body .= "</pre>";
+
+    return ['status' => 404, 'body' => $body];
+}
+
+/**
+ * Send response with security headers
  */
 function respond(array $res): void
 {
     http_response_code($res['status'] ?? 200);
+    header('X-Frame-Options: DENY');
+    header('X-Content-Type-Options: nosniff');
+    header("Content-Security-Policy: default-src 'self'");
+
     foreach ($res['headers'] ?? [] as $h => $v) {
         header("$h: $v");
     }
     echo $res['body'] ?? '';
-}
-
-
-function scaffold(array $parts): void
-{
-    $path = implode('/', $parts);
-    $sig  = implode(', ', array_map(fn($n) => "\$arg$n", range(1, count($parts) - 1)));
-
-    echo nl2br("Missing route: /$path\n\n");
-    echo nl2br("Create file:\n  /routes/$path.php\n\n");
-    echo nl2br("return function ($sig) {\n    return 'not implemented';\n};\n");
-    exit;
 }
