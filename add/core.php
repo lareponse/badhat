@@ -2,7 +2,7 @@
 
 /**
  * ADDBAD Core Routing & Dispatch
- * Version: 1.2.0 (2025-05-12)
+ * Version: 1.2.5 (2025-05-12)
  */
 
 declare(strict_types=1);
@@ -13,38 +13,28 @@ if (!defined('MAX_ROUTE_SEGMENTS')) {
 }
 
 /**
- * Phase 1: Resolve handler file and args
- *
  * @param string $route_root Absolute path to the routes directory
- * @return array ['handler' => string, 'args' => array, 'root' => string] or ['status'=>int,'body'=>string]
+ * @return array ['handler' => string, 'args' => array, 'root' => string] or exits with status+message
  */
 function route(string $route_root): array
 {
-    // Extract and clean path
-    $segs = [];
+    $path = $_SERVER['REQUEST_URI'] ?? 'home';
+    $raw  = urldecode(parse_url($path, PHP_URL_PATH) ?? '');
 
-    if (!empty($_SERVER['REQUEST_URI'])) {
-        
-        $raw  = urldecode(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) ?? '');
-
-        if (preg_match('#(\.{2}|[\\/]\.)#', $raw)) {
-            return ['status' => 403, 'body' => 'directory traversal'];
-        }
-
-        $clean = preg_replace('#/+#', '/', trim($raw, '/'));
-        if ($clean !== '') {
-            $segs = explode('/', $clean);
-            // Whitelist each segment
-            foreach ($segs as $seg) {
-                if (!preg_match('/^[a-z0-9_\-]+$/', $seg)) {
-                    return ['status' => 400, 'body' => 'Bad Request'];
-                }
-            }
-        }
+    // Basic traversal check
+    if (preg_match('#(\.{2}|[\/]\.)#', $raw)) {
+        exit('403 Forbidden');
     }
 
-    if (empty($segs)) {
-        $segs = ['home'];
+    // Normalize and split segments
+    $clean = preg_replace('#/+#', '/', trim($raw, '/'));
+    $segs  = $clean === '' ? ['home'] : explode('/', $clean);
+
+    // Whitelist each segment
+    foreach ($segs as $seg) {
+        if (!preg_match('/^[a-z0-9_\-]+$/', $seg)) {
+            exit(sprintf('400 Invalid Segment /%s/', $seg));
+        }
     }
 
     // Build candidate list (deepest-first) using up to MAX_ROUTE_SEGMENTS
@@ -56,7 +46,6 @@ function route(string $route_root): array
         $cur .= '/' . $segs[$i];
         $candidates[$i] = $route_root . $cur . '.php';
     }
-
     krsort($candidates);
 
     // Find matching handler
@@ -65,30 +54,30 @@ function route(string $route_root): array
             $real = realpath($file) ?: '';
             if (strpos($real, realpath($route_root)) === 0) {
                 $args = array_slice($segs, $depth + 1);
-
                 return ['handler' => $real, 'args' => $args, 'root' => realpath($route_root)];
             }
         }
     }
 
-    // Route missing
+    // Route missing (DEV_MODE only)
     if (getenv('DEV_MODE')) {
         return scaffold($segs, $route_root, $candidates);
     }
 
-    return ['status' => 404, 'body' => 'Not Found'];
+    exit('404 Not Found');
 }
 
 /**
  * Phase 2: Dispatch prepare hooks, handler, then conclude hooks
  *
  * @param array $info ['handler','args','root']
- * @return array
+ * @return array or exits with status+message
  */
 function handle(array $info): array
 {
+    // Early exit on scaffold or errors from route()
     if (isset($info['status'])) {
-        return $info;
+        exit($info['status'] . ' ' . ($info['body'] ?? ''));
     }
 
     $base     = $info['root'];
@@ -105,37 +94,46 @@ function handle(array $info): array
     foreach ($parts as $seg) {
         $curDir .= '/' . $seg;
 
-        $_ = $curDir . '/prepare.php';
-        if (file_exists($_)) {
-            ob_start();
-            $fn = include $_;
-            ob_end_clean();
-            if (is_callable($fn) && $res = $fn()) {
-                return $res;
+        $prepFile = $curDir . '/prepare.php';
+        if (file_exists($prepFile)) {
+            $fn = silent_include($prepFile);
+            if (!is_callable($fn)) {
+                exit("500 Invalid prepare hook at $prepFile");
+            }
+            $res = $fn();
+            if (is_array($res)) {
+                exit(
+                    ($res['status'] ?? 500) . ' ' .
+                    ($res['body']   ?? ''));
             }
         }
 
-        $_ = $curDir . '/conclude.php';
-        if (file_exists($_)) {
-            ob_start();
-            $fn2 = include $_;
-            ob_end_clean();
-            if (is_callable($fn2)) {
-                $concludes[] = $fn2;
+        $concFile = $curDir . '/conclude.php';
+        if (file_exists($concFile)) {
+            $fn2 = silent_include($concFile);
+            if (!is_callable($fn2)) {
+                exit("500 Invalid conclude hook at $concFile");
             }
+            $concludes[] = $fn2;
         }
     }
 
     // Handler
-    $fn = require $handler;
+    $fn = silent_include($handler);
     if (!is_callable($fn)) {
-        return ['status' => 500, 'body' => 'Invalid route handler'];
+        exit('500 Invalid route handler');
     }
     $res = $fn(...$args);
+    if (!is_array($res)) {
+        exit('500 Handler did not return response array');
+    }
 
     // Run conclude hooks in reverse
     foreach (array_reverse($concludes) as $finish) {
         $res = $finish($res);
+        if (!is_array($res)) {
+            exit('500 Conclude hook did not return response array');
+        }
     }
 
     return $res;
@@ -179,3 +177,54 @@ function respond(array $res): void
     }
     echo $res['body'] ?? '';
 }
+
+/**
+ * Silently include a PHP file: suppress warnings and any output.
+ *
+ * @param string $file
+ * @return mixed
+ */
+function silent_include(string $file)
+{
+    if (!is_readable($file)) {
+        return null;
+    }
+    ob_start();
+    /** @noinspection PhpIncludeInspection */
+    $result = @include $file;
+    ob_end_clean();
+    return $result;
+}
+
+
+register_shutdown_function(function () {
+    $output = ob_get_clean();
+    // if it looks like "### Message...", use that as status + body
+    if (preg_match('/^(\d{3})\s+(.+)/s', $output, $m)) {
+        respond([
+            'status' => (int) $m[1],
+            'body'   => $m[2],
+        ]);
+    }
+    // otherwise, just output raw (you could also choose to swallow it)
+    else {
+        echo $output;
+    }
+});
+
+set_error_handler(function ($errno, $errstr, $errfile, $errline) {
+    // Ignore notices and warnings
+    if (error_reporting() === 0 || in_array($errno, [E_NOTICE, E_WARNING], true)) {
+        error_log(sprintf('%s in %s:%d', $errstr, $errfile, $errline));
+        return;
+    }
+    // Handle fatal errors
+    if (in_array($errno, [E_ERROR, E_PARSE], true)) {
+        exit(sprintf('500 %s in %s:%d', $errstr, $errfile, $errline));
+    }
+}, E_ALL);
+
+set_exception_handler(function ($e) {
+    // Handle uncaught exceptions
+    exit(sprintf('500 %s in %s:%d', $e->getMessage(), $e->getFile(), $e->getLine()));
+});
