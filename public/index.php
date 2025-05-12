@@ -2,17 +2,19 @@
 putenv('DEV_MODE=true');
 
 require '../add/core.php';
+require '../add/bad/ui.php';
 
 try{
     $response = handle(route(realpath(__DIR__ . '/../route')));
+    respond($response);
 }
 catch (Throwable $e) {
     // Handle the exception
-    $response = [
+    respond([
         'status' => 500,
         'body' => 'Internal Server Error: ' . $e->getMessage()
-    ];
+    ]);
 }
-finally {
-    respond($response);
-}
+
+
+
