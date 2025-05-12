@@ -3,12 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title><?= implode(' | ', slot('title')); ?></title>
 </head>
 <body>
-    
-<?php
-echo implode(slot('content'));
-?>
+    <?= implode(slot('content')); ?>
 </body>
 </html>
