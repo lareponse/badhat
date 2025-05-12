@@ -1,8 +1,10 @@
 <?php
+putenv('DEV_MODE=true');
+
 require '../add/core.php';
 
 try{
-    $response = handle(route(__DIR__ . '/route'));
+    $response = handle(route(realpath(__DIR__ . '/../route')));
 }
 catch (Throwable $e) {
     // Handle the exception
