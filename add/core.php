@@ -21,21 +21,30 @@ if (!defined('MAX_ROUTE_SEGMENTS')) {
 function route(string $route_root): array
 {
     // Extract and clean path
-    $path = $_SERVER['REQUEST_URI'] ?? '';
-    $raw  = urldecode(parse_url($path, PHP_URL_PATH) ?? '');
+    $segs = [];
 
-    if (preg_match('#(\.{2}|[\\/]\.)#', $raw)) {
-        return ['status' => 403, 'body' => 'directory traversal'];
+    if (!empty($_SERVER['REQUEST_URI'])) {
+        
+        $raw  = urldecode(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) ?? '');
+
+        if (preg_match('#(\.{2}|[\\/]\.)#', $raw)) {
+            return ['status' => 403, 'body' => 'directory traversal'];
+        }
+
+        $clean = preg_replace('#/+#', '/', trim($raw, '/'));
+        if ($clean !== '') {
+            $segs = explode('/', $clean);
+            // Whitelist each segment
+            foreach ($segs as $seg) {
+                if (!preg_match('/^[a-z0-9_\-]+$/', $seg)) {
+                    return ['status' => 400, 'body' => 'Bad Request'];
+                }
+            }
+        }
     }
 
-    $clean = preg_replace('#/+#', '/', trim($raw, '/'));
-    $segs  = $clean === '' ? ['home'] : explode('/', $clean);
-
-    // Whitelist each segment
-    foreach ($segs as $seg) {
-        if (!preg_match('/^[a-z0-9_\-]+$/', $seg)) {
-            return ['status' => 400, 'body' => 'Bad Request'];
-        }
+    if (empty($segs)) {
+        $segs = ['home'];
     }
 
     // Build candidate list (deepest-first) using up to MAX_ROUTE_SEGMENTS
@@ -56,6 +65,7 @@ function route(string $route_root): array
             $real = realpath($file) ?: '';
             if (strpos($real, realpath($route_root)) === 0) {
                 $args = array_slice($segs, $depth + 1);
+
                 return ['handler' => $real, 'args' => $args, 'root' => realpath($route_root)];
             }
         }
@@ -63,8 +73,9 @@ function route(string $route_root): array
 
     // Route missing
     if (getenv('DEV_MODE')) {
-        return scaffold($segs, $route_root);
+        return scaffold($segs, $route_root, $candidates);
     }
+
     return ['status' => 404, 'body' => 'Not Found'];
 }
 
@@ -133,7 +144,7 @@ function handle(array $info): array
 /**
  * Scaffold for missing routes (DEV_MODE only)
  */
-function scaffold(array $parts, string $route_root): array
+function scaffold(array $parts, string $route_root, array $candidates): array
 {
     $path       = implode('/', $parts);
     $limit      = min(count($parts), MAX_ROUTE_SEGMENTS);
@@ -142,13 +153,12 @@ function scaffold(array $parts, string $route_root): array
     $routePath  = implode('/', $routeSegs) ?: 'home';
 
     $body  = "<pre>Missing route: /$path\n\n";
-    $body .= "Create route file: $route_root/$routePath.php\n\n";
-    $body .= htmlspecialchars("<?php
-return function (...\$args) {
-    return ['status' => 200, 'body' => __FILE__];
-};");
+    $body .= "Choose route file to create:\n";
+    $body .= implode("\n", array_map(fn($f) => "  $f", $candidates)) . "\n\n";
+    $body .= "And add code: \n\n";
+    $body .= htmlspecialchars("<?php\n\nreturn function (...\$args) {\n\treturn ['status' => 200, 'body' => __FILE__];\n};");
     $body .= "\n\n";
-    $body .= "Expected argument values: function(" . htmlspecialchars(json_encode($handlerArgs)) . ")";
+    $body .= "Expected arguments with this query: function(" . htmlspecialchars(json_encode($handlerArgs)) . ")";
     $body .= "</pre>";
 
     return ['status' => 404, 'body' => $body];
