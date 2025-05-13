@@ -5,7 +5,7 @@ require '../add/core.php';
 require '../add/bad/ui.php';
 
 try{
-    $response = handle(route(realpath(__DIR__ . '/../route')));
+    $response = handle(route(realpath(__DIR__ . '/../app/route')));
     respond($response);
 }
 catch (Throwable $e) {
