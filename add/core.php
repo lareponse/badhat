@@ -18,7 +18,7 @@ function route(string $route_root): array
 
     // Basic traversal check
     if (preg_match('#(\.{2}|[\/]\.)#', $raw)) {
-        exit('403 Forbidden: Path Traversal');
+        trigger_error('403 Forbidden: Path Traversal', E_USER_ERROR);
     }
 
     // Normalize and split segments
@@ -30,13 +30,13 @@ function route(string $route_root): array
     // Whitelist each segment and build candidate list
     foreach ($segs as $seg) {
         if (!preg_match('/^[a-z0-9_\-]+$/', $seg)) {
-            exit('400 Bad Request: Invalid Segment ' . sprintf('/%s/', $seg));
+            trigger_error('400 Bad Request: Invalid Segment ' . sprintf('/%s/', $seg), E_USER_ERROR);
         }
 
         $cur .= '/' . $seg;
         $candidates[] = $route_root . $cur . '.php';
     }
-    
+
     // Find matching handler, deepth-first
     krsort($candidates);
     foreach ($candidates as $depth => $file) {
@@ -46,8 +46,7 @@ function route(string $route_root): array
                 $args = array_slice($segs, $depth + 1);
                 return ['handler' => $real, 'args' => $args, 'root' => realpath($route_root)];
             }
-        }
-        else $candidates[$depth] = ['handler' => $file, 'args' => array_slice($segs, $depth + 1), 'root' => realpath($route_root)];
+        } else $candidates[$depth] = ['handler' => $file, 'args' => array_slice($segs, $depth + 1), 'root' => realpath($route_root)];
     }
 
     // Route missing (DEV_MODE only)
@@ -55,7 +54,7 @@ function route(string $route_root): array
         return scaffold($path, $route_root, $candidates);
     }
 
-    exit('404 Not Found');
+    trigger_error('404 Not Found', E_USER_ERROR);
 }
 
 /**
@@ -68,9 +67,10 @@ function handle(array $info): array
 {
     // Early exit on scaffold or errors from route()
     if (isset($info['status'])) {
-        exit($info['status'] . ' ' . ($info['body'] ?? ''));
+        trigger_error($info['status'] . ' ' . ($info['body'] ?? ''), E_USER_ERROR);
     }
 
+    var_dump($info);
     $base     = $info['root'];
     $handler  = $info['handler'];
     $args     = $info['args'];
@@ -92,45 +92,37 @@ function handle(array $info): array
         // 1) prepare hook
         $prepFile = $dir . '/prepare.php';
         if (file_exists($prepFile)) {
-            $fn = silent_include($prepFile);
-            if (!is_callable($fn)) {
-                exit("500 Invalid prepare hook at $prepFile");
-            }
-            $res = $fn();
+            $res = summon($prepFile)();
             if (is_array($res)) {
                 // short-circuit if prepare returned a full response
-                exit(
+                trigger_error(
                     ($res['status'] ?? 500) . ' ' .
-                    ($res['body']   ?? ''));
+                        ($res['body']   ?? ''),
+                    E_USER_ERROR
+                );
             }
         }
 
         // 2) collect conclude hook
         $concFile = $dir . '/conclude.php';
         if (file_exists($concFile)) {
-            $fn2 = silent_include($concFile);
-            if (!is_callable($fn2)) {
-                exit("500 Invalid conclude hook at $concFile");
-            }
+            $fn2 = summon($concFile);
             $concludes[] = $fn2;
         }
     }
 
     // 3) handler itself
-    $fn = silent_include($handler);
-    if (!is_callable($fn)) {
-        exit('500 Invalid route handler');
-    }
+    $fn = summon($handler);
     $res = $fn(...$args);
     if (!is_array($res)) {
-        exit('500 Handler did not return response array');
+        trigger_error('500 Handler did not return response array', E_USER_ERROR);
     }
 
     // 4) run conclude hooks in reverse order
     foreach (array_reverse($concludes) as $finish) {
         $res = $finish($res);
         if (!is_array($res)) {
-            exit('500 Conclude hook did not return response array');
+            trigger_error('500 Conclude hook did not return response array', E_USER_ERROR);
         }
     }
 
@@ -159,20 +151,25 @@ function scaffold(string $path, string $route_root, array $candidates): array
     return ['status' => 404, 'body' => $body];
 }
 
+function response(int $http_code, string $body, array $http_headers = []): array
+{
+    return [
+        'status'  => $http_code,
+        'body'    => $body,
+        'headers' => $http_headers,
+    ];
+}
 /**
  * Send response with security headers
  */
-function respond(array $res): void
+function respond(array $http): void
 {
-    http_response_code($res['status'] ?? 200);
-    header('X-Frame-Options: DENY');
-    header('X-Content-Type-Options: nosniff');
-    header("Content-Security-Policy: default-src 'self'");
+    http_response_code($http['status'] ?? 200);
 
-    foreach ($res['headers'] ?? [] as $h => $v) {
+    foreach ($http['headers'] ?? [] as $h => $v) {
         header("$h: $v");
     }
-    echo $res['body'] ?? '';
+    echo $http['body'] ?? '';
 }
 
 /**
@@ -181,47 +178,34 @@ function respond(array $res): void
  * @param string $file
  * @return mixed
  */
-function silent_include(string $file)
+function summon(string $file): ?callable
 {
     if (!is_readable($file)) {
         return null;
     }
     ob_start();
     /** @noinspection PhpIncludeInspection */
-    $result = @include $file;
+    $callable = @include $file;
     ob_end_clean();
-    return $result;
+
+    if (!is_callable($callable)) {
+        trigger_error("500 Invalid Callable in $file", E_USER_ERROR);
+    }
+    return $callable;
 }
 
+set_error_handler(function (int $errno, string $errstr): bool {
+    if ($errno !== E_USER_ERROR)
+        return false; // let PHP (or another handler) deal with notices, warnings, etc.
 
-register_shutdown_function(function () {
-    $output = ob_get_clean();
-    // if it looks like "### Message...", use that as status + body
-    if (preg_match('/^(\d{3})\s+(.+)/s', $output, $m)) {
-        respond([
-            'status' => (int) $m[1],
-            'body'   => $m[2],
-        ]);
-    }
-    // otherwise, just output raw (you could also choose to swallow it)
-    else {
-        echo $output;
-    }
+    // expecting "$status $body…"
+    preg_match('/^([1-5]\d{2})\s+(.*)$/s', $errstr, $m)
+        ? respond(['status' => (int)$m[1], 'body' => $m[2]])
+        : respond(['status' => 500, 'body' => $errno . ': ' . $errstr]);
+    
+    exit;
 });
 
-set_error_handler(function ($errno, $errstr, $errfile, $errline) {
-    // Ignore notices and warnings
-    if (error_reporting() === 0 || in_array($errno, [E_NOTICE, E_WARNING], true)) {
-        error_log(sprintf('%s in %s:%d', $errstr, $errfile, $errline));
-        return;
-    }
-    // Handle fatal errors
-    if (in_array($errno, [E_ERROR, E_PARSE], true)) {
-        exit(sprintf('500 %s in %s:%d', $errstr, $errfile, $errline));
-    }
-}, E_ALL);
-
 set_exception_handler(function ($e) {
-    // Handle uncaught exceptions
-    exit(sprintf('500 %s in %s:%d', $e->getMessage(), $e->getFile(), $e->getLine()));
+    trigger_error(sprintf('500 Uncaught Exception: %s in %s:%d', $e->getMessage(), $e->getFile(), $e->getLine()), E_USER_ERROR);
 });
