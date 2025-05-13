@@ -30,7 +30,7 @@ function route(string $route_root): array
     // Whitelist each segment and build candidate list
     foreach ($segs as $seg) {
         if (!preg_match('/^[a-z0-9_\-]+$/', $seg)) {
-            exit(sprintf('400 Bad Request: Invalid Segment /%s/', $seg));
+            exit('400 Bad Request: Invalid Segment ' . sprintf('/%s/', $seg));
         }
 
         $cur .= '/' . $seg;
@@ -75,33 +75,38 @@ function handle(array $info): array
     $handler  = $info['handler'];
     $args     = $info['args'];
 
-    // Determine hook directories relative to base
-    $rel       = substr($handler, strlen($base) + 1);
-    $parts     = explode('/', dirname($rel));
-    $curDir    = $base;
-    $concludes = [];
+    // Figure out the path segments under $base
+    $rel   = substr($handler, strlen($base) + 1);
+    $parts = explode('/', $rel);
 
-    // Prepare and collect conclude hooks
+    // Build a list of all directories to check, starting with $base
+    $dirs = [$base];
+    $cur  = $base;
     foreach ($parts as $seg) {
-        $curDir .= '/' . $seg;
+        $cur .= '/' . $seg;
+        $dirs[] = $cur;
+    }
 
-        $prepFile = $curDir . '/prepare.php';
-        var_dump($prepFile, file_exists($prepFile));
+    $concludes = [];
+    foreach ($dirs as $dir) {
+        // 1) prepare hook
+        $prepFile = $dir . '/prepare.php';
         if (file_exists($prepFile)) {
             $fn = silent_include($prepFile);
-            var_dump($fn);
             if (!is_callable($fn)) {
                 exit("500 Invalid prepare hook at $prepFile");
             }
             $res = $fn();
             if (is_array($res)) {
+                // short-circuit if prepare returned a full response
                 exit(
                     ($res['status'] ?? 500) . ' ' .
                     ($res['body']   ?? ''));
             }
         }
 
-        $concFile = $curDir . '/conclude.php';
+        // 2) collect conclude hook
+        $concFile = $dir . '/conclude.php';
         if (file_exists($concFile)) {
             $fn2 = silent_include($concFile);
             if (!is_callable($fn2)) {
@@ -111,7 +116,7 @@ function handle(array $info): array
         }
     }
 
-    // Handler
+    // 3) handler itself
     $fn = silent_include($handler);
     if (!is_callable($fn)) {
         exit('500 Invalid route handler');
@@ -121,7 +126,7 @@ function handle(array $info): array
         exit('500 Handler did not return response array');
     }
 
-    // Run conclude hooks in reverse
+    // 4) run conclude hooks in reverse order
     foreach (array_reverse($concludes) as $finish) {
         $res = $finish($res);
         if (!is_array($res)) {
@@ -131,6 +136,7 @@ function handle(array $info): array
 
     return $res;
 }
+
 
 /**
  * Scaffold for missing routes (DEV_MODE only)
