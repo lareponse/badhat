@@ -7,11 +7,6 @@
 
 declare(strict_types=1);
 
-// Maximum URL segments used for routing (extras become handler args)
-if (!defined('MAX_ROUTE_SEGMENTS')) {
-    define('MAX_ROUTE_SEGMENTS', 3);
-}
-
 /**
  * @param string $route_root Absolute path to the routes directory
  * @return array ['handler' => string, 'args' => array, 'root' => string] or exits with status+message
@@ -29,26 +24,21 @@ function route(string $route_root): array
     // Normalize and split segments
     $clean = preg_replace('#/+#', '/', trim($raw, '/'));
     $segs  = $clean === '' ? ['home'] : explode('/', $clean);
-
-    // Whitelist each segment
-    foreach ($segs as $seg) {
-        if (!preg_match('/^[a-z0-9_\-]+$/', $seg)) {
-            exit(sprintf('400 Invalid Segment /%s/', $seg));
-        }
-    }
-
-    // Build candidate list (deepest-first) using up to MAX_ROUTE_SEGMENTS
-    $limit      = min(count($segs), MAX_ROUTE_SEGMENTS);
     $candidates = [];
     $cur        = '';
 
-    for ($i = 0; $i < $limit; $i++) {
-        $cur .= '/' . $segs[$i];
-        $candidates[$i] = $route_root . $cur . '.php';
-    }
-    krsort($candidates);
+    // Whitelist each segment and build candidate list
+    foreach ($segs as $seg) {
+        if (!preg_match('/^[a-z0-9_\-]+$/', $seg)) {
+            exit(sprintf('400 Bad Request: Invalid Segment /%s/', $seg));
+        }
 
-    // Find matching handler
+        $cur .= '/' . $seg;
+        $candidates[] = $route_root . $cur . '.php';
+    }
+    
+    // Find matching handler, deepth-first
+    krsort($candidates);
     foreach ($candidates as $depth => $file) {
         if (file_exists($file)) {
             $real = realpath($file) ?: '';
@@ -144,11 +134,7 @@ function handle(array $info): array
  */
 function scaffold(array $parts, string $route_root, array $candidates): array
 {
-    $path       = implode('/', $parts);
-    $limit      = min(count($parts), MAX_ROUTE_SEGMENTS);
-    $routeSegs  = array_slice($parts, 0, $limit);
-    $handlerArgs = array_slice($parts, $limit);
-    $routePath  = implode('/', $routeSegs) ?: 'home';
+    $path  = implode('/', $parts) ?: 'home';
 
     $body  = "<pre>Missing route: /$path\n\n";
     $body .= "Choose route file to create:\n";
