@@ -1,6 +1,6 @@
 # ADDBAD — A Procedural Micro-Framework for Serious Developers
 
-**ADDBAD** is not a framework. It’s a refusal.
+**ADDBAD** is not a framework. It's a refusal.
 
 A refusal of boilerplate.
 A refusal of magic.
@@ -18,7 +18,7 @@ That means:
 * No layers of abstraction
 
 All you need are **file systems**, **functions**, **arrays** and **conventions**.
-ADDBAD is \~80 lines of core code that give you everything required to build real applications—and nothing you don’t explicitly ask for.
+ADDBAD is \~200 lines of core code that give you everything required to build real applications—and nothing you don't explicitly ask for.
 
 ---
 
@@ -31,12 +31,12 @@ ADDBAD is \~80 lines of core code that give you everything required to build rea
   Use `require` directly—no Composer, no magic.
 
 * **No config files**
-  Define paths with `define()`. Manage secrets in `.env`. Be explicit.
+  Define paths with `define()`. Let your server keep your secrets. Be explicit.
 
 ### Routing is convention, not configuration
 
 * **Filesystem as router**
-  The URL `/user/show/42` maps to a file under `app/controller/user/show.php` (or `app/controller/user.php` with arguments).
+  The URL `/user/show/42` maps to a file under `app/route/user/show.php` (or `app/route/user.php` with arguments).
   No route registration, no middleware—if you want code to run first, put it first in the file.
 
 ### PHP as template engine
@@ -44,19 +44,18 @@ ADDBAD is \~80 lines of core code that give you everything required to build rea
 * **No Blade, Twig, JSX or template DSLs**
   PHP itself is your view layer. Use:
 
-  * `render('viewname', $data)`
-  * `partial('name', $data)` to load `_name.php`
-  * `slot($name, $value)` and `slot($name)` / `slots($name, $sep)` for injection points
+  * `render('viewname', $data, $layout)`
+  * `slot($name, $value)` and `slot($name)` / `implode(slot($name), $sep)` for injection points
 
 ### SQL is a first-class citizen
 
 * **No ORM, no SELECT builder, no DELETE helper**
   SQL is a language—respect it.
-  Automate only what’s repetitive:
+  Automate only what's repetitive:
 
   ```php
-  [$sql, $params] = qb_insert('table', ['a' => 1, 'b' => 2]);
-  [$sql, $params] = qb_update('table', ['a' => 1], 'id = ?', [42]);
+  $stmt = db_create('table', ['a' => 1, 'b' => 2]);
+  $stmt = db_update('table', ['a' => 1], 'id = ?', [42]);
   ```
 
   Write your `SELECT` and hand-craft your destructive `DELETE`.
@@ -64,7 +63,7 @@ ADDBAD is \~80 lines of core code that give you everything required to build rea
 ### No fake architecture
 
 * **No DI containers or service layers**
-  Include a file. Pass variables. Don’t summon frameworks or factories.
+  Include a file. Pass variables. Don't summon frameworks or factories.
 
 * **No meta-framework**
   ADDBAD is not a foundation for something bigger—it *is* the final product.
@@ -75,7 +74,7 @@ ADDBAD is \~80 lines of core code that give you everything required to build rea
 
 **Yes**, if:
 
-* You’d rather write 10 lines of clear code than configure a container.
+* You'd rather write 10 lines of clear code than configure a container.
 * You treat SQL as a language, not a leaky abstraction.
 * You believe the filesystem is a perfectly good routing mechanism.
 * You understand what `require` does—and that it's enough.
@@ -84,32 +83,37 @@ ADDBAD is \~80 lines of core code that give you everything required to build rea
 **No**, if:
 
 * You need framework magic or auto-generated classes.
-* You prefer “clean architecture” over readable code.
+* You prefer "clean architecture" over readable code.
 * You reach for `composer require` before writing a function.
 
 ---
 
-## Controllers & Routing
+## Routing & Request Handling
 
-There are no controllers—only files. Each route is a PHP file that **returns a closure**. That closure is passed the request and any URL-extracted arguments, and returns either:
+There are no controllers—only files. Each route is a PHP file that **returns a closure**. That closure is passed the URL-extracted arguments, and returns an array:
 
-* An HTML string, or
-* An array: `['status' => int, 'headers' => [], 'body' => string]`
+```php
+['status' => int, 'body' => string, 'headers' => []]
+```
 
 ### Route resolution
 
 A request to `/secure/users/edit/42` resolves by walking the directory:
 
-1. `app/controller/secure/users/edit.php`
-2. Or `app/controller/secure/users.php` with `edit`, `42` as args
-3. Or `app/controller/secure.php` with `users`, `edit`, `42`
+1. `app/route/secure/users/edit.php`
+2. Or `app/route/secure/users.php` with `edit`, `42` as args
+3. Or `app/route/secure.php` with `users`, `edit`, `42` as args
 
 That file looks like:
 
 ```php
 <?php
-return function ($req, $id) {
-    return render('users/edit', ['id' => $id]);
+return function ($id) {
+    // $id will be 42
+    return [
+        'status' => 200,
+        'body' => render('users/edit', ['id' => $id], 'layout')
+    ];
 };
 ```
 
@@ -123,19 +127,43 @@ You may add optional `prepare.php` and `conclude.php` files at any directory lev
 4. `secure/users/conclude.php`
 5. `secure/conclude.php`
 
-Each returns a closure. Use `prepare.php` for auth or setup, and `conclude.php` for logging or response mutation.
+Each returns a closure. The `prepare.php` files run before the handler in top-down order, and the `conclude.php` files run after the handler in bottom-up order.
+
+* Use `prepare.php` for auth or setup:
+  ```php
+  return function() {
+    if (!operator()) {
+        trigger_error('403 Forbidden', E_USER_ERROR);
+    }
+  };
+  ```
+
+* Use `conclude.php` for logging or response mutation:
+  ```php
+  return function($response) {
+    // Add logging, modify headers, etc.
+    return $response;
+  };
+  ```
+
+### Development Mode
+
+When `DEV_MODE` is enabled, missing routes will trigger the `scaffold()` function, which shows a list of candidate route files with template code to create them.
+
+```php
+putenv('DEV_MODE=true');
+```
 
 ---
 
 ## Views
 
-* **Render a view**: `render('viewname', $data)`
-* **Layout**: `layout.php` wraps your `$content`; swap in `secure-layout.php` if needed.
-* **Partials**: `partial('name', $data)` loads `_name.php`.
+* **Render a view**: `render('viewname', $data, $layout)`
+* **Layout**: Specified as the third parameter to `render()`
 * **Slots**:
-
-  * `slot('head', '<meta>')`
-  * `slot('head')` to retrieve last, or `slots('head', "\n")` to join all.
+  * `slot('head', '<meta>')` to push content to a slot
+  * `slot('head')` to retrieve slot values as array
+  * Use `implode(slot('head'), "\n")` to join slot values
 
 Use slots for injecting `<meta>`, scripts, toolbars, footers, etc.
 
@@ -143,50 +171,102 @@ Use slots for injecting `<meta>`, scripts, toolbars, footers, etc.
 
 ## Database Helpers
 
-No ORM—use PDO directly. Helpers only for repetitive `INSERT`/`UPDATE`:
+No ORM—use PDO directly. Helpers for common database operations:
 
 ```php
-[$sql, $params] = qb_insert('users', ['name' => $name, 'email' => $email]);
-[$sql, $params] = qb_update('posts', ['title' => $t], 'id = ?', [$postId]);
+// Get a PDO instance
+$pdo = db($dsn, $user, $pass);
+
+// Execute a prepared statement
+$stmt = db_state("SELECT * FROM users WHERE id = ?", [$id]);
+
+// Insert data
+$stmt = db_create('users', ['name' => $name, 'email' => $email]);
+
+// Update data
+$stmt = db_update('posts', ['title' => $t], 'id = ?', [$postId]);
+
+// Run operations in a transaction
+db_transaction(function() {
+    db_create(...);
+    db_update(...);
+    return true; // commit if true, rollback if false
+});
 ```
 
 Write your `SELECT`s and never automate `DELETE`.
 
 ---
 
-## Authentication & Access Control
+## Security
 
-ADDBAD uses a **single HTTP header** for auth:
+ADDBAD provides several security functions:
 
-* A reverse proxy or upstream sets `X-AUTH-USER`.
-* Your code trusts that header—no sessions, no cookies, no DB lookups in-app.
-* In `controller/secure/*.php`:
+### Authentication
 
-  ```php
-  if (!is_authenticated()) {
-      return ['status' => 403, 'body' => 'Forbidden'];
-  }
-  ```
-* Upstream enforcement makes your app fast, stateless, and focused.
+```php
+// Basic auth check
+if (!auth()) {
+    // Will trigger 401 Unauthorized error
+}
+
+// HMAC-verified auth
+$username = operator();
+if (!$username) {
+    // Invalid or missing auth
+}
+```
+
+Authentication requires:
+* `X-AUTH-USER` HTTP header
+* `X-AUTH-SIG` HTTP header for HMAC verification
+* `ADDBAD_AUTH_HMAC_SECRET` environment variable
+
+### CSRF Protection
+
+```php
+// Generate a token
+$token = csrf(); // Returns base64 string
+
+// Validate a token
+if (!csrf($_POST['csrf_token'])) {
+    trigger_error('403 Forbidden: Invalid CSRF', E_USER_ERROR);
+}
+```
+
+### Content Security Policy
+
+```php
+// Generate a nonce for scripts
+$nonce = csp_nonce();
+```
 
 ---
 
-## Multiple Fronts: Public vs Secure
+## Error Handling
 
-Every real app has two surfaces:
+ADDBAD uses custom error handling to convert errors to HTTP responses:
 
-* **Public**: open to all
-* **Secure**: only authorized users
+```php
+// Trigger a specific HTTP error
+trigger_error('404 Not Found', E_USER_ERROR);
 
-ADDBAD doesn’t treat secure as a plugin. It’s just another controller directory—protect routes by explicit code.
+// More detailed error
+trigger_error('400 Bad Request: Invalid input', E_USER_ERROR);
+```
 
-### File layout
+Exception handling is also implemented, converting uncaught exceptions to 500 responses.
+
+---
+
+## File Layout
 
 ```
 addbad-app/
 ├── add/
 │   ├── bad/
 │   │   ├── db.php
+│   │   ├── security.php
 │   │   └── ui.php
 │   └── core.php
 │
@@ -194,61 +274,39 @@ addbad-app/
 │   ├── render/
 │   └── route/
 │
-├── log/
-│   ├── access.log
-│   └── error.log
-│
 ├── public/
-│   ├── doc/
 │   ├── index.php
-│   ├── .htaccess
-│   └── js/app.js
-├── .gitignore
+│   └── .htaccess
+│
+├── .env
 └── README.md
 ```
 
-### Protecting secure routes
-
-In any `app/controller/secure/*.php`:
+### Entry Point (index.php)
 
 ```php
-if (!is_authenticated()) {
-    return ['status' => 403, 'body' => 'Forbidden'];
+<?php
+putenv('DEV_MODE=true'); // Optional for development
+
+require '../add/core.php';
+require '../add/bad/ui.php';
+require '../add/bad/security.php';
+
+try {
+    $response = handle(route(realpath(__DIR__ . '/../app/route')));
+    respond($response);
+} catch (Throwable $e) {
+    respond([
+        'status' => 500,
+        'body' => 'Internal Server Error: ' . $e->getMessage()
+    ]);
 }
 ```
-
-No annotations, no decorators—protect each route where needed.
-
-### Secure layout
-
-```php
-return render(
-    'secure/dashboard',
-    ['user' => $user],
-    layout: 'secure-layout'
-);
-```
-
-No template inheritance—just call the layout you need.
-
----
-
-## TL;DR
-
-| Path                   | Controller File           | Notes              |
-| ---------------------- | ------------------------- | ------------------ |
-| `/about`               | `public/about.php`        | Open to all        |
-| `/user/show/42`        | `public/user/show.php`    | Filesystem routing |
-| `/secure/dashboard`    | `secure/dashboard.php`    | Enforce auth       |
-| `/secure/users/edit/5` | `secure/users.php` → edit | Explicit args      |
-
-Routing by structure, not configuration.
-`public/` is open; `secure/` is your responsibility.
 
 ---
 
 ## License
 
-Use it, fork it, ignore it—just don’t automate `DELETE` and then blame the framework.
+Use it, fork it, ignore it—just don't automate `DELETE` and then blame the framework.
 
 Made with precision and refusal by **La Reponse**.
