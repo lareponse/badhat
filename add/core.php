@@ -18,7 +18,7 @@ function route(string $route_root): array
 
     // Basic traversal check
     if (preg_match('#(\.{2}|[\/]\.)#', $raw)) {
-        exit('403 Forbidden');
+        exit('403 Forbidden: Path Traversal');
     }
 
     // Normalize and split segments
@@ -47,11 +47,12 @@ function route(string $route_root): array
                 return ['handler' => $real, 'args' => $args, 'root' => realpath($route_root)];
             }
         }
+        else $candidates[$depth] = ['handler' => $file, 'args' => array_slice($segs, $depth + 1), 'root' => realpath($route_root)];
     }
 
     // Route missing (DEV_MODE only)
     if (getenv('DEV_MODE')) {
-        return scaffold($segs, $route_root, $candidates);
+        return scaffold($path, $route_root, $candidates);
     }
 
     exit('404 Not Found');
@@ -85,8 +86,10 @@ function handle(array $info): array
         $curDir .= '/' . $seg;
 
         $prepFile = $curDir . '/prepare.php';
+        var_dump($prepFile, file_exists($prepFile));
         if (file_exists($prepFile)) {
             $fn = silent_include($prepFile);
+            var_dump($fn);
             if (!is_callable($fn)) {
                 exit("500 Invalid prepare hook at $prepFile");
             }
@@ -132,18 +135,20 @@ function handle(array $info): array
 /**
  * Scaffold for missing routes (DEV_MODE only)
  */
-function scaffold(array $parts, string $route_root, array $candidates): array
+function scaffold(string $path, string $route_root, array $candidates): array
 {
-    $path  = implode('/', $parts) ?: 'home';
-
-    $body  = "<pre>Missing route: /$path\n\n";
+    $body = "<h1>Missing route: $path</h1>\n\n";
     $body .= "Choose route file to create:\n";
-    $body .= implode("\n", array_map(fn($f) => "  $f", $candidates)) . "\n\n";
-    $body .= "And add code: \n\n";
-    $body .= htmlspecialchars("<?php\n\nreturn function (...\$args) {\n\treturn ['status' => 200, 'body' => __FILE__];\n};");
-    $body .= "\n\n";
-    $body .= "Expected arguments with this query: function(" . htmlspecialchars(json_encode($handlerArgs)) . ")";
-    $body .= "</pre>";
+    $body .= "<dl>";
+    foreach ($candidates as $depth => $response) {
+        $handler = $response['handler'];
+        $handlerArgs = empty($response['args']) ? 'none' : implode(',', $response['args']);
+        $templateCode = "<?php\nreturn function (...\$args) {\n\t// Expected arguments: function($handlerArgs)\n\treturn ['status' => 200, 'body' => __FILE__];\n};";
+        $body .= "<dt><strong>$handler</strong></dt>";
+        $body .= '<dd><pre>' . htmlspecialchars($templateCode) . '</pre></dd>';
+    }
+    $body .= "</dl>";
+
 
     return ['status' => 404, 'body' => $body];
 }
