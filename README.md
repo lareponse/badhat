@@ -110,7 +110,12 @@ Each route is a file. That file returns a closure. That closure receives the req
 A request to `/secure/users/edit/42` resolves to:
 
 ```
-app/controller/secure/users/edit.php
+app/route/secure/users/edit.php
+or
+app/route/secure/users.php with argument `edit`
+```
+or
+app/route/secure.php with 3 arguments `users`, `edit`, `42`
 ```
 
 That file returns:
