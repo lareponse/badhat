@@ -6,7 +6,7 @@
 function auth()
 {
     if (empty($_SERVER['HTTP_X_AUTH_USER'])) {
-        exit('401 Unauthorized');
+        trigger_error('401 Unauthorized', E_USER_ERROR);
     }
     return true;
 }
@@ -14,7 +14,7 @@ function auth()
 function operator(): ?string
 {
     if (empty(getenv('ADDBAD_AUTH_HMAC_SECRET')))
-        exit('500 Auth HMAC secret is missing');
+        trigger_error('500 Auth HMAC secret is missing', E_USER_ERROR);
 
     if (empty($_SERVER['HTTP_X_AUTH_USER']) || empty($_SERVER['HTTP_X_AUTH_SIG']))
         return null;
@@ -44,7 +44,7 @@ function csp_nonce(string $key = 'default'): string
 function csrf(?string $token = null, int $max_age = 3600, $env_key = 'CSRF_SECRET'): string|bool
 {
     if (empty(getenv($env_key)))
-        exit('500 CSRF secret is missing');
+        trigger_error('500 CSRF secret is missing', E_USER_ERROR);
     
     if ($token === null) {
         $time = time();
