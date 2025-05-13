@@ -2,26 +2,23 @@
 
 **ADDBAD** is not a framework. It’s a refusal.
 
-A refusal of boilerplate.  
-A refusal of magic.  
+A refusal of boilerplate.
+A refusal of magic.
 A refusal of engineering theater.
 
-That means: 
+That means:
 
-- No config
-- No classes (or containers, annotations, attributes or autowiring)
-- No sessions
-- No routing tables
-- No templating engines
-- No dependency injection
-- No layers of abstraction
+* No config files or metadata
+* No classes, containers, annotations or autowiring
+* No namespaces or autoloading
+* No dependency injection or service layers
+* No sessions or cookie parsing
+* No routing tables or middleware stacks
+* No templating engines or DSLs
+* No layers of abstraction
 
-None of them are needed.
-What we need are **file systems**, **functions**, **arrays** and **conventions**.
-
-addbad is ~80 lines of core code that give you everything required to build real applications -and nothing you don’t ask for.
-
-addbad is built on the belief that clarity, control, and constraint lead to better code—and that modern PHP has been hijacked by people trying to turn it into Java.
+All you need are **file systems**, **functions**, **arrays** and **conventions**.
+ADDBAD is \~80 lines of core code that give you everything required to build real applications—and nothing you don’t explicitly ask for.
 
 ---
 
@@ -29,434 +26,190 @@ addbad is built on the belief that clarity, control, and constraint lead to bett
 
 ### Simplicity over abstraction
 
-- **No classes, namespaces or autoloading**  
-  Structure logic with directories and filenames. Not object hierarchies.
-  If you need namespaces to avoid name collisions, your function names suck.
-  You use it, you include it. No composer. No magic. One line does the job.
+* **No classes, no namespaces, no autoloading**
+  Structure logic with directories and filenames. If you need namespaces to avoid collisions, rename your functions.
+  Use `require` directly—no Composer, no magic.
+
+* **No config files**
+  Define paths with `define()`. Manage secrets in `.env`. Be explicit.
 
 ### Routing is convention, not configuration
 
-- **No routing tables or middleware stack**  
-  The URL `/user/show/42` maps to `user/show.php`. That’s it.
-  You want code to run before something? Put it before it. Use the order of lines.
+* **Filesystem as router**
+  The URL `/user/show/42` maps to a file under `app/controller/user/show.php` (or `app/controller/user.php` with arguments).
+  No route registration, no middleware—if you want code to run first, put it first in the file.
 
-### No templating engines, ever
+### PHP as template engine
 
-- **No Blade, Twig, or template DSLs**  
-  PHP *is* your template engine. Use `render()`, `slot()`, `partial()` -nothing more.
+* **No Blade, Twig, JSX or template DSLs**
+  PHP itself is your view layer. Use:
 
----
+  * `render('viewname', $data)`
+  * `partial('name', $data)` to load `_name.php`
+  * `slot($name, $value)` and `slot($name)` / `slots($name, $sep)` for injection points
 
-### SQL is not the enemy
+### SQL is a first-class citizen
 
-- **No ORM, No SELECT builder, No DELETE helper**  
-  SQL is a language. Respect it. Don’t wrap it in toys.
-  Writing a `SELECT` is not a problem. Stop pretending it is.
-  Destructive queries must be written by hand. If you automate `DELETE`, you don’t deserve root access.
+* **No ORM, no SELECT builder, no DELETE helper**
+  SQL is a language—respect it.
+  Automate only what’s repetitive:
 
----
+  ```php
+  [$sql, $params] = qb_insert('table', ['a' => 1, 'b' => 2]);
+  [$sql, $params] = qb_update('table', ['a' => 1], 'id = ?', [42]);
+  ```
+
+  Write your `SELECT` and hand-craft your destructive `DELETE`.
 
 ### No fake architecture
 
-- **No DI containers**  
-  Include a file. Pass a variable. Don’t summon a container to resolve a logger.
+* **No DI containers or service layers**
+  Include a file. Pass variables. Don’t summon frameworks or factories.
 
-- **No service layers**  
-  You don’t need to inject a `UserManagerFactoryInterface`. You need to write better functions.
-
----
-
-### Configuration by the developer, not the framework
-
-- **No config files**  
-  Use `define()` for paths. Use `.env` for secrets. Be direct.
-
-- **No meta-framework**  
-  ADDBAD is not a foundation for something bigger. It *is* the final product.
+* **No meta-framework**
+  ADDBAD is not a foundation for something bigger—it *is* the final product.
 
 ---
 
 ## Is ADDBAD for you?
 
-ADDBAD is for you if:
+**Yes**, if:
 
-- You'd rather write 10 lines of clear code than configure a service container.
-- You think HTML templates should be `.php`, not `.twig`, `.blade`, or `.jsx`.
-- You don’t need 8000 stars on GitHub to feel good about a solution.
-- You treat SQL as a language, not a leaky abstraction.
-- You believe the filesystem is a perfectly good routing mechanism.
-- You like reading code more than reading documentation.
-- You understand what `require` does—and that it's enough.
-- You want to know exactly what happens when a request hits your server.
-- You believe control is more important than convention.
+* You’d rather write 10 lines of clear code than configure a container.
+* You treat SQL as a language, not a leaky abstraction.
+* You believe the filesystem is a perfectly good routing mechanism.
+* You understand what `require` does—and that it's enough.
+* You want to know exactly what happens when a request hits your server.
 
-ADDBAD is **not** for you if:
+**No**, if:
 
-- You need framework magic to feel productive.
-- You prefer "clean architecture" over readable code.
-- You reach for `composer require` before writing a function.
-- You think DI containers are an achievement.
-- You believe boilerplate is inevitable.
-- You think auto-generating classes is programming.
+* You need framework magic or auto-generated classes.
+* You prefer “clean architecture” over readable code.
+* You reach for `composer require` before writing a function.
 
 ---
 
-## Processing routes
+## Controllers & Routing
 
-There are no controllers. There are only files.
+There are no controllers—only files. Each route is a PHP file that **returns a closure**. That closure is passed the request and any URL-extracted arguments, and returns either:
 
-Each route is a file. That file returns a closure. That closure receives the request and any arguments extracted from the URL. That’s it. The filesystem is the router.
+* An HTML string, or
+* An array: `['status' => int, 'headers' => [], 'body' => string]`
 
-A request to `/secure/users/edit/42` resolves to:
+### Route resolution
 
-```
-app/route/secure/users/edit.php
-or
-app/route/secure/users.php with argument `edit`
-```
-or
-app/route/secure.php with 3 arguments `users`, `edit`, `42`
-```
+A request to `/secure/users/edit/42` resolves by walking the directory:
 
-That file returns:
+1. `app/controller/secure/users/edit.php`
+2. Or `app/controller/secure/users.php` with `edit`, `42` as args
+3. Or `app/controller/secure.php` with `users`, `edit`, `42`
+
+That file looks like:
 
 ```php
+<?php
 return function ($req, $id) {
     return render('users/edit', ['id' => $id]);
 };
 ```
 
-Closures returns an array: `['status' => int, 'headers' => [], 'body' => string]`
+### Lifecycles: prepare & conclude
 
-You may also include two optional lifecycle files:
+You may add optional `prepare.php` and `conclude.php` files at any directory level:
 
-* `prepare.php` runs before the route (used for authentication, setup)
-* `conclude.php` runs after the route (used for logging, response mutation)
+1. `secure/prepare.php`
+2. `secure/users/prepare.php`
+3. `secure/users/edit.php` (the route)
+4. `secure/users/conclude.php`
+5. `secure/conclude.php`
 
-The execution order is:
-
-1. Area-level `prepare.php` (e.g. `secure/prepare.php`)
-2. Controller-level `prepare.php` (e.g. `secure/users/prepare.php`)
-3. Route file (e.g. `secure/users/edit.php`)
-4. Controller-level `secure/users/conclude.php`
-5. Area-level `secure/conclude.php`
-
-Each file returns a closure.
-No class-based routing.
-No annotations.
-No dependency injection.
-
-If you want something to happen, write it.
-If you want something to stop, return early.
-Everything else is noise.
-
----
-
-Let me know if you want this dropped into the full README draft now.
+Each returns a closure. Use `prepare.php` for auth or setup, and `conclude.php` for logging or response mutation.
 
 ---
 
 ## Views
 
-- Use `render('viewname', $data)`
-- Layout is defined in `layout.php`, uses `$content`
-- Partial rendering: `partial('name', $data)` — looks for `_name.php`
-- Slot system:
-  - `slot($name, $value)` — adds a value
-  - `slot($name)` — returns the last value
-  - `slots($name, $sep)` — returns all values joined by a separator
+* **Render a view**: `render('viewname', $data)`
+* **Layout**: `layout.php` wraps your `$content`; swap in `secure-layout.php` if needed.
+* **Partials**: `partial('name', $data)` loads `_name.php`.
+* **Slots**:
 
-Use slots for injecting:
-- `<meta>` tags
-- `<script>` or `<style>` blocks
-- toolbars, footers, or sidebars
+  * `slot('head', '<meta>')`
+  * `slot('head')` to retrieve last, or `slots('head', "\n")` to join all.
+
+Use slots for injecting `<meta>`, scripts, toolbars, footers, etc.
 
 ---
 
 ## Database Helpers
 
-There is no ORM. You write SQL. You run it with PDO.
-
-The only helpers provided:
+No ORM—use PDO directly. Helpers only for repetitive `INSERT`/`UPDATE`:
 
 ```php
-[$sql, $params] = qb_insert('table', ['a' => 1, 'b' => 2]);
-[$sql, $params] = qb_update('table', ['a' => 1], 'id = ?', [42]);
-````
-
-Why?
-
-* INSERT and UPDATE are repetitive
-* SELECT is not
-* DELETE is a crime
-
-No builder for SELECT. Write your queries.
-No builder for DELETE. Ever.
-
----
-
-## Authentication & Access Control: Header-based
-
-ADDBAD uses a **single HTTP header** for authentication and access control.
-
-No login forms. No sessions. No cookie p# ADDBAD — A Procedural Micro-Framework for Serious Developers
-
-**ADDBAD** is not a framework. It’s a refusal.
-
-A refusal of boilerplate.  
-A refusal of magic.  
-A refusal of engineering theater.
-
-That means: 
-
-- No config
-- No classes (or containers, annotations, attributes or autowiring)
-- No sessions
-- No routing tables
-- No templating engines
-- No dependency injection
-- No layers of abstraction
-
-None of them are needed.
-What we need are **file systems**, **functions**, **arrays** and **conventions**.
-
-addbad is ~80 lines of core code that give you everything required to build real applications -and nothing you don’t ask for.
-
-addbad is built on the belief that clarity, control, and constraint lead to better code—and that modern PHP has been hijacked by people trying to turn it into Java.
-
----
-
-## Core Principles
-
-### Simplicity over abstraction
-
-- **No classes**  
-  Structure logic with directories and filenames. Not object hierarchies.
-
-- **No namespaces**
-  If you need namespaces to avoid name collisions, your function names suck.
-
-- **No autoloading**  
-  You use it, you include it. No composer. No magic. One line does the job.
-
----
-
-### Routing is convention, not configuration
-
-- **No route registration**  
-  The URL `/user/show/42` maps to `user.php → show()`. That’s it.
-
-- **No middleware stack**  
-  You want code to run before something? Put it before it. Use the order of lines.
-
----
-
-### No templating engines, ever
-
-- **No Blade, Twig, or template DSLs**  
-  PHP *is* your template engine. Use `render()`, `slot()`, `partial()`—nothing more.
-
----
-
-### SQL is not the enemy
-
-- **No ORM**  
-  SQL is a language. Respect it. Don’t wrap it in toys.
-
-- **No SELECT builder**  
-  Writing a `SELECT` is not a problem. Stop pretending it is.
-
-- **No DELETE helper**  
-  Destructive queries must be written by hand. If you automate `DELETE`, you don’t deserve root access.
-
----
-
-### No fake architecture
-
-- **No DI containers**  
-  Include a file. Pass a variable. Don’t summon a container to resolve a logger.
-
-- **No service layers**  
-  You don’t need to inject a `UserManagerFactoryInterface`. You need to write better functions.
-
----
-
-### Configuration by the developer, not the framework
-
-- **No config files**  
-  Use `define()` for paths. Use `.env` for secrets. Be direct.
-
-- **No meta-framework**  
-  ADDBAD is not a foundation for something bigger. It *is* the final product.
-
----
-
-## Is ADDBAD for you?
-
-ADDBAD is for you if:
-
-- You'd rather write 10 lines of clear code than configure a service container.
-- You think HTML templates should be `.php`, not `.twig`, `.blade`, or `.jsx`.
-- You don’t need 8000 stars on GitHub to feel good about a solution.
-- You treat SQL as a language, not a leaky abstraction.
-- You believe the filesystem is a perfectly good routing mechanism.
-- You like reading code more than reading documentation.
-- You understand what `require` does—and that it's enough.
-- You want to know exactly what happens when a request hits your server.
-- You believe control is more important than convention.
-
-ADDBAD is **not** for you if:
-
-- You need framework magic to feel productive.
-- You prefer "clean architecture" over readable code.
-- You reach for `composer require` before writing a function.
-- You think DI containers are an achievement.
-- You believe boilerplate is inevitable.
-- You think auto-generating classes is programming.
-
----
-
-## Controllers and Routing
-
-There are no controllers. There are only files.
-
-Each route is a file. That file returns a function. That function receives the request, and the arguments extracted from the URL. That’s it. The filesystem is your routing table.
-
-A request to `/secure/users/edit/42` resolves to:
-
-```
-app/controller/secure/users/edit.php
+[$sql, $params] = qb_insert('users', ['name' => $name, 'email' => $email]);
+[$sql, $params] = qb_update('posts', ['title' => $t], 'id = ?', [$postId]);
 ```
 
-That file returns:
-
-```php
-return function ($req, $id) {
-    // your logic here
-};
-```
-Function returns either:
-  - HTML string  
-  - or an array: `['status' => int, 'headers' => [], 'body' => string]`
-
-Each route can be preceded by a `prepare.php` (in the same folder or parent folder), and followed by a `conclude.php`.
-
-* `prepare.php` is executed before
+Write your `SELECT`s and never automate `DELETE`.
 
 ---
 
-## Views
+## Authentication & Access Control
 
-- Use `render('viewname', $data)`
-- Layout is defined in `layout.php`, uses `$content`
-- Partial rendering: `partial('name', $data)` — looks for `_name.php`
-- Slot system:
-  - `slot($name, $value)` — adds a value
-  - `slot($name)` — returns the last value
-  - `slots($name, $sep)` — returns all values joined by a separator
+ADDBAD uses a **single HTTP header** for auth:
 
-Use slots for injecting:
-- `<meta>` tags
-- `<script>` or `<style>` blocks
-- toolbars, footers, or sidebars
+* A reverse proxy or upstream sets `X-AUTH-USER`.
+* Your code trusts that header—no sessions, no cookies, no DB lookups in-app.
+* In `controller/secure/*.php`:
 
----
-
-## Database Helpers
-
-There is no ORM. You write SQL. You run it with PDO.
-
-The only helpers provided:
-
-```php
-[$sql, $params] = qb_insert('table', ['a' => 1, 'b' => 2]);
-[$sql, $params] = qb_update('table', ['a' => 1], 'id = ?', [42]);
-````
-
-Why?
-
-* INSERT and UPDATE are repetitive
-* SELECT is not
-* DELETE is a crime
-
-No builder for SELECT. Write your queries.
-No builder for DELETE. Ever.
-
----
-
-## Authentication & Access Control: Header-based
-
-ADDBAD uses a **single HTTP header** for authentication and access control.
-
-No login forms. No sessions. No cookie parsing. No database involved.  
-Just a signed reverse proxy or upstream service setting `X-AUTH-USER`, because it's:
-- Simple (one header, one identity)
-- Stateless (no session or DB lookup)
-- Flexible (can integrate with any SSO or auth provider)
-- Enforced upstream (reverse proxy, gateway, or load balancer)
-
-Authentication is upstream.  
-ADDBAD trusts the header.
-This keeps your app fast, stateless, and focused.
+  ```php
+  if (!is_authenticated()) {
+      return ['status' => 403, 'body' => 'Forbidden'];
+  }
+  ```
+* Upstream enforcement makes your app fast, stateless, and focused.
 
 ---
 
 ## Multiple Fronts: Public vs Secure
 
-Every real application has two surfaces:
+Every real app has two surfaces:
 
-- **Public** — what everyone sees
-- **Secure** — what only authorized users should access
+* **Public**: open to all
+* **Secure**: only authorized users
 
-ADDBAD doesn’t treat your secure interface like a plugin or sub-framework.  
-It’s just another controller directory—with structure and protection you define.
-
----
+ADDBAD doesn’t treat secure as a plugin. It’s just another controller directory—protect routes by explicit code.
 
 ### File layout
+
 ```
 addbad-app/
+├── add/
+│   ├── bad/
+│   │   ├── db.php
+│   │   └── ui.php
+│   └── core.php
+│
 ├── app/
-│   ├── controller/
-│   │   ├── public/          # Public routes (open)
-│   │   │   ├── home.php     # function home($req)
-│   │   │   └── about.php
-│   │   └── secure/          # Protected routes (auth checks inside)
-│   │       ├── dashboard.php
-│   │       └── users.php
-│   ├── view/                # Layouts, views, and partials
-│   │   ├── layout.php       # Default layout (uses $content)
-│   │   ├── secure-layout.php
-│   │   ├── home.php
-│   │   ├── about.php
-│   │   └── _footer.php      # Partial: render('footer') → looks for _footer.php
-│   └── lib/                 # Helpers (auth.php, db.php, render.php, etc.)
-│       ├── auth.php
-│       ├── db.php
-│       ├── render.php
-│       ├── router.php
-│       └── slot.php
-├── db/
-│   ├── users.sqlite         # Auth-only SQLite DB
-│   └── logs.sqlite          # Optional write-only logs
+│   ├── render/
+│   └── route/
+│
 ├── log/
-│   └── auth.log             # Flat file login activity (optional)
-├── public/                 # Web root
-│   ├── index.php            # Entry point
-│   ├── css/
-│   │   └── main.css
-│   └── js/
-│       └── app.js
-├── .env                     # Secrets and config
+│   ├── access.log
+│   └── error.log
+│
+├── public/
+│   ├── doc/
+│   ├── index.php
+│   ├── .htaccess
+│   └── js/app.js
 ├── .gitignore
 └── README.md
 ```
 
----
+### Protecting secure routes
 
-### Protect the secure routes
-
-In any `controller/secure/*.php`:
+In any `app/controller/secure/*.php`:
 
 ```php
 if (!is_authenticated()) {
@@ -464,163 +217,38 @@ if (!is_authenticated()) {
 }
 ```
 
-There is no middleware.
-No `@SecureOnly` decorator.
-No access config.
-If a route must be protected, **you protect it.**
-
----
+No annotations, no decorators—protect each route where needed.
 
 ### Secure layout
 
-If your secure interface has different structure, use:
-
 ```php
-return render('secure/dashboard', ['user' => $user], layout: 'secure-layout');
+return render(
+    'secure/dashboard',
+    ['user' => $user],
+    layout: 'secure-layout'
+);
 ```
 
-No layout inheritance. No template engine. Just call the right file.
+No template inheritance—just call the layout you need.
 
 ---
 
-### TL;DR
+## TL;DR
 
-| Path                   | Controller File             | Notes              |
-| ---------------------- | --------------------------- | ------------------ |
-| `/about`               | `public/about.php`          | Open to all        |
-| `/secure/dashboard`    | `secure/dashboard.php`      | Must check auth    |
-| `/secure/users/edit/5` | `secure/users.php → edit()` | Enforce protection |
+| Path                   | Controller File           | Notes              |
+| ---------------------- | ------------------------- | ------------------ |
+| `/about`               | `public/about.php`        | Open to all        |
+| `/user/show/42`        | `public/user/show.php`    | Filesystem routing |
+| `/secure/dashboard`    | `secure/dashboard.php`    | Enforce auth       |
+| `/secure/users/edit/5` | `secure/users.php` → edit | Explicit args      |
 
-This is ADDBAD's multi-surface architecture:
-**routing by structure, not by configuration.**
+Routing by structure, not configuration.
+`public/` is open; `secure/` is your responsibility.
 
-`public/` is open.
-`secure/` is your responsibility.
+---
 
---- 
 ## License
 
-Use it, fork it, ignore it.
-Just don’t automate `DELETE` and then blame the framework.
-
----
-
-Made with precision and refusal by **La Reponse**.
-arsing. No database involved.  
-Just a signed reverse proxy or upstream service setting `X-AUTH-USER`, because it's:
-- Simple (one header, one identity)
-- Stateless (no session or DB lookup)
-- Flexible (can integrate with any SSO or auth provider)
-- Enforced upstream (reverse proxy, gateway, or load balancer)
-
-Authentication is upstream.  
-ADDBAD trusts the header.
-This keeps your app fast, stateless, and focused.
-
----
-
-## Multiple Fronts: Public vs Secure
-
-Every real application has two surfaces:
-
-- **Public** — what everyone sees
-- **Secure** — what only authorized users should access
-
-ADDBAD doesn’t treat your secure interface like a plugin or sub-framework.  
-It’s just another controller directory—with structure and protection you define.
-
----
-
-### File layout
-```
-addbad-app/
-├── app/
-│   ├── controller/
-│   │   ├── public/          # Public routes (open)
-│   │   │   ├── home.php     # function home($req)
-│   │   │   └── about.php
-│   │   └── secure/          # Protected routes (auth checks inside)
-│   │       ├── dashboard.php
-│   │       └── users.php
-│   ├── view/                # Layouts, views, and partials
-│   │   ├── layout.php       # Default layout (uses $content)
-│   │   ├── secure-layout.php
-│   │   ├── home.php
-│   │   ├── about.php
-│   │   └── _footer.php      # Partial: render('footer') → looks for _footer.php
-│   └── lib/                 # Helpers (auth.php, db.php, render.php, etc.)
-│       ├── auth.php
-│       ├── db.php
-│       ├── render.php
-│       ├── router.php
-│       └── slot.php
-├── db/
-│   ├── users.sqlite         # Auth-only SQLite DB
-│   └── logs.sqlite          # Optional write-only logs
-├── log/
-│   └── auth.log             # Flat file login activity (optional)
-├── public/                 # Web root
-│   ├── index.php            # Entry point
-│   ├── css/
-│   │   └── main.css
-│   └── js/
-│       └── app.js
-├── .env                     # Secrets and config
-├── .gitignore
-└── README.md
-```
-
----
-
-### Protect the secure routes
-
-In any `controller/secure/*.php`:
-
-```php
-if (!is_authenticated()) {
-    return ['status' => 403, 'body' => 'Forbidden'];
-}
-```
-
-There is no middleware.
-No `@SecureOnly` decorator.
-No access config.
-If a route must be protected, **you protect it.**
-
----
-
-### Secure layout
-
-If your secure interface has different structure, use:
-
-```php
-return render('secure/dashboard', ['user' => $user], layout: 'secure-layout');
-```
-
-No layout inheritance. No template engine. Just call the right file.
-
----
-
-### TL;DR
-
-| Path                   | Controller File             | Notes              |
-| ---------------------- | --------------------------- | ------------------ |
-| `/about`               | `public/about.php`          | Open to all        |
-| `/secure/dashboard`    | `secure/dashboard.php`      | Must check auth    |
-| `/secure/users/edit/5` | `secure/users.php → edit()` | Enforce protection |
-
-This is ADDBAD's multi-surface architecture:
-**routing by structure, not by configuration.**
-
-`public/` is open.
-`secure/` is your responsibility.
-
---- 
-## License
-
-Use it, fork it, ignore it.
-Just don’t automate `DELETE` and then blame the framework.
-
----
+Use it, fork it, ignore it—just don’t automate `DELETE` and then blame the framework.
 
 Made with precision and refusal by **La Reponse**.
