@@ -9,7 +9,7 @@ declare(strict_types=1);
 
 /**
  * @param string $route_root Absolute path to the routes directory
- * @return array ['handler' => string, 'args' => array, 'root' => string] or exits with status+message
+ * @return array ['handler' => string, 'args' => array, 'root' => string] or trigger_error with status+message
  */
 function route(string $route_root): array
 {
@@ -65,70 +65,27 @@ function route(string $route_root): array
  */
 function handle(array $info): array
 {
-    // Early exit on scaffold or errors from route()
-    if (isset($info['status'])) {
-        trigger_error($info['status'] . ' ' . ($info['body'] ?? ''), E_USER_ERROR);
-    }
+    if(isset($info['status']))
+        return $info;
 
-    var_dump($info);
-    $base     = $info['root'];
-    $handler  = $info['handler'];
-    $args     = $info['args'];
+    if (empty($info['handler']))
+        trigger_error('500 Handler not found', E_USER_ERROR);
 
-    // Figure out the path segments under $base
-    $rel   = substr($handler, strlen($base) + 1);
-    $parts = explode('/', $rel);
+    // summon main handler first, if an error is triggered, we wont run the hooks
+    $handler = summon($info['handler']);
 
-    // Build a list of all directories to check, starting with $base
-    $dirs = [$base];
-    $cur  = $base;
-    foreach ($parts as $seg) {
-        $cur .= '/' . $seg;
-        $dirs[] = $cur;
-    }
+    $hooks = hooks($info['root'], $info['handler']);
 
-    $concludes = [];
-    foreach ($dirs as $dir) {
-        // 1) prepare hook
-        $prepFile = $dir . '/prepare.php';
-        if (file_exists($prepFile)) {
-            $res = summon($prepFile)();
-            if (is_array($res)) {
-                // short-circuit if prepare returned a full response
-                trigger_error(
-                    ($res['status'] ?? 500) . ' ' .
-                        ($res['body']   ?? ''),
-                    E_USER_ERROR
-                );
-            }
-        }
+    foreach ($hooks['prepare'] as $hook)
+        $hook();
 
-        // 2) collect conclude hook
-        $concFile = $dir . '/conclude.php';
-        if (file_exists($concFile)) {
-            $fn2 = summon($concFile);
-            $concludes[] = $fn2;
-        }
-    }
+    $res = $handler(...$info['args']);
 
-    // 3) handler itself
-    $fn = summon($handler);
-    $res = $fn(...$args);
-    if (!is_array($res)) {
-        trigger_error('500 Handler did not return response array', E_USER_ERROR);
-    }
-
-    // 4) run conclude hooks in reverse order
-    foreach (array_reverse($concludes) as $finish) {
-        $res = $finish($res);
-        if (!is_array($res)) {
-            trigger_error('500 Conclude hook did not return response array', E_USER_ERROR);
-        }
-    }
+    foreach (array_reverse($hooks['conclude']) as $hook)
+        $res = $hook($res);
 
     return $res;
 }
-
 
 /**
  * Scaffold for missing routes (DEV_MODE only)
@@ -149,6 +106,42 @@ function scaffold(string $path, string $route_root, array $candidates): array
 
 
     return ['status' => 404, 'body' => $body];
+}
+
+function hooks(string $base, string $handler): array
+{
+    $ret = [
+        'prepare'  => [],
+        'conclude' => [],
+    ];
+
+    // Figure out the path segments under $base
+    $rel   = substr($handler, strlen($base) + 1);
+    $parts = explode('/', $rel);
+
+    // Build a list of all directories to check, starting with $base
+    $dirs = [$base];
+    $cur  = $base;
+    foreach ($parts as $seg) {
+        $cur .= '/' . $seg;
+        $dirs[] = $cur;
+    }
+
+    foreach ($dirs as $dir) {
+        // Collect prepare hooks
+        $prepFile = $dir . '/prepare.php';
+        if (file_exists($prepFile)) {
+            $ret['prepare'][] = summon($prepFile);
+        }
+
+        // Collect conclude hooks
+        $concFile = $dir . '/conclude.php';
+        if (file_exists($concFile)) {
+            $ret['conclude'][] = summon($concFile);
+        }
+    }
+
+    return $ret;
 }
 
 function response(int $http_code, string $body, array $http_headers = []): array
@@ -172,25 +165,16 @@ function respond(array $http): void
     echo $http['body'] ?? '';
 }
 
-/**
- * Silently include a PHP file: suppress warnings and any output.
- *
- * @param string $file
- * @return mixed
- */
 function summon(string $file): ?callable
 {
-    if (!is_readable($file)) {
-        return null;
-    }
+    if (!is_readable($file)) return null;
+
     ob_start();
-    /** @noinspection PhpIncludeInspection */
     $callable = @include $file;
     ob_end_clean();
 
-    if (!is_callable($callable)) {
-        trigger_error("500 Invalid Callable in $file", E_USER_ERROR);
-    }
+    if (!is_callable($callable)) trigger_error("500 Invalid Callable in $file", E_USER_ERROR);
+
     return $callable;
 }
 
@@ -202,7 +186,7 @@ set_error_handler(function (int $errno, string $errstr): bool {
     preg_match('/^([1-5]\d{2})\s+(.*)$/s', $errstr, $m)
         ? respond(['status' => (int)$m[1], 'body' => $m[2]])
         : respond(['status' => 500, 'body' => $errno . ': ' . $errstr]);
-    
+
     exit;
 });
 
