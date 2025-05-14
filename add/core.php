@@ -51,7 +51,7 @@ function route(string $route_root): array
 
     // Route missing (DEV_MODE only)
     if (getenv('DEV_MODE')) {
-        return scaffold($path, $route_root, $candidates);
+        return scaffold($path, $candidates);
     }
 
     return ['status' => 404, 'body' => '404 Not Found', 'headers' => ['Content-Type' => 'text/plain']];
@@ -90,7 +90,7 @@ function handle(array $info): array
 /**
  * Scaffold for missing routes (DEV_MODE only)
  */
-function scaffold(string $path, string $route_root, array $candidates): array
+function scaffold(string $path, array $candidates): array
 {
     $body = "<h1>Missing route: $path</h1>\n\n";
     $body .= "Choose route file to create:\n";
