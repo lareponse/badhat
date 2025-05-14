@@ -278,7 +278,6 @@ addbad-app/
 │   ├── index.php
 │   └── .htaccess
 │
-├── .env
 └── README.md
 ```
 
