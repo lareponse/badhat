@@ -54,7 +54,7 @@ function route(string $route_root): array
         return scaffold($path, $route_root, $candidates);
     }
 
-    trigger_error('404 Not Found', E_USER_ERROR);
+    return ['status' => 404, 'body' => '404 Not Found', 'headers' => ['Content-Type' => 'text/plain']];
 }
 
 /**
@@ -65,7 +65,7 @@ function route(string $route_root): array
  */
 function handle(array $info): array
 {
-    if(isset($info['status']))
+    if (isset($info['status']))
         return $info;
 
     if (empty($info['handler']))
@@ -182,12 +182,12 @@ set_error_handler(function (int $errno, string $errstr): bool {
     if ($errno !== E_USER_ERROR)
         return false; // let PHP (or another handler) deal with notices, warnings, etc.
 
-    // expecting "$status $body…"
-    preg_match('/^([1-5]\d{2})\s+(.*)$/s', $errstr, $m)
-        ? respond(['status' => (int)$m[1], 'body' => $m[2]])
-        : respond(['status' => 500, 'body' => $errno . ': ' . $errstr]);
-
-    exit;
+    respond(
+        preg_match('/^([1-5]\d{2})\s+(.*)$/s', $errstr, $m)
+            ? ['status' => (int)$m[1], 'body' => $m[2]]
+            : ['status' => 500, 'body' => $errno . ': ' . $errstr]
+    );
+    return false; // prevent PHP from executing its internal error handler
 });
 
 set_exception_handler(function ($e) {
