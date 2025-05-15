@@ -7,13 +7,34 @@
 
 declare(strict_types=1);
 
+set_error_handler(function (int $errno, string $errstr): bool {
+    if ($errno === E_USER_ERROR)
+        respond(
+            preg_match('/^([1-5]\d{2})\s+(.*)$/s', $errstr, $m)
+                ? response((int)$m[1], $m[2])
+                : response(500, $errno . ': ' . $errstr)
+        );
+
+    return false; // let PHP (or another handler) deal with notices, warnings, etc.
+
+    return false; // prevent PHP from executing its internal error handler
+});
+
+set_exception_handler(function ($e) {
+    trigger_error(sprintf('500 Uncaught Exception: %s in %s:%d', $e->getMessage(), $e->getFile(), $e->getLine()), E_USER_ERROR);
+});
+
+
+
 /**
  * @param string $route_root Absolute path to the routes directory
  * @return array ['handler' => string, 'args' => array, 'root' => string] or trigger_error with status+message
  */
 function route(string $route_root): array
 {
-    $path = clean_request_uri();
+    $path = clean_request_uri($_SERVER['REQUEST_URI']);
+    $format = request_mime($_SERVER['HTTP_ACCEPT'] ?? null, $_GET['format'] ?? null);
+
     $segments  = $path === '' ? ['home'] : explode('/', $path);
     $candidates = route_candidates($route_root, $segments);
 
@@ -36,12 +57,7 @@ function route(string $route_root): array
     return response(404, 'Not Found', ['Content-Type' => 'text/plain']);
 }
 
-/**
- * Phase 2: Dispatch prepare hooks, handler, then conclude hooks
- *
- * @param array $info ['handler','args','root']
- * @return array or exits with status+message
- */
+
 function handle(array $info): array
 {
     if (isset($info['status']))
@@ -55,7 +71,7 @@ function handle(array $info): array
 
     //collect all hooks along the path
     $hooks = hooks($info['root'], $info['handler']);
-    // var_dump($hooks);
+    vd($hooks);
     foreach ($hooks['prepare'] as $hook)
         $hook();
 
@@ -91,23 +107,6 @@ function summon(string $file): ?callable
     return $callable;
 }
 
-set_error_handler(function (int $errno, string $errstr): bool {
-    if ($errno !== E_USER_ERROR)
-        return false; // let PHP (or another handler) deal with notices, warnings, etc.
-
-    respond(
-        preg_match('/^([1-5]\d{2})\s+(.*)$/s', $errstr, $m)
-            ? response((int)$m[1], $m[2]) 
-            : response(500, $errno . ': ' . $errstr)
-    );
-    return false; // prevent PHP from executing its internal error handler
-});
-
-set_exception_handler(function ($e) {
-    trigger_error(sprintf('500 Uncaught Exception: %s in %s:%d', $e->getMessage(), $e->getFile(), $e->getLine()), E_USER_ERROR);
-});
-
-
 function clean_request_uri(?string $path = null): string
 {
 
@@ -124,7 +123,6 @@ function clean_request_uri(?string $path = null): string
 
     return $path;
 }
-
 
 function route_candidates($route_root, $segments): array
 {
@@ -144,7 +142,6 @@ function route_candidates($route_root, $segments): array
 
     return $candidates;
 }
-
 
 function hooks(string $base, string $handler): array
 {
@@ -171,8 +168,6 @@ function hooks(string $base, string $handler): array
     ];
 }
 
-
-
 function response(int $http_code, string $body, array $http_headers = []): array
 {
     return [
@@ -180,4 +175,21 @@ function response(int $http_code, string $body, array $http_headers = []): array
         'body'    => $body,
         'headers' => $http_headers,
     ];
+}
+
+function request_mime(?string $http_accept, ?string $requested_format): string
+{
+    if ($requested_format === 'json')
+        return 'application/vnd.addbad+json';
+
+    if (!empty($http_accept)) {
+        $accept = explode(',', $http_accept);
+        foreach ($accept as $type) {
+            if (strpos($type, 'application/vnd.addbad') !== false) {
+                return 'application/vnd.addbad+json';
+            }
+        }
+    }
+
+    return 'text/html';
 }
