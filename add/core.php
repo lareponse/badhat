@@ -13,40 +13,19 @@ declare(strict_types=1);
  */
 function route(string $route_root): array
 {
-    $path = $_SERVER['REQUEST_URI'] ?? 'home';
-    $raw  = urldecode(parse_url($path, PHP_URL_PATH) ?? '');
+    $path = clean_request_uri();
+    $segments  = $path === '' ? ['home'] : explode('/', $path);
+    $candidates = route_candidates($route_root, $segments);
 
-    // Basic traversal check
-    if (preg_match('#(\.{2}|[\/]\.)#', $raw)) {
-        trigger_error('403 Forbidden: Path Traversal', E_USER_ERROR);
-    }
-
-    // Normalize and split segments
-    $clean = preg_replace('#/+#', '/', trim($raw, '/'));
-    $segs  = $clean === '' ? ['home'] : explode('/', $clean);
-    $candidates = [];
-    $cur        = '';
-
-    // Whitelist each segment and build candidate list
-    foreach ($segs as $seg) {
-        if (!preg_match('/^[a-z0-9_\-]+$/', $seg)) {
-            trigger_error('400 Bad Request: Invalid Segment ' . sprintf('/%s/', $seg), E_USER_ERROR);
-        }
-
-        $cur .= '/' . $seg;
-        $candidates[] = $route_root . $cur . '.php';
-    }
-
-    // Find matching handler, deepth-first
-    krsort($candidates);
     foreach ($candidates as $depth => $file) {
+        $args = array_slice($segments, $depth + 1);
         if (file_exists($file)) {
             $real = realpath($file) ?: '';
             if (strpos($real, realpath($route_root)) === 0) {
-                $args = array_slice($segs, $depth + 1);
                 return ['handler' => $real, 'args' => $args, 'root' => realpath($route_root)];
             }
-        } else $candidates[$depth] = ['handler' => $file, 'args' => array_slice($segs, $depth + 1), 'root' => realpath($route_root)];
+        } else
+            $candidates[$depth] = ['handler' => $file, 'args' => $args, 'root' => realpath($route_root)];
     }
 
     // Route missing (DEV_MODE only)
@@ -54,7 +33,7 @@ function route(string $route_root): array
         return scaffold($path, $candidates);
     }
 
-    return ['status' => 404, 'body' => '404 Not Found', 'headers' => ['Content-Type' => 'text/plain']];
+    return response(404, 'Not Found', ['Content-Type' => 'text/plain']);
 }
 
 /**
@@ -74,8 +53,9 @@ function handle(array $info): array
     // summon main handler first, if an error is triggered, we wont run the hooks
     $handler = summon($info['handler']);
 
+    //collect all hooks along the path
     $hooks = hooks($info['root'], $info['handler']);
-
+    // var_dump($hooks);
     foreach ($hooks['prepare'] as $hook)
         $hook();
 
@@ -87,74 +67,6 @@ function handle(array $info): array
     return $res;
 }
 
-/**
- * Scaffold for missing routes (DEV_MODE only)
- */
-function scaffold(string $path, array $candidates): array
-{
-    $body = "<h1>Missing route: $path</h1>\n\n";
-    $body .= "Choose route file to create:\n";
-    $body .= "<dl>";
-    foreach ($candidates as $depth => $response) {
-        $handler = $response['handler'];
-        $handlerArgs = empty($response['args']) ? 'none' : implode(',', $response['args']);
-        $templateCode = "<?php\nreturn function (...\$args) {\n\t// Expected arguments: function($handlerArgs)\n\treturn ['status' => 200, 'body' => __FILE__];\n};";
-        $body .= "<dt><strong>$handler</strong></dt>";
-        $body .= '<dd><pre>' . htmlspecialchars($templateCode) . '</pre></dd>';
-    }
-    $body .= "</dl>";
-
-
-    return ['status' => 404, 'body' => $body];
-}
-
-function hooks(string $base, string $handler): array
-{
-    $ret = [
-        'prepare'  => [],
-        'conclude' => [],
-    ];
-
-    // Figure out the path segments under $base
-    $rel   = substr($handler, strlen($base) + 1);
-    $parts = explode('/', $rel);
-
-    // Build a list of all directories to check, starting with $base
-    $dirs = [$base];
-    $cur  = $base;
-    foreach ($parts as $seg) {
-        $cur .= '/' . $seg;
-        $dirs[] = $cur;
-    }
-
-    foreach ($dirs as $dir) {
-        // Collect prepare hooks
-        $prepFile = $dir . '/prepare.php';
-        if (file_exists($prepFile)) {
-            $ret['prepare'][] = summon($prepFile);
-        }
-
-        // Collect conclude hooks
-        $concFile = $dir . '/conclude.php';
-        if (file_exists($concFile)) {
-            $ret['conclude'][] = summon($concFile);
-        }
-    }
-
-    return $ret;
-}
-
-function response(int $http_code, string $body, array $http_headers = []): array
-{
-    return [
-        'status'  => $http_code,
-        'body'    => $body,
-        'headers' => $http_headers,
-    ];
-}
-/**
- * Send response with security headers
- */
 function respond(array $http): void
 {
     http_response_code($http['status'] ?? 200);
@@ -164,6 +76,7 @@ function respond(array $http): void
     }
     echo $http['body'] ?? '';
 }
+
 
 function summon(string $file): ?callable
 {
@@ -184,8 +97,8 @@ set_error_handler(function (int $errno, string $errstr): bool {
 
     respond(
         preg_match('/^([1-5]\d{2})\s+(.*)$/s', $errstr, $m)
-            ? ['status' => (int)$m[1], 'body' => $m[2]]
-            : ['status' => 500, 'body' => $errno . ': ' . $errstr]
+            ? response((int)$m[1], $m[2]) 
+            : response(500, $errno . ': ' . $errstr)
     );
     return false; // prevent PHP from executing its internal error handler
 });
@@ -193,3 +106,78 @@ set_error_handler(function (int $errno, string $errstr): bool {
 set_exception_handler(function ($e) {
     trigger_error(sprintf('500 Uncaught Exception: %s in %s:%d', $e->getMessage(), $e->getFile(), $e->getLine()), E_USER_ERROR);
 });
+
+
+function clean_request_uri(?string $path = null): string
+{
+
+    $path = $path ?? $_SERVER['REQUEST_URI'] ?: '';
+    $path  = urldecode(parse_url($path, PHP_URL_PATH) ?? '');
+
+    // Basic traversal check
+    if (preg_match('#(\.{2}|[\/]\.)#', $path)) {
+        trigger_error('403 Forbidden: Path Traversal', E_USER_ERROR);
+    }
+
+    // Normalize and split segments
+    $path = preg_replace('#/+#', '/', trim($path, '/'));
+
+    return $path;
+}
+
+
+function route_candidates($route_root, $segments): array
+{
+    $candidates = [];
+    $cur        = '';
+
+    // Whitelist each segment and build candidate list
+    foreach ($segments as $seg) {
+        if (!preg_match('/^[a-z0-9_\-]+$/', $seg)) {
+            trigger_error('400 Bad Request: Invalid Segment ' . sprintf('/%s/', $seg), E_USER_ERROR);
+        }
+        $cur .= '/' . $seg;
+        $candidates[] = $route_root . $cur . '.php';
+    }
+
+    krsort($candidates);
+
+    return $candidates;
+}
+
+
+function hooks(string $base, string $handler): array
+{
+    $base = rtrim($base, '/');
+    $before = $after = [];
+
+    // Figure out the path segments under $base
+    $rel   = substr($handler, strlen($base) + 1);
+    $parts = explode('/', $rel);
+
+    // Build a list of all directories to check, starting with $base
+    // $before[$base] = summon($base . '/prepare.php');
+    // $after[$base] = summon($base . '/conclude.php');
+    array_unshift($parts, ''); // add empty string to the start of the array
+    foreach ($parts as $seg) {
+        $base .= '/' . $seg;
+        $before[$base . '/prepare.php'] = summon($base . '/prepare.php');
+        $after[$base . '/prepare.php'] = summon($base . '/conclude.php');
+    }
+    // var_dump("base: $base", $before, $after);
+    return [
+        'prepare'  => array_filter($before),
+        'conclude' => array_filter($after)
+    ];
+}
+
+
+
+function response(int $http_code, string $body, array $http_headers = []): array
+{
+    return [
+        'status'  => $http_code,
+        'body'    => $body,
+        'headers' => $http_headers,
+    ];
+}
