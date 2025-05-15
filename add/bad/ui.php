@@ -34,7 +34,7 @@ function slot(string $name, ?string $value = null): array
  */
 function render(string $view, array $args = [], string $layout): void
 {
-    $view = str_replace('route', 'render', $view);
+    $view = str_replace('route', 'views', $view);
     ob_start();
     require $view;
     // Push rendered view onto 'content' slot
@@ -42,4 +42,19 @@ function render(string $view, array $args = [], string $layout): void
 
     // Invoke layout, which should output slot('content')
     require $layout;
+}
+
+function el(string $tag, ?string $inner = null, array $attributes = [], $formatter = null): string
+{
+    $formatter ??= fn($v) => htmlspecialchars($v, ENT_QUOTES);
+    if (!is_callable($formatter)) // no escaping
+        $formatter = fn($v) => $v;
+
+    $attrs = '';
+    foreach ($attributes as $name => $value) {
+        $attr = $formatter(is_array($value) ? implode(' ', $value) : (string)$value);
+        $attrs .= ' ' . (is_int($name) ? $attr : "$name=\"$attr\"");
+    }
+
+    return "<{$tag}{$attrs}". ($inner === null ? '/>' : sprintf('>%s</%s>', $formatter($inner), $tag)); 
 }
