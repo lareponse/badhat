@@ -5,6 +5,21 @@ putenv('DEV_MODE=true');
 /**
  * Scaffold for missing routes (DEV_MODE only)
  */
+
+
+function vd()
+{
+    foreach (func_get_args() as $arg)
+        var_dump($arg);
+}
+// var_dump + debug_backtrace
+function vdt()
+{
+    vd(func_get_args());
+    debug_print_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
+}
+
+
 function scaffold(string $path, array $candidates): array
 {
     $body = "<h1>Missing route: $path</h1>\n\n";
@@ -21,21 +36,4 @@ function scaffold(string $path, array $candidates): array
 
 
     return response(404, $body);
-}
-
-function vd()
-{
-    $args = func_get_args();
-    foreach ($args as $arg) {
-        var_dump($arg);
-    }
-}
-// var_dump + debug_backtrace
-function vdt()
-{
-    $args = func_get_args();
-    foreach ($args as $arg) {
-        var_dump($arg);
-    }
-    debug_print_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
 }
