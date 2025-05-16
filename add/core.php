@@ -51,12 +51,13 @@ function route(string $route_root): array
 
     // Route missing (DEV_MODE only)
     if (getenv('DEV_MODE')) {
-        return scaffold($path, $candidates);
+        ob_start();
+        @include __DIR__ . '/bad/scaffold.php';
+        return response(202, ob_get_clean());
     }
 
     return response(404, 'Not Found', ['Content-Type' => 'text/plain']);
 }
-
 
 function handle(array $info): array
 {
@@ -66,17 +67,20 @@ function handle(array $info): array
     if (empty($info['handler']))
         trigger_error('500 Handler not found', E_USER_ERROR);
 
-    // summon main handler first, if an error is triggered, we wont run the hooks
+    // 1. summon main handler first, if an error is triggered, we wont run the hooks
     $handler = summon($info['handler']);
 
-    //collect all hooks along the path
+    // 2. collect all hooks along the path
     $hooks = hooks($info['root'], $info['handler']);
-    vd($hooks);
+
+    // 3. run all prepare hooks
     foreach ($hooks['prepare'] as $hook)
         $hook();
 
+    // 4. run the main handler
     $res = $handler(...$info['args']);
 
+    // 5. run all conclude hooks
     foreach (array_reverse($hooks['conclude']) as $hook)
         $res = $hook($res);
 
@@ -92,7 +96,6 @@ function respond(array $http): void
     }
     echo $http['body'] ?? '';
 }
-
 
 function summon(string $file): ?callable
 {
@@ -161,7 +164,6 @@ function hooks(string $base, string $handler): array
         $before[$base . '/prepare.php'] = summon($base . '/prepare.php');
         $after[$base . '/prepare.php'] = summon($base . '/conclude.php');
     }
-    // var_dump("base: $base", $before, $after);
     return [
         'prepare'  => array_filter($before),
         'conclude' => array_filter($after)
