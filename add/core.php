@@ -1,5 +1,4 @@
 <?php
-
 /**
  * ADDBAD Core Routing & Dispatch
  * Version: 1.2.5 (2025-05-12)
@@ -24,29 +23,22 @@ set_exception_handler(function ($e) {
     trigger_error(sprintf('500 Uncaught Exception: %s in %s:%d', $e->getMessage(), $e->getFile(), $e->getLine()), E_USER_ERROR);
 });
 
-
-
 /**
  * @param string $route_root Absolute path to the routes directory
- * @return array ['handler' => string, 'args' => array, 'root' => string] or trigger_error with status+message
  */
 function route(string $route_root): array
 {
-    $path = clean_request_uri($_SERVER['REQUEST_URI']);
-    $format = request_mime($_SERVER['HTTP_ACCEPT'] ?? null, $_GET['format'] ?? null);
+    $request = request($route_root);
 
-    $segments  = $path === '' ? ['home'] : explode('/', $path);
-    $candidates = route_candidates($route_root, $segments);
-
-    foreach ($candidates as $depth => $file) {
-        $args = array_slice($segments, $depth + 1);
+    foreach ($request['candidates'] as $depth => $file) {
+        $args = array_slice($request['segments'], $depth + 1);
         if (file_exists($file)) {
             $real = realpath($file) ?: '';
             if (strpos($real, realpath($route_root)) === 0) {
                 return ['handler' => $real, 'args' => $args, 'root' => realpath($route_root)];
             }
         } else
-            $candidates[$depth] = ['handler' => $file, 'args' => $args, 'root' => realpath($route_root)];
+            $request['candidates'][$depth] = ['handler' => $file, 'args' => $args, 'root' => realpath($route_root)];
     }
 
     // Route missing (DEV_MODE only)
@@ -61,7 +53,7 @@ function route(string $route_root): array
 
 function handle(array $info): array
 {
-    if (isset($info['status']))
+    if (isset($info['status'])) // already a response
         return $info;
 
     if (empty($info['handler']))
@@ -108,23 +100,6 @@ function summon(string $file): ?callable
     if (!is_callable($callable)) trigger_error("500 Invalid Callable in $file", E_USER_ERROR);
 
     return $callable;
-}
-
-function clean_request_uri(?string $path = null): string
-{
-
-    $path = $path ?? $_SERVER['REQUEST_URI'] ?: '';
-    $path  = urldecode(parse_url($path, PHP_URL_PATH) ?? '');
-
-    // Basic traversal check
-    if (preg_match('#(\.{2}|[\/]\.)#', $path)) {
-        trigger_error('403 Forbidden: Path Traversal', E_USER_ERROR);
-    }
-
-    // Normalize and split segments
-    $path = preg_replace('#/+#', '/', trim($path, '/'));
-
-    return $path;
 }
 
 function route_candidates($route_root, $segments): array
@@ -177,6 +152,41 @@ function response(int $http_code, string $body, array $http_headers = []): array
         'body'    => $body,
         'headers' => $http_headers,
     ];
+}
+
+function request(string $route_root): array
+{
+    static $request = null;
+
+    if ($request === null) {
+        $route_root = realpath($route_root);
+        if ($route_root === false) {
+            trigger_error('500 Route root not found', E_USER_ERROR);
+        }
+
+        $path = $_SERVER['REQUEST_URI'] ?: '';
+        $path  = urldecode(parse_url($path, PHP_URL_PATH) ?? '');
+
+        // Basic traversal check
+        if (preg_match('#(\.{2}|[\/]\.)#', $path)) {
+            trigger_error('403 Forbidden: Path Traversal', E_USER_ERROR);
+        }
+
+        // Normalize and split segments
+        $path = preg_replace('#/+#', '/', trim($path, '/'));
+        $segments = $path === '' ? ['home'] : explode('/', $path);
+
+        $request = [
+            'root'          => $route_root,
+            'method'        => $_SERVER['REQUEST_METHOD'] ?? 'GET',
+            'format'        => request_mime($_SERVER['HTTP_ACCEPT'] ?? null, $_GET['format'] ?? null),
+            'path'          => $path,
+            'segments'      => $segments,
+            'candidates'    => route_candidates($route_root, $segments)
+        ];
+    }
+
+    return $request;
 }
 
 function request_mime(?string $http_accept, ?string $requested_format): string
