@@ -1,6 +1,6 @@
 # ADDBAD — A Procedural Micro-Framework for Serious Developers
 
-**ADDBAD** is not a framework. It's a refusal.
+**ADDBAD** is not a php framework. It's a refusal.
 
 A refusal of boilerplate.
 A refusal of magic.
@@ -20,11 +20,16 @@ That means:
 All you need are **file systems**, **functions**, **arrays** and **conventions**.
 ADDBAD is \~200 lines of core code that give you everything required to build real applications—and nothing you don't explicitly ask for.
 
+This is not retro. This is not hip. This is the future that was stolen. We're taking it back.
+
 ---
 
 ## Core Principles
 
 ### Simplicity over abstraction
+
+If you need 2 million lines of dependencies to build a contact form, you're doing it wrong.
+
 
 * **No classes, no namespaces, no autoloading**
   Structure logic with directories and filenames. If you need namespaces to avoid collisions, rename your functions.
@@ -266,14 +271,33 @@ addbad-app/
 ├── add/
 │   ├── bad/
 │   │   ├── db.php
+│   │   ├── dev.php
 │   │   ├── security.php
 │   │   └── ui.php
 │   └── core.php
 │
 ├── app/
-│   ├── render/
-│   └── route/
-│
+│   ├── route/
+│   │   ├── admin
+│   │   │   └── users
+|   │   │   │   ├── disable.php
+|   │   │   │   ├── create.php
+|   │   │   │   ├── read.php
+|   │   │   │   ├── update.php
+│   │   │   │   └── disable.php
+│   │   ├── users
+│   │   │   ├── account.php
+│   │   │   ├── bills.php
+│   │   │   └── profile.php
+│   │   ├── contact.php
+│   │   ├── home.php
+│   │   └── catalog.php
+│   │
+│   ├── prepare.php
+│   ├── conclude.php
+│   └── views/
+│       ├── db.php
+│       └── ui.php
 ├── public/
 │   ├── index.php
 │   └── .htaccess
