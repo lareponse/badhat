@@ -1,4 +1,5 @@
 <?php
+
 /**
  * ADDBAD Core Routing & Dispatch
  * Version: 1.2.5 (2025-05-12)
@@ -14,9 +15,8 @@ set_error_handler(function (int $errno, string $errstr): bool {
                 : response(500, $errno . ': ' . $errstr)
         );
 
-    return false; // let PHP (or another handler) deal with notices, warnings, etc.
-
-    return false; // prevent PHP from executing its internal error handler
+    // let php handle all other errors
+    return false;
 });
 
 set_exception_handler(function ($e) {
