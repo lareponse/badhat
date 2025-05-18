@@ -18,7 +18,8 @@ That means:
 * No layers of abstraction
 
 All you need are **file systems**, **functions**, **arrays** and **conventions**.
-ADDBAD is ~200 lines of core code that give you everything required to build real applications—and nothing you don't explicitly ask for.
+ADDBAD is about 150 lines of core code that give you everything required to build real applications—and nothing you don't explicitly ask for.
+ADDBAD adds another 150 lines or so of helpers for database access, security, templating and routing.
 
 This is not retro. This is not hip. This is the future that was stolen. We're taking it back.
 
