@@ -170,7 +170,7 @@ function _ui_ascend(string $dir, string $layoutFile): ?string
  * @param string $format     Content type (reserved for content negotiation)
  * @return string            Absolute path to the matching view template
  */
-function _ui_mirror(string $routeFile, $format = 'text/html'): string
+function _ui_mirror(string $routeFile): string
 {
     // Access application root directory
     $appDir = dirname(request()['root']);
