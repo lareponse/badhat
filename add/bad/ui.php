@@ -30,31 +30,27 @@
 function render(array $vars = [], string $routeFile = __FILE__, string $layoutName = 'layout.php'): string
 {
     // Convert route handler path to view template path
-    $viewFile = mirror($routeFile);
+    $viewFile = _ui_mirror($routeFile);
 
     if (! is_file($viewFile)) {
         trigger_error("404 View not found: {$viewFile}", E_USER_ERROR);
     }
 
-    // Extract variables into view scope - EXTR_SKIP prevents overwriting existing vars
-    extract($vars, EXTR_SKIP);
-
     // Capture view output without echoing
-    $content = capture(fn() => include $viewFile);
+    $content = _ui_capture(fn() => include $viewFile);
 
     // Store view content in 'main' slot for layout to access
     slot('main', $content);
 
     // Search for layout file, traversing up directory tree
-    $layoutFile = ascend(dirname($viewFile), $layoutName);
+    $layoutFile = _ui_ascend(dirname($viewFile), $layoutName);
     if ($layoutFile && is_file($layoutFile)) {
-        return capture(fn() => include $layoutFile);
+        return _ui_capture(fn() => include $layoutFile);
     }
 
     // No layout found, return raw view content
     return $content;
 }
-
 
 /**
  * Manages named content slots using static storage
@@ -78,105 +74,6 @@ function slot(string $name, ?string $value = null): array
     }
     return $slots[$name] ?? [];
 }
-
-
-/**
- * Locates layout file by traversing directory hierarchy
- *
- * Search algorithm:
- * 1. Check absolute path
- * 2. Check relative to view directory
- * 3. Traverse up directories until app root is reached
- *
- * This enables both:
- * - Component-specific layouts in deeper directories
- * - Fallback to parent/global layouts when not overridden
- *
- * @param  string      $dir        Starting directory path
- * @param  string      $layoutFile Layout filename
- * @return string|null             Full path to found layout or null if none exists
- */
-function ascend(string $dir, string $layoutFile): ?string
-{
-    // Check if layout is an absolute path
-    if (is_file($layoutFile)) {
-        return $layoutFile;
-    }
-
-    // Check if layout exists in the view directory
-    if (is_file($dir . '/' . $layoutFile)) {
-        return $dir . '/' . $layoutFile;
-    }
-
-    $appDir = request()['root'];
-    $current = rtrim($dir, '/');
-
-    // Traverse upward through directory tree
-    while ($current !== $appDir) {
-        $candidate = $current . '/' . $layoutFile;
-        if (is_file($candidate))
-            return $candidate;
-
-        $current = dirname($current);
-    }
-
-    return null;
-}
-
-
-/**
- * Maps route handler to corresponding view file
- * 
- * Convention-over-configuration approach:
- * - Assumes paired directory structure (routes + views)
- * - Determines view path by finding complementary directory
- * - Preserves path hierarchy from route to view
- *
- * Design choice: Uses file system structure rather than explicit mapping
- * to eliminate config maintenance and enforce consistency
- *
- * @param string $routeFile  Absolute path to executing route handler
- * @param string $format     Content type (reserved for content negotiation)
- * @return string            Absolute path to the matching view template
- */
-function mirror(string $routeFile, $format = 'text/html'): string
-{
-    // Access application root directory
-    $appDir = dirname(request()['root']);
-
-    // Sort directories in descending order to prioritize structured directories
-    foreach (array_diff(scandir($appDir, SCANDIR_SORT_DESCENDING), ['.', '..']) as $viewFolder) {
-        $fullpath = $appDir . '/' . $viewFolder;
-
-        // Identify view directory by excluding the directory containing the route file
-        // Assumes routes and views are in separate top-level directories
-        if (strpos($routeFile, $fullpath) === false) {
-            // Mirror request path to maintain parallel structure between routes and views
-            return $fullpath . request()['path'] . '.php';
-        }
-    }
-
-    // Return empty string if structural assumptions fail
-    return '';
-}
-
-
-/**
- * Captures output buffering without leaking
- * 
- * Encapsulates PHP's output control functions into a clean callable interface
- * Ensures buffer is properly cleaned even if exceptions occur
- *
- * @param callable $something Function that generates output
- * @return string             Captured output
- */
-function capture(callable $something): string
-{
-    ob_start();
-    $something();
-    return (string) ob_get_clean();
-}
-
 
 /**
  * Generates HTML elements with attribute safety
@@ -213,4 +110,99 @@ function html(string $tag, ?string $inner = null, array $attributes = [], $forma
 
     // Generate self-closing or regular tag based on inner content
     return "<{$tag}{$attrs}" . ($inner === null ? '/>' : sprintf('>%s</%s>', $formatter($inner), $tag));
+}
+
+/**
+ * Locates layout file by traversing directory hierarchy
+ *
+ * Search algorithm:
+ * 1. Check absolute path
+ * 2. Check relative to view directory
+ * 3. Traverse up directories until app root is reached
+ *
+ * This enables both:
+ * - Component-specific layouts in deeper directories
+ * - Fallback to parent/global layouts when not overridden
+ *
+ * @param  string      $dir        Starting directory path
+ * @param  string      $layoutFile Layout filename
+ * @return string|null             Full path to found layout or null if none exists
+ */
+function _ui_ascend(string $dir, string $layoutFile): ?string
+{
+    // Check if layout is an absolute path
+    if (is_file($layoutFile)) {
+        return $layoutFile;
+    }
+
+    // Check if layout exists in the view directory
+    if (is_file($dir . '/' . $layoutFile)) {
+        return $dir . '/' . $layoutFile;
+    }
+
+    $appDir = request()['root'];
+    $current = rtrim($dir, '/');
+
+    // Traverse upward through directory tree
+    while ($current !== $appDir) {
+        $candidate = $current . '/' . $layoutFile;
+        if (is_file($candidate))
+            return $candidate;
+
+        $current = dirname($current);
+    }
+
+    return null;
+}
+
+/**
+ * Maps route handler to corresponding view file
+ * 
+ * Convention-over-configuration approach:
+ * - Assumes paired directory structure (routes + views)
+ * - Determines view path by finding complementary directory
+ * - Preserves path hierarchy from route to view
+ *
+ * Design choice: Uses file system structure rather than explicit mapping
+ * to eliminate config maintenance and enforce consistency
+ *
+ * @param string $routeFile  Absolute path to executing route handler
+ * @param string $format     Content type (reserved for content negotiation)
+ * @return string            Absolute path to the matching view template
+ */
+function _ui_mirror(string $routeFile, $format = 'text/html'): string
+{
+    // Access application root directory
+    $appDir = dirname(request()['root']);
+
+    // Sort directories in descending order to prioritize structured directories
+    foreach (array_diff(scandir($appDir, SCANDIR_SORT_DESCENDING), ['.', '..']) as $viewFolder) {
+        $fullpath = $appDir . '/' . $viewFolder;
+
+        // Identify view directory by excluding the directory containing the route file
+        // Assumes routes and views are in separate top-level directories
+        if (strpos($routeFile, $fullpath) === false) {
+            // Mirror request path to maintain parallel structure between routes and views
+            return $fullpath . request()['path'] . '.php';
+        }
+    }
+
+    // Return empty string if structural assumptions fail
+    return '';
+}
+
+/**
+ * Captures output buffering without leaking
+ * 
+ * Encapsulates PHP's output control functions into a clean callable interface
+ * Ensures buffer is properly cleaned even if exceptions occur
+ *
+ * @param callable $something Function that generates output
+ * @return string             Captured output
+ */
+function _ui_capture(callable $something): string
+{
+    ob_start();
+    $something();
+    return (string) ob_get_clean();
 }
