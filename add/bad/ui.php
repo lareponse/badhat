@@ -36,16 +36,18 @@ function render(array $vars = [], string $routeFile = __FILE__, string $layoutNa
         trigger_error("404 View not found: {$viewFile}", E_USER_ERROR);
     }
 
-    // Capture view output without echoing
-    $content = _ui_capture(fn() => include $viewFile);
-
+    ob_start();
+    @include $viewFile;
+    $content = ob_get_clean();
     // Store view content in 'main' slot for layout to access
     slot('main', $content);
 
     // Search for layout file, traversing up directory tree
     $layoutFile = _ui_ascend(dirname($viewFile), $layoutName);
     if ($layoutFile && is_file($layoutFile)) {
-        return _ui_capture(fn() => include $layoutFile);
+        ob_start();
+        @include $layoutFile;
+        return ob_get_clean();
     }
 
     // No layout found, return raw view content
@@ -189,20 +191,4 @@ function _ui_mirror(string $routeFile): string
 
     // Return empty string if structural assumptions fail
     return '';
-}
-
-/**
- * Captures output buffering without leaking
- * 
- * Encapsulates PHP's output control functions into a clean callable interface
- * Ensures buffer is properly cleaned even if exceptions occur
- *
- * @param callable $something Function that generates output
- * @return string             Captured output
- */
-function _ui_capture(callable $something): string
-{
-    ob_start();
-    $something();
-    return (string) ob_get_clean();
 }
