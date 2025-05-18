@@ -51,27 +51,26 @@ function route(string $route_root): array
     return response(404, 'Not Found', ['Content-Type' => 'text/plain']);
 }
 
-function handle(array $info): array
+function handle(array $route): array
 {
-    if (isset($info['status'])) // already a response
-        return $info;
+    if (isset($route['status'])) // already a response
+        return $route;
 
-    if (empty($info['handler']))
+    if (empty($route['handler']))
         trigger_error('500 Handler not found', E_USER_ERROR);
 
     // 1. summon main handler first, if an error is triggered, we wont run the hooks
-    $handler = summon($info['handler']);
+    $handler = summon($route['handler']);
 
     // 2. collect all hooks along the path
-    $hooks = hooks($info['root'], $info['handler']);
+    $hooks = hooks($route['root'], $route['handler']);
 
     // 3. run all prepare hooks
     foreach ($hooks['prepare'] as $hook)
         $hook();
 
     // 4. run the main handler
-    $res = $handler(...$info['args']);
-
+    $res = $handler(...$route['args']);
     // 5. run all conclude hooks
     foreach (array_reverse($hooks['conclude']) as $hook)
         $res = $hook($res);
@@ -154,7 +153,7 @@ function response(int $http_code, string $body, array $http_headers = []): array
     ];
 }
 
-function request(string $route_root): array
+function request(?string $route_root=null): array
 {
     static $request = null;
 
@@ -180,7 +179,7 @@ function request(string $route_root): array
             'root'          => $route_root,
             'method'        => $_SERVER['REQUEST_METHOD'] ?? 'GET',
             'format'        => request_mime($_SERVER['HTTP_ACCEPT'] ?? null, $_GET['format'] ?? null),
-            'path'          => $path,
+            'path'          => '/'.$path,
             'segments'      => $segments,
             'candidates'    => route_candidates($route_root, $segments)
         ];
