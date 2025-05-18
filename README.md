@@ -46,7 +46,7 @@ This is not retro. This is not hip. This is the future that was stolen. We're ta
 
 ### Simplicity over abstraction
 
-* **No classes, no namespaces, no autoloading**
+* **No [classes](./public/doc/overhead-oop.md), no [namespaces](./public/doc/overhead-namespace.md), no [autoloading](./public/doc/overhead-autoload.md)**
   Structure logic with directories and filenames. If you need namespaces to avoid collisions, rename your functions.
   Use `require` directly—no Composer, no magic.
 
