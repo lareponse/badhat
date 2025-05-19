@@ -2,7 +2,6 @@
 
 /**
  * BADGE Core Routing & Dispatch
- * Version: 1.2.5 (2025-05-12)
  */
 
 declare(strict_types=1);
