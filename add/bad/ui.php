@@ -27,12 +27,11 @@
  * @param  string $layoutName Layout filename to search for
  * @return string             Rendered HTML output
  */
-function render(array $vars = [], string $routeFile = __FILE__, string $layoutName = 'layout.php'): string
+function render(array $data = [], string $routeFile = __FILE__, string $layoutName = 'layout.php'): string
 {
     // Convert route handler path to view template path
     $viewFile = _ui_mirror($routeFile);
-
-    if (! is_file($viewFile)) {
+    if (!is_file($viewFile)) {
         trigger_error("404 View not found: {$viewFile}", E_USER_ERROR);
     }
 
@@ -137,22 +136,17 @@ function _ui_ascend(string $dir, string $layoutFile): ?string
         return $layoutFile;
     }
 
-    // Check if layout exists in the view directory
-    if (is_file($dir . '/' . $layoutFile)) {
-        return $dir . '/' . $layoutFile;
-    }
 
-    $appDir = request()['root'];
+    $appDir = (dirname(request()['route_root']));
     $current = rtrim($dir, '/');
-
     // Traverse upward through directory tree
-    while ($current !== $appDir) {
+    do {
         $candidate = $current . '/' . $layoutFile;
         if (is_file($candidate))
             return $candidate;
 
         $current = dirname($current);
-    }
+    } while ($current !== $appDir);
 
     return null;
 }
@@ -175,10 +169,9 @@ function _ui_ascend(string $dir, string $layoutFile): ?string
 function _ui_mirror(string $routeFile): string
 {
     // Access application root directory
-    $appDir = dirname(request()['root']);
+    $appDir = dirname(request()['route_root']);
 
     // Sort directories in descending order to prioritize structured directories
-    vd(array_diff(scandir($appDir, SCANDIR_SORT_DESCENDING), ['.', '..']));
     foreach (array_diff(scandir($appDir, SCANDIR_SORT_DESCENDING), ['.', '..']) as $viewFolder) {
         $fullpath = $appDir . '/' . $viewFolder;
         // Identify view directory by excluding the directory containing the route file
