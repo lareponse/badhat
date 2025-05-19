@@ -1,7 +1,7 @@
 <?php
 
 /**
- * ADDBAD Core Routing & Dispatch
+ * BADGE Core Routing & Dispatch
  * Version: 1.2.5 (2025-05-12)
  */
 
@@ -191,13 +191,13 @@ function request(?string $route_root=null): array
 function request_mime(?string $http_accept, ?string $requested_format): string
 {
     if ($requested_format === 'json')
-        return 'application/vnd.addbad+json';
+        return 'application/vnd.BADGE+json';
 
     if (!empty($http_accept)) {
         $accept = explode(',', $http_accept);
         foreach ($accept as $type) {
-            if (strpos($type, 'application/vnd.addbad') !== false) {
-                return 'application/vnd.addbad+json';
+            if (strpos($type, 'application/vnd.BADGE') !== false) {
+                return 'application/vnd.BADGE+json';
             }
         }
     }

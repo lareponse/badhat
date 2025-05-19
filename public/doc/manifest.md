@@ -1,11 +1,11 @@
-# ADDBAD MANIFESTO  
+# BADGE MANIFESTO  
 **A declaration of independence from bloated software.**
 ---
 
 
 ## CODE IS NOT PROGRESS. FUNCTION IS.
 
-ADDBAD is not a framework. It’s a **refusal**.
+BADGE is not a framework. It’s a **refusal**.
 
 A refusal of:
 - Indirection
@@ -65,9 +65,9 @@ Every convenience you add hides one more moving part.
 “Developer Experience” is just User Experience for devs who don’t want to learn.
 
 
-## ADDBAD IS THE ALTERNATIVE
+## BADGE IS THE ALTERNATIVE
 
-ADDBAD is a procedural micro-stack for serious developers.
+BADGE is a procedural micro-stack for serious developers.
 
 - ~300 lines of PHP
 - No magic
@@ -85,7 +85,7 @@ You know what runs. You control what executes.
 - Build what you understand.
 - Ship something small and sane.
 
-ADDBAD doesn’t scale by indirection.  
+BADGE doesn’t scale by indirection.  
 It scales by composition.
 
 

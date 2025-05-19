@@ -1,8 +1,8 @@
-# Authentication Methods in ADDBAD Context
+# Authentication Methods in BADGE Context
 
 ## Overview
 
-This document outlines practical authentication strategies for use in minimalistic PHP applications, specifically within the ADDBAD philosophy: procedural, no boilerplate, no classes, and minimal dependencies.
+This document outlines practical authentication strategies for use in minimalistic PHP applications, specifically within the BADGE philosophy: procedural, no boilerplate, no classes, and minimal dependencies.
 
 ---
 
@@ -107,7 +107,7 @@ $user = $_SERVER['REMOTE_USER'] ?? null;
 
 ---
 
-## ADDBAD Helper Function
+## BADGE Helper Function
 
 ```php
 function current_user(): ?string {
@@ -137,4 +137,4 @@ This provides a single entry point for user identity in your app. Customize if y
 
 Avoid trusting `X-Auth-User` unless you fully control the proxy and strip incoming headers. For maximum safety, lean on Apache's built-in mechanisms: they’re harder to misconfigure than anything PHP-side.
 
-Stay lean. Stay secure. Stay ADDBAD.
+Stay lean. Stay secure. Stay BADGE.

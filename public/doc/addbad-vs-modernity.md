@@ -1,8 +1,8 @@
-# ADDBAD vs Modern Frameworks
+# BADGE vs Modern Frameworks
 
-This document provides code comparisons between ADDBAD and popular modern PHP frameworks, showcasing the simplicity of ADDBAD's design philosophy.
+This document provides code comparisons between BADGE and popular modern PHP frameworks, showcasing the simplicity of BADGE's design philosophy.
 
-## Code Comparison: ADDBAD vs. Modern Frameworks
+## Code Comparison: BADGE vs. Modern Frameworks
 
 ### Entity/Data Model Definition
 
@@ -41,7 +41,7 @@ class User implements JsonSerializable
 }
 ```
 
-**ADDBAD:**
+**BADGE:**
 ```php
 // A simple contact form submission
 function save_contact($data) {
@@ -77,7 +77,7 @@ class UserController extends BaseController
 }
 ```
 
-**ADDBAD:**
+**BADGE:**
 ```php
 // app/route/users/show.php
 <?php
@@ -105,7 +105,7 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'admin']], function 
 });
 ```
 
-**ADDBAD's simple folder structure:**
+**BADGE's simple folder structure:**
 ```
 app/route/admin/users/disable.php
 app/route/admin/users/verify.php
@@ -130,7 +130,7 @@ app/route/admin/prepare.php  // Contains auth checks for all admin routes
 @endsection
 ```
 
-**ADDBAD:**
+**BADGE:**
 ```php
 <!-- views/users/profile.php -->
 <h1>Welcome, <?= htmlspecialchars($name) ?></h1>
@@ -173,7 +173,7 @@ $entityManager->persist($user);
 $entityManager->flush();
 ```
 
-**ADDBAD:**
+**BADGE:**
 ```php
 $user = db_state("SELECT * FROM users WHERE email = ?", [$email])->fetch();
 db_update('users', [
@@ -219,7 +219,7 @@ public function processOrder(Request $request)
 }
 ```
 
-**ADDBAD:**
+**BADGE:**
 ```php
 // payment.php
 function process_payment($order_id, $amount, $card) {
@@ -274,7 +274,7 @@ class UserController extends Controller
 }
 ```
 
-**ADDBAD:**
+**BADGE:**
 ```php
 // Initialize once in your entry point
 db('mysql:host=' . getenv('DB_HOST') . ';dbname=' . getenv('DB_NAME'), 
@@ -291,7 +291,7 @@ function get_user($id) {
 
 **Modern framework approach:** 3,000+ files, 50+ database tables, complex migrations, 100+ service classes
 
-**ADDBAD approach:**
+**BADGE approach:**
 
 ```
 app/
@@ -380,12 +380,12 @@ return function () {
 };
 ```
 
-## Benchmarks: ADDBAD vs. Popular Frameworks
+## Benchmarks: BADGE vs. Popular Frameworks
 
 | Framework     | Request Time | Memory Usage | Files Loaded |
 |---------------|--------------|--------------|--------------|
 | Laravel 10    | 120-180ms    | 20-32MB      | 800-1200     |
 | Symfony 6     | 90-120ms     | 15-22MB      | 600-900      |
-| ADDBAD        | 5-8ms        | 1-2MB        | 4-15         |
+| BADGE        | 5-8ms        | 1-2MB        | 4-15         |
 
 *Note: Benchmarks performed on a simple "show user profile" page with database access.*
