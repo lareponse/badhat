@@ -178,9 +178,9 @@ function _ui_mirror(string $routeFile): string
     $appDir = dirname(request()['root']);
 
     // Sort directories in descending order to prioritize structured directories
+    vd(array_diff(scandir($appDir, SCANDIR_SORT_DESCENDING), ['.', '..']));
     foreach (array_diff(scandir($appDir, SCANDIR_SORT_DESCENDING), ['.', '..']) as $viewFolder) {
         $fullpath = $appDir . '/' . $viewFolder;
-
         // Identify view directory by excluding the directory containing the route file
         // Assumes routes and views are in separate top-level directories
         if (strpos($routeFile, $fullpath) === false) {
@@ -188,7 +188,7 @@ function _ui_mirror(string $routeFile): string
             return $fullpath . request()['path'] . '.php';
         }
     }
-
+    die('View directory not found');
     // Return empty string if structural assumptions fail
     return '';
 }
