@@ -1,6 +1,6 @@
-# ADDBAD — A Procedural Micro-Framework for Serious Developers
+# BADGE — A Procedural Micro-Framework for Serious Developers
 
-**ADDBAD** is not a php framework. It's a refusal.
+**BADGE** is not a php framework. It's a refusal.
 
 A refusal of boilerplate.
 A refusal of magic.
@@ -18,14 +18,14 @@ That means:
 * No layers of abstraction
 
 All you need are **file systems**, **functions**, **arrays** and **conventions**.
-ADDBAD is about 150 lines of core code that give you everything required to build real applications—and nothing you don't explicitly ask for.
-ADDBAD adds another 150 lines or so of helpers for database access, security, templating and routing.
+BADGE is about 150 lines of core code that give you everything required to build real applications—and nothing you don't explicitly ask for.
+BADGE adds another 150 lines or so of helpers for database access, security, templating and routing.
 
 This is not retro. This is not hip. This is the future that was stolen. We're taking it back.
 
 ---
 
-## Is ADDBAD for you?
+## Is BADGE for you?
 
 **Yes**, if:
 
@@ -72,7 +72,7 @@ This is not retro. This is not hip. This is the future that was stolen. We're ta
   The URL `/user/show/42` maps to a file under `app/route/user/show.php` (or `app/route/user.php` with arguments).
   No route registration, no middleware—if you want code to run first, put it first in the file.
 
-  **ADDBAD simply uses folders:**
+  **BADGE simply uses folders:**
   ```
   app/route/admin/users/disable.php
   app/route/admin/users/verify.php
@@ -96,7 +96,7 @@ This is not retro. This is not hip. This is the future that was stolen. We're ta
   <!DOCTYPE html>
   <html>
   <head>
-      <title><?= $title ?? 'ADDBAD App' ?></title>
+      <title><?= $title ?? 'BADGE App' ?></title>
       <?= implode("\n    ", slot('head')) ?>
   </head>
   <body>
@@ -113,7 +113,7 @@ This is not retro. This is not hip. This is the future that was stolen. We're ta
   Automate only what's repetitive:
 
   ```php
-  // ADDBAD helpers for common patterns:
+  // BADGE helpers for common patterns:
   $stmt = db_create('table', ['a' => 1, 'b' => 2]);
   $stmt = db_update('table', ['a' => 1], 'id = ?', [42]);
   
@@ -151,7 +151,7 @@ This is not retro. This is not hip. This is the future that was stolen. We're ta
   5. **Pure functions**: Encourage functional programming and stateless design
 
 * **No meta-framework**
-  ADDBAD is not a foundation for something bigger—it *is* the final product.
+  BADGE is not a foundation for something bigger—it *is* the final product.
 
 ---
 
@@ -267,7 +267,7 @@ return function () {
 
 ## UI/View Functions
 
-ADDBAD provides a minimal but powerful approach to views and templating:
+BADGE provides a minimal but powerful approach to views and templating:
 
 ### Slot-based Composition
 
@@ -286,7 +286,7 @@ slot('scripts', '<script src="/js/profile.js"></script>');
 <!DOCTYPE html>
 <html>
 <head>
-    <title><?= $title ?? 'ADDBAD App' ?></title>
+    <title><?= $title ?? 'BADGE App' ?></title>
     <?= implode("\n    ", slot('head')) ?>
 </head>
 <body>
@@ -367,7 +367,7 @@ No ORM—use PDO directly. Helpers for common database operations:
 
 ### The Magic of Global Functions vs. DI Containers
 
-ADDBAD's `db()` function demonstrates why global functions are superior to complex dependency injection.
+BADGE's `db()` function demonstrates why global functions are superior to complex dependency injection.
 
 **How it works:**
 
@@ -416,7 +416,7 @@ Write your `SELECT`s and never automate `DELETE`.
 
 ## Security
 
-ADDBAD provides several security functions:
+BADGE provides several security functions:
 
 ### Authentication
 
@@ -463,7 +463,7 @@ return function() {
 Authentication requires:
 * `X-AUTH-USER` HTTP header
 * `X-AUTH-SIG` HTTP header for HMAC verification
-* `ADDBAD_AUTH_HMAC_SECRET` environment variable
+* `BADGE_AUTH_HMAC_SECRET` environment variable
 
 ### CSRF Protection
 
@@ -503,7 +503,7 @@ echo '<script nonce="' . $nonce . '" src="/js/app.js"></script>';
 
 ## Error Handling
 
-ADDBAD uses custom error handling to convert errors to HTTP responses:
+BADGE uses custom error handling to convert errors to HTTP responses:
 
 ```php
 // Trigger a specific HTTP error
@@ -529,7 +529,7 @@ Exception handling is also implemented, converting uncaught exceptions to 500 re
 ## File Layout
 
 ```
-addbad-app/
+BADGE-app/
 ├── add/
 │   ├── bad/
 │   │   ├── db.php
