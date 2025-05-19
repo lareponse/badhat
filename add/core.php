@@ -22,22 +22,23 @@ set_exception_handler(function ($e) {
     trigger_error(sprintf('500 Uncaught Exception: %s in %s:%d', $e->getMessage(), $e->getFile(), $e->getLine()), E_USER_ERROR);
 });
 
-/**
- * @param string $route_root Absolute path to the routes directory
- */
 function route(string $route_root): array
 {
-    $request = request($route_root);
+    // creates the request object
+    $req = request($route_root);
+    $real_root = request()['route_root'];
+    foreach ($req['candidates'] as $depth => $file) {
 
-    foreach ($request['candidates'] as $depth => $file) {
-        $args = array_slice($request['segments'], $depth + 1);
+        $args = array_slice($req['segments'], $depth + 1);
+
         if (file_exists($file)) {
             $real = realpath($file) ?: '';
-            if (strpos($real, realpath($route_root)) === 0) {
-                return ['handler' => $real, 'args' => $args, 'root' => realpath($route_root)];
+            if (strpos($real, $real_root) === 0) {
+                return ['handler' => $real, 'args' => $args];
             }
-        } else
-            $request['candidates'][$depth] = ['handler' => $file, 'args' => $args, 'root' => realpath($route_root)];
+        } else {
+            $req['candidates'][$depth] = ['handler' => $file, 'args' => $args];
+        }
     }
 
     // Route missing (DEV_MODE only)
@@ -61,15 +62,17 @@ function handle(array $route): array
     // 1. summon main handler first, if an error is triggered, we wont run the hooks
     $handler = summon($route['handler']);
 
+    vd($route);
     // 2. collect all hooks along the path
-    $hooks = hooks($route['root'], $route['handler']);
+    $hooks = hooks($route['handler']);
 
     // 3. run all prepare hooks
     foreach ($hooks['prepare'] as $hook)
         $hook();
 
     // 4. run the main handler
-    $res = $handler(...$route['args']);
+    $res = $handler(...($route['args']));
+
     // 5. run all conclude hooks
     foreach (array_reverse($hooks['conclude']) as $hook)
         $res = $hook($res);
@@ -86,6 +89,7 @@ function respond(array $http): void
     }
     echo $http['body'] ?? '';
 }
+
 
 function summon(string $file): ?callable
 {
@@ -112,30 +116,27 @@ function route_candidates($route_root, $segments): array
         }
         $cur .= '/' . $seg;
         $candidates[] = $route_root . $cur . '.php';
+        $candidates[] = $route_root . $cur . DIRECTORY_SEPARATOR . $seg . '.php';
     }
-
     krsort($candidates);
 
     return $candidates;
 }
 
-function hooks(string $base, string $handler): array
+function hooks(string $handler): array
 {
-    $base = rtrim($base, '/');
+    $base = rtrim(request()['route_root'], '/');
     $before = $after = [];
 
     // Figure out the path segments under $base
     $rel   = substr($handler, strlen($base) + 1);
     $parts = explode('/', $rel);
 
-    // Build a list of all directories to check, starting with $base
-    // $before[$base] = summon($base . '/prepare.php');
-    // $after[$base] = summon($base . '/conclude.php');
     array_unshift($parts, ''); // add empty string to the start of the array
     foreach ($parts as $seg) {
         $base .= '/' . $seg;
         $before[$base . '/prepare.php'] = summon($base . '/prepare.php');
-        $after[$base . '/prepare.php'] = summon($base . '/conclude.php');
+        $after[$base . '/conclude.php'] = summon($base . '/conclude.php');
     }
     return [
         'prepare'  => array_filter($before),
@@ -152,33 +153,42 @@ function response(int $http_code, string $body, array $http_headers = []): array
     ];
 }
 
-function request(?string $route_root=null): array
+function request(?string $route_root = null, ?callable $cleanor = null, ?callable $segmentor = null): array
 {
     static $request = null;
 
     if ($request === null) {
-        $route_root = realpath($route_root);
-        if ($route_root === false) {
-            trigger_error('500 Route root not found', E_USER_ERROR);
-        }
 
-        $path = $_SERVER['REQUEST_URI'] ?: '';
-        $path  = urldecode(parse_url($path, PHP_URL_PATH) ?? '');
+        $route_root = $route_root                   ?: trigger_error('500 Request Requires Route Root', E_USER_ERROR);
+        $route_root = realpath($route_root)         ?: trigger_error('500 Route Root Reality Report', E_USER_ERROR);
+        $root = realpath($route_root . '/../../')   ?: trigger_error('500 Root Reality Report', E_USER_ERROR);
 
-        // Basic traversal check
-        if (preg_match('#(\.{2}|[\/]\.)#', $path)) {
-            trigger_error('403 Forbidden: Path Traversal', E_USER_ERROR);
-        }
+        $cleanor ??= function () {
+            $_ = $_SERVER['REQUEST_URI']            ?: '';
+            $_ = parse_url($_, PHP_URL_PATH)        ?: '';
+            $_ = urldecode($_);
+            !preg_match('#(\.{2}|[\/]\.)#', $_)      ?: trigger_error('403 Forbidden: Path Traversal', E_USER_ERROR);
+            $_ = preg_replace('#/+#', '/', trim($_, '/'));
 
-        // Normalize and split segments
-        $path = preg_replace('#/+#', '/', trim($path, '/'));
-        $segments = $path === '' ? ['home'] : explode('/', $path);
+            return $_;
+        };
+
+        $segmentor ??= function ($clean_path) {
+            $segments = ($clean_path === '') ? ['home'] : explode('/', $clean_path);
+            foreach ($segments as $seg)
+                preg_match('/^[a-z0-9_\-]+$/', $seg) ?: trigger_error('400 Bad Request: Invalid Segment ' . sprintf('/%s/', $seg), E_USER_ERROR);
+            return $segments;
+        };
+
+        $path = $cleanor();
+        $segments = $segmentor($path);
 
         $request = [
-            'root'          => $route_root,
+            'route_root'    => $route_root,
+            'root'          => $root,
             'method'        => $_SERVER['REQUEST_METHOD'] ?? 'GET',
             'format'        => request_mime($_SERVER['HTTP_ACCEPT'] ?? null, $_GET['format'] ?? null),
-            'path'          => '/'.$path,
+            'path'          => '/' . $path,
             'segments'      => $segments,
             'candidates'    => route_candidates($route_root, $segments)
         ];
