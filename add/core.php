@@ -25,19 +25,13 @@ set_exception_handler(function ($e) {
 function route(string $route_root): array
 {
     // creates the request object
-    $req = request($route_root);
+    request($route_root);
+
     $real_root = request()['route_root'];
-    foreach ($req['candidates'] as $depth => $file) {
 
-        $args = array_slice($req['segments'], $depth + 1);
-
-        if (file_exists($file)) {
-            $real = realpath($file) ?: '';
-            if (strpos($real, $real_root) === 0) {
-                return ['handler' => $real, 'args' => $args];
-            }
-        } else {
-            $req['candidates'][$depth] = ['handler' => $file, 'args' => $args];
+    foreach (io_candidates($real_root) as $candidate) {
+        if (strpos($candidate['handler'], $real_root) === 0 && file_exists($candidate['handler'])) {
+            return $candidate;
         }
     }
 
@@ -62,7 +56,6 @@ function handle(array $route): array
     // 1. summon main handler first, if an error is triggered, we wont run the hooks
     $handler = summon($route['handler']);
 
-    vd($route);
     // 2. collect all hooks along the path
     $hooks = hooks($route['handler']);
 
@@ -104,23 +97,54 @@ function summon(string $file): ?callable
     return $callable;
 }
 
-function route_candidates($route_root, $segments): array
+function io_candidates($in_or_out, $scaffold = false): array
 {
+    static $segments = null;
+
+    if ($segments === null) {
+        $segments = trim(request()['path'], '/') ?: 'home';
+        $segments = explode('/', $segments);
+        foreach ($segments as $seg)
+            preg_match('/^[a-z0-9_\-]+$/', $seg) ?: trigger_error('400 Bad Request: Invalid Segment /' . $seg . '/', E_USER_ERROR);
+    }
+
     $candidates = [];
     $cur        = '';
 
     // Whitelist each segment and build candidate list
-    foreach ($segments as $seg) {
-        if (!preg_match('/^[a-z0-9_\-]+$/', $seg)) {
-            trigger_error('400 Bad Request: Invalid Segment ' . sprintf('/%s/', $seg), E_USER_ERROR);
-        }
+    foreach ($segments as $depth => $seg) {
+
         $cur .= '/' . $seg;
-        $candidates[] = $route_root . $cur . '.php';
-        $candidates[] = $route_root . $cur . DIRECTORY_SEPARATOR . $seg . '.php';
+
+        $args = array_slice($segments, $depth + 1);
+        $possible = [
+            $in_or_out . $cur . '.php',
+            $in_or_out . $cur . DIRECTORY_SEPARATOR . $seg . '.php',
+        ];
+        foreach ($possible as $candidate) {
+
+            if (strpos($candidate, $in_or_out) !== 0) // skip if the candidate is not in the same root
+                continue;
+
+            $candidates[] = handler($candidate, $args);
+        }
     }
+
     krsort($candidates);
 
-    return $candidates;
+    if ($scaffold)
+        return $candidates;
+
+    foreach ($candidates as $candidate)
+        if (strpos($candidate['handler'], $in_or_out) === 0  && file_exists($candidate['handler']))
+            return [$candidate];
+    
+    return [];
+}
+
+function handler(string $path, array $args = []): array
+{
+    return ['handler' => $path, 'args' => $args];
 }
 
 function hooks(string $handler): array
@@ -153,7 +177,7 @@ function response(int $http_code, string $body, array $http_headers = []): array
     ];
 }
 
-function request(?string $route_root = null, ?callable $cleanor = null, ?callable $segmentor = null): array
+function request(?string $route_root = null, ?callable $cleanor = null): array
 {
     static $request = null;
 
@@ -173,24 +197,15 @@ function request(?string $route_root = null, ?callable $cleanor = null, ?callabl
             return $_;
         };
 
-        $segmentor ??= function ($clean_path) {
-            $segments = ($clean_path === '') ? ['home'] : explode('/', $clean_path);
-            foreach ($segments as $seg)
-                preg_match('/^[a-z0-9_\-]+$/', $seg) ?: trigger_error('400 Bad Request: Invalid Segment ' . sprintf('/%s/', $seg), E_USER_ERROR);
-            return $segments;
-        };
 
         $path = $cleanor();
-        $segments = $segmentor($path);
 
         $request = [
             'route_root'    => $route_root,
             'root'          => $root,
             'method'        => $_SERVER['REQUEST_METHOD'] ?? 'GET',
             'format'        => request_mime($_SERVER['HTTP_ACCEPT'] ?? null, $_GET['format'] ?? null),
-            'path'          => '/' . $path,
-            'segments'      => $segments,
-            'candidates'    => route_candidates($route_root, $segments)
+            'path'          => '/' . $path
         ];
     }
 
