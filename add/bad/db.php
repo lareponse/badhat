@@ -1,17 +1,21 @@
 <?php
 
 function db(
-    $dsn = null,
-    $user = null,
-    $pass = null,
-    $options = null
+    ?string $dsn = null,
+    ?string $user = null,
+    ?string $pass = null,
+    ?array $options = null
 ): PDO {
 
     static $pdo;
 
     if ($pdo === null) {
+        $dsn  = $dsn  ?? defined('DB_DSN')  ? DB_DSN : null;
+        $user = $user ?? defined('DB_USER') ? DB_USER : null;
+        $pass = $pass ?? defined('DB_PASS') ? DB_PASS : null;
+
         if(!isset($dsn, $user, $pass)) {
-            throw new LogicException("Database not initialized; call db_connect() in your bootstrap.");
+            throw new LogicException("500 Database Definition Disappear");
         }
         // resolve defaults
         $options = $options ?? [
