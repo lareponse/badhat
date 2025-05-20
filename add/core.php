@@ -6,22 +6,6 @@
 
 declare(strict_types=1);
 
-set_error_handler(function (int $errno, string $errstr): bool {
-    if ($errno === E_USER_ERROR)
-        respond(
-            preg_match('/^([1-5]\d{2})\s+(.*)$/s', $errstr, $m)
-                ? response((int)$m[1], $m[2])
-                : response(500, $errno . ': ' . $errstr)
-        );
-
-    // let php handle all other errors
-    return false;
-});
-
-set_exception_handler(function ($e) {
-    trigger_error(sprintf('500 Uncaught Exception: %s in %s:%d', $e->getMessage(), $e->getFile(), $e->getLine()), E_USER_ERROR);
-});
-
 function route(string $route_root): array
 {
     // creates the request object
@@ -97,7 +81,7 @@ function summon(string $file): ?callable
     return $callable;
 }
 
-function io_candidates($in_or_out, $scaffold = false): array
+function io_candidates(string $in_or_out, bool $scaffold = false): array
 {
     static $segments = null;
 
