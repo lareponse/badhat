@@ -12,7 +12,7 @@
     <strong>Choose route file to create:</strong>
     <dl>
         <?php
-        foreach ($req['candidates'] as $depth => $response) {
+        foreach (io_candidates(request()['route_root'], true) as $depth => $response) {
             $handler = $response['handler'];
             $handlerArgs = empty($response['args']) ? 'none' : implode(',', $response['args']);
             $templateCode = "<?php\nreturn function (...\$args) {\n\t// Expected arguments: function($handlerArgs)\n\treturn ['status' => 200, 'body' => __FILE__];\n};";
