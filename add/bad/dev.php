@@ -18,7 +18,7 @@ function vd($arg, int $bt_depth = 1)
 
     if (IS_DEV) {
         // In dev mode, show on the page
-        echo '<pre class="vd">' . htmlspecialchars($buffer, ENT_QUOTES) . '</pre>';
+        echo '<pre class="vd">' . $buffer . '</pre>';
     } else {
         // In production, send to the error log
         error_log($buffer);
@@ -40,7 +40,7 @@ function vvd(...$args)
     $buffer = ob_get_clean();
 
     if (IS_DEV) {
-        echo '<pre class="vvd">' . htmlspecialchars($buffer, ENT_QUOTES) . '</pre>';
+        echo '<pre class="vvd">' . $buffer . '</pre>';
     } else {
         error_log($buffer);
     }
