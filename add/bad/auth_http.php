@@ -25,12 +25,11 @@ function auth_token_revoke(string $token_id): bool
     return false;
 }
 
-function auth_user_active(): ?array
+function auth_user_active(): ?string
 {
-    $name = $_SERVER['HTTP_X_AUTH_USER']
+    return $_SERVER['HTTP_X_AUTH_USER']
         ?? $_SERVER['PHP_AUTH_USER']
         ?? $_SERVER['REMOTE_USER']
         ?? null;
 
-    return $name ? ['username' => $name] : null;
 }
