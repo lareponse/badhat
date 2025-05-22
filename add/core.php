@@ -20,7 +20,7 @@ function route(string $route_root): array
     }
 
     // Route missing (DEV_MODE only)
-    if (getenv('DEV_MODE')) {
+    if (defined('IS_DEV') && IS_DEV) {
         ob_start();
         @include __DIR__ . '/bad/scaffold.php';
         return response(202, ob_get_clean());
