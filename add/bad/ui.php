@@ -160,28 +160,20 @@ function _ui_ascend(string $dir, string $layoutFile): ?string
  * - Preserves path hierarchy from route to view
  *
  * Design choice: Uses file system structure rather than explicit mapping
- * to eliminate config maintenance and enforce consistency
+ * to eliminate config maintenance, allow free naming and enforce consistency
  *
  * @param string $routeFile  Absolute path to executing route handler
  * @param string $format     Content type (reserved for content negotiation)
  * @return string            Absolute path to the matching view template
  */
-function _ui_mirror(string $routeFile): string
+function _ui_mirror(): ?string
 {
-    // Access application root directory
-    $appDir = dirname(request()['route_root']);
+    $io = dirname(request()['route_root']);
+    $io = new FilesystemIterator($io, FilesystemIterator::SKIP_DOTS | FilesystemIterator::CURRENT_AS_PATHNAME);
 
-    // Sort directories in descending order to prioritize structured directories
-    foreach (array_diff(scandir($appDir, SCANDIR_SORT_DESCENDING), ['.', '..']) as $viewFolder) {
-        $fullpath = $appDir . '/' . $viewFolder;
-        // Identify view directory by excluding the directory containing the route file
-        // Assumes routes and views are in separate top-level directories
-        if (strpos($routeFile, $fullpath) === false) {
-            // Mirror request path to maintain parallel structure between routes and views
-            return $fullpath . request()['path'] . '.php';
-        }
-    }
-    die('View directory not found');
-    // Return empty string if structural assumptions fail
-    return '';
+    if ($io->current() === request()['route_root'])
+        $io->next();
+
+    $view = array_shift(io_candidates($io->current()));
+    return $view['handler'] ?? null;
 }
