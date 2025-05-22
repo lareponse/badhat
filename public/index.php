@@ -5,6 +5,7 @@ require '../add/bad/dev.php';
 require '../add/bad/db.php';
 require '../add/bad/ui.php';
 require '../add/bad/security.php';
+require '../add/bad/auth_sql.php';
 
 list($dsn, $u, $p) = require '../app/data/credentials.php';
 // $dsn = null;
