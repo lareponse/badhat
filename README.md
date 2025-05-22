@@ -113,12 +113,12 @@ This is not retro. This is not hip. This is the future that was stolen. We're ta
   Automate only what's repetitive:
 
   ```php
-  // BADGE helpers for common patterns:
-  $stmt = db_create('table', ['a' => 1, 'b' => 2]);
-  $stmt = db_update('table', ['a' => 1], 'id = ?', [42]);
+  // BADGE query-builders:
+  $string_insert = qb_create('table', ['a' => 1, 'b' => 2]);
+  $string_update = qb_update('table', ['a' => 1], 'id = ?', [42]);
   
   // But for SELECTs, write what you mean:
-  $products = db_state(
+  $products = dbq(
       "SELECT p.*, c.name as category_name 
        FROM products p
        JOIN categories c ON p.category_id = c.id
@@ -133,7 +133,7 @@ This is not retro. This is not hip. This is the future that was stolen. We're ta
   
   ```php
   // This is better than ORM abstractions:
-  db_state("DELETE FROM sessions WHERE last_active < ? AND user_id = ?", 
+  dbq("DELETE FROM sessions WHERE last_active < ? AND user_id = ?", 
          [date('Y-m-d H:i:s', time() - 86400), $user_id]);
   ```
 
@@ -177,7 +177,7 @@ That file looks like:
 <?php
 return function ($id) {
     // $id will be 42
-    $user = db_state("SELECT * FROM users WHERE id = ?", [$id])->fetch();
+    $user = dbq("SELECT * FROM users WHERE id = ?", [$id])->fetch();
     
     if (!$user) {
         trigger_error('404 Not Found: User not found', E_USER_ERROR);
@@ -211,7 +211,7 @@ Each returns a closure. The `prepare.php` files run before the handler in top-do
     }
     
     // Use function return values instead of globals
-    user_set_current(db_state("SELECT * FROM users WHERE username = ?", 
+    user_set_current(dbq("SELECT * FROM users WHERE username = ?", 
                            [operator()])->fetch());
   };
   ```
@@ -341,7 +341,7 @@ A typical route handler using these view functions:
 ```php
 <?php
 return function ($id) {
-    $user = db_state("SELECT * FROM users WHERE id = ?", [$id])->fetch();
+    $user = dbq("SELECT * FROM users WHERE id = ?", [$id])->fetch();
     
     // Add page-specific metadata
     slot('head', '<meta name="author" content="' . htmlspecialchars($user['name']) . '">');
@@ -379,7 +379,7 @@ BADGE's `db()` function demonstrates why global functions are superior to comple
 
 ```php
 // Execute a prepared statement
-$stmt = db_state("SELECT * FROM users WHERE id = ?", [$id]);
+$stmt = dbq("SELECT * FROM users WHERE id = ?", [$id]);
 $user = $stmt->fetch();
 
 // Insert data
@@ -391,11 +391,12 @@ $stmt = db_create('users', [
 $userId = db()->lastInsertId();
 
 // Update data
-$stmt = db_update('posts', 
+[$sql, $params] = qb_update('posts', 
     ['title' => $title, 'content' => $content], 
     'id = ? AND user_id = ?', 
-    [$postId, $userId]
-);
+    [$postId, $userId]);
+$stmt = dbq($sql, $params);
+
 
 // Run operations in a transaction
 db_transaction(function() use ($userData, $settingsData) {
@@ -437,7 +438,7 @@ return function() {
     if (!operator()) {
         if (isset($_COOKIE['session_token'])) {
             // Try to restore from session
-            $session = db_state(
+            $session = dbq(
                 "SELECT u.username FROM sessions s
                  JOIN users u ON s.user_id = u.id
                  WHERE s.token = ? AND s.expires_at > NOW()",

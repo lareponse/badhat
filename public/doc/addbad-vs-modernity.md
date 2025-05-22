@@ -7,6 +7,7 @@ This document provides code comparisons between BADGE and popular modern PHP fra
 ### Entity/Data Model Definition
 
 **Modern frameworks:**
+
 ```php
 // First, install 87 dependencies
 composer require framework/core framework/router framework/orm framework/validation
@@ -42,6 +43,7 @@ class User implements JsonSerializable
 ```
 
 **BADGE:**
+
 ```php
 // A simple contact form submission
 function save_contact($data) {
@@ -51,7 +53,7 @@ function save_contact($data) {
         'message' => $data['message'],
         'created_at' => date('Y-m-d H:i:s')
     ]);
-    
+
     return $stmt->rowCount() > 0;
 }
 ```
@@ -59,6 +61,7 @@ function save_contact($data) {
 ### Routing Definition
 
 **Modern frameworks:**
+
 ```php
 // routes.php or routes.yaml
 $router->get('/users/{id}', [UserController::class, 'show'])
@@ -78,6 +81,7 @@ class UserController extends BaseController
 ```
 
 **BADGE:**
+
 ```php
 // app/route/users/show.php
 <?php
@@ -85,9 +89,9 @@ return function ($id) {
     if (!auth()) {
         trigger_error('401 Unauthorized', E_USER_ERROR);
     }
-    
-    $user = db_state("SELECT * FROM users WHERE id = ?", [$id])->fetch();
-    
+
+    $user = dbq("SELECT * FROM users WHERE id = ?", [$id])->fetch();
+
     return [
         'status' => 200,
         'body' => render('users/show', ['user' => $user])
@@ -96,6 +100,7 @@ return function ($id) {
 ```
 
 **More complex routes in modern frameworks:**
+
 ```php
 // Modern frameworks
 Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'admin']], function () {
@@ -106,6 +111,7 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'admin']], function 
 ```
 
 **BADGE's simple folder structure:**
+
 ```
 app/route/admin/users/disable.php
 app/route/admin/users/verify.php
@@ -115,12 +121,13 @@ app/route/admin/prepare.php  // Contains auth checks for all admin routes
 ### Templating Systems
 
 **Modern frameworks (e.g., Blade):**
+
 ```php
 @extends('layouts.app')
 
 @section('content')
     <h1>Welcome, {{ $user->name }}</h1>
-    
+
     @foreach($posts as $post)
         <div class="post">
             <h2>{{ $post->title }}</h2>
@@ -131,6 +138,7 @@ app/route/admin/prepare.php  // Contains auth checks for all admin routes
 ```
 
 **BADGE:**
+
 ```php
 <!-- views/users/profile.php -->
 <h1>Welcome, <?= htmlspecialchars($name) ?></h1>
@@ -147,7 +155,7 @@ app/route/admin/prepare.php  // Contains auth checks for all admin routes
 return function ($username) {
     $user = get_user($username);
     $posts = get_user_posts($username);
-    
+
     return [
         'status' => 200,
         'body' => render('users/profile', [
@@ -161,6 +169,7 @@ return function ($username) {
 ### Database Operations
 
 **Modern frameworks (with ORM):**
+
 ```php
 // First, define a 100-line entity class
 // Then, define a 50-line repository class
@@ -174,17 +183,21 @@ $entityManager->flush();
 ```
 
 **BADGE:**
+
 ```php
-$user = db_state("SELECT * FROM users WHERE email = ?", [$email])->fetch();
-db_update('users', [
+$user = dbq("SELECT * FROM users WHERE email = ?", [$email])->fetch();
+
+$update_data = [
     'last_login' => date('Y-m-d H:i:s'),
     'login_count' => $user['login_count'] + 1
-], 'id = ?', [$user['id']]);
+];
+$stmt = dbq(...qb_update('users', $update_data$, 'id = ?', [$user['id']]));
 ```
 
 ### Dependency Injection
 
 **Modern frameworks:**
+
 ```php
 // ServiceProvider.php
 namespace App\Providers;
@@ -220,14 +233,15 @@ public function processOrder(Request $request)
 ```
 
 **BADGE:**
+
 ```php
 // payment.php
 function process_payment($order_id, $amount, $card) {
     require_once 'gateways/stripe.php';  // Include what you need
-    
+
     $api_key = getenv('STRIPE_API_KEY');
     $result = stripe_charge($api_key, $amount, $card);
-    
+
     return $result;
 }
 
@@ -238,6 +252,7 @@ $result = process_payment($order_id, $amount, $card_data);
 ### Database Connection
 
 **Modern frameworks:**
+
 ```php
 // Configuration (config/database.php)
 return [
@@ -260,12 +275,12 @@ $this->app->singleton('db', function ($app) {
 class UserController extends Controller
 {
     private $db;
-    
+
     public function __construct(DatabaseManager $db)
     {
         $this->db = $db;
     }
-    
+
     public function show($id)
     {
         $user = $this->db->table('users')->find($id);
@@ -275,15 +290,16 @@ class UserController extends Controller
 ```
 
 **BADGE:**
+
 ```php
 // Initialize once in your entry point
-db('mysql:host=' . getenv('DB_HOST') . ';dbname=' . getenv('DB_NAME'), 
-   getenv('DB_USER'), 
+db('mysql:host=' . getenv('DB_HOST') . ';dbname=' . getenv('DB_NAME'),
+   getenv('DB_USER'),
    getenv('DB_PASS'));
 
 // Use anywhere without importing/injecting
 function get_user($id) {
-    return db_state("SELECT * FROM users WHERE id = ?", [$id])->fetch();
+    return dbq("SELECT * FROM users WHERE id = ?", [$id])->fetch();
 }
 ```
 
@@ -318,7 +334,7 @@ app/
 │   ├── admin/
 │   │   ├── dashboard.php
 │   │   ├── sites/
-│   │   │   ├── form.php            # Reused for create/edit 
+│   │   │   ├── form.php            # Reused for create/edit
 │   │   │   └── list.php
 │   │   └── users/
 │   │       ├── form.php
@@ -333,22 +349,23 @@ app/
 ```
 
 **Admin dashboard route (admin/dashboard.php):**
+
 ```php
 <?php
 return function () {
     // Get site stats
-    $sites = db_state("SELECT COUNT(*) FROM sites")->fetchColumn();
-    $users = db_state("SELECT COUNT(*) FROM users")->fetchColumn();
-    $pages = db_state("SELECT COUNT(*) FROM pages")->fetchColumn();
-    
+    $sites = dbq("SELECT COUNT(*) FROM sites")->fetchColumn();
+    $users = dbq("SELECT COUNT(*) FROM users")->fetchColumn();
+    $pages = dbq("SELECT COUNT(*) FROM pages")->fetchColumn();
+
     // Get recent activity
-    $activity = db_state(
+    $activity = dbq(
         "SELECT u.username, a.action, a.entity_type, a.created_at
          FROM activity_log a
          JOIN users u ON a.user_id = u.id
          ORDER BY a.created_at DESC LIMIT 10"
     )->fetchAll();
-    
+
     return [
         'status' => 200,
         'body' => render('admin/dashboard', [
@@ -364,6 +381,7 @@ return function () {
 ```
 
 **Authentication (admin/prepare.php):**
+
 ```php
 <?php
 return function () {
@@ -372,8 +390,8 @@ return function () {
         header('Location: /login?return=' . urlencode($_SERVER['REQUEST_URI']));
         exit;
     }
-    
-    $user = db_state("SELECT * FROM users WHERE username = ?", [$username])->fetch();
+
+    $user = dbq("SELECT * FROM users WHERE username = ?", [$username])->fetch();
     if (!$user || $user['role'] !== 'admin') {
         trigger_error('403 Forbidden: Admin access required', E_USER_ERROR);
     }
@@ -382,10 +400,10 @@ return function () {
 
 ## Benchmarks: BADGE vs. Popular Frameworks
 
-| Framework     | Request Time | Memory Usage | Files Loaded |
-|---------------|--------------|--------------|--------------|
-| Laravel 10    | 120-180ms    | 20-32MB      | 800-1200     |
-| Symfony 6     | 90-120ms     | 15-22MB      | 600-900      |
-| BADGE        | 5-8ms        | 1-2MB        | 4-15         |
+| Framework  | Request Time | Memory Usage | Files Loaded |
+| ---------- | ------------ | ------------ | ------------ |
+| Laravel 10 | 120-180ms    | 20-32MB      | 800-1200     |
+| Symfony 6  | 90-120ms     | 15-22MB      | 600-900      |
+| BADGE      | 5-8ms        | 1-2MB        | 4-15         |
 
-*Note: Benchmarks performed on a simple "show user profile" page with database access.*
+_Note: Benchmarks performed on a simple "show user profile" page with database access._
