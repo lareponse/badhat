@@ -2,32 +2,6 @@
 
 declare(strict_types=1);
 
-function db(?string $dsn = null, ?string $u = null, ?string $p = null, ?array $o = null): PDO
-{
-    static $pdo;
-    return $pdo ??= new PDO($dsn ?: throw new LogicException("No DSN"), $u, $p, ($o ?: []) + [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
-}
-
-function dbq(string $q, array $b = []): PDOStatement
-{
-    $s = db()->prepare($q);
-    $s->execute($b);
-    return $s;
-}
-
-function db_transaction(callable $f)
-{
-    $db = db();
-    $db->beginTransaction();
-    try {
-        $r = $f();
-        $db->commit();
-        return $r;
-    } catch (Throwable $e) {
-        $db->rollBack();
-        throw $e;
-    }
-}
 
 function qb_create(string $table, array ...$rows): array
 {
@@ -66,12 +40,6 @@ function qb_where(array $conds, string $connective = 'AND'): array
     return ['WHERE ' . implode(" $connective ", $where), $binds];
 }
 
-function qb_limit(int $limit, int $offset = 0): array
-{
-    return $offset > 0
-        ? ["LIMIT :limit OFFSET :offset", [':limit' => $limit, ':offset' => $offset]]
-        : ["LIMIT :limit", [':limit' => $limit]];
-}
 function qb_in(string $col, array $val, string $prefix = 'in'): array
 {
     if (!$val) return ["1=0", []]; // or throw exception
@@ -94,4 +62,12 @@ function qb_compass(array $data, string $op = '=', string $prefix = 'comp'): arr
         $clauses[] = $op ? "{$col} {$op} {$k}" : "{$col} {$k}";
     }
     return [implode(' AND ', $clauses), $binds];
+}
+
+
+function qb_limit(int $limit, int $offset = 0): array
+{
+    return $offset > 0
+        ? ["LIMIT :limit OFFSET :offset", [':limit' => $limit, ':offset' => $offset]]
+        : ["LIMIT :limit", [':limit' => $limit]];
 }
