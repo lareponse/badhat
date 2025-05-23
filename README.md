@@ -185,7 +185,7 @@ return function ($id) {
     
     return [
         'status' => 200,
-        'body' => render('users/edit', ['user' => $user], 'layout')
+        'body' => render('users/edit', ['user' => $user])
     ];
 };
 ```
@@ -305,7 +305,7 @@ The `render()` function processes PHP templates with extracted variables:
 render('users/profile', [
     'name' => $user['name'],
     'posts' => $posts
-], 'layout');
+]);
 ```
 
 Key details:
@@ -351,7 +351,7 @@ return function ($id) {
     render('users/profile', [
         'user' => $user,
         'title' => 'Profile: ' . $user['name']
-    ], 'layout');
+    ]);
     
     return ['status' => 200];
 };
