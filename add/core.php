@@ -100,7 +100,9 @@ function io_candidates(string $in_or_out, bool $scaffold = false): array
 
         $cur .= '/' . $seg;
 
-        $args = array_slice($segments, $depth + 1);
+        
+        $args = array_slice($segments, $depth + 1); // remaining segments are args
+
         $possible = [
             $in_or_out . $cur . '.php',
             $in_or_out . $cur . DIRECTORY_SEPARATOR . $seg . '.php',
