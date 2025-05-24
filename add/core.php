@@ -35,7 +35,6 @@ function handle(array $route): array
 
     if (empty($route['handler'])) // no handler
         return response(404, 'Not Found', ['Content-Type' => 'text/plain']);
-
     // summon end point handler 
     $handler = summon($route['handler']);
 
@@ -53,14 +52,14 @@ function handle(array $route): array
     foreach (array_reverse($hooks['conclude']) as $hook)
         $res = $hook($res);
 
-    if($handler === null && $res === null) {
+    if ($handler === null && !is_array($res)) {
         $static = render([], $route['handler']);
+
         if ($static) {
             $res = response(200, $static, ['Content-Type' => 'text/html']);
         } else {
             $res = response(500, 'Internal Server Error', ['Content-Type' => 'text/plain']);
         }
-
     }
     return $res ?? [];
 }
