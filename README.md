@@ -43,6 +43,68 @@ This is not retro. This is not hip. This is the future that was stolen. We're ta
 
 ---
 
+## Setup & Installation
+
+### 1. Basic Directory Structure
+```
+myapp/
+├── add/                    # BADGE framework core
+├── app/
+│   ├── io/
+│   │   ├── route/         # Route handlers
+│   │   └── views/         # View templates
+│   ├── mapper/            # Database functions
+│   ├── morph/             # Data transformation
+│   ├── data/              # Configuration & credentials
+│   └── public/            # Web-accessible files
+│       ├── index.php
+│       ├── .htaccess
+│       └── assets/
+└── README.md
+```
+
+### 2. Entry Point (app/public/index.php)
+```php
+<?php
+require '../../add/core.php';
+require '../../add/bad/db.php';
+require '../../add/bad/ui.php';
+require '../../add/bad/security.php';
+require '../../add/bad/error.php';
+
+// Database setup
+list($dsn, $user, $pass) = require '../data/credentials.php';
+db($dsn, $user, $pass);
+
+// Route and respond
+$route = route(__DIR__ . '/../io/route');
+$response = handle($route);
+respond($response);
+```
+
+### 3. Environment Variables
+```bash
+# Required for auth
+export BADGE_AUTH_HMAC_SECRET="your-secret-key"
+
+# Optional for development
+export DEV_MODE=true
+```
+
+### 4. Web Server Configuration (app/public/.htaccess)
+```apache
+RewriteEngine On
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule . /index.php [QSA,L]
+
+<IfModule mod_env.c>
+    SetEnv DEV_MODE true
+</IfModule>
+```
+
+---
+
 ## Core Principles: The How & Why
 
 ### Simplicity over abstraction
@@ -74,9 +136,9 @@ This is not retro. This is not hip. This is the future that was stolen. We're ta
 
   **BADGE simply uses folders:**
   ```
-  app/route/admin/users/disable.php
-  app/route/admin/users/verify.php
-  app/route/admin/prepare.php  // Contains auth checks for all admin routes
+  app/io/route/admin/users/disable.php
+  app/io/route/admin/users/verify.php
+  app/io/route/admin/prepare.php  // Contains auth checks for all admin routes
   ```
 
 ### PHP as template engine
@@ -84,7 +146,7 @@ This is not retro. This is not hip. This is the future that was stolen. We're ta
 * **No Blade, Twig, JSX or template DSLs**
   PHP itself is your view layer. Use:
 
-  * `render('viewname', $data, $layout)`
+  * `render($data, $route_file, $layout)`
   * `slot($name, $value)` and `slot($name)` / `implode(slot($name), $sep)` for injection points
   
   ```php
@@ -100,7 +162,7 @@ This is not retro. This is not hip. This is the future that was stolen. We're ta
       <?= implode("\n    ", slot('head')) ?>
   </head>
   <body>
-      <?= $content ?? '' ?>
+      <?= implode("\n    ", slot('main')) ?>
       <?= implode("\n    ", slot('scripts')) ?>
   </body>
   </html>
@@ -113,9 +175,13 @@ This is not retro. This is not hip. This is the future that was stolen. We're ta
   Automate only what's repetitive:
 
   ```php
-  // BADGE query-builders:
-  $string_insert = qb_create('table', ['a' => 1, 'b' => 2]);
-  $string_update = qb_update('table', ['a' => 1], 'id = ?', [42]);
+  // BADGE query-builders for repetitive operations:
+  [$sql, $params] = qb_create('users', ['name' => 'John', 'email' => 'john@example.com']);
+  $stmt = dbq($sql, $params);
+  $user_id = db()->lastInsertId();
+  
+  [$sql, $params] = qb_update('users', ['last_login' => date('Y-m-d H:i:s')], 'id = ?', [42]);
+  $stmt = dbq($sql, $params);
   
   // But for SELECTs, write what you mean:
   $products = dbq(
@@ -134,7 +200,7 @@ This is not retro. This is not hip. This is the future that was stolen. We're ta
   ```php
   // This is better than ORM abstractions:
   dbq("DELETE FROM sessions WHERE last_active < ? AND user_id = ?", 
-         [date('Y-m-d H:i:s', time() - 86400), $user_id]);
+      [date('Y-m-d H:i:s', time() - 86400), $user_id]);
   ```
 
 ### No fake architecture
@@ -167,9 +233,9 @@ There are no controllers—only files. Each route is a PHP file that **returns a
 
 A request to `/secure/users/edit/42` resolves by walking the directory:
 
-1. `app/route/secure/users/edit.php`
-2. Or `app/route/secure/users.php` with `edit`, `42` as args
-3. Or `app/route/secure.php` with `users`, `edit`, `42` as args
+1. `app/io/route/secure/users/edit.php`
+2. Or `app/io/route/secure/users.php` with `edit`, `42` as args
+3. Or `app/io/route/secure.php` with `users`, `edit`, `42` as args
 
 That file looks like:
 
@@ -185,7 +251,7 @@ return function ($id) {
     
     return [
         'status' => 200,
-        'body' => render('users/edit', ['user' => $user])
+        'body' => render(['user' => $user])
     ];
 };
 ```
@@ -221,13 +287,14 @@ Each returns a closure. The `prepare.php` files run before the handler in top-do
   <?php
   return function($response) {
     // Log this request
-    db_create('access_log', [
+    [$sql, $params] = qb_create('access_log', [
         'url' => $_SERVER['REQUEST_URI'],
         'user_id' => user_current()['id'] ?? null,
         'ip' => $_SERVER['REMOTE_ADDR'],
         'status' => $response['status'],
         'timestamp' => date('Y-m-d H:i:s')
     ]);
+    dbq($sql, $params);
     
     // Add security headers
     $response['headers']['Content-Security-Policy'] = "default-src 'self'";
@@ -249,16 +316,16 @@ putenv('DEV_MODE=true');
 Route not found: /products/categories/list
 
 Create one of:
-- app/route/products/categories/list.php
-- app/route/products/categories.php (with 'list' as arg)
-- app/route/products.php (with 'categories', 'list' as args)
+- app/io/route/products/categories/list.php
+- app/io/route/products/categories.php (with 'list' as arg)
+- app/io/route/products.php (with 'categories', 'list' as args)
 
 Suggested template:
 <?php
 return function () {
     return [
         'status' => 200,
-        'body' => render('products/categories/list', [])
+        'body' => render(['title' => 'Products Categories List'])
     ];
 };
 ```
@@ -290,7 +357,7 @@ slot('scripts', '<script src="/js/profile.js"></script>');
     <?= implode("\n    ", slot('head')) ?>
 </head>
 <body>
-    <?= $content ?? '' ?>
+    <?= implode("\n    ", slot('main')) ?>
     <?= implode("\n    ", slot('scripts')) ?>
 </body>
 </html>
@@ -301,35 +368,35 @@ slot('scripts', '<script src="/js/profile.js"></script>');
 The `render()` function processes PHP templates with extracted variables:
 
 ```php
-// Outputs the rendered view with layout
-render('users/profile', [
+// Renders view and returns HTML string
+$html = render([
     'name' => $user['name'],
     'posts' => $posts
 ]);
 ```
 
 Key details:
-* Views are rendered into the `content` slot
-* The layout is responsible for echoing the content slot
-* Variables passed in the second argument are extracted into the view scope
-* The layout path is provided as the third argument
+* Views are rendered into the `main` slot
+* The layout is responsible for echoing the main slot
+* Variables passed in the first argument are extracted into the view scope
+* The route file path determines the corresponding view file
 
 ### HTML Element Helper
 
-The `el()` function provides a clean way to generate HTML elements:
+The `html()` function provides a clean way to generate HTML elements:
 
 ```php
 // Simple element
-echo el('div', 'Content');
+echo html('div', 'Content');
 
 // Element with attributes
-echo el('a', 'Click me', ['href' => 'https://example.com', 'class' => 'btn']);
+echo html('a', 'Click me', ['href' => 'https://example.com', 'class' => 'btn']);
 
 // Self-closing element
-echo el('img', null, ['src' => 'logo.png', 'alt' => 'Logo']);
+echo html('img', null, ['src' => 'logo.png', 'alt' => 'Logo']);
 
 // Custom escaping/formatting
-echo el('pre', $code, [], function($v) { return htmlentities($v); });
+echo html('pre', $code, [], function($v) { return htmlentities($v); });
 ```
 
 This helper handles attribute escaping and formatting while keeping your templates clean and readable.
@@ -348,12 +415,15 @@ return function ($id) {
     slot('scripts', '<script src="/js/profile.js"></script>');
     
     // Render the view inside the layout
-    render('users/profile', [
+    $html = render([
         'user' => $user,
         'title' => 'Profile: ' . $user['name']
     ]);
     
-    return ['status' => 200];
+    return [
+        'status' => 200,
+        'body' => $html
+    ];
 };
 ```
 
@@ -383,11 +453,12 @@ $stmt = dbq("SELECT * FROM users WHERE id = ?", [$id]);
 $user = $stmt->fetch();
 
 // Insert data
-$stmt = db_create('users', [
+[$sql, $params] = qb_create('users', [
     'name' => $name, 
     'email' => $email,
     'created_at' => date('Y-m-d H:i:s')
 ]);
+$stmt = dbq($sql, $params);
 $userId = db()->lastInsertId();
 
 // Update data
@@ -397,29 +468,75 @@ $userId = db()->lastInsertId();
     [$postId, $userId]);
 $stmt = dbq($sql, $params);
 
-
 // Run operations in a transaction
 db_transaction(function() use ($userData, $settingsData) {
-    $userId = db_create('users', $userData)->rowCount() ? db()->lastInsertId() : null;
+    [$sql, $params] = qb_create('users', $userData);
+    $stmt = dbq($sql, $params);
+    $userId = $stmt->rowCount() ? db()->lastInsertId() : null;
     
     if (!$userId) {
         return false; // Will trigger rollback
     }
     
-    db_create('user_settings', ['user_id' => $userId] + $settingsData);
+    [$sql, $params] = qb_create('user_settings', ['user_id' => $userId] + $settingsData);
+    dbq($sql, $params);
     return true; // Will commit
 });
 ```
 
 Write your `SELECT`s and never automate `DELETE`.
 
+### Mapper Pattern for Database Operations
+
+BADGE applications typically organize database functions using the mapper pattern:
+
+```php
+// app/mapper/user.php
+function user_create($data) {
+    [$sql, $params] = qb_create('users', $data);
+    $stmt = dbq($sql, $params);
+    return db()->lastInsertId();
+}
+
+function user_get_by_id($id) {
+    return dbq("SELECT * FROM users WHERE id = ?", [$id])->fetch();
+}
+
+function user_get_by_username($username) {
+    return dbq("SELECT * FROM users WHERE username = ?", [$username])->fetch();
+}
+
+// In routes, include the mapper:
+require_once __DIR__ . '/../../mapper/user.php';
+
+$user = user_get_by_id($id);
+```
+
 ---
 
-## Security
+## Authentication
 
-BADGE provides several security functions:
+BADGE provides two authentication backends and security functions:
 
-### Authentication
+### Authentication Backends
+
+Choose one based on your deployment architecture:
+
+#### HTTP Header Auth (auth_http.php)
+For apps behind reverse proxies or SSO systems:
+```php
+require 'add/bad/auth_http.php';
+// Uses $_SERVER['HTTP_X_AUTH_USER']
+```
+
+#### Database Auth (auth_sql.php)  
+For traditional username/password with sessions:
+```php
+require 'add/bad/auth_sql.php';
+// Requires users and tokens tables
+```
+
+### Basic Authentication
 
 ```php
 // Basic auth check
@@ -525,6 +642,36 @@ if (strlen($password) < 8) {
 
 Exception handling is also implemented, converting uncaught exceptions to 500 responses.
 
+Include error handling in your entry point:
+```php
+require 'add/bad/error.php';
+```
+
+---
+
+## Testing
+
+BADGE includes a minimal testing framework:
+
+```php
+require 'add/test.php';
+
+test('user creation works', function() {
+    $id = user_create(['username' => 'test']);
+    assert($id > 0);
+});
+
+test('handles errors correctly', function() {
+    assert_throws(function() {
+        user_create(['username' => 'duplicate']);
+    }, 'PDOException', 'UNIQUE constraint');
+});
+
+run_tests();
+```
+
+See `add/doc/test.md` for complete testing guide.
+
 ---
 
 ## File Layout
@@ -533,46 +680,83 @@ Exception handling is also implemented, converting uncaught exceptions to 500 re
 BADGE-app/
 ├── add/
 │   ├── bad/
+│   │   ├── auth_http.php
+│   │   ├── auth_sql.php
 │   │   ├── db.php
 │   │   ├── dev.php
+│   │   ├── error.php
+│   │   ├── qb.php
+│   │   ├── scaffold.php
 │   │   ├── security.php
 │   │   └── ui.php
-│   └── core.php
+│   ├── core.php
+│   ├── test.php
+│   └── doc/
 │
 ├── app/
-│   ├── route/
-│   │   ├── admin/
-│   │   │   ├── prepare.php  // Auth for all admin routes
-│   │   │   └── users/
-|   │   │       ├── create.php
-|   │   │       ├── read.php
-|   │   │       ├── update.php
-│   │   │       └── disable.php
-│   │   ├── users/
-│   │   │   ├── account.php
-│   │   │   ├── bills.php
-│   │   │   └── profile.php
-│   │   ├── contact.php
-│   │   ├── home.php
-│   │   └── catalog.php
+│   ├── io/
+│   │   ├── route/
+│   │   │   ├── admin/
+│   │   │   │   ├── prepare.php  // Auth for all admin routes
+│   │   │   │   ├── articles/
+│   │   │   │   │   ├── alter.php
+│   │   │   │   │   └── articles.php
+│   │   │   │   ├── events/
+│   │   │   │   │   ├── alter.php
+│   │   │   │   │   └── events.php
+│   │   │   │   ├── resources/
+│   │   │   │   └── users/
+│   │   │   │       └── users.php
+│   │   │   ├── blog/
+│   │   │   │   ├── article.php
+│   │   │   │   └── blog.php
+│   │   │   ├── events/
+│   │   │   │   └── event.php
+│   │   │   ├── resources/
+│   │   │   │   └── download.php
+│   │   │   ├── contact.php
+│   │   │   ├── home.php
+│   │   │   ├── login.php
+│   │   │   ├── logout.php
+│   │   │   ├── register.php
+│   │   │   └── search.php
+│   │   │
+│   │   └── views/
+│   │       ├── layout.php
+│   │       ├── admin/
+│   │       │   ├── layout.php
+│   │       │   ├── admin.php
+│   │       │   ├── articles/
+│   │       │   ├── events/
+│   │       │   ├── resources/
+│   │       │   └── users/
+│   │       ├── blog/
+│   │       ├── events/
+│   │       ├── resources/
+│   │       ├── contact.php
+│   │       ├── login.php
+│   │       └── register.php
 │   │
-│   ├── prepare.php  // Global setup for all routes
-│   ├── conclude.php // Global cleanup for all routes
-│   └── views/
-│       ├── layout.php
-│       ├── admin/
-│       │   └── users/
-│       │       ├── form.php
-│       │       └── list.php
-│       ├── users/
-│       │   ├── account.php
-│       │   └── profile.php
-│       ├── contact.php
-│       └── home.php
-├── public/
-│   ├── index.php
-│   ├── assets/
-│   └── .htaccess
+│   ├── mapper/              // Database functions
+│   │   ├── article.php
+│   │   ├── category.php
+│   │   ├── event.php
+│   │   ├── resource.php
+│   │   └── user.php
+│   │
+│   ├── morph/               // Data transformation
+│   │   └── slugify.php
+│   │
+│   ├── data/                // Configuration
+│   │   ├── credentials.php
+│   │   └── 000-schema.sql
+│   │
+│   └── public/              // Web-accessible files
+│       ├── index.php
+│       ├── .htaccess
+│       └── assets/
+│           ├── css/
+│           └── images/
 │
 └── README.md
 ```
