@@ -16,7 +16,14 @@
                 $handlerArgs = empty($response['args']) ? 'none' : implode(',', $response['args']);
                 $templateCode = "<?php\n// Expected arguments: $handlerArgs\nreturn function (...\$args) {\n\treturn ['status' => 200, 'body' => __FILE__];\n};";
             ?>
-                <dt><strong><?= htmlspecialchars(str_replace(request()['route_root'], '', $handler)) ?></strong></dt>
+                <dt><strong>
+                <?= htmlspecialchars(
+                    trim(
+                        str_replace(request()['route_root'], '', $handler),
+                        '/'
+                    )
+                ) ?>
+                </strong></dt>
                 <dd>
                     <pre><?= htmlspecialchars($templateCode) ?></pre>
                 </dd>
