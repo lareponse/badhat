@@ -40,6 +40,27 @@ function qb_where(array $conds, string $connective = 'AND'): array
     return ['WHERE ' . implode(" $connective ", $where), $binds];
 }
 
+
+// qb_rby('articles', 'id', 42)
+// qb_rby('articles', ['status' => 'published', 'user_id' => 5, 'tag_id' => [3, 4]])
+function qb_rby($table, ...$args): array
+{
+    if (is_array($args[0]))
+        $args = $args[0];
+    elseif (is_string($args[0]) && is_scalar($args[1]))
+        $args = [$args[0] => $args[1]];
+
+    [$where, $params] = qb_where($args, 'AND');
+
+    return ["SELECT * FROM {$table} {$where}", $params];
+}
+
+function qb_limit(int $limit, int $offset = 0): array
+{
+    return $offset > 0
+        ? ["LIMIT :limit OFFSET :offset", [':limit' => $limit, ':offset' => $offset]]
+        : ["LIMIT :limit", [':limit' => $limit]];
+}
 function qb_in(string $col, array $val, string $prefix = 'in'): array
 {
     if (!$val) return ["1=0", []]; // or throw exception
@@ -62,12 +83,4 @@ function qb_compass(array $data, string $op = '=', string $prefix = 'comp'): arr
         $clauses[] = $op ? "{$col} {$op} {$k}" : "{$col} {$k}";
     }
     return [implode(' AND ', $clauses), $binds];
-}
-
-
-function qb_limit(int $limit, int $offset = 0): array
-{
-    return $offset > 0
-        ? ["LIMIT :limit OFFSET :offset", [':limit' => $limit, ':offset' => $offset]]
-        : ["LIMIT :limit", [':limit' => $limit]];
 }
