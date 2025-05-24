@@ -12,7 +12,6 @@ function route(string $route_root): array
     request($route_root);
 
     $real_root = request()['route_root'];
-
     foreach (io_candidates($real_root) as $candidate) {
         if (strpos($candidate['handler'], $real_root) === 0 && file_exists($candidate['handler'])) {
             return $candidate;
@@ -31,30 +30,39 @@ function route(string $route_root): array
 
 function handle(array $route): array
 {
-    if (isset($route['status'])) // already a response
+    if (!empty($route['status'])) // already a response
         return $route;
 
-    if (empty($route['handler']))
-        trigger_error('500 Handler not found', E_USER_ERROR);
+    if (empty($route['handler'])) // no handler
+        return response(404, 'Not Found', ['Content-Type' => 'text/plain']);
 
-    // 1. summon main handler first, if an error is triggered, we wont run the hooks
+    // summon end point handler 
     $handler = summon($route['handler']);
 
-    // 2. collect all hooks along the path
+    // gather prepare/conclude hooks along the route tree
     $hooks = hooks($route['handler']);
 
-    // 3. run all prepare hooks
+    // prepare > execute > conclude
     foreach ($hooks['prepare'] as $hook)
         $hook();
 
-    // 4. run the main handler
-    $res = $handler(...($route['args']));
+    $res = null;
+    if ($handler)
+        $res = $handler(...($route['args']));
 
-    // 5. run all conclude hooks
     foreach (array_reverse($hooks['conclude']) as $hook)
         $res = $hook($res);
 
-    return $res;
+    if($handler === null && $res === null) {
+        $static = render([], $route['handler']);
+        if ($static) {
+            $res = response(200, $static, ['Content-Type' => 'text/html']);
+        } else {
+            $res = response(500, 'Internal Server Error', ['Content-Type' => 'text/plain']);
+        }
+
+    }
+    return $res ?? [];
 }
 
 function respond(array $http): void
@@ -67,7 +75,6 @@ function respond(array $http): void
     echo $http['body'] ?? '';
 }
 
-
 function summon(string $file): ?callable
 {
     if (!is_readable($file)) return null;
@@ -76,9 +83,11 @@ function summon(string $file): ?callable
     $callable = @include $file;
     ob_end_clean();
 
-    if (!is_callable($callable)) trigger_error("500 Invalid Callable in $file", E_USER_ERROR);
+    if (is_callable($callable))
+        return $callable;
 
-    return $callable;
+    trigger_error("Invalid Callable in $file", E_USER_NOTICE);
+    return null;
 }
 
 function io_candidates(string $in_or_out, bool $scaffold = false): array
@@ -100,7 +109,7 @@ function io_candidates(string $in_or_out, bool $scaffold = false): array
 
         $cur .= '/' . $seg;
 
-        
+
         $args = array_slice($segments, $depth + 1); // remaining segments are args
 
         $possible = [
@@ -124,14 +133,11 @@ function io_candidates(string $in_or_out, bool $scaffold = false): array
     foreach ($candidates as $candidate)
         if (strpos($candidate['handler'], $in_or_out) === 0  && file_exists($candidate['handler']))
             return [$candidate];
-    
+
     return [];
 }
 
-function handler(string $path, array $args = []): array
-{
-    return ['handler' => $path, 'args' => $args];
-}
+
 
 function hooks(string $handler): array
 {
@@ -154,6 +160,44 @@ function hooks(string $handler): array
     ];
 }
 
+
+
+function request(?string $route_root = null, ?callable $path = null): array
+{
+    static $request;
+
+    if ($request === null) {
+
+        $route_root = $route_root                   ?: trigger_error('500 Request Requires Route Root', E_USER_ERROR);
+        $route_root = realpath($route_root)         ?: trigger_error('500 Route Root Reality Report', E_USER_ERROR);
+        $root = realpath($route_root . '/../../')   ?: trigger_error('500 Root Reality Report', E_USER_ERROR);
+
+        $path ??= function (string $uri) {
+            $uri = parse_url($uri, PHP_URL_PATH)        ?: '';
+            $uri = urldecode($uri);
+            !preg_match('#(\.{2}|[\/]\.)#', $uri)      ?: trigger_error('403 Forbidden: Path Traversal', E_USER_ERROR);
+            $uri = preg_replace('#/+#', '/', rtrim($uri, '/'));
+
+            return $uri;
+        };
+
+        $request = [
+            'route_root'    => $route_root,
+            'root'          => $root,
+            'method'        => $_SERVER['REQUEST_METHOD'] ?? 'GET',
+            'format'        => request_mime($_SERVER['HTTP_ACCEPT'] ?? null, $_GET['format'] ?? null),
+            'path'          => $path($_SERVER['REQUEST_URI'])
+        ];
+    }
+
+    return $request;
+}
+
+function handler(string $path, array $args = []): array
+{
+    return ['handler' => $path, 'args' => $args];
+}
+
 function response(int $http_code, string $body, array $http_headers = []): array
 {
     return [
@@ -163,40 +207,6 @@ function response(int $http_code, string $body, array $http_headers = []): array
     ];
 }
 
-function request(?string $route_root = null, ?callable $cleanor = null): array
-{
-    static $request = null;
-
-    if ($request === null) {
-
-        $route_root = $route_root                   ?: trigger_error('500 Request Requires Route Root', E_USER_ERROR);
-        $route_root = realpath($route_root)         ?: trigger_error('500 Route Root Reality Report', E_USER_ERROR);
-        $root = realpath($route_root . '/../../')   ?: trigger_error('500 Root Reality Report', E_USER_ERROR);
-
-        $cleanor ??= function () {
-            $_ = $_SERVER['REQUEST_URI']            ?: '';
-            $_ = parse_url($_, PHP_URL_PATH)        ?: '';
-            $_ = urldecode($_);
-            !preg_match('#(\.{2}|[\/]\.)#', $_)      ?: trigger_error('403 Forbidden: Path Traversal', E_USER_ERROR);
-            $_ = preg_replace('#/+#', '/', trim($_, '/'));
-
-            return $_;
-        };
-
-
-        $path = $cleanor();
-
-        $request = [
-            'route_root'    => $route_root,
-            'root'          => $root,
-            'method'        => $_SERVER['REQUEST_METHOD'] ?? 'GET',
-            'format'        => request_mime($_SERVER['HTTP_ACCEPT'] ?? null, $_GET['format'] ?? null),
-            'path'          => '/' . $path
-        ];
-    }
-
-    return $request;
-}
 
 function request_mime(?string $http_accept, ?string $requested_format): string
 {
@@ -205,11 +215,9 @@ function request_mime(?string $http_accept, ?string $requested_format): string
 
     if (!empty($http_accept)) {
         $accept = explode(',', $http_accept);
-        foreach ($accept as $type) {
-            if (strpos($type, 'application/vnd.BADGE') !== false) {
+        foreach ($accept as $type)
+            if (strpos($type, 'application/vnd.BADGE') !== false)
                 return 'application/vnd.BADGE+json';
-            }
-        }
     }
 
     return 'text/html';
