@@ -29,10 +29,13 @@
  */
 function render(array $data = [], string $routeFile = __FILE__, string $layoutName = 'layout.php'): string
 {
+  
     // Convert route handler path to view template path
     $viewFile = _ui_mirror($routeFile);
+
     if (!is_file($viewFile)) {
-        trigger_error("404 View not found: {$viewFile}", E_USER_ERROR);
+        trigger_error("404 View not found: '{$viewFile}'", E_USER_NOTICE);
+        return '';
     }
 
     ob_start();
