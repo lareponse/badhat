@@ -13,13 +13,13 @@ function auth()
 
 function operator(): ?string
 {
-    if (empty(getenv('ADDBAD_AUTH_HMAC_SECRET')))
+    if (empty(getenv('BADGE_AUTH_HMAC_SECRET')))
         trigger_error('500 Auth HMAC secret is missing', E_USER_ERROR);
 
     if (empty($_SERVER['HTTP_X_AUTH_USER']) || empty($_SERVER['HTTP_X_AUTH_SIG']))
         return null;
 
-    $hash_hmac = hash_hmac('sha256', $_SERVER['HTTP_X_AUTH_USER'], getenv('ADDBAD_AUTH_HMAC_SECRET'));
+    $hash_hmac = hash_hmac('sha256', $_SERVER['HTTP_X_AUTH_USER'], getenv('BADGE_AUTH_HMAC_SECRET'));
 
     if (hash_equals($_SERVER['HTTP_X_AUTH_SIG'], $hash_hmac))
         return $_SERVER['HTTP_X_AUTH_USER'];
