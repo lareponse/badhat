@@ -1,31 +1,33 @@
 <?php
 
-declare(strict_types=1);
-
-function db(?string $dsn = null, ?string $u = null, ?string $p = null, ?array $o = null): PDO
+function pdo(...$args)
 {
     static $pdo;
-    return $pdo ??= new PDO($dsn ?: throw new LogicException("No DSN"), $u, $p, ($o ?: []) + [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
-}
+    
+    if (!$pdo && $defaults = [PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC, PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]) {                                        // not connected yet
+    
+        [$dsn, $user, $pass, $options] = $args;         // expected to provide PDO constructor arguments 
+        $pdo = new PDO($dsn ?: throw new LogicException('Empty DSN'), $user, $pass, is_array($options) ? ($options + $defaults) : $defaults);
+    
+    } else if (is_string($args[0])) { // just querying, signature pdo('query', [bindings] ?? [], ?PDO): PDOStatement
 
-function dbq(string $q, array $b = []): PDOStatement
-{
-    $s = db()->prepare($q);
-    $s->execute($b);
-    return $s;
-}
+        [$sql, $bindings, $connection] = $args + ['', [], $pdo];
+        return ($s = $connection->prepare($sql))->execute($bindings) ? $s : $s;
 
-function db_transaction(callable $f)
-{
-    $db = db();
-    $db->beginTransaction();
-    try {
-        $r = $f();
-        $db->commit();
-        return $r;
-    } catch (Throwable $e) {
-        $db->rollBack();
-        throw $e;
+    } else { // a transaction, signature pdo(callable, ?PDO)
+        
+        [$callable, $connection] = $args + [null, $pdo];
+        $connection->beginTransaction();
+        try {
+            $r = $callable();
+            $connection->commit();
+            return $r;  
+        } catch (Throwable $e) {
+            $connection->rollBack();
+            throw $e;
+        }
+        
     }
-}
 
+    return $pdo; // going native, return PDO instance, signature pdo(): PDO
+}
