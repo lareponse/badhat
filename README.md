@@ -74,7 +74,7 @@ require '../../add/bad/error.php';
 
 // Database setup
 list($dsn, $user, $pass) = require '../data/credentials.php';
-db($dsn, $user, $pass);
+pdo($dsn, $user, $pass);
 
 // Route and respond
 $route = route(__DIR__ . '/../io/route');
@@ -177,14 +177,14 @@ RewriteRule . /index.php [QSA,L]
   ```php
   // BADGE query-builders for repetitive operations:
   [$sql, $params] = qb_create('users', ['name' => 'John', 'email' => 'john@example.com']);
-  $stmt = dbq($sql, $params);
-  $user_id = db()->lastInsertId();
+  $stmt = pdo($sql, $params);
+  $user_id = pdo()->lastInsertId();
   
   [$sql, $params] = qb_update('users', ['last_login' => date('Y-m-d H:i:s')], 'id = ?', [42]);
-  $stmt = dbq($sql, $params);
+  $stmt = pdo($sql, $params);
   
   // But for SELECTs, write what you mean:
-  $products = dbq(
+  $products = pdo(
       "SELECT p.*, c.name as category_name 
        FROM products p
        JOIN categories c ON p.category_id = c.id
@@ -199,7 +199,7 @@ RewriteRule . /index.php [QSA,L]
   
   ```php
   // This is better than ORM abstractions:
-  dbq("DELETE FROM sessions WHERE last_active < ? AND user_id = ?", 
+  pdo("DELETE FROM sessions WHERE last_active < ? AND user_id = ?", 
       [date('Y-m-d H:i:s', time() - 86400), $user_id]);
   ```
 
@@ -243,7 +243,7 @@ That file looks like:
 <?php
 return function ($id) {
     // $id will be 42
-    $user = dbq("SELECT * FROM users WHERE id = ?", [$id])->fetch();
+    $user = pdo("SELECT * FROM users WHERE id = ?", [$id])->fetch();
     
     if (!$user) {
         trigger_error('404 Not Found: User not found', E_USER_ERROR);
@@ -277,7 +277,7 @@ Each returns a closure. The `prepare.php` files run before the handler in top-do
     }
     
     // Use function return values instead of globals
-    user_set_current(dbq("SELECT * FROM users WHERE username = ?", 
+    user_set_current(pdo("SELECT * FROM users WHERE username = ?", 
                            [operator()])->fetch());
   };
   ```
@@ -294,7 +294,7 @@ Each returns a closure. The `prepare.php` files run before the handler in top-do
         'status' => $response['status'],
         'timestamp' => date('Y-m-d H:i:s')
     ]);
-    dbq($sql, $params);
+    pdo($sql, $params);
     
     // Add security headers
     $response['headers']['Content-Security-Policy'] = "default-src 'self'";
@@ -408,7 +408,7 @@ A typical route handler using these view functions:
 ```php
 <?php
 return function ($id) {
-    $user = dbq("SELECT * FROM users WHERE id = ?", [$id])->fetch();
+    $user = pdo("SELECT * FROM users WHERE id = ?", [$id])->fetch();
     
     // Add page-specific metadata
     slot('head', '<meta name="author" content="' . htmlspecialchars($user['name']) . '">');
@@ -437,19 +437,19 @@ No ORM—use PDO directly. Helpers for common database operations:
 
 ### The Magic of Global Functions vs. DI Containers
 
-BADGE's `db()` function demonstrates why global functions are superior to complex dependency injection.
+BADGE's `pdo()` function demonstrates why global functions are superior to complex dependency injection.
 
 **How it works:**
 
-1. **First call**: `db($dsn, $user, $pass)` initializes the PDO connection and stores it in a static variable
-2. **Subsequent calls**: `db()` without parameters returns the existing connection
+1. **First call**: `pdo($dsn, $user, $pass)` initializes the PDO connection and stores it in a static variable
+2. **Subsequent calls**: `pdo()` without parameters returns the existing connection
 3. **No service locator**: Unlike DI containers where you ask for dependencies, the function just works
 
 **Basic database operations:**
 
 ```php
 // Execute a prepared statement
-$stmt = dbq("SELECT * FROM users WHERE id = ?", [$id]);
+$stmt = pdo("SELECT * FROM users WHERE id = ?", [$id]);
 $user = $stmt->fetch();
 
 // Insert data
@@ -458,28 +458,28 @@ $user = $stmt->fetch();
     'email' => $email,
     'created_at' => date('Y-m-d H:i:s')
 ]);
-$stmt = dbq($sql, $params);
-$userId = db()->lastInsertId();
+$stmt = pdo($sql, $params);
+$userId = pdo()->lastInsertId();
 
 // Update data
 [$sql, $params] = qb_update('posts', 
     ['title' => $title, 'content' => $content], 
     'id = ? AND user_id = ?', 
     [$postId, $userId]);
-$stmt = dbq($sql, $params);
+$stmt = pdo($sql, $params);
 
 // Run operations in a transaction
-db_transaction(function() use ($userData, $settingsData) {
+pdo(function() use ($userData, $settingsData) {
     [$sql, $params] = qb_create('users', $userData);
-    $stmt = dbq($sql, $params);
-    $userId = $stmt->rowCount() ? db()->lastInsertId() : null;
+    $stmt = pdo($sql, $params);
+    $userId = $stmt->rowCount() ? pdo()->lastInsertId() : null;
     
     if (!$userId) {
         return false; // Will trigger rollback
     }
     
     [$sql, $params] = qb_create('user_settings', ['user_id' => $userId] + $settingsData);
-    dbq($sql, $params);
+    pdo($sql, $params);
     return true; // Will commit
 });
 ```
@@ -494,16 +494,16 @@ BADGE applications typically organize database functions using the mapper patter
 // app/mapper/user.php
 function user_create($data) {
     [$sql, $params] = qb_create('users', $data);
-    $stmt = dbq($sql, $params);
-    return db()->lastInsertId();
+    $stmt = pdo($sql, $params);
+    return pdo()->lastInsertId();
 }
 
 function user_get_by_id($id) {
-    return dbq("SELECT * FROM users WHERE id = ?", [$id])->fetch();
+    return pdo("SELECT * FROM users WHERE id = ?", [$id])->fetch();
 }
 
 function user_get_by_username($username) {
-    return dbq("SELECT * FROM users WHERE username = ?", [$username])->fetch();
+    return pdo("SELECT * FROM users WHERE username = ?", [$username])->fetch();
 }
 
 // In routes, include the mapper:
@@ -555,7 +555,7 @@ return function() {
     if (!operator()) {
         if (isset($_COOKIE['session_token'])) {
             // Try to restore from session
-            $session = dbq(
+            $session = pdo(
                 "SELECT u.username FROM sessions s
                  JOIN users u ON s.user_id = u.id
                  WHERE s.token = ? AND s.expires_at > NOW()",

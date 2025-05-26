@@ -90,7 +90,7 @@ return function ($id) {
         trigger_error('401 Unauthorized', E_USER_ERROR);
     }
 
-    $user = dbq("SELECT * FROM users WHERE id = ?", [$id])->fetch();
+    $user = pdo("SELECT * FROM users WHERE id = ?", [$id])->fetch();
 
     return [
         'status' => 200,
@@ -185,13 +185,13 @@ $entityManager->flush();
 **BADGE:**
 
 ```php
-$user = dbq("SELECT * FROM users WHERE email = ?", [$email])->fetch();
+$user = pdo("SELECT * FROM users WHERE email = ?", [$email])->fetch();
 
 $update_data = [
     'last_login' => date('Y-m-d H:i:s'),
     'login_count' => $user['login_count'] + 1
 ];
-$stmt = dbq(...qb_update('users', $update_data$, 'id = ?', [$user['id']]));
+$stmt = pdo(...qb_update('users', $update_data$, 'id = ?', [$user['id']]));
 ```
 
 ### Dependency Injection
@@ -293,13 +293,13 @@ class UserController extends Controller
 
 ```php
 // Initialize once in your entry point
-db('mysql:host=' . getenv('DB_HOST') . ';dbname=' . getenv('DB_NAME'),
+pdo('mysql:host=' . getenv('DB_HOST') . ';dbname=' . getenv('DB_NAME'),
    getenv('DB_USER'),
    getenv('DB_PASS'));
 
 // Use anywhere without importing/injecting
 function get_user($id) {
-    return dbq("SELECT * FROM users WHERE id = ?", [$id])->fetch();
+    return pdo("SELECT * FROM users WHERE id = ?", [$id])->fetch();
 }
 ```
 
@@ -354,12 +354,12 @@ app/
 <?php
 return function () {
     // Get site stats
-    $sites = dbq("SELECT COUNT(*) FROM sites")->fetchColumn();
-    $users = dbq("SELECT COUNT(*) FROM users")->fetchColumn();
-    $pages = dbq("SELECT COUNT(*) FROM pages")->fetchColumn();
+    $sites = pdo("SELECT COUNT(*) FROM sites")->fetchColumn();
+    $users = pdo("SELECT COUNT(*) FROM users")->fetchColumn();
+    $pages = pdo("SELECT COUNT(*) FROM pages")->fetchColumn();
 
     // Get recent activity
-    $activity = dbq(
+    $activity = pdo(
         "SELECT u.username, a.action, a.entity_type, a.created_at
          FROM activity_log a
          JOIN users u ON a.user_id = u.id
@@ -391,7 +391,7 @@ return function () {
         exit;
     }
 
-    $user = dbq("SELECT * FROM users WHERE username = ?", [$username])->fetch();
+    $user = pdo("SELECT * FROM users WHERE username = ?", [$username])->fetch();
     if (!$user || $user['role'] !== 'admin') {
         trigger_error('403 Forbidden: Admin access required', E_USER_ERROR);
     }
