@@ -2,7 +2,8 @@
 
 declare(strict_types=1);
 
-
+// qb_insert('articles', ['title' => 'Hello World', 'content' => 'This is a test.'])
+// qb_insert('articles', ['title' => 'Hello World', 'content' => 'This is a test.'], ['title' => 'Another Article', 'content' => 'More content here.'])
 function qb_create(string $table, array ...$rows): array
 {
     $cols = array_keys($rows[0]);
@@ -18,6 +19,41 @@ function qb_create(string $table, array ...$rows): array
     return ["INSERT INTO {$table}(" . implode(',', $cols) . ") VALUES " . implode(',', $placeholders), $bindings];
 }
 
+// qb_read('articles', 'id', 42)
+// qb_read('articles', ['status' => 'published', 'user_id' => 5, 'tag_id' => [3, 4]])
+function qb_read($table, ...$args): array
+{
+    if (is_array($args[0]))
+        $args = $args[0];
+    elseif (is_string($args[0]) && is_scalar($args[1]))
+        $args = [$args[0] => $args[1]];
+
+    [$where, $params] = qb_where($args, 'AND');
+
+    return ["SELECT * FROM {$table} {$where}", $params];
+}
+// qb_update('articles', ['title' => 'Updated Title'], ['id' => 42])
+// qb_update('articles', ['title' => 'Updated Title'], ['id' => 42, 'status' => 'draft'])
+function qb_update(string $table, array $data, array $where = []): array
+{
+    if (!$data) return ['', []];
+
+    [$set_clause, $set_binds] = qb_compass($data, '=', 'update');
+    [$where_clause, $where_binds] = qb_where($where);
+
+    $sql = "UPDATE {$table} SET {$set_clause}";
+    if ($where_clause) $sql .= " {$where_clause}";
+
+    return [$sql, $set_binds + $where_binds];
+}
+
+function qb_delete(string $table, array $where): array
+{
+    throw new \BadMethodCallException('Good of you to rely on conventions, but automated deletions violate the ADDBAD ethos.');
+}
+
+// qb_where(['status' => 'published', 'user_id' => 5, 'tag_id' => [3, 4]])
+// qb_where(['status' => 'published', 'user_id' => 5, 'tag_id' => [3, 4]], 'OR')
 function qb_where(array $conds, string $connective = 'AND'): array
 {
     if (!$conds) return ['', []];
@@ -40,27 +76,17 @@ function qb_where(array $conds, string $connective = 'AND'): array
     return ['WHERE ' . implode(" $connective ", $where), $binds];
 }
 
-
-// qb_rby('articles', 'id', 42)
-// qb_rby('articles', ['status' => 'published', 'user_id' => 5, 'tag_id' => [3, 4]])
-function qb_rby($table, ...$args): array
-{
-    if (is_array($args[0]))
-        $args = $args[0];
-    elseif (is_string($args[0]) && is_scalar($args[1]))
-        $args = [$args[0] => $args[1]];
-
-    [$where, $params] = qb_where($args, 'AND');
-
-    return ["SELECT * FROM {$table} {$where}", $params];
-}
-
+// qb_limit(10)
+// qb_limit(10, 20)
 function qb_limit(int $limit, int $offset = 0): array
 {
     return $offset > 0
         ? ["LIMIT :limit OFFSET :offset", [':limit' => $limit, ':offset' => $offset]]
         : ["LIMIT :limit", [':limit' => $limit]];
 }
+
+// qb_in('tag_id', [3, 4])
+// qb_in('status', ['published', 'draft'], 'allowed')
 function qb_in(string $col, array $val, string $prefix = 'in'): array
 {
     if (!$val) return ["1=0", []]; // or throw exception
@@ -74,7 +100,9 @@ function qb_in(string $col, array $val, string $prefix = 'in'): array
     return ["$col IN(" . implode(',', $ph) . ")", $b];
 }
 
-function qb_compass(array $data, string $op = '=', string $prefix = 'comp'): array
+// qb_compass(['status' => 'published', 'user_id' => 5], '=')
+// qb_compass(['status' => 'published', 'user_id' => 5], '<>', 'sp')
+function qb_compass(array $data, string $op = '=', string $prefix = 'qbc'): array
 {
     $clauses = $binds = [];
     foreach ($data as $col => $val) {
