@@ -89,6 +89,25 @@ function summon(string $file): ?callable
     return null;
 }
 
+/**
+ * Replace file_exists() with strpos() in existing BADGE functions
+ * 
+ * Generate cache: find app/route -name '*.php' > routes.cache
+ */
+
+function route_exists(string $file): bool
+{
+    static $routes = null;
+    
+    if ($routes === null) {
+        $cache_file = dirname(request()['route_root']) . '/routes.cache';
+        $routes = file_exists($cache_file) ? file_get_contents($cache_file) : '';
+    }
+    
+    return strpos($routes, $file) !== false;
+}
+
+// Modify existing io_candidates() - replace file_exists() with route_exists()
 function io_candidates(string $in_or_out, bool $scaffold = false): array
 {
     static $segments = null;
@@ -103,21 +122,16 @@ function io_candidates(string $in_or_out, bool $scaffold = false): array
     $candidates = [];
     $cur        = '';
 
-    // Whitelist each segment and build candidate list
     foreach ($segments as $depth => $seg) {
-
         $cur .= '/' . $seg;
-
-
-        $args = array_slice($segments, $depth + 1); // remaining segments are args
+        $args = array_slice($segments, $depth + 1);
 
         $possible = [
             $in_or_out . $cur . '.php',
             $in_or_out . $cur . DIRECTORY_SEPARATOR . $seg . '.php',
         ];
         foreach ($possible as $candidate) {
-
-            if (strpos($candidate, $in_or_out) !== 0) // skip if the candidate is not in the same root
+            if (strpos($candidate, $in_or_out) !== 0)
                 continue;
 
             $candidates[] = handler($candidate, $args);
@@ -130,12 +144,16 @@ function io_candidates(string $in_or_out, bool $scaffold = false): array
         return $candidates;
 
     foreach ($candidates as $candidate)
-        if (strpos($candidate['handler'], $in_or_out) === 0  && file_exists($candidate['handler']))
+        if (strpos($candidate['handler'], $in_or_out) === 0 && route_exists($candidate['handler']))
+            return [$candidate];
+
+    // Cache miss: probe filesystem
+    foreach ($candidates as $candidate)
+        if (strpos($candidate['handler'], $in_or_out) === 0 && file_exists($candidate['handler']))
             return [$candidate];
 
     return [];
 }
-
 
 
 function hooks(string $handler): array
