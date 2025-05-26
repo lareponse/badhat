@@ -9,7 +9,7 @@ require '../add/bad/auth_sql.php';
 
 list($dsn, $u, $p) = require '../app/data/credentials.php';
 // $dsn = null;
-db($dsn, $u, $p, [
+pdo($dsn, $u, $p, [
     PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
 ]);
 

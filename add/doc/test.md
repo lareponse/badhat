@@ -48,16 +48,16 @@ require_once __DIR__ . '/../test.php';
 require_once __DIR__ . '/../../add/bad/db.php';
 require_once __DIR__ . '/../../mapper/user.php';
 
-function setup_test_db(): void
+function setup_test_pdo(): void
 {
     static $setup = false;
     if ($setup) return;
     
     // Use in-memory SQLite for fast tests
-    db('sqlite::memory:');
+    pdo('sqlite::memory:');
     
     // Create test tables
-    dbq("CREATE TABLE users (
+    pdo("CREATE TABLE users (
         id INTEGER PRIMARY KEY,
         username TEXT NOT NULL UNIQUE,
         email TEXT NOT NULL UNIQUE,
@@ -72,7 +72,7 @@ function setup_test_db(): void
 }
 
 test('user_create works with valid data', function() {
-    setup_test_db();
+    setup_test_pdo();
     
     $user_data = [
         'username' => 'testuser',
@@ -88,7 +88,7 @@ test('user_create works with valid data', function() {
 });
 
 test('user_verify works with correct credentials', function() {
-    setup_test_db();
+    setup_test_pdo();
     
     $user_data = [
         'username' => 'verifytest',
@@ -106,7 +106,7 @@ test('user_verify works with correct credentials', function() {
 });
 
 test('user_create fails with duplicate username', function() {
-    setup_test_db();
+    setup_test_pdo();
     
     $user_data = [
         'username' => 'duplicate',
@@ -153,7 +153,7 @@ require_once __DIR__ . '/../test.php';
 require_once __DIR__ . '/../../mapper/article.php';
 
 test('articles_get_published returns only published articles', function() {
-    setup_test_db();
+    setup_test_pdo();
     
     // Create test data
     article_create([
@@ -184,7 +184,7 @@ test('articles_get_published returns only published articles', function() {
 
 ```php
 test('user_create throws on duplicate username', function() {
-    setup_test_db();
+    setup_test_pdo();
     
     $user_data = ['username' => 'duplicate', 'email' => 'test@example.com'];
     user_create($user_data);
@@ -196,7 +196,7 @@ test('user_create throws on duplicate username', function() {
 });
 
 test('route handler throws 404 for missing article', function() {
-    setup_test_db();
+    setup_test_pdo();
     
     // Test that accessing non-existent article throws specific error
     assert_throws(function() {
@@ -349,7 +349,7 @@ Test complete workflows by testing actual route handlers:
 require_once __DIR__ . '/../test.php';
 
 test('article creation workflow works end-to-end', function() {
-    setup_test_db();
+    setup_test_pdo();
     
     // Create test user
     $user_id = user_create([
@@ -445,12 +445,12 @@ test('qb_create performance vs manual SQL', function() {
 ### 1. Use SQLite In-Memory for Database Tests
 
 ```php
-function setup_test_db(): void
+function setup_test_pdo(): void
 {
     static $setup = false;
     if ($setup) return;
     
-    db('sqlite::memory:'); // Fast, isolated
+    pdo('sqlite::memory:'); // Fast, isolated
     
     // Create tables...
     $setup = true;
@@ -490,7 +490,7 @@ test('handles empty input gracefully', function() {
 });
 
 test('handles database constraint violations', function() {
-    setup_test_db();
+    setup_test_pdo();
     user_create(['username' => 'duplicate']);
     
     // Test specific exception type and message
@@ -516,7 +516,7 @@ test('handles file not found errors', function() {
 
 ```php
 test('login route redirects on success', function() {
-    setup_test_db();
+    setup_test_pdo();
     user_create(['username' => 'test', 'password' => 'pass']);
     
     $_POST = ['username' => 'test', 'password' => 'pass'];
@@ -588,18 +588,18 @@ ini_set('display_errors', 1);
 ### Database Test Setup
 
 ```php
-function setup_test_db(): void
+function setup_test_pdo(): void
 {
     static $setup = false;
     if ($setup) return;
     
-    db('sqlite::memory:');
+    pdo('sqlite::memory:');
     
     // Load schema
     $schema = file_get_contents(__DIR__ . '/../schema/test.sql');
     foreach (explode(';', $schema) as $statement) {
         if (trim($statement)) {
-            dbq($statement);
+            pdo($statement);
         }
     }
     
@@ -612,13 +612,13 @@ function setup_test_db(): void
 ```php
 function cleanup_test_data(): void
 {
-    dbq("DELETE FROM users");
-    dbq("DELETE FROM articles");
-    dbq("DELETE FROM categories");
+    pdo("DELETE FROM users");
+    pdo("DELETE FROM articles");
+    pdo("DELETE FROM categories");
 }
 
 test('first test', function() {
-    setup_test_db();
+    setup_test_pdo();
     cleanup_test_data();
     // ... test code
 });
@@ -628,7 +628,7 @@ test('first test', function() {
 
 ```php
 test('handles constraint violations properly', function() {
-    setup_test_db();
+    setup_test_pdo();
     
     // Test UNIQUE constraint
     user_create(['username' => 'test', 'email' => 'test@example.com']);
@@ -638,7 +638,7 @@ test('handles constraint violations properly', function() {
     
     // Test NOT NULL constraint  
     assert_throws(function() {
-        dbq("INSERT INTO users (username) VALUES (?)", ['incomplete']);
+        pdo("INSERT INTO users (username) VALUES (?)", ['incomplete']);
     }, 'PDOException', 'NOT NULL');
     
     // Test FOREIGN KEY constraint
