@@ -3,16 +3,12 @@
 declare(strict_types=1);
 
 
+// E_USER_NOTICE and E_USER_WARNING are just logged, php handles the rest
 set_error_handler(function ($errno, $errstr) {
-    if ($errno === E_USER_NOTICE || $errno === E_USER_WARNING) {
-        error_log("PHP [$errno]: $errstr");
-        return true;
-    }
-
-    // Let PHP handle everything else (including deprecated E_USER_ERROR)
-    return false;
+    return error_log("\nPHP ERR#$errno : $errstr") && ($errno === E_USER_NOTICE || $errno === E_USER_WARNING);
 });
 
+// Uncaught exceptions are logged and a structured HTTP response is sent
 set_exception_handler(function ($e) {
     $message = $e->getMessage();
     $error_id = base_convert((string)mt_rand(), 10, 36);
