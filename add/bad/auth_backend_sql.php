@@ -78,11 +78,7 @@ function auth_token_store(array $token): bool
         ]);
 
         if ($stmt->rowCount() === 0) {
-            pdo("INSERT INTO tokens (token, user_id, expires_at) VALUES (?, ?, ?)", [
-                $token['token'],
-                $token['user_id'],
-                $token['expires_at']
-            ]);
+            pdo(...qb_create('tokens', ['user_id', 'expires_at', 'token'], $token));
         }
 
         return true;
