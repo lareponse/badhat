@@ -1,4 +1,4 @@
-# BADGE — A Procedural Micro-Framework for Serious Developers
+# BADGE 
 
 **BADGE** is not a php framework. It's a refusal.
 
@@ -22,8 +22,6 @@ BADGE is about 150 lines of core code that give you everything required to build
 BADGE adds another 150 lines or so of helpers for database access, security, templating and routing.
 
 This is not retro. This is not hip. This is the future that was stolen. We're taking it back.
-
----
 
 ## Is BADGE for you?
 
