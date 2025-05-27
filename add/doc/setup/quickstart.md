@@ -122,7 +122,7 @@ Visit `http://localhost/myapp/app/public/` or configure virtual host.
 3. **Use in routes:** `require_once '../mapper/user.php'`
 
 ### Adding Authentication
-1. **Choose backend:** Include `auth_http.php` or `auth_sql.php`
+1. **Choose backend:** Include `auth_backend_http.php` or `auth_backend_sql.php`
 2. **Protect routes:** Add `app/io/route/admin/prepare.php`
 3. **Check auth:** Use `operator()` or `auth()`
 

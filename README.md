@@ -67,7 +67,7 @@ myapp/
 require '../../add/core.php';
 require '../../add/bad/db.php';
 require '../../add/bad/ui.php';
-require '../../add/bad/security.php';
+require '../../add/bad/guard_auth.php';
 require '../../add/bad/error.php';
 
 // Database setup
@@ -520,17 +520,17 @@ BADGE provides two authentication backends and security functions:
 
 Choose one based on your deployment architecture:
 
-#### HTTP Header Auth (auth_http.php)
+#### HTTP Header Auth (auth_backend_http.php)
 For apps behind reverse proxies or SSO systems:
 ```php
-require 'add/bad/auth_http.php';
+require 'add/bad/auth_backend_http.php';
 // Uses $_SERVER['HTTP_X_AUTH_USER']
 ```
 
-#### Database Auth (auth_sql.php)  
+#### Database Auth (auth_backend_sql.php)  
 For traditional username/password with sessions:
 ```php
-require 'add/bad/auth_sql.php';
+require 'add/bad/auth_backend_sql.php';
 // Requires users and tokens tables
 ```
 
@@ -678,14 +678,14 @@ See `add/doc/test.md` for complete testing guide.
 BADGE-app/
 ├── add/
 │   ├── bad/
-│   │   ├── auth_http.php
-│   │   ├── auth_sql.php
+│   │   ├── auth_backend_http.php
+│   │   ├── auth_backend_sql.php
 │   │   ├── db.php
 │   │   ├── dev.php
 │   │   ├── error.php
 │   │   ├── qb.php
 │   │   ├── scaffold.php
-│   │   ├── security.php
+│   │   ├── guard_auth.php
 │   │   └── ui.php
 │   ├── core.php
 │   ├── test.php
