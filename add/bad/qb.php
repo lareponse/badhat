@@ -1,23 +1,40 @@
 <?php
 
 declare(strict_types=1);
-
-// qb_insert('articles', ['title' => 'Hello World', 'content' => 'This is a test.'])
-// qb_insert('articles', ['title' => 'Hello World', 'content' => 'This is a test.'], ['title' => 'Another Article', 'content' => 'More content here.'])
-function qb_create(string $table, array ...$rows): array
+  
+/**
+ * qb_create('articles', null, ['title' => 'Hello', 'content' => '...'])
+ * sql: INSERT INTO articles (title, content) VALUES (:title_0, :content_0)
+ * binds: [':title_0' => 'Hello', ':content_0' => '...']
+ * qb_create('articles', ['title', 'content'], [...], [...])
+ * sql: INSERT INTO articles (title, content) VALUES (:title_0, :content_0), (:title_1, :content_1)
+ * binds: [':title_0' => '...', ':content_0' => '...', ':title_1' => '...', ':content_1' => '...']  
+ */
+function qb_create(string $table, ?array $fields, array ...$rows): array
 {
-    $cols = array_keys($rows[0]);
+    $rows ?: throw new InvalidArgumentException('Rows cannot be empty.');
+    $fields = $fields ?: array_keys(array_replace_recursive(...$rows));
+
     $bindings = $placeholders = [];
+
     foreach ($rows as $i => $row) {
         $holders = [];
-        foreach ($cols as $col) {
-            $holders[] = $ph = ":{$col}_{$i}";
+
+        foreach ($fields as $col) {
+            $ph = ":{$col}_{$i}";
+            $holders[] = $ph;
             $bindings[$ph] = $row[$col];
         }
+
         $placeholders[] = '(' . implode(',', $holders) . ')';
     }
-    return ["INSERT INTO {$table}(" . implode(',', $cols) . ") VALUES " . implode(',', $placeholders), $bindings];
+
+    $sql = "INSERT INTO {$table} (" . implode(',', $fields) . ") VALUES " . implode(',', $placeholders);
+
+    return [$sql, $bindings];
 }
+
+
 
 // qb_read('articles', 'id', 42)
 // qb_read('articles', ['status' => 'published', 'user_id' => 5, 'tag_id' => [3, 4]])
@@ -47,9 +64,11 @@ function qb_update(string $table, array $data, array $where = []): array
     return [$sql, $set_binds + $where_binds];
 }
 
+// ajouter un log ou une option 'allow_delete' contrôlée
 function qb_delete(string $table, array $where): array
 {
-    throw new \BadMethodCallException('Good of you to rely on conventions, but automated deletions violate the ADDBAD ethos.');
+    error_log("Delete attempted on {$table} — denied by ADDBAD convention.");
+    throw new BadMethodCallException("Automated deletes are forbidden. Use manual SQL.");
 }
 
 // qb_where(['status' => 'published', 'user_id' => 5, 'tag_id' => [3, 4]])
