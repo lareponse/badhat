@@ -29,7 +29,6 @@
  */
 function render(array $data = [], string $routeFile = __FILE__, string $layoutName = 'layout.php'): string
 {
-  
     // Convert route handler path to view template path
     $viewFile = _ui_mirror($routeFile);
 
@@ -56,53 +55,40 @@ function render(array $data = [], string $routeFile = __FILE__, string $layoutNa
     return $content;
 }
 
-/**
- * Manages named content slots using static storage
- * 
- * Provides dual functionality:
- * - As setter: stores content in named slot when value provided
- * - As getter: retrieves all accumulated values for slot when called without value
- *
- * Using static variable ensures slot persistence across function calls
- * while avoiding global state pollution
- *
- * @param string      $name  Slot identifier
- * @param string|null $value Content to append to slot (optional)
- * @return array<string>     All values stored in requested slot
- */
-function slot(?string $name, ?string $value): array
+
+// Collects HTML fragments (e.g., <meta>, <link>, <script>) into named slots.
+//
+//   slot('name', 'value')   Push a value into the named slot and return the slot.
+//   slot('name')            Flush and return the named slot.
+//   slot(null)              Flush and return all slots.
+//   slot()                  Return all slots without flushing (debug-like mode).
+function slot(?string $index = null, ?string $value = null): array
 {
     static $slots = [];
 
-    if ($name === null) // Inspection mode, return complete state
+    // Case 4: slot() → Return all slots without flushing
+    if (func_num_args() === 0)
         return $slots;
 
-    if ($value !== null) { // Append mod, add to named heap
-        $slots[$name][] = $value;
-        return $slots[$name];
+    // Case 3: slot(null) → return all slots and flush
+    if ($index === null) {
+        $all = $slots;
+        $slots = [];
+        return $all;
     }
 
-    // Consume mode - return and clear named heap
-    $heap = $slots[$name] ?? [];
-    $slots[$name] = [];
-    return $heap;
+    // Case 1: slot('name', 'value') → Push a value into the named slot and return it
+    if ($value !== null) {
+        $slots[$index][] = $value;
+        return $slots[$index];
+    }
+
+    // Case 2: slot('name') → Flush and return the named slot
+    $out = $slots[$index] ?? [];
+    unset($slots[$index]);
+    return $out;
 }
 
-/**
- * Generates HTML elements with attribute safety
- *
- * Features:
- * - Self-closing tag support (when $inner is null)
- * - Optional attribute escaping via formatter
- * - Support for array attributes (converted to space-delimited strings)
- * - Integer keys treated as valueless attributes
- *
- * @param string        $tag        HTML element name
- * @param string|null   $inner      Element content (null for self-closing tags)
- * @param array         $attributes Element attributes as name=>value pairs
- * @param callable|null $formatter  Optional escaping function (defaults to htmlspecialchars)
- * @return string                   Complete HTML element
- */
 function html(string $tag, ?string $inner = null, array $attributes = [], $formatter = null): string
 {
     // Default to HTML escaping for security
@@ -125,22 +111,6 @@ function html(string $tag, ?string $inner = null, array $attributes = [], $forma
     return "<{$tag}{$attrs}" . ($inner === null ? '/>' : sprintf('>%s</%s>', $formatter($inner), $tag));
 }
 
-/**
- * Locates layout file by traversing directory hierarchy
- *
- * Search algorithm:
- * 1. Check absolute path
- * 2. Check relative to view directory
- * 3. Traverse up directories until app root is reached
- *
- * This enables both:
- * - Component-specific layouts in deeper directories
- * - Fallback to parent/global layouts when not overridden
- *
- * @param  string      $dir        Starting directory path
- * @param  string      $layoutFile Layout filename
- * @return string|null             Full path to found layout or null if none exists
- */
 function _ui_ascend(string $dir, string $layoutFile): ?string
 {
     // Check if layout is an absolute path
@@ -163,21 +133,6 @@ function _ui_ascend(string $dir, string $layoutFile): ?string
     return null;
 }
 
-/**
- * Maps route handler to corresponding view file
- * 
- * Convention-over-configuration approach:
- * - Assumes paired directory structure (routes + views)
- * - Determines view path by finding complementary directory
- * - Preserves path hierarchy from route to view
- *
- * Design choice: Uses file system structure rather than explicit mapping
- * to eliminate config maintenance, allow free naming and enforce consistency
- *
- * @param string $routeFile  Absolute path to executing route handler
- * @param string $format     Content type (reserved for content negotiation)
- * @return string            Absolute path to the matching view template
- */
 function _ui_mirror(): ?string
 {
     $io = dirname(request()['route_root']);
@@ -189,3 +144,5 @@ function _ui_mirror(): ?string
     $view = array_shift(io_candidates($io->current()));
     return $view['handler'] ?? null;
 }
+
+
