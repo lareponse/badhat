@@ -70,13 +70,22 @@ function render(array $data = [], string $routeFile = __FILE__, string $layoutNa
  * @param string|null $value Content to append to slot (optional)
  * @return array<string>     All values stored in requested slot
  */
-function slot(string $name, ?string $value = null): array
+function slot(?string $name, ?string $value): array
 {
     static $slots = [];
-    if ($value !== null) {
+
+    if ($name === null) // Inspection mode, return complete state
+        return $slots;
+
+    if ($value !== null) { // Append mod, add to named heap
         $slots[$name][] = $value;
+        return $slots[$name];
     }
-    return $slots[$name] ?? [];
+
+    // Consume mode - return and clear named heap
+    $heap = $slots[$name] ?? [];
+    $slots[$name] = [];
+    return $heap;
 }
 
 /**
