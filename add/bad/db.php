@@ -7,7 +7,7 @@ function pdo(...$args)
     if (!$pdo && $defaults = [PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC, PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]) {                                        // not connected yet
     
         [$dsn, $user, $pass, $options] = $args;         // expected to provide PDO constructor arguments 
-        $pdo = new PDO($dsn ?: throw new LogicException('Empty DSN'), $user, $pass, is_array($options) ? ($options + $defaults) : $defaults);
+        $pdo = new PDO($dsn ?: throw new LogicException('Empty DSN', 500), $user, $pass, is_array($options) ? ($options + $defaults) : $defaults);
     
     } else if (is_string($args[0])) { // just querying, signature pdo('query', [bindings] ?? [], ?PDO): PDOStatement
 
