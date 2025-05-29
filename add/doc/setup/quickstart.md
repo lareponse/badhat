@@ -13,20 +13,6 @@ mv app/public/index.base.php app/public/index.php
 
 ### 2. Create Entry Point
 **app/public/index.php:**
-```php
-<?php
-require '../../add/core.php';
-require '../../add/bad/db.php';
-require '../../add/bad/ui.php';
-require '../../add/bad/error.php';
-
-list($dsn, $user, $pass) = require '../data/credentials.php';
-pdo($dsn, $user, $pass);
-
-$route = route(__DIR__ . '/../io/route');
-$response = handle($route);
-respond($response);
-```
 
 **Critical:** `route(__DIR__ . '/../io/route')` defines your entire app architecture.
 
@@ -185,6 +171,6 @@ if ($_FILES['upload']['error'] === UPLOAD_ERR_OK) {
 ## Debugging Tips
 
 - **Route issues:** Check DEV_MODE scaffold suggestions
-- **DB problems:** Use `pdo()->errorInfo()` after queries
+- **DB problems:** Use `db()->errorInfo()` after queries
 - **Auth failures:** Verify HMAC secret and headers
 - **View errors:** Check variable extraction in templates

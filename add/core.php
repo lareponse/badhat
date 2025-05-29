@@ -5,12 +5,11 @@
  */
 
 declare(strict_types=1);
+define('BADGE_MIME_BASE', 'application/vnd.BADGE');
 
-function route(string $route_root): array
+function route(): array
 {
     // creates the request object
-    request($route_root);
-
     $real_root = request()['route_root'];
     foreach (io_candidates($real_root) as $candidate) {
         if (strpos($candidate['handler'], $real_root) === 0 && file_exists($candidate['handler'])) {
@@ -18,8 +17,7 @@ function route(string $route_root): array
         }
     }
 
-    // Route missing (DEV_MODE only)
-    if (defined('IS_DEV') && IS_DEV) {
+    if (is_dev()) {
         ob_start();
         @include __DIR__ . '/bad/scaffold.php';
         return response(202, ob_get_clean());
@@ -37,9 +35,8 @@ function handle(array $route): array
         return response(404, 'Not Found', ['Content-Type' => 'text/plain']);
     // summon end point handler 
     $handler = summon($route['handler']);
-
-    // gather prepare/conclude hooks along the route tree
     $hooks = hooks($route['handler']);
+    // gather prepare/conclude hooks along the route tree
 
     // prepare > execute > conclude
     foreach ($hooks['prepare'] as $hook)
@@ -98,12 +95,12 @@ function summon(string $file): ?callable
 function route_exists(string $file): bool
 {
     static $routes = null;
-    
+
     if ($routes === null) {
         $cache_file = dirname(request()['route_root']) . '/routes.cache';
         $routes = file_exists($cache_file) ? file_get_contents($cache_file) : '';
     }
-    
+
     return strpos($routes, $file) !== false;
 }
 
@@ -116,7 +113,7 @@ function io_candidates(string $in_or_out, bool $scaffold = false): array
         $segments = trim(request()['path'], '/') ?: 'home';
         $segments = explode('/', $segments);
         foreach ($segments as $seg)
-            preg_match('/^[a-z0-9_\-]+$/', $seg) ?: trigger_error('400 Bad Request: Invalid Segment /' . $seg . '/', E_USER_ERROR);
+            preg_match('/^[a-zA-Z0-9_\-]+$/', $seg) ?: throw new DomainException('Bad Request: Invalid Segment /' . $seg . '/', 400);
     }
 
     $candidates = [];
@@ -177,34 +174,32 @@ function hooks(string $handler): array
     ];
 }
 
-
-
-function request(?string $route_root = null, ?callable $path = null): array
+function request(?string $route_root = null, ?callable $uri_cleaner = null): array
 {
     static $request;
 
     if ($request === null) {
-
-        $route_root = $route_root                   ?: trigger_error('500 Request Requires Route Root', E_USER_ERROR);
-        $route_root = realpath($route_root)         ?: trigger_error('500 Route Root Reality Report', E_USER_ERROR);
-        $root = realpath($route_root . '/../../')   ?: trigger_error('500 Root Reality Report', E_USER_ERROR);
-
-        $path ??= function (string $uri) {
+        $uri_cleaner ??= function (string $uri) {
             $uri = parse_url($uri, PHP_URL_PATH)        ?: '';
             $uri = urldecode($uri);
-            !preg_match('#(\.{2}|[\/]\.)#', $uri)      ?: trigger_error('403 Forbidden: Path Traversal', E_USER_ERROR);
+            !preg_match('#(\.{2}|[\/]\.)#', $uri)      ?: throw new DomainException('Forbidden: Path Traversal', 403);
             $uri = preg_replace('#/+#', '/', rtrim($uri, '/'));
-
+            
             return $uri;
         };
+        
+        $request = [];
 
-        $request = [
-            'route_root'    => $route_root,
-            'root'          => $root,
-            'method'        => $_SERVER['REQUEST_METHOD'] ?? 'GET',
-            'format'        => request_mime($_SERVER['HTTP_ACCEPT'] ?? null, $_GET['format'] ?? null),
-            'path'          => $path($_SERVER['REQUEST_URI'])
-        ];
+        $request['in'] = $route_root                    ?: throw new BadFunctionCallException('Request Requires Route Root', 500);
+        $request['in'] = realpath($route_root)          ?: throw new InvalidArgumentException('Route Reality Rescinded', 500);
+        $request['out'] = 
+
+        $request['route_root'] = $route_root                    ?: throw new BadFunctionCallException('Request Requires Route Root', 500);
+        $request['route_root'] = realpath($route_root)          ?: throw new InvalidArgumentException('Route Root Reality Rescinded', 500);
+        $request['root'] = realpath($route_root . '/../../')    ?: throw new OutOfRangeException('Root Reality Report', 500);
+
+        $request['path'] = $uri_cleaner($_SERVER['REQUEST_URI'] ?? '/');
+        $request['accept'] = request_mime($_SERVER['HTTP_ACCEPT'] ?? null, $_GET['format'] ?? null);
     }
 
     return $request;
@@ -224,18 +219,7 @@ function response(int $http_code, string $body, array $http_headers = []): array
     ];
 }
 
-
 function request_mime(?string $http_accept, ?string $requested_format): string
 {
-    if ($requested_format === 'json')
-        return 'application/vnd.BADGE+json';
-
-    if (!empty($http_accept)) {
-        $accept = explode(',', $http_accept);
-        foreach ($accept as $type)
-            if (strpos($type, 'application/vnd.BADGE') !== false)
-                return 'application/vnd.BADGE+json';
-    }
-
-    return 'text/html';
+    return strpos("$requested_format$http_accept", 'application/vnd.BADGE+json') !== false ? 'application/vnd.BADGE+json' : 'text/html';
 }

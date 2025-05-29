@@ -7,11 +7,10 @@ require '../add/bad/ui.php';
 require '../add/bad/guard_auth.php';
 require '../add/bad/auth_backend_sql.php';
 
+// no env ? need these 2
 list($dsn, $u, $p) = require '../app/data/credentials.php';
-// $dsn = null;
-pdo($dsn, $u, $p, [
-    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-]);
+db(new PDO($dsn, $u, $p, [PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC]));
+
 
 $route_root = __DIR__ . '/../app/io/route';
 $route = route($route_root);
