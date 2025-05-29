@@ -33,7 +33,7 @@ function db(PDO|string $arg = '', ?string $profile = null): PDO
         return $map[$profile];
     }
 
-    $dsn  = getenv("DB_DSN_$profile")  ?: throw new LogicException("Missing ENV: DB_DSN_$profile)");
+    $dsn  = getenv("DB_DSN_$profile")  ?: throw new LogicException("Missing ENV: DB_DSN_$profile");
     $user = getenv("DB_USER_$profile") ?: null;
     $pass = getenv("DB_PASS_$profile") ?: null;
 
