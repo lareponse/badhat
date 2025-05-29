@@ -48,7 +48,7 @@ trigger_error("Slow response from mail server", E_USER_WARNING);
 Use `throw` for application-level errors that should abort current flow and be caught by `set_exception_handler()`.
 
 ```php
-throw new RuntimeException("500 Unable to connect to database");
+throw new RuntimeException("500 Unable to connect to database", 500);
 throw new InvalidArgumentException("400 Invalid query parameter");
 ```
 
@@ -59,8 +59,8 @@ throw new InvalidArgumentException("400 Invalid query parameter");
 Use for internal logic errors or corrupted application state.
 
 ```php
-throw new Error("500 Inconsistent session state");
-throw new LogicException("500 Missing required configuration");
+throw new Error("Inconsistent session state", 500);
+throw new LogicException("Missing required configuration", 500);
 ```
 
 ---
