@@ -6,10 +6,15 @@ declare(strict_types=1);
  * db() — Get or inject a PDO instance by profile ('' = unnamed)
  *
  * Usage:
- *   db()                         → get unnamed connection
- *   db('read')                   → get named profile
- *   db($pdo)                     → inject unnamed connection
- *   db($pdo, 'test')             → inject named profile
+ *   db()                         get default connection
+ *   db('read')                   get 'read' connection
+ *   db($pdo)                     override getenv to set default connection
+ *   db(new PDO('sqlite::memory:'), 'test')             → set named connection
+ * 
+ * 
+ * expects environment variables:
+ *   DB_DSN_$profile, DB_USER_$profile, DB_PASS_$profile
+ *      Where profile is the name of the connection, or empty for the default (DB_DSN_, DB_USER_, DB_PASS_)
  */
 function db(PDO|string $arg = '', ?string $profile = null): PDO
 {
@@ -28,9 +33,9 @@ function db(PDO|string $arg = '', ?string $profile = null): PDO
         return $map[$profile];
     }
 
-    $dsn  = getenv("DB_DSN_$profile")  ?: getenv("DB_DSN")  ?: throw new LogicException("Missing DB_DSN (or DB_DSN_$profile)");
-    $user = getenv("DB_USER_$profile") ?: getenv("DB_USER") ?: null;
-    $pass = getenv("DB_PASS_$profile") ?: getenv("DB_PASS") ?: null;
+    $dsn  = getenv("DB_DSN_$profile")  ?: throw new LogicException("Missing ENV: DB_DSN_$profile)");
+    $user = getenv("DB_USER_$profile") ?: null;
+    $pass = getenv("DB_PASS_$profile") ?: null;
 
     return $map[$profile] = new PDO($dsn, $user, $pass, [
         PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
@@ -41,9 +46,7 @@ function db(PDO|string $arg = '', ?string $profile = null): PDO
 
 
 /**
- * dbq() — Execute SQL query with optional bindings
- *
- * Usage:
+ * Execute SQL query with optional bindings
  *   dbq("SELECT * FROM users")
  *   dbq("SELECT * FROM users WHERE id = ?", [$id])
  *   dbq("...", [...], 'read')
@@ -57,12 +60,11 @@ function dbq(string $sql, array $bind = [], string $profile = ''): PDOStatement
 }
 
 /**
- * dbt() — Execute a transaction block safely
- *
- * Usage:
+ * Execute a transaction block safely
  *   dbt(fn() => {
  *       dbq("INSERT INTO logs (event) VALUES (?)", ['created']);
  *       dbq("INSERT INTO users (name) VALUES (?)", ['Alice']);
+ *       return dbq("SELECT * FROM users WHERE name = ?", ['Alice'])->fetchAll();
  *   });
  */
 function dbt(callable $fn, string $profile = ''): mixed
@@ -77,15 +79,4 @@ function dbt(callable $fn, string $profile = ''): mixed
         $pdo->rollBack();
         throw $e;
     }
-}
-
-
-/**
- *   pdo()                         db()
- *   pdo("$sql", [bind])           dbq("$sql", [bind])
- *   pdo(callable)                 dbt(callable)
- */
-function pdo(...$args): mixed
-{
-    return !$args ? db() : (is_callable($args[0]) ? dbt($args[0]) : dbq($args[0], $args[1] ?? [])); 
 }

@@ -1,164 +1,264 @@
-# Introduction
+# BADGE Database Layer
 
-`pdo(...$args)` is your single-entry database gateway: no factories, no managers, no ceremony. 
+**Three functions. No classes. No abstraction.**
+---
 
-It unites four distinct responsibilities (connection, raw access, querying, transaction) into a lean, statically cached function. 
-
-Critics will decry the amalgamation of concerns—but true minimalism isn’t about purity; it’s about ruthless efficiency. 
-
-Welcome to Occam’s Razor in PHP: one function, four clear modes, zero wasted keystrokes.
+This *is* PDO. Just procedural.
+If you know `PDO` and `PDOStatement`, you already know how it works.
 
 
+## Core Functions
 
-# Table of Contents
+* `db()`    get/set a PDO connection (default or by profile)
+* `dbq()`   execute raw or prepared queries
+* `dbt()`   run transaction blocks in try/catch
 
-1. [Connection Mode](#1-connection-mode)
-2. [Native Mode](#2-native-mode)
-3. [Query Mode](#3-query-mode)
-4. [Transaction Mode](#4-transaction-mode)
+Nothing hidden. Nothing wrapped. You get the raw `PDO` and `PDOStatement` back.
+
+## TL;DR
+If you know PDO, you already know everything. 
+
+No DSL, no wrapper. Full PDO and PDOStatement API at your disposal.
+
+BADGE just removes the noise.
+
+## Design Philosophy
+
+* **Procedural** — No classes, no DI, no static methods
+* **Explicit** — You choose the query, the connection, and the bindings
+* **Scoped** — No global state, no shared memory
+* **Profile-aware** — Send reads to replicas, writes to main, logs to analytics
+* **Fail-fast** — Exceptions on error, rollback on failure
 
 
-# 1. Connection Mode
+## Environment, for default and read replica connections
 
-**Signature**
+```bash
+export DB_DSN_="mysql:host=localhost;dbname=shop"
+export DB_USER_="shop_user"
+export DB_PASS_="secret"
 
-```php
-pdo(string $dsn, string $user = null, string $pass = null, array $options = []): PDO
+export DB_DSN_read="mysql:host=replica.local;dbname=shop"
+export DB_USER_read="readonly"
+export DB_PASS_read="readonlypass"
 ```
 
-> **Note**: arguments mirror exactly `PDO::__construct(string $dsn, string $username = null, string $password = null, array $options = [])`.
+# 1. dbq()
 
-## Parameters
+```php
+// No bindings, uses PDO::query()
+dbq("SELECT * FROM products")->fetchAll();
 
-| Name      | Type     | Required | Description & Justification                                                                                                                                                             |
-| --------- | -------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `dsn`     | `string` | yes      | Data Source Name. Throws `LogicException('Empty DSN')` if empty—catch misconfigs early.                                                                                                 |
-| `user`    | `string` | no       | Database username.                                                                                                                                                                      |
-| `pass`    | `string` | no       | Database password.                                                                                                                                                                      |
-| `options` | `array`  | no       | Merged with defaults (`PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC`, `PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION`). Enables centralized best practices with override flexibility. |
+// With bindings → uses PDO::prepare() + ->execute()
+dbq("SELECT * FROM products WHERE slug = ?", ['slug-piccolo'])->fetch();
 
-## Return Value
+// Read replica (profile 'read')
+dbq("SELECT * FROM products WHERE id = ?", [42], 'read')->fetch();
 
-* **`PDO`**: a singleton instance (first call constructs, subsequent no-arg calls return same).
+// Named parameters
+dbq("UPDATE products SET price = :price WHERE id = :id", ['price' => 19.99,'id' => 42])->rowCount();
 
-## Errors / Exceptions
 
-* **Empty DSN**:
+// Prepared statement re-execution 
+$results = [];
 
-  ```php
-  throw new LogicException('Empty DSN');
-  ```
-* **PDOException**:
-  Any driver/option error per `ERRMODE_EXCEPTION`.
+$first_category = array_shift($categories);
+
+$stmt = dbq("SELECT * array_shiftM products WHERE category = ?", [$first_category]);
+$results[$first_category] = $stmt->fetchAll();
+
+foreach($categories as $category) {
+    $stmt->execute([$category]);
+    $results[$category] = $stmt->fetchAll();
+}
+array_unshift($categories, $first_category); // restore original order
+```
+
+
+
+
+```php
+// Main connection
+$product = dbq("SELECT * FROM products WHERE id = ?", [$id])->fetch();
+
+// Read replica
+$count = dbq("SELECT COUNT(*) FROM orders", [], 'read')->fetchColumn();
+```
 
 ---
 
-# 2. Native Mode
-
-**Signature**
+## Manual Injection
 
 ```php
-pdo(): PDO
+$pdo = new PDO('sqlite::memory:');
+db($pdo);              // default
+db($pdo, 'test');      // profile "test"
+
+$ok = dbq("SELECT 1", [], 'test')->fetchColumn();
 ```
-
-## Parameters
-
-* *none*
-
-## Return Value
-
-* **`PDO`**: returns the previously instantiated singleton.
-
-## Errors / Exceptions
-
-* **Empty DSN** on first-ever call (falls back to Connection Mode).
 
 ---
 
-# 3. Query Mode
-
-**Signature**
+## Transactions
 
 ```php
-pdo(string $sql, array $bindings = [], PDO $connection = null): PDOStatement
+$order_id = dbt(function () {
+    dbq("INSERT INTO orders (customer_id) VALUES (?)", [5]);
+    $id = db()->lastInsertId();
+
+    dbq("INSERT INTO order_items (order_id, product_id) VALUES (?, ?)", [$id, 7]);
+    dbq("INSERT INTO order_items (order_id, product_id) VALUES (?, ?)", [$id, 8]);
+
+    return $id;
+});
 ```
 
-## Parameters
-
-| Name         | Type     | Required | Description & Justification                                        |
-| ------------ | -------- | -------- | ------------------------------------------------------------------ |
-| `sql`        | `string` | yes      | SQL to execute. One-liner `prepare`+`execute` slashes boilerplate. |
-| `bindings`   | `array`  | no       | Positional or named parameters.                                    |
-| `connection` | `PDO`    | no       | Override singleton for multi-DB contexts.                          |
-
-## Return Value
-
-* **`PDOStatement`**: always returned (exceptions handle failures).
-
-## Errors / Exceptions
-
-* **PDOException**: on SQL syntax errors or bind mismatches.
+* `dbt()` runs a closure in a transaction
+* Rolls back automatically on exception
+* Returns whatever your callback returns
 
 ---
 
-# 4. Transaction Mode
+## Notes
 
-**Signature**
+* Connections are stored per profile. Re-injecting overwrites.
+* `db()` returns the default connection if no profile is specified.
+* `dbq()` and `dbt()` use the default connection unless a profile is specified.
+* All `dbq()` calls return native `PDOStatement` or throw an exception.
+* Only you know what `dbt` returns
 
-```php
-pdo(callable $work, PDO $connection = null)
+
+
+# FAQs
+
+
+---
+
+### **What is ENV? Why does it matter?**
+
+ENV means **environment variables** — configuration stored *outside* your code. Example:
+
+```bash
+export DB_DSN="mysql:host=localhost;dbname=shop"
+export DB_USER="root"
+export DB_PASS="secret"
 ```
 
-## Parameters
+They're used to keep **secrets out of your codebase**, so:
 
-| Name         | Type       | Required | Description & Justification                            |
-| ------------ | ---------- | -------- | ------------------------------------------------------ |
-| `work`       | `callable` | yes      | Encapsulate multiple `pdo(...)` calls.                 |
-| `connection` | `PDO`      | no       | Override singleton for special transactional contexts. |
+* You don't commit credentials to Git
+* You can switch environments without changing code
+* You deploy the same code to dev, staging, and production safely
 
-## Return Value
+If these ENV variables exist, `db()` will auto-connect using them.
 
-* **`mixed`**: whatever `$work()` returns.
+---
 
-## Errors / Exceptions
+### **I want `db($dsn, $user, $pass)`**
 
-* **Throwable** inside `$work`: triggers rollback then rethrows.
-* **PDOException**: on `beginTransaction()`/`commit()` failures, if any.
+`db()` accepts **either** a `PDO` instance (injection) or a profile name (lookup). 
+Mixing modes makes everything fragile and error-prone.
+
+Want to connect manually? Do it once — explicitly:
+
+```php
+$pdo = new PDO($dsn, $user, $pass, $options);
+db($pdo);              // default
+db($pdo, 'read');      // profile 'read'
+```
+
+After that, call `db()` with just the profile name. No magic. No guessing.
+
+---
+
+### **Is this a wrapper?**
+
+No. It's a loader. It **returns native `PDO` and `PDOStatement` objects**. If you know how to use them, you already know 100% of this API.
+
+No classes. No decorators. No base model.
+
+---
+
+### **Where is the query builder?**
+
+Busy reading this sentence. SQL is readable, portable, and expressive.
+Don't outsource the one part of your backend that actually talks to the database.
+
+---
+
+### **Isn't this unsafe? Where's the ORM?**
+
+ORMs are the clutches you reach for when you don't understand SQL or don't trust your data layer.
+
+Its not that this code is unsafe, it's that you might not know how to use it safely.
+This is not a guided tour through SQL. It's a tool for those who already know how to write queries.
+
+No builder can protect you from not understanding SQL.
+What they do is restrict the surface area of mistakes, at the cost of performance, verbosity, and transparency.
+
+Don’t outsource safety. Understand what your query does. Then write it yourself.
+
+---
+
+### **How do I handle errors?**
+
+Exceptions. Always.
+This code sets `PDO::ERRMODE_EXCEPTION` by default. If something goes wrong, it throws. That's the contract. Catch it or crash.
+
+---
+
+### **What if I need multiple databases?**
+
+Use named profiles:
+
+```php
+db($pdo1);                     // default
+db($pdo2, 'read');             // replica
+db($pdo3, 'analytics');        // analytics
+
+dbq("SELECT * FROM users", [], 'read');
+dbq("INSERT INTO logs (...) VALUES (...)", [...], 'analytics');
+```
+
+---
+
+### **Can I use named parameters in `dbq()`?**
+
+Yes. `dbq()` just delegates to `prepare()` and `execute()`. Use `?` or `:name` — your choice.
+
+```php
+dbq("SELECT * FROM users WHERE id = :id", ['id' => 42]);
+```
 
 ---
 
 
-# Combined Usage Example
+
+
+### **Don't want to use ENV yet? Inject manually.**
 
 ```php
-<?php
-// 1. Bootstrap (Connection Mode)
-pdo(
-    'mysql:host=127.0.0.1;dbname=app;charset=utf8', 
-    'user', 
-    'pass',
-    [PDO::ATTR_TIMEOUT => 5]
+$pdo = new PDO(
+    'mysql:host=localhost;dbname=shop',
+    'root',
+    'secret',
+    [
+        PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+        PDO::ATTR_EMULATE_PREPARES   => false,
+    ]
 );
 
-// 2. Raw PDO access (Native Mode)
-$raw = pdo(); 
+// Inject the connection (default profile)
+db($pdo);
 
-// 3. Simple Query (Query Mode)
-$users = pdo(
-    'SELECT id, name FROM users WHERE active = ?', 
-    [1]
-)->fetchAll();
-
-// 4. Transaction (Transaction Mode)
-$result = pdo(function() {
-    // debit
-    pdo('UPDATE accounts SET balance = balance - ? WHERE id = ?', [100, 1]);
-    // credit
-    pdo('UPDATE accounts SET balance = balance + ? WHERE id = ?', [100, 2]);
-    // fetch new balances
-    return pdo('SELECT id, balance FROM accounts WHERE id IN (?, ?)', [1, 2])->fetchAll();
-});
-
-// Inspect results
-var_dump($users, $result);
+// Use it
+$user = dbq("SELECT * FROM users WHERE id = ?", [42])->fetch();
 ```
+
+Same connection. Same queries. Just bypassing ENV entirely.
+Useful for scripts, tests, or early development.
+
+If you're wondering what the `$profile` argument is for — wait until you have ENV skills.
+For now: ignore it. Stick with the default. It works.
+
