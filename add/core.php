@@ -7,10 +7,13 @@
 declare(strict_types=1);
 define('BADGE_MIME_BASE', 'application/vnd.BADGE');
 
-function route(): array
+function route($route_root): array
 {
+    request();
+    io($route_root);
+    
     // creates the request object
-    $real_root = request()['route_root'];
+    $real_root = io('i');
     foreach (io_candidates($real_root) as $candidate) {
         if (strpos($candidate['handler'], $real_root) === 0 && file_exists($candidate['handler'])) {
             return $candidate;
@@ -97,7 +100,7 @@ function route_exists(string $file): bool
     static $routes = null;
 
     if ($routes === null) {
-        $cache_file = dirname(request()['route_root']) . '/routes.cache';
+        $cache_file = dirname(io('i')) . '/routes.cache';
         $routes = file_exists($cache_file) ? file_get_contents($cache_file) : '';
     }
 
@@ -155,7 +158,7 @@ function io_candidates(string $in_or_out, bool $scaffold = false): array
 
 function hooks(string $handler): array
 {
-    $base = rtrim(request()['route_root'], '/');
+    $base = rtrim(io('i'), '/');
     $before = $after = [];
 
     // Figure out the path segments under $base
@@ -174,7 +177,7 @@ function hooks(string $handler): array
     ];
 }
 
-function request(?string $route_root = null, ?callable $uri_cleaner = null): array
+function request(?callable $uri_cleaner = null): array
 {
     static $request;
 
@@ -184,22 +187,14 @@ function request(?string $route_root = null, ?callable $uri_cleaner = null): arr
             $uri = urldecode($uri);
             !preg_match('#(\.{2}|[\/]\.)#', $uri)      ?: throw new DomainException('Forbidden: Path Traversal', 403);
             $uri = preg_replace('#/+#', '/', rtrim($uri, '/'));
-            
+
             return $uri;
         };
-        
-        $request = [];
 
-        $request['in'] = $route_root                    ?: throw new BadFunctionCallException('Request Requires Route Root', 500);
-        $request['in'] = realpath($route_root)          ?: throw new InvalidArgumentException('Route Reality Rescinded', 500);
-        $request['out'] = 
-
-        $request['route_root'] = $route_root                    ?: throw new BadFunctionCallException('Request Requires Route Root', 500);
-        $request['route_root'] = realpath($route_root)          ?: throw new InvalidArgumentException('Route Root Reality Rescinded', 500);
-        $request['root'] = realpath($route_root . '/../../')    ?: throw new OutOfRangeException('Root Reality Report', 500);
-
-        $request['path'] = $uri_cleaner($_SERVER['REQUEST_URI'] ?? '/');
-        $request['accept'] = request_mime($_SERVER['HTTP_ACCEPT'] ?? null, $_GET['format'] ?? null);
+        $request = [
+            'path' => $uri_cleaner($_SERVER['REQUEST_URI'] ?? '/'),
+            'accept' => request_mime($_SERVER['HTTP_ACCEPT'] ?? null, $_GET['format'] ?? null)
+        ];
     }
 
     return $request;
@@ -218,6 +213,32 @@ function response(int $http_code, string $body, array $http_headers = []): array
         'headers' => $http_headers,
     ];
 }
+
+function io(string $arg): string
+{
+    static $io = [];
+
+    if(!$io){
+        $route_root = $arg ?:  throw new BadFunctionCallException('IO Requires Real Route Root', 500);
+
+        $d = glob(dirname($route_root) . '/*', GLOB_ONLYDIR) ?: [];
+        count($d) === 2                                     || throw new RuntimeException('One folder containing in (route) and out (render) files', 500);
+        $in = realpath($route_root)                         ?: throw new RuntimeException('Route Reality Rescinded', 500);
+        $out = realpath($d[0] === $in ? $d[1] : $d[0])      ?: throw new RuntimeException('Render Reality Rescinded', 500);
+        $root = realpath(dirname(__DIR__))                  ?: throw new RuntimeException('Root Reality Rescinded', 500);
+
+        $io = [
+            'i' => $in,
+            'o' => $out,
+            '/' => $root,
+        ];
+
+        return '';
+    }
+    
+    return $io[$arg] ?? throw new InvalidArgumentException("Invalid IO argument: $arg [i,o,/]", 500);
+}
+
 
 function request_mime(?string $http_accept, ?string $requested_format): string
 {
