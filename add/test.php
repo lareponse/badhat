@@ -3,17 +3,20 @@
 declare(strict_types=1);
 
 
-// register a test with a name and a callable function.
-function test(string $name, callable $test_func): void
+function &get_tests(): array
 {
     static $tests = [];
-    $tests[] = ['name' => $name, 'func' => $test_func];
+    return $tests;
 }
 
-// run all registered tests
+function test(string $name, callable $test_func): void
+{
+    get_tests()[] = ['name' => $name, 'func' => $test_func];
+}
+
 function run_tests(): void
 {
-    static $tests = [];
+    $tests = &get_tests();
     $passed = $failed = 0;
 
     echo "Running tests...\n\n";
