@@ -39,7 +39,7 @@ function upload(array $f, string $dst, int $maxSize, array $types, string $prefi
         . bin2hex(random_bytes(4))
         . ".$ext";
 
-    $root = rtrim(request()['root'], '/');
+    $root = rtrim(io('/'), '/');
     $dir  = "$root/public/" . trim($dst, '/');
     is_dir($dir) ?: mkdir($dir, 0755, true);
 

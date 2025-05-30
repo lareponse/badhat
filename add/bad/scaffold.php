@@ -7,11 +7,11 @@
 
 <body>
     <h1>Missing end point <?= request()['path'] ?></h1>
-    <span>Choose route file to create in: <strong><?= request()['route_root'] ?>/</strong></span>
+    <span>Choose route file to create in: <strong><?= io('i') ?>/</strong></span>
 
         <dl>
             <?php
-            foreach (io_candidates(request()['route_root'], true) as $depth => $response) {
+            foreach (io_candidates(io('i'), true) as $depth => $response) {
                 $handler = $response['handler'];
                 $handlerArgs = empty($response['args']) ? 'none' : implode(',', $response['args']);
                 $templateCode = "<?php\n// Expected arguments: $handlerArgs\nreturn function (...\$args) {\n\treturn ['status' => 200, 'body' => __FILE__];\n};";
@@ -19,7 +19,7 @@
                 <dt><strong>
                 <?= htmlspecialchars(
                     trim(
-                        str_replace(request()['route_root'], '', $handler),
+                        str_replace(io('i'), '', $handler),
                         '/'
                     )
                 ) ?>

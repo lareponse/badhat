@@ -119,7 +119,7 @@ function _ui_ascend(string $dir, string $layoutFile): ?string
     }
 
 
-    $appDir = (dirname(request()['route_root']));
+    $appDir = (dirname(io('i')));
     $current = rtrim($dir, '/');
     // Traverse upward through directory tree
     do {
@@ -135,13 +135,13 @@ function _ui_ascend(string $dir, string $layoutFile): ?string
 
 function _ui_mirror(): ?string
 {
-    $io = dirname(request()['route_root']);
+    $io = dirname(io('i'));
     $io = new FilesystemIterator($io, FilesystemIterator::SKIP_DOTS | FilesystemIterator::CURRENT_AS_PATHNAME);
 
-    if ($io->current() === request()['route_root'])
+    if ($io->current() === io('i'))
         $io->next();
 
-    $view = array_shift(io_candidates($io->current()));
+    $view = array_shift(io_candidates(io('o')));
     return $view['handler'] ?? null;
 }
 
