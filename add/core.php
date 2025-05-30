@@ -122,9 +122,9 @@ function io_candidates(string $in_or_out, bool $scaffold = false): array
     $candidates = [];
     $cur        = '';
 
-    foreach ($segments as $depth => $seg) {
+    foreach (request()['segments'] as $depth => $seg) {
         $cur .= '/' . $seg;
-        $args = array_slice($segments, $depth + 1);
+        $args = array_slice(request()['segments'], $depth + 1);
 
         $possible = [
             $in_or_out . $cur . '.php',
@@ -182,6 +182,8 @@ function request(?callable $uri_cleaner = null): array
     static $request;
 
     if ($request === null) {
+        $request = parse_url($_SERVER['REQUEST_URI'] ?? '/');
+
         $uri_cleaner ??= function (string $uri) {
             $uri = parse_url($uri, PHP_URL_PATH)        ?: '';
             $uri = urldecode($uri);
@@ -191,10 +193,14 @@ function request(?callable $uri_cleaner = null): array
             return $uri;
         };
 
-        $request = [
-            'path' => $uri_cleaner($_SERVER['REQUEST_URI'] ?? '/'),
-            'accept' => request_mime($_SERVER['HTTP_ACCEPT'] ?? null, $_GET['format'] ?? null)
-        ];
+        $request['path'] = $uri_cleaner($request['path']);
+
+        $segments = explode('/', trim($request['path'], '/') ?: 'home');
+        foreach ($segments as $seg)
+            preg_match('/^[a-zA-Z0-9_\-]+$/', $seg) ?: throw new DomainException('Bad Request: Invalid Segment /' . $seg . '/', 400);
+        $request['segments'] = $segments;
+
+        $request['accept'] = request_mime($_SERVER['HTTP_ACCEPT'] ?? null, $_GET['format'] ?? null);
     }
 
     return $request;

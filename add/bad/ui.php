@@ -30,21 +30,20 @@
 function render(array $data = [], string $routeFile = __FILE__, string $layoutName = 'layout.php'): string
 {
     // Convert route handler path to view template path
-    $viewFile = _ui_mirror($routeFile);
+    $candidates = io_candidates(io('o'));
+    $handler = array_shift($candidates);
 
-    if (!is_file($viewFile)) {
-        trigger_error("404 View not found: '{$viewFile}'", E_USER_NOTICE);
-        return '';
-    }
+    if (!is_file($handler['handler']))
+        throw new DomainException("View file not found: {$handler['handler']}", 404);
 
     ob_start();
-    @include $viewFile;
+    @include $handler['handler'];
     $content = ob_get_clean();
     // Store view content in 'main' slot for layout to access
     slot('main', $content);
 
     // Search for layout file, traversing up directory tree
-    $layoutFile = _ui_ascend(dirname($viewFile), $layoutName);
+    $layoutFile = _ui_ascend(dirname($handler['handler']), $layoutName);
     if ($layoutFile && is_file($layoutFile)) {
         ob_start();
         @include $layoutFile;
@@ -135,13 +134,8 @@ function _ui_ascend(string $dir, string $layoutFile): ?string
 
 function _ui_mirror(): ?string
 {
-    $io = dirname(io('i'));
-    $io = new FilesystemIterator($io, FilesystemIterator::SKIP_DOTS | FilesystemIterator::CURRENT_AS_PATHNAME);
-
-    if ($io->current() === io('i'))
-        $io->next();
-
-    $view = array_shift(io_candidates(io('o')));
+    $view = io_candidates(io('o'));
+    $view = array_shift($view);
     return $view['handler'] ?? null;
 }
 
