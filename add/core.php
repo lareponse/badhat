@@ -20,7 +20,7 @@ function resolve(): callable
             return function () use ($handler, $hooks, $route) {
                 $response = [];
                 // Prepare hooks
-                foreach ($hooks['prepare'] as $prepare) 
+                foreach ($hooks['prepare'] as $prepare)
                     is_callable($prepare) ? $response = $prepare($response) : trigger_error("Invalid prepare hook in resolve(): " . json_encode($prepare), E_USER_NOTICE);
 
                 $response = $handler($response, ...($route['args']));
@@ -34,7 +34,16 @@ function resolve(): callable
         }
     }
 
-    return function() {
+    return function () {
+        if (is_dev() && !empty(io_candidates('in', true))) {
+            ob_start(); {
+                require_once 'add/bad/scaffold.php';
+            }
+            $scaffold = ob_get_clean();  // Scaffold response
+            return response(404, $scaffold, ['Content-Type' => 'text/html; charset=UTF-8']);
+        }
+        vd(io_candidates('in', true));
+        die('too late');
         return response(404, 'Not Found', ['Content-Type' => 'text/plain']);
     };
 }
@@ -85,9 +94,8 @@ function io_candidates(string $in_or_out, bool $scaffold = false): array
 {
     $candidates = [];
     $cur        = '';
+    $in_or_out  = $in_or_out === 'in' ? io()[0] : io()[1];
 
-    $in_or_out = $in_or_out === 'in' ? io()[0] : io()[1];
-    
     foreach (request()['segments'] as $depth => $seg) {
         $cur .= '/' . $seg;
         $args = array_slice(request()['segments'], $depth + 1);
@@ -96,12 +104,9 @@ function io_candidates(string $in_or_out, bool $scaffold = false): array
             $in_or_out . $cur . '.php',
             $in_or_out . $cur . DIRECTORY_SEPARATOR . $seg . '.php',
         ];
-        foreach ($possible as $candidate) {
-            if (strpos($candidate, $in_or_out) !== 0)
-                continue;
 
+        foreach ($possible as $candidate)
             $candidates[] = handler($candidate, $args);
-        }
     }
 
     krsort($candidates);
@@ -167,10 +172,7 @@ function request(?callable $uri_cleaner = null): array
         // CSRF check
         if ($_SERVER['REQUEST_METHOD'] === 'POST' && function_exists('csrf') && !csrf($_POST['csrf_token'] ?? '')) {
             trigger_error('403 Forbidden: Invalid CSRF token', E_USER_WARNING);
-            return [
-                'status' => 403,
-                'body' => render(['error' => 'Invalid CSRF token.'])
-            ];
+            return response(403, render(['error' => 'Invalid CSRF token.']));
         }
 
         $request = parse_url($_SERVER['REQUEST_URI'] ?? '/');
