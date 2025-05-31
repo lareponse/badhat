@@ -30,7 +30,7 @@
 function render(array $data = [], string $routeFile = __FILE__, string $layoutName = 'layout.php'): string
 {
     // Convert route handler path to view template path
-    $candidates = io_candidates(io('o'));
+    $candidates = io_candidates('out');
     $handler = array_shift($candidates);
 
     if (!is_file($handler['handler']))
@@ -118,7 +118,7 @@ function _ui_ascend(string $dir, string $layoutFile): ?string
     }
 
 
-    $appDir = (dirname(io('i')));
+    $appDir = (dirname(io()[0]));
     $current = rtrim($dir, '/');
     // Traverse upward through directory tree
     do {
@@ -131,12 +131,3 @@ function _ui_ascend(string $dir, string $layoutFile): ?string
 
     return null;
 }
-
-function _ui_mirror(): ?string
-{
-    $view = io_candidates(io('o'));
-    $view = array_shift($view);
-    return $view['handler'] ?? null;
-}
-
-
