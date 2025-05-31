@@ -13,8 +13,8 @@
             <?php
             foreach (io_candidates('in', true) as $depth => $response) {
                 $handler = $response['handler'];
-                $handlerArgs = empty($response['args']) ? 'none' : implode(',', $response['args']);
-                $templateCode = "<?php\n// Expected arguments: $handlerArgs\nreturn function (...\$args) {\n\treturn ['status' => 200, 'body' => __FILE__];\n};";
+                $handlerArgs = empty($response['args']) ? 'no arguments' : "Expected arguments: '".implode(',', $response['args'])."'";
+                $templateCode = "<?php\n// $handlerArgs\nreturn function (...\$args) {\n\treturn ['status' => 200, 'body' => __FILE__];\n};";
             ?>
                 <dt><strong>
                 <?= htmlspecialchars(
