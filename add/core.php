@@ -110,15 +110,6 @@ function route_exists(string $file): bool
 // Modify existing io_candidates() - replace file_exists() with route_exists()
 function io_candidates(string $in_or_out, bool $scaffold = false): array
 {
-    static $segments = null;
-
-    if ($segments === null) {
-        $segments = trim(request()['path'], '/') ?: 'home';
-        $segments = explode('/', $segments);
-        foreach ($segments as $seg)
-            preg_match('/^[a-zA-Z0-9_\-]+$/', $seg) ?: throw new DomainException('Bad Request: Invalid Segment /' . $seg . '/', 400);
-    }
-
     $candidates = [];
     $cur        = '';
 
@@ -230,7 +221,7 @@ function io(string $arg): string
         $d = glob(dirname($route_root) . '/*', GLOB_ONLYDIR) ?: [];
         count($d) === 2                                     || throw new RuntimeException('One folder containing in (route) and out (render) files', 500);
         $in = realpath($route_root)                         ?: throw new RuntimeException('Route Reality Rescinded', 500);
-        $out = realpath($d[0] === $in ? $d[1] : $d[0])      ?: throw new RuntimeException('Render Reality Rescinded', 500);
+        $out = realpath($d[0] === $in ? $d[0] : $d[1])      ?: throw new RuntimeException('Render Reality Rescinded', 500);
         $root = realpath(dirname(__DIR__))                  ?: throw new RuntimeException('Root Reality Rescinded', 500);
 
         $io = [
