@@ -110,6 +110,11 @@ function html(string $tag, ?string $inner = null, array $attributes = [], $forma
     return "<{$tag}{$attrs}" . ($inner === null ? '/>' : sprintf('>%s</%s>', $formatter($inner), $tag));
 }
 
+function e($value): string
+{
+    return htmlspecialchars((string)$value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+}
+
 function _ui_ascend(string $dir, string $layoutFile): ?string
 {
     // Check if layout is an absolute path
