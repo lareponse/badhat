@@ -49,20 +49,34 @@ function qb_read($table, ...$args): array
 
     return ["SELECT * FROM {$table} {$where}", $params];
 }
-// qb_update('articles', ['title' => 'Updated Title'], ['id' => 42])
-// qb_update('articles', ['title' => 'Updated Title'], ['id' => 42, 'status' => 'draft'])
-function qb_update(string $table, array $data, array $where = []): array
+
+// qb_update('articles', $SET_assoc, 'id = ?', [42])
+// == qb_update('articles', $SET_assoc, ['id' => 42]);
+
+// qb_update('articles', $SET_assoc, "status = 'draft' AND id = ?", [42]);
+// == qb_update('articles', $SET_assoc, ['status' => 'draft', 'id' => 42]);
+function qb_update(string $table, array $data, array|string $where = [], array $binds = []): array
 {
     if (!$data) return ['', []];
 
     [$set_clause, $set_binds] = qb_compass($data, '=', 'update');
-    [$where_clause, $where_binds] = qb_where($where);
+
+    if (is_string($where)) {
+        $where_clause = 'WHERE ' . $where;
+        $where_binds = $binds;
+    } elseif (is_array($where) && $where) {
+        [$where_clause, $where_binds] = qb_where($where);
+    } else {
+        $where_clause = '';
+        $where_binds = [];
+    }
 
     $sql = "UPDATE {$table} SET {$set_clause}";
     if ($where_clause) $sql .= " {$where_clause}";
 
     return [$sql, $set_binds + $where_binds];
 }
+
 
 // ajouter un log ou une option 'allow_delete' contrôlée
 function qb_delete(string $table, array $where): array
