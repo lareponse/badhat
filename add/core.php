@@ -100,13 +100,8 @@ function io_candidates(string $in_or_out, bool $scaffold = false): array
         $cur .= '/' . $seg;
         $args = array_slice(request()['segments'], $depth + 1);
 
-        $possible = [
-            $in_or_out . $cur . '.php',
-            $in_or_out . $cur . DIRECTORY_SEPARATOR . 'index.php',
-        ];
-
-        foreach ($possible as $candidate)
-            $candidates[] = handler($candidate, $args);
+        $candidates[] = handler($in_or_out . $cur . '.php', $args);
+        $candidates[] = handler($in_or_out . $cur . DIRECTORY_SEPARATOR . 'index.php', $args);
     }
 
     krsort($candidates);
