@@ -8,7 +8,7 @@ error_reporting(E_ALL);
 // E_USER_NOTICE and E_USER_WARNING are just logged, php handles the rest
 set_error_handler(function (int $errno, string $errstr): bool {
     return ($errno === E_USER_NOTICE  && journal(200, $errstr) && error_log("E_USER_NOTICE: $errstr"))
-        || ($errno === E_USER_WARNING && journal(400, $errstr) && error_log("E_USER_WARNING: $errstr")) 
+        || ($errno === E_USER_WARNING && journal(400, $errstr) && error_log("E_USER_WARNING: $errstr"))
         || false;
 });
 
@@ -87,44 +87,54 @@ function is_dev(): bool
     return $isDev ?? ($isDev = filter_var(getenv('DEV_MODE') ?: ($_ENV['DEV_MODE'] ?? '0'), FILTER_VALIDATE_BOOLEAN));
 }
 
-// dump a single value + backtrace, either to screen (dev) or to error_log.
-function vd($arg, int $bt_depth = 1)
+function vd($first, $second = null, ...$others)
 {
-    // Capture both var_dump and debug_print_backtrace into a string
+    $arity = func_num_args();
+
+    [$label, $depth, $vars] = match ($arity) {
+        1 => ['', 1, [$first]],
+        2 => [is_string($second) ? $second : '', is_int($second) ? $second : 1, [$first]],
+        default => [$first, is_int($second) ? $second : 1, array_slice(func_get_args(), 2)]
+    };
+
+    $label = htmlspecialchars((string)$label, ENT_QUOTES, 'UTF-8');
+    $params = http_build_query(['frames' => $depth, 'arity' => $arity], '', ', ');
+
     ob_start(); {
-        var_dump($arg);
-        echo PHP_EOL;
-        debug_print_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, $bt_depth);
-    }
-    $buffer = ob_get_clean();
+        echo str_repeat('-', 23) . __FUNCTION__;
+        if (count($vars) > 2)
+            printf('[%s, %s] ' . PHP_EOL, $label, $params);
+        else
+            printf('(%s, %s) ' . PHP_EOL, $label, $params);
 
-    if (is_dev()) {
-        // In dev mode, show on the page
-        echo '<pre class="vd">' . $buffer . '</pre>';
-    } else {
-        // In production, send to the error log
-        error_log($buffer);
-    }
-
-    return $arg;
-}
-
-// dump any number of values + 1-frame backtrace, either to screen (dev) or to error_log.
-function vvd(...$args)
-{
-    ob_start(); {
-        foreach ($args as $arg) {
-            var_dump($arg);
+        foreach ($vars as $valueToDump) {
+            var_dump($valueToDump);
             echo PHP_EOL;
         }
-        debug_print_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 1);
-    }
-    $buffer = ob_get_clean();
 
-    if (is_dev()) {
-        echo '<pre class="vvd">' . $buffer . '</pre>';
+        // 8) Clean up output: remove “root” prefix from absolute paths
+    }
+    $output = ob_get_clean();
+
+    ob_start(); {
+        debug_print_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, $depth);
+    }
+    $frames = '| ' . str_replace(PHP_EOL, PHP_EOL . '| ', trim(ob_get_clean()));
+    $rootDir = dirname(dirname(__DIR__)) . DIRECTORY_SEPARATOR;
+    $output = $output
+        . str_repeat('-', 3)
+        . PHP_EOL
+        . str_replace($rootDir, DIRECTORY_SEPARATOR, $frames)
+        . PHP_EOL
+        . str_repeat('-', 23) . '|';
+
+    // 9) Echo as HTML (<pre>) if web, or error_log() if CLI
+    if (PHP_SAPI !== 'cli') {
+        echo '<pre class="vd">' . $output . PHP_EOL . '</pre>';
     } else {
-        error_log($buffer);
+        error_log($output);
     }
-}
 
+    // 10) Return the very first argument, unchanged
+    return $first;
+}
