@@ -24,10 +24,10 @@ function run_tests(): void
     foreach ($tests as $test) {
         try {
             $test['func']();
-            echo "✓ {$test['name']}\n";
+            echo "x {$test['name']}\n";
             $passed++;
         } catch (Throwable $e) {
-            echo "✗ {$test['name']}: {$e->getMessage()}\n";
+            echo "! {$test['name']}: {$e->getMessage()}\n";
             $failed++;
         }
     }
