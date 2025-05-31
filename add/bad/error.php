@@ -7,8 +7,8 @@ error_reporting(E_ALL);
 
 // E_USER_NOTICE and E_USER_WARNING are just logged, php handles the rest
 set_error_handler(function (int $errno, string $errstr): bool {
-    return ($errno === E_USER_NOTICE  && quest(200, $errstr) && error_log("E_USER_NOTICE: $errstr"))
-        || ($errno === E_USER_WARNING && quest(400, $errstr) && error_log("E_USER_WARNING: $errstr")) 
+    return ($errno === E_USER_NOTICE  && journal(200, $errstr) && error_log("E_USER_NOTICE: $errstr"))
+        || ($errno === E_USER_WARNING && journal(400, $errstr) && error_log("E_USER_WARNING: $errstr")) 
         || false;
 });
 
@@ -63,7 +63,7 @@ register_shutdown_function(function () {
     }
 });
 
-function quest(?int $code = null, ?string $message = null): array
+function journal(?int $code = null, ?string $message = null): array
 {
     static $journal = [];
 
