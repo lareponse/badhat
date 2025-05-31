@@ -102,7 +102,7 @@ function io_candidates(string $in_or_out, bool $scaffold = false): array
 
         $possible = [
             $in_or_out . $cur . '.php',
-            $in_or_out . $cur . DIRECTORY_SEPARATOR . $seg . '.php',
+            $in_or_out . $cur . DIRECTORY_SEPARATOR . 'index.php',
         ];
 
         foreach ($possible as $candidate)
