@@ -63,23 +63,12 @@ register_shutdown_function(function () {
     }
 });
 
-function journal(?int $code = null, ?string $message = null): array
+function journal(int $code, string $message): bool
 {
-    static $journal = [];
-
-    if ($code === null && $message === null) {
-        return $journal;
-    }
-
-    if ($code === null) {
-        $journal = [];
-        return [];
-    }
-
-    $journal[] = ['code' => $code, 'message' => $message];
-    return $journal;
+    static $entries = [];
+    $entries[] = ['code' => $code, 'message' => $message, 'time' => time()];
+    return true;  // For boolean chaining in error handler
 }
-
 
 function is_dev(): bool
 {
