@@ -1,4 +1,7 @@
 <?php
+require_once 'add/bad/qb.php';
+
+
 
 function whoami(): ?string
 {
@@ -52,13 +55,49 @@ function auth_token(?string $cookie_index): ?string
             'samesite' => 'Lax'
         ]);
     }
-    
+
     return null;
+}
+
+function check_rate_limit(string $key, int $max_attempts = 5, int $window = 300): bool
+{
+    $cache_key = 'rate_limit:' . $key;
+
+    // Get current attempts from database or cache
+    $result = dbq(
+        "SELECT attempts, last_attempt FROM rate_limits 
+         WHERE cache_key = ? AND last_attempt > ?",
+        [$cache_key, time() - $window]
+    )->fetch();
+
+    if (!$result) {
+        // First attempt
+        dbq(
+            "INSERT INTO rate_limits (cache_key, attempts, last_attempt) 
+             VALUES (?, 1, ?) 
+             ON DUPLICATE KEY UPDATE attempts = 1, last_attempt = ?",
+            [$cache_key, time(), time()]
+        );
+        return true;
+    }
+
+    if ($result['attempts'] >= $max_attempts) {
+        return false;
+    }
+
+    // Increment attempts
+    dbq(
+        "UPDATE rate_limits SET attempts = attempts + 1, last_attempt = ? 
+         WHERE cache_key = ?",
+        [time(), $cache_key]
+    );
+
+    return true;
 }
 
 function auth_post(string $username, string $password, string $csrf_name = 'csrf_token'): bool
 {
-    $_SERVER['REQUEST_METHOD'] !== 'POST'   ?: throw new DomainException('Invalid request method', 405);
+    $_SERVER['REQUEST_METHOD'] === 'POST'   ?: throw new DomainException('Invalid request method: ' . $_SERVER['REQUEST_METHOD'], 405);
     $_POST[$csrf_name]                      ?: throw new DomainException('CSRF token missing', 403);
     csrf($_POST[$csrf_name] ?? '')          ?: throw new DomainException('Invalid CSRF', 403);
 
@@ -66,8 +105,15 @@ function auth_post(string $username, string $password, string $csrf_name = 'csrf
     $password ?: throw new DomainException('Password required', 403);
 
     $user = dbq("SELECT * FROM users WHERE username = ?", [$username])->fetch(PDO::FETCH_ASSOC);
-    if (!$user || !password_verify($password, $user['password'])) {
-        return false;
+    if (is_dev()) {
+        if (!$user || $password !== $user['password']) {
+            vd($user);
+            return false;
+        }
+    } else {
+        if (!$user || !password_verify($password, $user['password'])) {
+            return false;
+        }
     }
 
     $token = bin2hex(random_bytes(32));
@@ -81,19 +127,20 @@ function auth_post(string $username, string $password, string $csrf_name = 'csrf
         'samesite' => 'Lax',
         'secure' => isset($_SERVER['HTTPS']) // Only if HTTPS
     ]);
+    return true;
 
-    return dbt(function () use ($token, $user_id, $expires_at) {
-        // Clean up expired tokens first
-        dbq("DELETE FROM tokens WHERE expires_at < ?", [time()]);
+    // return dbt(function () use ($token, $user_id, $expires_at) {
+    //     // Clean up expired tokens first
+    //     dbq("DELETE FROM tokens WHERE expires_at < ?", [time()]);
 
-        $stmt = dbq("UPDATE tokens SET user_id = ?, expires_at = ? WHERE token = ?", [$user_id, $expires_at, $token]);
+    //     $stmt = dbq("UPDATE tokens SET user_id = ?, expires_at = ? WHERE token = ?", [$user_id, $expires_at, $token]);
 
-        if ($stmt->rowCount() === 0) {
-            dbq(...qb_create('tokens', ['token' => $token, 'user_id' => $user_id, 'expires_at' => $expires_at]));
-        }
+    //     if ($stmt->rowCount() === 0) {
+    //         dbq(...qb_create('tokens', null, [['token' => $token, 'user_id' => $user_id, 'expires_at' => $expires_at]]));
+    //     }
 
-        return true;
-    });
+    //     return true;
+    // });
 }
 
 function auth_revoke(): bool
@@ -135,12 +182,10 @@ function csp_nonce(string $key = 'default'): string
  * - No args → returns new token (string)
  * - With token → returns bool
  */
-function csrf(?string $token = null, int $max_age = 3600, string $env_key = 'CSRF_SECRET'): string|bool
+function csrf(?string $token = null, ?string $csrf_secret = null, int $max_age = 3600): string|bool
 {
-    $secret = getenv($env_key);
-    if (!$secret) {
-        trigger_error('500 CSRF secret is missing', E_USER_ERROR);
-    }
+    static $secret = null;
+    $secret ??= $csrf_secret ?? getenv('CSRF_SECRET') ?: throw new DomainException('A secret is missing to prevent cross-site request forgery', 500);
 
     if ($token === null) {
         $time = time();
@@ -155,4 +200,10 @@ function csrf(?string $token = null, int $max_age = 3600, string $env_key = 'CSR
     if (!$t || !$s || abs(time() - (int)$t) > $max_age) return false;
 
     return hash_equals(hash_hmac('sha256', $t, $secret), $s);
+}
+
+
+function csrf_field(string $name = 'csrf_token'): string
+{
+    return "<input type='hidden' name='$name' value='" . htmlspecialchars(csrf()) . "'>";
 }
