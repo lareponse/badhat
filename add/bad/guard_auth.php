@@ -1,14 +1,12 @@
 <?php
 require_once 'add/bad/qb.php';
 
-
-
 function whoami(): ?string
 {
     static $username = null;
 
     if ($username === null)
-        $username = auth_http() ?? auth_token('auth');
+        $username = auth_http() ?? auth_token('auth_token');
 
     return $username;
 }
@@ -32,7 +30,6 @@ function auth_http(): ?string
 function auth_token(?string $cookie_index): ?string
 {
     if (!empty($cookie_index) && !empty($_COOKIE[$cookie_index])) {
-
         $token = dbq("SELECT * FROM tokens WHERE token = ? AND expires_at > ?", [$_COOKIE[$cookie_index], time()])->fetch(PDO::FETCH_ASSOC);
         if ($token) {
             if ($token['expires_at'] > time())
@@ -41,14 +38,8 @@ function auth_token(?string $cookie_index): ?string
             auth_token_purge();
         }
     }
-
     if (empty($cookie_index)) {
-        // $token_id =;
-        // if ($token_id) {
-        // }
-
-        // Clear cookie
-        setcookie('auth', '', [
+        setcookie('auth_token', '', [
             'expires' => time() - 3600,
             'path' => '/',
             'httponly' => true,
@@ -95,65 +86,53 @@ function check_rate_limit(string $key, int $max_attempts = 5, int $window = 300)
     return true;
 }
 
-function auth_post(string $username, string $password, string $csrf_name = 'csrf_token'): bool
+function auth_post(string $username, string $password, bool $remember_me = false): bool
 {
-    $_SERVER['REQUEST_METHOD'] === 'POST'   ?: throw new DomainException('Invalid request method: ' . $_SERVER['REQUEST_METHOD'], 405);
-    $_POST[$csrf_name]                      ?: throw new DomainException('CSRF token missing', 403);
-    csrf($_POST[$csrf_name] ?? '')          ?: throw new DomainException('Invalid CSRF', 403);
+    session_start();
 
-    $username ?: throw new DomainException('Username required', 403);
-    $password ?: throw new DomainException('Password required', 403);
+    $_SERVER['REQUEST_METHOD'] === 'POST' ?: throw new DomainException('Invalid method', 405);
+    csrf($_POST['csrf_token'] ?? '') ?: throw new DomainException('Invalid CSRF', 403);
 
     $user = dbq("SELECT * FROM users WHERE username = ?", [$username])->fetch(PDO::FETCH_ASSOC);
-    if (is_dev()) {
-        if (!$user || $password !== $user['password']) {
-            vd($user);
-            return false;
-        }
-    } else {
-        if (!$user || !password_verify($password, $user['password'])) {
-            return false;
-        }
-    }
+    // if (!$user || ($password != $user['password'])) return false;
+    if (!$user || !password_verify($password, $user['password'])) return false;
 
+    session_regenerate_id(true);
+
+    $_SESSION['user_id'] = $user['id'];
     $token = bin2hex(random_bytes(32));
-    $user_id = $user['id'];
-    $expires_at = time() + (30 * 24 * 3600);
+    $expires = time() + 30 * 24 * 3600;
 
-    setcookie('auth', $token, [
-        'expires' => $expires_at,
+    [$sql, $bindings] = qb_create('tokens', null, [
+        'token' => $token,
+        'user_id' => $user['id'],
+        'expires_at' => $expires,
+        'ip_address' => $_SERVER['REMOTE_ADDR'] ?? null,
+        'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? null
+    ]);
+    dbq($sql, $bindings);
+
+
+    setcookie('auth_token', $token, [
+        'expires' => $expires,
         'path' => '/',
         'httponly' => true,
         'samesite' => 'Lax',
-        'secure' => isset($_SERVER['HTTPS']) // Only if HTTPS
+        'secure' => (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || $_SERVER['SERVER_PORT'] == 443,
+
     ]);
+
     return true;
-
-    // return dbt(function () use ($token, $user_id, $expires_at) {
-    //     // Clean up expired tokens first
-    //     dbq("DELETE FROM tokens WHERE expires_at < ?", [time()]);
-
-    //     $stmt = dbq("UPDATE tokens SET user_id = ?, expires_at = ? WHERE token = ?", [$user_id, $expires_at, $token]);
-
-    //     if ($stmt->rowCount() === 0) {
-    //         dbq(...qb_create('tokens', null, [['token' => $token, 'user_id' => $user_id, 'expires_at' => $expires_at]]));
-    //     }
-
-    //     return true;
-    // });
 }
 
-function auth_revoke(): bool
+function auth_revoke(): void
 {
-    // Clear HTTP headers
-    unset($_SERVER['HTTP_X_AUTH_USER'], $_SERVER['HTTP_X_AUTH_SIG']);
+    session_start();
+    session_destroy();
 
-    if (!empty($_COOKIE['auth'])) {
-
-        dbq("DELETE FROM tokens WHERE token = ?", [$_COOKIE['auth']])->rowCount();
-
-        // Clear auth token cookie
-        setcookie('auth', '', [
+    if (!empty($_COOKIE['auth_token'])) {
+        dbq("DELETE FROM tokens WHERE token = ?", [$_COOKIE['auth_token']]);
+        setcookie('auth_token', '', [
             'expires' => time() - 3600,
             'path' => '/',
             'httponly' => true,
@@ -161,6 +140,7 @@ function auth_revoke(): bool
         ]);
     }
 }
+
 
 function auth_token_purge(): bool
 {
