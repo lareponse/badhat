@@ -1,36 +1,40 @@
 <!DOCTYPE html>
 <html lang="en">
+<?php
+$addbad_scaffold_mode = $addbad_scaffold_mode ?: 'in';
+?>
+
 <head>
     <meta charset="UTF-8">
     <title>Scaffold</title>
 </head>
 
 <body>
-    <h1>Missing end point <?= request()['path'] ?></h1>
-    <span>Choose route file to create in: <strong><?= io()[0] ?>/</strong></span>
+    <h1>Missing <?= $addbad_scaffold_mode === 'in' ? 'route' : 'render' ?>  end point <?= request()['path'] ?></h1>
+    <span>Choose file to create in: <strong><?= io()[$addbad_scaffold_mode === 'in' ? 0 : 1] ?>/</strong></span>
 
-        <dl>
-            <?php
-            foreach (io_candidates('in', true) as $depth => $response) {
-                $handler = $response['handler'];
-                $handlerArgs = empty($response['args']) ? 'no arguments' : "Expected arguments: '".implode(',', $response['args'])."'";
-                $templateCode = "<?php\n// $handlerArgs\nreturn function (...\$args) {\n\treturn ['status' => 200, 'body' => __FILE__];\n};";
-            ?>
-                <dt><strong>
-                <?= htmlspecialchars(
-                    trim(
-                        str_replace(io()[0], '', $handler),
-                        '/'
-                    )
-                ) ?>
+    <dl>
+        <?php
+        foreach (io_candidates($addbad_scaffold_mode) as $depth => $response) {
+            $handler = $response['handler'];
+            $handlerArgs = empty($response['args']) ? 'no arguments' : "Expected arguments: '" . implode(',', $response['args']) . "'";
+            $templateCode = "<?php\n// $handlerArgs\nreturn function (...\$args) {\n\treturn ['status' => 200, 'body' => __FILE__];\n};";
+        ?>
+            <dt><strong>
+                    <?= htmlspecialchars(
+                        trim(
+                            str_replace(io()[0], '', $handler),
+                            '/'
+                        )
+                    ) ?>
                 </strong></dt>
-                <dd>
-                    <pre><?= htmlspecialchars($templateCode) ?></pre>
-                </dd>
-            <?php
-            }
-            ?>
-        </dl>
+            <dd>
+                <pre><?= $addbad_scaffold_mode === 'in' ? htmlspecialchars($templateCode) : '' ?></pre>
+            </dd>
+        <?php
+        }
+        ?>
+    </dl>
 </body>
 
 </html>

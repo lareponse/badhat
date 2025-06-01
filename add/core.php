@@ -12,38 +12,37 @@ define('BADGE_MIME_ACCEPT', 'application/vnd.BADGE+json, text/html, text/plain')
 
 function resolve(): callable
 {
-    foreach (io_candidates('in') as $route) {
-        if (!empty($route['handler']) && route_exists($route['handler'])) {
+    $route = io_candidate('in');
+    if (!empty($route) && isset($route['handler'])) {
+        return function () use ($route) {
             $handler = summon($route['handler']);
             $hooks   = hooks($route['handler']);
 
-            return function () use ($handler, $hooks, $route) {
-                $response = [];
-                // Prepare hooks
-                foreach ($hooks['prepare'] as $prepare)
-                    is_callable($prepare) ? $response = $prepare($response) : trigger_error("Invalid prepare hook in resolve(): " . json_encode($prepare), E_USER_NOTICE);
+            $response = [];
+            // Prepare hooks
+            foreach ($hooks['prepare'] as $prepare)
+                is_callable($prepare) ? $response = $prepare($response) : trigger_error("Invalid prepare hook in resolve(): " . json_encode($prepare), E_USER_NOTICE);
 
-                $response = $handler($response, ...($route['args']));
+            $response = $handler($response, ...($route['args']));
 
-                // Conclude hooks
-                foreach ($hooks['conclude'] as $conclude)
-                    is_callable($conclude) ? $response = $conclude($response) : trigger_error("Invalid conclude hook in resolve(): " . json_encode($conclude), E_USER_NOTICE);
+            // Conclude hooks
+            foreach ($hooks['conclude'] as $conclude)
+                is_callable($conclude) ? $response = $conclude($response) : trigger_error("Invalid conclude hook in resolve(): " . json_encode($conclude), E_USER_NOTICE);
 
-                return $response;
-            };
-        }
+            return $response;
+        };
     }
 
     return function () {
-        if (is_dev() && !empty(io_candidates('in', true))) {
+        if (is_dev() && !empty(io_candidates('in'))) {
             ob_start(); {
+                $addbad_scaffold_mode = 'in';
                 require_once 'add/bad/scaffold.php';
             }
             $scaffold = ob_get_clean();  // Scaffold response
             return response(404, $scaffold, ['Content-Type' => 'text/html; charset=UTF-8']);
         }
-        vd(io_candidates('in', true));
-        die('too late');
+
         return response(404, 'Not Found', ['Content-Type' => 'text/plain']);
     };
 }
@@ -90,7 +89,7 @@ function io(?string $arg = null): array
     return $io;
 }
 
-function io_candidates(string $in_or_out, bool $scaffold = false): array
+function io_candidates(string $in_or_out): array
 {
     $candidates = [];
     $cur        = '';
@@ -106,13 +105,20 @@ function io_candidates(string $in_or_out, bool $scaffold = false): array
 
     krsort($candidates);
 
-    if ($scaffold)
-        return $candidates;
+    return $candidates;
+}
 
-    foreach ($candidates as $candidate)
-        if (route_exists($candidate['handler']) || file_exists($candidate['handler']))
-            return [$candidate];
+function io_candidate(string $in_or_out): array
+{
+    $app_root = dirname(dirname(__DIR__));
 
+    foreach (io_candidates($in_or_out) as $candidate) {
+        $real = realpath($candidate['handler']);
+        if (!$real) continue;
+
+        if (strpos($real, $app_root) === 0 && route_exists($real) || is_readable($real) && is_file($real))
+            return $candidate;
+    }
     return [];
 }
 
@@ -184,11 +190,13 @@ function request(?callable $uri_cleaner = null): array
         $request['path'] = $uri_cleaner($request['path']);
 
         $segments = explode('/', trim($request['path'], '/') ?: 'home');
-        foreach ($segments as $seg)
-            preg_match('/^[a-zA-Z0-9_\-]+$/', $seg) ?: throw new DomainException('Bad Request: Invalid Segment /' . $seg . '/', 400);
-        $request['segments'] = $segments;
 
-        $request['accept'] = request_mime($_SERVER['HTTP_ACCEPT'] ?? null, $_GET['format'] ?? null);
+        foreach ($segments as $depth => $seg) {
+            preg_match('/^[a-zA-Z0-9_\-]+$/', $seg) ?: throw new DomainException('Bad Request: Invalid Segment /' . $seg . '/', 400);
+        }
+
+        $request['segments']    = $segments;
+        $request['accept']      = request_mime($_SERVER['HTTP_ACCEPT'] ?? null, $_GET['format'] ?? null);
     }
 
     return $request;
