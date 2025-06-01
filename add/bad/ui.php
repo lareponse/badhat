@@ -30,11 +30,17 @@
 function render(array $data = [], string $routeFile = __FILE__, string $layoutName = 'layout.php'): string
 {
     // Convert route handler path to view template path
-    $candidates = io_candidates('out');
-    $handler = array_shift($candidates);
-
-    if (!is_file($handler['handler']))
-        throw new DomainException("View file not found: {$handler['handler']}", 404);
+    $handler = io_candidate('out');
+    vd($handler);
+    if (!$handler || !isset($handler['handler']) || !is_file($handler['handler'])) {
+        if (is_dev()) {
+            $addbad_scaffold_mode = 'out';
+            require_once 'add/bad/scaffold.php';
+            die;
+        } else {
+            throw new RuntimeException("No valid view handler found for route: $routeFile", 404);
+        }
+    }
 
     ob_start();
     @include $handler['handler'];
