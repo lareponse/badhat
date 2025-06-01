@@ -27,28 +27,18 @@
  * @param  string $layoutName Layout filename to search for
  * @return string             Rendered HTML output
  */
-function render(array $data = [], string $routeFile = __FILE__, string $layoutName = 'layout.php'): string
+function render(array $quest, string $viewFile = __FILE__, string $layoutName = 'layout.php'): string
 {
-    // Convert route handler path to view template path
-    $handler = io_candidate('out');
-    if (!$handler || !isset($handler['handler']) || !is_file($handler['handler'])) {
-        if (is_dev()) {
-            $addbad_scaffold_mode = 'out';
-            require_once 'add/bad/scaffold.php';
-            die;
-        } else {
-            throw new RuntimeException("No valid view handler found for route: $routeFile", 404);
-        }
-    }
-
+    $data = $quest['payload'] ?? [];
     ob_start();
-    @include $handler['handler'];
+    @include $viewFile;
     $content = ob_get_clean();
     // Store view content in 'main' slot for layout to access
     slot('main', $content);
 
     // Search for layout file, traversing up directory tree
-    $layoutFile = _ui_ascend(dirname($handler['handler']), $layoutName);
+    $layoutFile = _ui_ascend(dirname($viewFile), $layoutName);
+
     if ($layoutFile && is_file($layoutFile)) {
         ob_start();
         @include $layoutFile;

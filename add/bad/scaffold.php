@@ -1,3 +1,7 @@
+<?php
+
+
+?>
 <!DOCTYPE html>
 <html lang="en">
 <?php
@@ -10,15 +14,15 @@ $addbad_scaffold_mode = $addbad_scaffold_mode ?: 'in';
 </head>
 
 <body>
-    <h1>Missing <?= $addbad_scaffold_mode === 'in' ? 'route' : 'render' ?>  end point <?= request()['path'] ?></h1>
+    <h1>Missing <?= $addbad_scaffold_mode === 'in' ? 'route' : 'render' ?>  end point <?= $quest['path'] ?></h1>
     <span>Choose file to create in: <strong><?= io()[$addbad_scaffold_mode === 'in' ? 0 : 1] ?>/</strong></span>
 
     <dl>
         <?php
-        foreach (io_candidates($addbad_scaffold_mode) as $depth => $response) {
+        foreach (io_map($plan, $gps[0])[1] ?? [] as $depth => $response) {
             $handler = $response['handler'];
             $handlerArgs = empty($response['args']) ? 'no arguments' : "Expected arguments: '" . implode(',', $response['args']) . "'";
-            $templateCode = "<?php\n// $handlerArgs\nreturn function (...\$args) {\n\treturn ['status' => 200, 'body' => __FILE__];\n};";
+            $templateCode = "<?php\n// $handlerArgs\nreturn function (\$quest, \$request) {\n\treturn ['status' => 200, 'body' => __FILE__];\n};";
         ?>
             <dt><strong>
                     <?= htmlspecialchars(
