@@ -58,7 +58,7 @@ This is **exactly what static variables were designed for**.
 
 ## 3. **Route Segment Parsing** (`add/core.php`)
 ```php
-function io_candidates(string $in_or_out, bool $scaffold = false): array
+function io_candidates(string $in_or_out): array
 {
     static $segments = null;
 
