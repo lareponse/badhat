@@ -90,7 +90,7 @@ function vd($first, $second = null, ...$others)
     $params = http_build_query(['frames' => $depth, 'arity' => $arity], '', ', ');
 
     ob_start(); {
-        echo str_repeat('-', 23) . __FUNCTION__;
+        echo PHP_EOL . PHP_EOL . str_repeat('- ', 23) . __FUNCTION__;
         if (count($vars) > 2)
             printf('[%s, %s] ' . PHP_EOL, $label, $params);
         else
@@ -111,11 +111,7 @@ function vd($first, $second = null, ...$others)
     $frames = '| ' . str_replace(PHP_EOL, PHP_EOL . '| ', trim(ob_get_clean()));
     $rootDir = dirname(dirname(__DIR__)) . DIRECTORY_SEPARATOR;
     $output = $output
-        . str_repeat('-', 3)
-        . PHP_EOL
-        . str_replace($rootDir, DIRECTORY_SEPARATOR, $frames)
-        . PHP_EOL
-        . str_repeat('-', 23) . '|';
+        . str_replace($rootDir, DIRECTORY_SEPARATOR, $frames);
 
     // 9) Echo as HTML (<pre>) if web, or error_log() if CLI
     if (PHP_SAPI !== 'cli') {
