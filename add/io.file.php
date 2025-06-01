@@ -176,7 +176,7 @@ function route_exists(string $file): bool
 function io_scaffold($addbad_scaffold_mode = 'in'): string
 {
     ob_start(); {
-        require_once 'add/bad/scaffold.php';
+        require_once 'add/dad/scaffold.php';
     }
     return  ob_get_clean();  // Scaffold response
 }
