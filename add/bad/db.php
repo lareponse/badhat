@@ -1,47 +1,69 @@
 <?php
 
 declare(strict_types=1);
-
 /**
  * db() — Get or inject a PDO instance by profile ('' = unnamed)
  *
  * Usage:
- *   db()                         get default connection
+ *   db()                         get default connection (env credentials)
  *   db('read')                   get 'read' connection
- *   db($pdo)                     override getenv to set default connection
- *   db(new PDO('sqlite::memory:'), 'test')             → set named connection
- * 
- * 
- * expects environment variables:
- *   DB_DSN_$profile, DB_USER_$profile, DB_PASS_$profile
- *      Where profile is the name of the connection, or empty for the default (DB_DSN_, DB_USER_, DB_PASS_)
+ *   db(PDO)                      override default connection ('')
+ *   db(PDO, 'read')              set named connection
+ *
+ * Expects these environment variables per profile:
+ *   DB_DSN_$PROFILE
+ *   DB_USER_$PROFILE
+ *   DB_PASS_$PROFILE
+ *
+ * Before returning a cached PDO, we run “SELECT 1” to verify it’s still alive.
+ * If that ping fails, we discard it and reconnect.
  */
-function db(PDO|string $arg = '', ?string $profile = null): PDO
+function db(mixed $arg = null, string $profile = ''): ?PDO
 {
-    static $map = [];
+    static $store = [];
 
-    // Setter mode
     if ($arg instanceof PDO) {
-        $map[$profile ?? ''] = $arg;
-        return $arg;
+        $store[$profile] = $arg;
+        return $store[$profile];
     }
 
-    // Getter mode
-    $profile = $arg ?? '';
+    if (is_string($arg)) {
+        $profile = $arg;
+    } 
 
-    if (isset($map[$profile])) {
-        return $map[$profile];
+    if (isset($store[$profile])) {
+        $existing = $store[$profile];
+        try {
+            $existing->query('SELECT 1'); // ping
+            return $existing;
+        } catch (PDOException $e) {
+            unset($store[$profile]);
+        }
     }
 
-    $dsn  = getenv("DB_DSN_$profile")  ?: throw new LogicException("Missing ENV: DB_DSN_$profile");
-    $user = getenv("DB_USER_$profile") ?: null;
-    $pass = getenv("DB_PASS_$profile") ?: null;
+    // 4) Read environment variables for this profile.
+    $dsn   = getenv('DB_DSN_' . $profile)  ?: throw new DomainException(
+        "No DSN defined. SetEnv DB_DSN_$profile"
+    );
 
-    return $map[$profile] = new PDO($dsn, $user, $pass, [
+    $user = getenv('DB_USER_' . $profile) ?: null;
+    $pass = getenv('DB_PASS_' . $profile) ?: null;
+
+    $options = [
         PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
         PDO::ATTR_EMULATE_PREPARES   => false,
-    ]);
+    ];
+
+    try {
+        $pdo = new PDO($dsn, $user, $pass, $options);
+        $store[$profile] = $pdo;
+        return $store[$profile];
+    } catch (PDOException $e) {
+        throw new RuntimeException(sprintf("PDO Failed For Profile '%s : %s'", 'DEFAULT', $e->getMessage()), 500);
+    }
+
+    return null;
 }
 
 
