@@ -8,7 +8,7 @@ function run(array $quest, array $request): array
     }
 
     if (isset($quest['execute']['closure']) && is_callable($quest['execute']['closure'])) {
-        $quest += $quest['execute']['closure']($quest, $request);
+        $quest += $quest['execute']['closure']($quest, $request, ...$quest['execute']['args'] ?? []);
     }
 
     foreach ($quest['conclude'] as $conclude) {
