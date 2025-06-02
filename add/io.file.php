@@ -18,19 +18,6 @@ function io(?string $base_setter = null): array
     return $base;
 }
 
-function io_summon(string $file): ?callable
-{
-    ob_start();
-    $callable = @include $file;
-    ob_end_clean();
-
-    if (is_callable($callable))
-        return $callable;
-
-    error_log("Invalid Callable in $file", E_USER_NOTICE);
-    return null;
-}
-
 function io_base(string $arg): array
 {
     $in = realpath($arg)            ?: throw new RuntimeException('Route Base Reality Rescinded', 500);
@@ -65,12 +52,12 @@ function io_map(array $plan, $in): array
         $base_path = $in . $cur;
 
         $prepares[] = handler($base_path . DIRECTORY_SEPARATOR . IO_FILE_PREPARE, $args);
-        $concludes[] = handler($base_path . DIRECTORY_SEPARATOR . IO_FILE_CONCLUDE);
+        $concludes[] = handler($base_path . DIRECTORY_SEPARATOR . IO_FILE_CONCLUDE, $args);
 
         if ($seg) {
             $candidates[] = handler($base_path . '.php', $args);
         }
-        $candidates[] = handler($base_path . DIRECTORY_SEPARATOR . IO_FILE_DEFAULT);
+        $candidates[] = handler($base_path . DIRECTORY_SEPARATOR . IO_FILE_DEFAULT, $args);
     }
 
     krsort($candidates);
@@ -116,4 +103,17 @@ function io_scaffold($addbad_scaffold_mode = 'in'): string
         require_once 'add/dad/scaffold.php';
     }
     return  ob_get_clean();  // Scaffold response
+}
+
+function io_summon(string $file): ?callable
+{
+    ob_start();
+    $callable = @include $file;
+    ob_end_clean();
+
+    if (is_callable($callable))
+        return $callable;
+
+    error_log("Invalid Callable in $file", E_USER_NOTICE);
+    return null;
 }
