@@ -1,10 +1,13 @@
 <?php
 declare(strict_types=1);
 
-function run(array $quest, array $request): array
+require 'add/io.http.php';
+require 'add/io.file.php';
+
+function follow(array $quest, array $request): array
 {
     foreach ($quest['prepare'] as $prepare) {
-        $quest = $prepare['closure']($quest, $request);
+        $quest += $prepare['closure']($quest, $request);
     }
 
     if (isset($quest['execute']['closure']) && is_callable($quest['execute']['closure'])) {
@@ -12,7 +15,7 @@ function run(array $quest, array $request): array
     }
 
     foreach ($quest['conclude'] as $conclude) {
-        $quest = $conclude['closure']($quest, $request);
+        $quest += $conclude['closure']($quest, $request);
     }
 
     return $quest;
