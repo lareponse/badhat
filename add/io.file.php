@@ -9,8 +9,6 @@ function handler(string $path, array $args = []): array
     return ['handler' => $path, 'args' => $args];
 }
 
-
-
 function io(?string $base_setter = null): array
 {
     static $base = [];

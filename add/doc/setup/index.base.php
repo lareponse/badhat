@@ -1,18 +1,29 @@
 <?php
 
-require '../add/core.php';
-require '../add/bad/dev.php';
-require '../add/bad/db.php';
-require '../add/bad/ui.php';
-require '../add/bad/guard_auth.php';
-require '../add/bad/auth_backend_sql.php';
+set_include_path(get_include_path() . PATH_SEPARATOR . __DIR__ . '/../..');
 
-// no env ? need these 2
-list($dsn, $u, $p) = require '../app/data/credentials.php';
-db(new PDO($dsn, $u, $p, [PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC]));
+require 'add/io.http.php';
+require 'add/io.file.php';
+require 'add/core.php';
+require 'add/bad/error.php';
+require 'add/bad/db.php';
+require 'add/bad/ui.php';
+require 'add/bad/guard_auth.php';
 
 
-$route_root = __DIR__ . '/../app/io/route';
-$route = route($route_root);
-$response = handle($route);
-respond($response);
+$request   = http_request();
+// vd($request, 'http_request()');
+
+$plan       = http_guard($request);
+$base       = io(__DIR__ . '/../io/route');
+$map        = io_map($plan, $base[0]);
+$quest      = io_read($map);
+$quest      = run($quest, $request);
+$response   = deliver($quest, $request) ?: http_response(404, "Not Found", ['Content-Type' => 'text/plain']);
+
+if (is_dev() && empty($response['status']) || $response['status'] >= 400) {
+    $response = http_response(404, io_scaffold('in'), ['Content-Type' => 'text/html; charset=UTF-8']);
+}
+
+http_echo(...$response);
+exit;
