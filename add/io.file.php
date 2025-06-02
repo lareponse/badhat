@@ -9,7 +9,18 @@ function handler(string $path, array $args = []): array
     return ['handler' => $path, 'args' => $args];
 }
 
-function summon(string $file): ?callable
+
+
+function io(?string $base_setter = null): array
+{
+    static $base = [];
+
+    $base || $base_setter && ($base = io_base($base_setter)) || throw new BadFunctionCallException('IO Requires Route Base', 500);
+
+    return $base;
+}
+
+function io_summon(string $file): ?callable
 {
     ob_start();
     $callable = @include $file;
@@ -22,42 +33,38 @@ function summon(string $file): ?callable
     return null;
 }
 
-function io(?string $arg = null): array
+function io_base(string $arg): array
 {
-    static $io = [];
+    $in = realpath($arg)            ?: throw new RuntimeException('Route Base Reality Rescinded', 500);
+    $io = realpath(dirname($in))    ?: throw new RuntimeException('Route Root Reality Rescinded', 500);
 
-    if (!$io) {
-        $arg ?: throw new BadFunctionCallException('IO Requires Real Route Root', 500);
-        $d = glob(dirname($arg) . '/*', GLOB_ONLYDIR) ?: [];
-        count($d) === 2 || throw new RuntimeException('One folder containing in (route) and out (render) files', 500);
-        $in = realpath($arg) ?: throw new RuntimeException('Route Reality Rescinded', 500);
-        $out = realpath($d[0] === $in ? $d[0] : $d[1]) ?: throw new RuntimeException('Render Reality Rescinded', 500);
+    $ios = glob($io . '/*', GLOB_ONLYDIR) ?: [];
+    count($ios) === 2               || throw new RuntimeException('One folder containing in (route) and out (render) files', 500);
 
-        $io = [$in, $out];
-    }
+    $out = $ios[0] === $in ? $ios[1] : $ios[0];
+    $out = is_readable($out) ? $out  : throw new RuntimeException('Render Base Reality Rescinded', 500);
 
-    return $io;
+    return [$in, $out];
 }
 
-function io_map(array $plan): array
+function io_map(array $plan, $in): array
 {
     // root path
-
-    $route_root = io()[0];
     if (empty($plan))
         return [
-            [handler($route_root . DIRECTORY_SEPARATOR . IO_FILE_PREPARE)],
-            [handler($route_root . DIRECTORY_SEPARATOR . IO_FILE_DEFAULT)],
-            [handler($route_root . DIRECTORY_SEPARATOR . IO_FILE_CONCLUDE)]
+            [handler($in . DIRECTORY_SEPARATOR . IO_FILE_PREPARE)],
+            [handler($in . DIRECTORY_SEPARATOR . IO_FILE_DEFAULT)],
+            [handler($in . DIRECTORY_SEPARATOR . IO_FILE_CONCLUDE)]
         ];
 
     $cur = '';
     $prepares = $candidates = $concludes = [];
     foreach ($plan as $depth => $seg) {
-        $cur .= '/' . $seg;
-        $base_path = $route_root . $cur;
 
+        $cur .= DIRECTORY_SEPARATOR . $seg;
         $args = array_slice($plan, $depth + 1);
+        
+        $base_path = $in . $cur;
 
         $prepares[] = handler($base_path . DIRECTORY_SEPARATOR . IO_FILE_PREPARE, $args);
         $concludes[] = handler($base_path . DIRECTORY_SEPARATOR . IO_FILE_CONCLUDE);
@@ -69,7 +76,7 @@ function io_map(array $plan): array
     }
 
     krsort($candidates);
-
+    
     return [$prepares, $candidates, array_reverse($concludes)];
 }
 
@@ -79,31 +86,30 @@ function io_read(array $map): array
         'prepare' => [],
         'execute' => [],
         'conclude' => [],
-        'map' => $map,
     ];
 
     [$prepares, $candidates, $concludes] = $map;
 
     foreach ($prepares as $prepare)
-        if ($prepare['closure'] = summon($prepare['handler']))
+        if ($prepare['closure'] = io_summon($prepare['handler']))
             $quest['prepare'][] = $prepare;
 
     foreach ($candidates as $candidate) {
-        if ($candidate['closure'] = summon($candidate['handler']))
+        if ($candidate['closure'] = io_summon($candidate['handler']))
             $quest['execute'] = $candidate; // no stacking
     }
 
     foreach ($concludes as $conclude)
-        if ($conclude['closure'] = summon($conclude['handler']))
+        if ($conclude['closure'] = io_summon($conclude['handler']))
             $quest['conclude'][] = $conclude;
-
 
     return $quest;
 }
 
 function io_mirror(array $quest): string
 {
-    return str_replace(io()[0], io()[1], $quest['execute']['handler']);
+    [$in, $out] = io();
+    return str_replace($in, $out, $quest['execute']['handler']);
 }
 
 function io_scaffold($addbad_scaffold_mode = 'in'): string
