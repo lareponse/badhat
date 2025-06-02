@@ -22,7 +22,6 @@ function deliver($quest, array $request): array
 {
     // vd($quest, 'deliver()');
     $view = io_mirror($quest);
-    
     $html = render($quest, $view);
     return http_response(200, $html, ['Content-Type' => 'text/html; charset=UTF-8']);
 }
