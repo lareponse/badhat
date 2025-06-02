@@ -9,13 +9,53 @@ function handler(string $path, array $args = []): array
     return ['handler' => $path, 'args' => $args];
 }
 
-function io(?string $base_setter = null): array
+function io(?string $base_setter = null, ?array $plan = null): array
 {
     static $base = [];
 
-    $base || $base_setter && ($base = io_base($base_setter)) || throw new BadFunctionCallException('IO Requires Route Base', 500);
+    if ($base_setter) {
+        $base = io_base($base_setter);
+    }
+
+    $base || throw new BadFunctionCallException('IO Requires Route Base', 500);
+
+    if (is_array($plan)) {
+        return io_read(io_map($plan, $base[0]));
+    }
 
     return $base;
+}
+
+function io_map(array $plan, $in): array
+{
+    if (empty($plan)) {
+        return [
+            [handler($in . DIRECTORY_SEPARATOR . IO_FILE_PREPARE)],
+            [handler($in . DIRECTORY_SEPARATOR . IO_FILE_DEFAULT)],
+            [handler($in . DIRECTORY_SEPARATOR . IO_FILE_CONCLUDE)]
+        ];
+    }
+
+    $prepares = $candidates = $concludes = [];
+
+    $paths = io_reveal($plan, $in);
+
+    foreach ($paths as $item) {
+        $base_path = $item['path'];
+        $args = $item['args'];
+        $seg = $item['segment'];
+
+        $prepares[] = handler($base_path . DIRECTORY_SEPARATOR . IO_FILE_PREPARE, $args);
+        $concludes[] = handler($base_path . DIRECTORY_SEPARATOR . IO_FILE_CONCLUDE, $args);
+
+        if (!empty($seg))
+            $candidates[] = handler($base_path . '.php', $args);
+        $candidates[] = handler($base_path . DIRECTORY_SEPARATOR . IO_FILE_DEFAULT, $args);
+    }
+
+    krsort($candidates);
+
+    return [$prepares, $candidates, array_reverse($concludes)];
 }
 
 function io_base(string $arg): array
@@ -30,39 +70,6 @@ function io_base(string $arg): array
     $out = is_readable($out) ? $out  : throw new RuntimeException('Render Base Reality Rescinded', 500);
 
     return [$in, $out];
-}
-
-function io_map(array $plan, $in): array
-{
-    // root path
-    if (empty($plan))
-        return [
-            [handler($in . DIRECTORY_SEPARATOR . IO_FILE_PREPARE)],
-            [handler($in . DIRECTORY_SEPARATOR . IO_FILE_DEFAULT)],
-            [handler($in . DIRECTORY_SEPARATOR . IO_FILE_CONCLUDE)]
-        ];
-
-    $cur = '';
-    $prepares = $candidates = $concludes = [];
-    foreach ($plan as $depth => $seg) {
-
-        $cur .= DIRECTORY_SEPARATOR . $seg;
-        $args = array_slice($plan, $depth + 1);
-        
-        $base_path = $in . $cur;
-
-        $prepares[] = handler($base_path . DIRECTORY_SEPARATOR . IO_FILE_PREPARE, $args);
-        $concludes[] = handler($base_path . DIRECTORY_SEPARATOR . IO_FILE_CONCLUDE, $args);
-
-        if ($seg) {
-            $candidates[] = handler($base_path . '.php', $args);
-        }
-        $candidates[] = handler($base_path . DIRECTORY_SEPARATOR . IO_FILE_DEFAULT, $args);
-    }
-
-    krsort($candidates);
-    
-    return [$prepares, $candidates, array_reverse($concludes)];
 }
 
 function io_read(array $map): array
@@ -89,6 +96,24 @@ function io_read(array $map): array
             $quest['conclude'][] = $conclude;
 
     return $quest;
+}
+
+function io_reveal(array $plan, string $base)
+{
+    $paths = [];
+    $cur = '';
+
+    foreach ($plan as $depth => $seg) {
+        $cur .= DIRECTORY_SEPARATOR . $seg;
+        $args = array_slice($plan, $depth + 1);
+        $paths[] = [
+            'path' => $base . $cur,
+            'args' => $args,
+            'segment' => $seg
+        ];
+    }
+
+    return $paths;
 }
 
 function io_mirror(array $quest): string
