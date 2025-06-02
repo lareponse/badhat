@@ -25,11 +25,11 @@ function http_response(int $http_code, string $body, array $http_headers = []): 
 function http_guard($request): array
 {
     if (!preg_match('/^(GET|POST|PUT|DELETE|PATCH|HEAD|OPTIONS)$/', $request['method']))
-        http_echo(405, "Method Not Allowed: " . $request['method']) or exit;
+        http_echo(405, "Method Not Allowed: " . $request['method']);
 
     // CSRF check
     if (!empty($_POST) && function_exists('csrf') && !csrf($_POST['csrf_token'] ?? ''))
-        http_echo(403, 'Invalid CSRF token.') or exit;
+        http_echo(403, 'Invalid CSRF token.');
 
     // Rate limit by IP
     // if (function_exists('check_rate_limit') && !check_rate_limit($_SERVER['REMOTE_ADDR'])) {
@@ -43,13 +43,13 @@ function http_guard($request): array
     $path = urldecode($request['path']);
     $path = preg_replace('#/+#', '/', trim($path, '/')) ?: '';
     if (preg_match('#(\.{2}|[\/]\.)#', $path))
-        http_echo(403, 'Forbidden: Path Traversal') or exit;
+        http_echo(403, 'Forbidden: Path Traversal');
 
     if (!empty($path)) {
         $map = explode('/', $path);
         foreach ($map as $seg)
             if ($seg && !preg_match('/^[a-zA-Z0-9_\-]+$/', $seg))
-                http_echo(400, 'Bad Request: Invalid Segment /' . $seg . '/') or exit;
+                http_echo(400, 'Bad Request: Invalid Segment /' . $seg . '/');
         return $map;
     }
 
@@ -64,6 +64,7 @@ function http_echo(int $status, string $body, array $headers = []): void
         header("$h: $v");
 
     echo $body;
+    exit;
 }
 
 function request_mime(?string $http_accept, ?string $requested_format): string
