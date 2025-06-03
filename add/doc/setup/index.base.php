@@ -2,8 +2,8 @@
 
 set_include_path(get_include_path() . PATH_SEPARATOR . __DIR__ . '/../..');
 
-require 'add/io.http.php';
-require 'add/io.file.php';
+require 'add/http.php';
+require 'add/io.php';
 require 'add/core.php';
 require 'add/bad/error.php';
 require 'add/bad/db.php';
@@ -16,10 +16,10 @@ $request   = http_request();
 
 $plan       = http_guard($request);
 $base       = io(__DIR__ . '/../io/route');
-$map        = io_map($plan, $base[0]);
+$map        = io_look($plan, $base[0]);
 $quest      = io_read($map);
-$quest      = run($quest, $request);
-$response   = deliver($quest, $request) ?: http_response(404, "Not Found", ['Content-Type' => 'text/plain']);
+$quest      = io_walk($quest);
+$response   = deliver($quest) ?: http_response(404, "Not Found", ['Content-Type' => 'text/plain']);
 
 if (is_dev() && empty($response['status']) || $response['status'] >= 400) {
     $response = http_response(404, io_scaffold('in'), ['Content-Type' => 'text/html; charset=UTF-8']);

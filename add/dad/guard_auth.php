@@ -50,42 +50,6 @@ function auth_token(?string $cookie_index): ?string
     return null;
 }
 
-function check_rate_limit(string $key, int $max_attempts = 5, int $window = 300): bool
-{
-    $cache_key = 'rate_limit:' . $key;
-
-    // Get current attempts from database or cache
-    $result = dbq(
-        "SELECT attempts, last_attempt FROM rate_limits 
-         WHERE cache_key = ? AND last_attempt > ?",
-        [$cache_key, time() - $window]
-    )->fetch();
-
-    if (!$result) {
-        // First attempt
-        dbq(
-            "INSERT INTO rate_limits (cache_key, attempts, last_attempt) 
-             VALUES (?, 1, ?) 
-             ON DUPLICATE KEY UPDATE attempts = 1, last_attempt = ?",
-            [$cache_key, time(), time()]
-        );
-        return true;
-    }
-
-    if ($result['attempts'] >= $max_attempts) {
-        return false;
-    }
-
-    // Increment attempts
-    dbq(
-        "UPDATE rate_limits SET attempts = attempts + 1, last_attempt = ? 
-         WHERE cache_key = ?",
-        [time(), $cache_key]
-    );
-
-    return true;
-}
-
 function auth_post(string $username, string $password, bool $remember_me = false): bool
 {
     session_start();

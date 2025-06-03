@@ -19,7 +19,7 @@ $addbad_scaffold_mode = $addbad_scaffold_mode ?: 'in';
 
     <dl>
         <?php
-        foreach (io_map($plan, $gps[0])[1] ?? [] as $depth => $response) {
+        foreach (io_look($plan, $gps[0])[1] ?? [] as $depth => $response) {
             $handler = $response['handler'];
             $handlerArgs = empty($response['args']) ? 'no arguments' : "Expected arguments: '" . implode(',', $response['args']) . "'";
             $templateCode = "<?php\n// $handlerArgs\nreturn function (\$quest, \$request) {\n\treturn ['status' => 200, 'body' => __FILE__];\n};";
