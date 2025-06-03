@@ -33,7 +33,7 @@ set_exception_handler(function (Throwable $e) {
         die;
     }
 
-    respond(response($code, "Exception $error_id: $message"));
+    http_echo($code, "Exception $error_id: $message");
 });
 
 
@@ -55,7 +55,7 @@ register_shutdown_function(function () {
 
         // Attempt to respond with structured HTTP response if headers not sent
         if (function_exists('respond') && !headers_sent()) {
-            respond(response(500, "Fatal Error $error_id: {$e['message']}"));
+            http_echo(500, "Fatal Error $error_id: {$e['message']}");
         } else {
             // Fallback: raw text for CLI or broken HTTP context
             exit("500 FATAL $error_id: {$e['message']}");
@@ -76,50 +76,39 @@ function is_dev(): bool
     return $isDev ?? ($isDev = filter_var(getenv('DEV_MODE') ?: ($_ENV['DEV_MODE'] ?? '0'), FILTER_VALIDATE_BOOLEAN));
 }
 
+//var_dump with variable-depth backtrace and optional message
 function vd($first, $second = null, ...$others)
 {
-    $arity = func_num_args();
+    $arity = func_num_args(); // yeah.. my tools, my rules. 
 
-    [$label, $depth, $vars] = match ($arity) {
-        1 => ['', 1, [$first]],
-        2 => [is_string($second) ? $second : '', is_int($second) ? $second : 1, [$first]],
-        default => [$first, is_int($second) ? $second : 1, array_slice(func_get_args(), 2)]
-    };
-
-    $label = htmlspecialchars((string)$label, ENT_QUOTES, 'UTF-8');
-    $params = http_build_query(['frames' => $depth, 'arity' => $arity], '', ', ');
-
-    ob_start(); {
-        echo PHP_EOL . PHP_EOL . str_repeat('- ', 23) . __FUNCTION__;
-        if (count($vars) > 2)
-            printf('[%s, %s] ' . PHP_EOL, $label, $params);
-        else
-            printf('(%s, %s) ' . PHP_EOL, $label, $params);
-
-        foreach ($vars as $valueToDump) {
-            var_dump($valueToDump);
-            echo PHP_EOL;
-        }
-
-        // 8) Clean up output: remove “root” prefix from absolute paths
-    }
-    $output = ob_get_clean();
+    $arity == 1 && [$label, $depth, $vars] = ['', 1, [$first]];
+    $arity == 2 && [$label, $depth, $vars] = [is_string($second) ? $second : '', is_int($second) ? $second : 1, [$first]];
+    $arity >= 3 && [$label, $depth, $vars] = [$first, is_int($second) ? $second : 1, array_slice(func_get_args(), 2)];
 
     ob_start(); {
         debug_print_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, $depth);
     }
-    $frames = '| ' . str_replace(PHP_EOL, PHP_EOL . '| ', trim(ob_get_clean()));
-    $rootDir = dirname(dirname(__DIR__)) . DIRECTORY_SEPARATOR;
-    $output = $output
-        . str_replace($rootDir, DIRECTORY_SEPARATOR, $frames);
+    $frames = trim(ob_get_clean());
+    $function_signature = __FUNCTION__ . '(' . sprintf('%s [%s]', $label, http_build_query(['depth' => $depth, 'arity' => $arity], '', ', '));
+    $frames = str_replace(__FUNCTION__ . '(', $function_signature, $frames);
+    $skip_dirs = realpath(__DIR__ . '/../..') . DIRECTORY_SEPARATOR;
+    $frames = str_replace($skip_dirs, DIRECTORY_SEPARATOR, $frames);
 
-    // 9) Echo as HTML (<pre>) if web, or error_log() if CLI
+    ob_start(); {
+        echo $frames;
+        foreach ($vars as $valueToDump) {
+            echo PHP_EOL;
+            var_dump($valueToDump);
+        }
+        echo $frames;
+    }
+    $dump = ob_get_clean();
+
     if (PHP_SAPI !== 'cli') {
-        echo '<pre class="vd">' . $output . PHP_EOL . '</pre>';
+        echo '<pre class="vd">' . $dump . PHP_EOL . '</pre>';
     } else {
-        error_log($output);
+        error_log($dump);
     }
 
-    // 10) Return the very first argument, unchanged
-    return $first;
+    return $first; // allows chaining like vd($var)->someMethod() or vd($var, 'label')->anotherMethod()
 }
