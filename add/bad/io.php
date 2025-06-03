@@ -1,113 +1,88 @@
 <?php
 
-define('IO_FILE_PREPARE', 'prepare.php');
-define('IO_FILE_DEFAULT', 'index.php');
-define('IO_FILE_CONCLUDE', 'conclude.php');
-
-function handler(string $path, array $args = []): array
+// first call, routes (in): 
+//      io(route_base)                sets the route base directory, CoC sets render base
+// [OR] io(route_base, render_base)   sets the route base directory, and sets render base
+//
+// subsequent calls:
+//      io()             returns the real path of the current base (route or render)
+//      io(path)         based on URI path, returns map of candidates (call io_map() with current base)
+//      io(null)         switch route base for render base, and vice versa
+function io(?string $io_in = null, ?string $io_out = null)
 {
-    return ['handler' => $path, 'args' => $args];
+    static $io = [];
+
+    if (empty($io) && $io_in) { // first call, set the bases
+        ($in = realpath($io_in)) ?: throw new RuntimeException('Route Base Reality Rescinded', 500);
+        ($out = realpath($io_out ?: io_other($in))) ?: throw new RuntimeException('Render Base Reality Rescinded', 500);
+        $io = [$in, $out];
+    } else if (func_num_args() === 1 && $io_in === null)
+        $io = array_reverse($io);
+
+    else if (func_num_args() === 1 && $io_in !== null)
+        return io_map(current($io), $io_in);
+
+    return current($io);
 }
 
-function io(?string $io_in = null): string
+function io_map(string $home, ?string $path = null)
 {
-    static $in = null;
-    return $in ?? ($in = realpath($io_in)) ?: throw new RuntimeException('Route Base Reality Rescinded', 500);
-}
+    $map = [];
 
-function io_plan(string $path, string $base)
-{
-    $plan = [];
-    $cur = '';
+    $path ??= parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH);
 
-    foreach (explode('/', trim($path, '/')) as $depth => $seg) {
-        $cur .= DIRECTORY_SEPARATOR . $seg;
-        $args = array_slice($plan, $depth + 1);
-        $plan[] = [
-            'path' => $base . $cur,
-            'args' => $args,
-            'segment' => $seg
-        ];
+    if (empty($path) || $path === '/')
+        $map[] = [$home . DIRECTORY_SEPARATOR . 'index.php'];
+    else {
+        $cur = '';
+        $segments = explode('/', trim($path, '/'));
+        foreach ($segments as $depth => $seg) {
+            $cur .= DIRECTORY_SEPARATOR . $seg;
+            $base_path = $home . $cur;
+            $args = array_slice($segments, $depth + 1);
+
+            if (!empty($seg))
+                $map[] = [$base_path . '.php', $args];
+
+            $map[] = [$base_path . DIRECTORY_SEPARATOR . $seg . '.php', $args];
+        }
+
+        krsort($map); //
     }
-
-    return $plan;
-}
-
-function io_look(string $starting_point): array
-{
-    $path = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) ?: '/';
-
-    // you are here. mini-map
-    if (empty($path) || $path === '/') {
-        return [
-            'prepare' => [handler($starting_point . DIRECTORY_SEPARATOR . IO_FILE_PREPARE)],
-            'execute' => [handler($starting_point . DIRECTORY_SEPARATOR . IO_FILE_DEFAULT)],
-            'conclude' => [handler($starting_point . DIRECTORY_SEPARATOR . IO_FILE_CONCLUDE)],
-        ];
-    }
-
-    $map = [
-        'prepare' => [],
-        'execute' => [],
-        'conclude' => [],
-    ];
-
-    $plan = io_plan($path, $starting_point);
-    foreach ($plan as $item) {
-        $base_path = $item['path'];
-        $args = $item['args'];
-        $seg = $item['segment'];
-
-        $map['prepare'][] = handler($base_path . DIRECTORY_SEPARATOR . IO_FILE_PREPARE);
-
-        if (!empty($seg))
-            $map['execute'][] = handler($base_path . '.php', $args);
-        $map['execute'][] = handler($base_path . DIRECTORY_SEPARATOR . IO_FILE_DEFAULT, $args);
-
-        $map['conclude'][] = handler($base_path . DIRECTORY_SEPARATOR . IO_FILE_CONCLUDE);
-    }
-
-    krsort($map['execute']);
-    $map['conclude'] = array_reverse($map['conclude']);
 
     return $map;
 }
 
-function io_read(array $map): array
+function io_try($map): ?array
 {
-    $quest = [];
-    foreach ($map as $part => $missions)
-        foreach ($missions as $mission)
-            if (($path = $mission['handler']) && $mission['handler'] = io_summon($path))
-                $quest[$part][$path] = $mission; // no stack for execute
+    foreach ($map as $quest)
+        if ($loot = io_dig(current($quest)))
+            return [$loot, ...$quest];
 
-    $last_path = array_pop(array_keys($quest['execute']));
-    $quest['execute'] = [$last_path => $quest['execute'][$last_path]];
-    return $quest;
+    return null;
 }
 
-function io_walk(array $quest): array
+function io_dig(string $file)
 {
-    foreach ($quest as $part => $missions)
-        foreach ($missions as $path => $mission) 
-            $quest[$part][$path] = $mission['handler']($quest, ...($mission['args'] ?? []));
-    return $quest;
+    ob_start();
+    $callable = @include $file;
+    $content = trim(ob_get_clean()); // significant whitespaces are in tags
+
+    return is_callable($callable) ? $callable : ($content ?: null);
 }
 
-function io_out(string $in)
+function io_other(string $one)
 {
-    $io = realpath(dirname($in))    ?: throw new RuntimeException('IO Root Reality Rescinded', 500);
+    $io = realpath(dirname($one))     ?: throw new RuntimeException('IO Root Reality Rescinded', 500);
 
-    $ios = glob($io . '/*', GLOB_ONLYDIR) ?: [];
-    count($ios) === 2               || throw new RuntimeException('One folder containing in (route) and out (render) files', 500);
+    $ios = glob($io . '/*', GLOB_ONLYDIR)   ?: [];
+    count($ios) === 2                       || throw new RuntimeException('One folder containing in (route) and out (render) files', 500);
 
-    $out = $ios[0] === $in ? $ios[1] : $ios[0];
-    $out = is_readable($out) ? $out  : throw new RuntimeException('Render Base Reality Rescinded', 500);
+    $other = $ios[0] === $one ? $ios[1] : $ios[0];
+    $other = is_readable($other) ? $other   : throw new RuntimeException('Other folder Not Readable', 500);
 
-    return $out;
+    return $other;
 }
-
-
 
 function io_scaffold($addbad_scaffold_mode = 'in'): string
 {
@@ -115,17 +90,4 @@ function io_scaffold($addbad_scaffold_mode = 'in'): string
         require_once 'add/dad/scaffold.php';
     }
     return  ob_get_clean();  // Scaffold response
-}
-
-function io_summon(string $file): ?callable
-{
-    ob_start();
-    $callable = @include $file;
-    ob_end_clean();
-
-    if (is_callable($callable))
-        return $callable;
-
-    error_log("Invalid Callable in $file", E_USER_NOTICE);
-    return null;
 }

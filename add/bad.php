@@ -9,7 +9,7 @@ function deliver($quest)
 {
     // vd($quest, 'deliver()');
     $in = io();
-    $out = io_out($in);
+    $out = io_other($in);
     $view =  str_replace($in, $out, key($quest['execute']));
     $html = render($quest, $view);
     return http_response(200, $html, ['Content-Type' => 'text/html; charset=UTF-8']);
