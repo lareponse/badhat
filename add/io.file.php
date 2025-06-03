@@ -9,36 +9,27 @@ function handler(string $path, array $args = []): array
     return ['handler' => $path, 'args' => $args];
 }
 
-function io(?string $base_setter = null, ?array $plan = null): array
+function io(?string $io_in = null): string
 {
-    static $base = [];
-
-    if ($base_setter) {
-        $base = io_base($base_setter);
-    }
-
-    $base || throw new BadFunctionCallException('IO Requires Route Base', 500);
-
-    if (is_array($plan)) {
-        return io_read(io_map($plan, $base[0]));
-    }
-
-    return $base;
+    static $in = null;
+    return $in ?? ($in = realpath($io_in)) ?: throw new RuntimeException('Route Base Reality Rescinded', 500);
 }
 
-function io_map(array $plan, $in): array
+function io_look(string $starting_point): array
 {
-    if (empty($plan)) {
+    $path = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) ?: '/';
+
+    if (empty($path) || $path === '/') {
         return [
-            [handler($in . DIRECTORY_SEPARATOR . IO_FILE_PREPARE)],
-            [handler($in . DIRECTORY_SEPARATOR . IO_FILE_DEFAULT)],
-            [handler($in . DIRECTORY_SEPARATOR . IO_FILE_CONCLUDE)]
+            [handler($starting_point . DIRECTORY_SEPARATOR . IO_FILE_PREPARE)],
+            [handler($starting_point . DIRECTORY_SEPARATOR . IO_FILE_DEFAULT)],
+            [handler($starting_point . DIRECTORY_SEPARATOR . IO_FILE_CONCLUDE)]
         ];
     }
 
     $prepares = $candidates = $concludes = [];
 
-    $paths = io_reveal($plan, $in);
+    $paths = io_reveal($path, $starting_point);
 
     foreach ($paths as $item) {
         $base_path = $item['path'];
@@ -54,22 +45,7 @@ function io_map(array $plan, $in): array
     }
 
     krsort($candidates);
-
     return [$prepares, $candidates, array_reverse($concludes)];
-}
-
-function io_base(string $arg): array
-{
-    $in = realpath($arg)            ?: throw new RuntimeException('Route Base Reality Rescinded', 500);
-    $io = realpath(dirname($in))    ?: throw new RuntimeException('Route Root Reality Rescinded', 500);
-
-    $ios = glob($io . '/*', GLOB_ONLYDIR) ?: [];
-    count($ios) === 2               || throw new RuntimeException('One folder containing in (route) and out (render) files', 500);
-
-    $out = $ios[0] === $in ? $ios[1] : $ios[0];
-    $out = is_readable($out) ? $out  : throw new RuntimeException('Render Base Reality Rescinded', 500);
-
-    return [$in, $out];
 }
 
 function io_read(array $map): array
@@ -94,32 +70,54 @@ function io_read(array $map): array
     foreach ($concludes as $conclude)
         if ($conclude['closure'] = io_summon($conclude['handler']))
             $quest['conclude'][] = $conclude;
-
     return $quest;
 }
 
-function io_reveal(array $plan, string $base)
+function io_walk(array $quest): array
+{ 
+    foreach ($quest['prepare'] as $depth => $hook) {
+        $quest['prepare'][$depth]['return'] = $hook['closure']($quest);
+    }
+
+    if (isset($quest['execute']['closure']) && is_callable($quest['execute']['closure'])) {
+        $quest['execute']['return'] = $quest['execute']['closure']($quest, ...$quest['execute']['args'] ?? []);
+    }
+
+    foreach ($quest['conclude'] as $depth => $hook) {
+        $quest['conclude'][$depth]['return'] = $hook['closure']($quest);
+    }
+    return $quest;
+}
+
+function io_out(string $in)
 {
-    $paths = [];
+    $io = realpath(dirname($in))    ?: throw new RuntimeException('IO Root Reality Rescinded', 500);
+
+    $ios = glob($io . '/*', GLOB_ONLYDIR) ?: [];
+    count($ios) === 2               || throw new RuntimeException('One folder containing in (route) and out (render) files', 500);
+
+    $out = $ios[0] === $in ? $ios[1] : $ios[0];
+    $out = is_readable($out) ? $out  : throw new RuntimeException('Render Base Reality Rescinded', 500);
+
+    return $out;
+}
+
+function io_reveal(string $path, string $base)
+{
+    $plan = [];
     $cur = '';
 
-    foreach ($plan as $depth => $seg) {
+    foreach (explode('/', trim($path, '/')) as $depth => $seg) {
         $cur .= DIRECTORY_SEPARATOR . $seg;
         $args = array_slice($plan, $depth + 1);
-        $paths[] = [
+        $plan[] = [
             'path' => $base . $cur,
             'args' => $args,
             'segment' => $seg
         ];
     }
 
-    return $paths;
-}
-
-function io_mirror(array $quest): string
-{
-    [$in, $out] = io();
-    return str_replace($in, $out, $quest['execute']['handler']);
+    return $plan;
 }
 
 function io_scaffold($addbad_scaffold_mode = 'in'): string
