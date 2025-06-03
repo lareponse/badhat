@@ -18,58 +18,60 @@ function io(?string $io_in = null): string
 function io_look(string $starting_point): array
 {
     $path = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) ?: '/';
-
-    if (empty($path) || $path === '/') {
-        return [
-            [handler($starting_point . DIRECTORY_SEPARATOR . IO_FILE_PREPARE)],
-            [handler($starting_point . DIRECTORY_SEPARATOR . IO_FILE_DEFAULT)],
-            [handler($starting_point . DIRECTORY_SEPARATOR . IO_FILE_CONCLUDE)]
-        ];
-    }
-
-    $prepares = $candidates = $concludes = [];
-
-    $paths = io_reveal($path, $starting_point);
-
-    foreach ($paths as $item) {
-        $base_path = $item['path'];
-        $args = $item['args'];
-        $seg = $item['segment'];
-
-        $prepares[] = handler($base_path . DIRECTORY_SEPARATOR . IO_FILE_PREPARE, $args);
-        $concludes[] = handler($base_path . DIRECTORY_SEPARATOR . IO_FILE_CONCLUDE, $args);
-
-        if (!empty($seg))
-            $candidates[] = handler($base_path . '.php', $args);
-        $candidates[] = handler($base_path . DIRECTORY_SEPARATOR . IO_FILE_DEFAULT, $args);
-    }
-
-    krsort($candidates);
-    return [$prepares, $candidates, array_reverse($concludes)];
-}
-
-function io_read(array $map): array
-{
     $quest = [
         'prepare' => [],
         'execute' => [],
         'conclude' => [],
     ];
 
-    [$prepares, $candidates, $concludes] = $map;
+    if (empty($path) || $path === '/') {
+        $quest['prepare'][] = handler($starting_point . DIRECTORY_SEPARATOR . IO_FILE_PREPARE);
+        $quest['execute'][] = handler($starting_point . DIRECTORY_SEPARATOR . IO_FILE_DEFAULT);
+        $quest['conclude'][] = handler($starting_point . DIRECTORY_SEPARATOR . IO_FILE_CONCLUDE);
+        return $quest;
+    }
+    
+    $paths = io_reveal($path, $starting_point);
+    foreach ($paths as $item) {
+        $base_path = $item['path'];
+        $args = $item['args'];
+        $seg = $item['segment'];
 
-    foreach ($prepares as $prepare)
-        if ($prepare['closure'] = io_summon($prepare['handler']))
-            $quest['prepare'][] = $prepare;
+        $quest['prepare'][] = handler($base_path . DIRECTORY_SEPARATOR . IO_FILE_PREPARE, $args);
+        $quest['conclude'][] = handler($base_path . DIRECTORY_SEPARATOR . IO_FILE_CONCLUDE, $args);
 
-    foreach ($candidates as $candidate) {
-        if ($candidate['closure'] = io_summon($candidate['handler']))
-            $quest['execute'] = $candidate; // no stacking
+        if (!empty($seg))
+            $quest['execute'][] = handler($base_path . '.php', $args);
+        $quest['execute'][] = handler($base_path . DIRECTORY_SEPARATOR . IO_FILE_DEFAULT, $args);
     }
 
-    foreach ($concludes as $conclude)
-        if ($conclude['closure'] = io_summon($conclude['handler']))
-            $quest['conclude'][] = $conclude;
+    krsort($quest['execute']);
+    $quest['conclude'] = array_reverse($quest['conclude']);
+    
+    return $quest;
+}
+
+function io_read(array $quest): array
+{
+    foreach($quest as $part => $missions){
+        foreach($missions as $depth => $mission){
+            $quest[$part][$mission['handler']] = io_summon($mission['handler'], $mission['args'] ?? []);
+            unset($quest[$part][$depth]);
+        }
+    }
+    // foreach ($prepares as $prepare)
+    //     if ($prepare['closure'] = io_summon($prepare['handler']))
+    //         $quest['prepare'][] = $prepare;
+
+    // foreach ($candidates as $candidate) {
+    //     if ($candidate['closure'] = io_summon($candidate['handler']))
+    //         $quest['execute'] = $candidate; // no stacking
+    // }
+
+    // foreach ($concludes as $conclude)
+    //     if ($conclude['closure'] = io_summon($conclude['handler']))
+    //         $quest['conclude'][] = $conclude;
+    vd($quest, 'io_read(quest)');
     return $quest;
 }
 
