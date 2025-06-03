@@ -1,11 +1,11 @@
 <?php
 
-declare(strict_types=1);
+require 'add/bad/error.php';
+require 'add/bad/http.php';
+require 'add/bad/io.php';
+require 'add/bad/db.php';
 
-require 'add/io.http.php';
-require 'add/io.file.php';
-
-function deliver($quest): array
+function deliver($quest)
 {
     // vd($quest, 'deliver()');
     $in = io();

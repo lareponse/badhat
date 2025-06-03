@@ -29,7 +29,8 @@
  */
 function render(array $quest, string $viewFile = __FILE__, string $layoutName = 'layout.php'): string
 {
-    $data = $quest['payload'] ?? [];
+    $data = $quest['execute']['payload'] ?? [];
+
     ob_start();
     @include $viewFile;
     $content = ob_get_clean();
@@ -109,6 +110,7 @@ function e($value): string
 {
     return htmlspecialchars((string)$value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 }
+
 
 function _ui_ascend(string $dir, string $layoutFile): ?string
 {

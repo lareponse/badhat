@@ -94,7 +94,7 @@ return function ($id) {
 
     return [
         'status' => 200,
-        'body' => render('users/show', ['user' => $user])
+        'body' => render(['user' => $user])
     ];
 };
 ```
@@ -157,11 +157,10 @@ return function ($username) {
     $posts = get_user_posts($username);
 
     return [
-        'status' => 200,
-        'body' => render('users/profile', [
+        'payload' => [
             'name' => $user['name'],
             'posts' => $posts
-        ], 'layout')
+        ]
     ];
 };
 ```
@@ -352,7 +351,7 @@ app/
 
 ```php
 <?php
-return function () {
+return function ($quest) {
     // Get site stats
     $sites = dbq("SELECT COUNT(*) FROM sites")->fetchColumn();
     $users = dbq("SELECT COUNT(*) FROM users")->fetchColumn();
@@ -384,7 +383,7 @@ return function () {
 
 ```php
 <?php
-return function () {
+return function ($quest) {
     $username = operator();
     if (!$username) {
         header('Location: /login?return=' . urlencode($_SERVER['REQUEST_URI']));
