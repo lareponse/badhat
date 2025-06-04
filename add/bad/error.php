@@ -33,7 +33,7 @@ set_exception_handler(function (Throwable $e) {
         die;
     }
 
-    http_echo($code, "Exception $error_id: $message");
+    http_respond($code, "Exception $error_id: $message");
 });
 
 
@@ -55,7 +55,7 @@ register_shutdown_function(function () {
 
         // Attempt to respond with structured HTTP response if headers not sent
         if (function_exists('respond') && !headers_sent()) {
-            http_echo(500, "Fatal Error $error_id: {$e['message']}");
+            http_respond(500, "Fatal Error $error_id: {$e['message']}");
         } else {
             // Fallback: raw text for CLI or broken HTTP context
             exit("500 FATAL $error_id: {$e['message']}");
@@ -100,7 +100,7 @@ function vd($first, $second = null, ...$others)
             echo PHP_EOL;
             var_dump($valueToDump);
         }
-        echo $frames;
+        // echo $frames;
     }
     $dump = ob_get_clean();
 
