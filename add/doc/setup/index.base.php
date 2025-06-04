@@ -25,5 +25,5 @@ if (is_dev() && empty($response['status']) || $response['status'] >= 400) {
     $response = http_response(404, io_scaffold('in'), ['Content-Type' => 'text/html; charset=UTF-8']);
 }
 
-http_echo(...$response);
+http_respond(...$response);
 exit;

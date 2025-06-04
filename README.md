@@ -63,7 +63,7 @@ db(new PDO($dsn, $user, $pass, [
 
 // Route and respond
 $route = route(__DIR__ . '/../io/route');
-respond(handle($route));
+http_respond(handle($route));
 ```
 
 ### 3. First Route (`app/io/route/home.php`)

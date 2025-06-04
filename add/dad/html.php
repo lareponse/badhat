@@ -38,7 +38,7 @@ function render(array $quest, string $viewFile = __FILE__, string $layoutName = 
     slot('main', $content);
 
     // Search for layout file, traversing up directory tree
-    $layoutFile = _ui_ascend(dirname($viewFile), $layoutName);
+    // $layoutFile = _ui_ascend(dirname($viewFile), $layoutName);
 
     if ($layoutFile && is_file($layoutFile)) {
         ob_start();
@@ -84,6 +84,7 @@ function slot(?string $index = null, ?string $value = null): array
     return $out;
 }
 
+
 function html(string $tag, ?string $inner = null, array $attributes = [], $formatter = null): string
 {
     // Default to HTML escaping for security
@@ -112,24 +113,23 @@ function e($value): string
 }
 
 
-function _ui_ascend(string $dir, string $layoutFile): ?string
-{
-    // Check if layout is an absolute path
-    if (is_file($layoutFile)) {
-        return $layoutFile;
-    }
+// function _ui_ascend(string $dir, string $layoutFile): ?string
+// {
+//     // Check if layout is an absolute path
+//     if (is_file($layoutFile)) {
+//         return $layoutFile;
+//     }
 
+//     $appDir = io_other(io());
+//     $current = rtrim($dir, '/');
+//     // Traverse upward through directory tree
+//     do {
+//         $candidate = $current . '/' . $layoutFile;
+//         if (is_file($candidate))
+//             return $candidate;
 
-    $appDir = (dirname(io()[0]));
-    $current = rtrim($dir, '/');
-    // Traverse upward through directory tree
-    do {
-        $candidate = $current . '/' . $layoutFile;
-        if (is_file($candidate))
-            return $candidate;
+//         $current = dirname($current);
+//     } while ($current !== $appDir);
 
-        $current = dirname($current);
-    } while ($current !== $appDir);
-
-    return null;
-}
+//     return null;
+// }
