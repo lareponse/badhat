@@ -1,10 +1,15 @@
 <?php
 
-define('BADGE_MIME_BASE', '');
-define('BADGE_MIME_DEFAULT', 'text/html');
-define('BADGE_MIME_ACCEPT', 'application/vnd.BADGE+json, text/html, text/plain');
+// define('BADGE_MIME_ACCEPT', 'application/vnd.BADGE+json, text/html, text/plain');
 
 // no http_request(), we are in the request, just ask $_SERVER, $_POST, $_GET, $_COOKIE, they know
+// check if the request is a valid beyond webserver .conf
+function http_guard(): void
+{
+    // CSRF check
+    if (!empty($_POST) && function_exists('csrf') && !csrf($_POST['csrf_token'] ?? ''))
+        http_respond(403, 'Invalid CSRF token.');
+}
 
 function http_response(int $http_code, string $body, array $http_headers = []): array
 {
@@ -15,15 +20,7 @@ function http_response(int $http_code, string $body, array $http_headers = []): 
     ];
 }
 
-// check if the request is a valid beyond webserver .conf
-function http_guard(): void
-{
-    // CSRF check
-    if (!empty($_POST) && function_exists('csrf') && !csrf($_POST['csrf_token'] ?? ''))
-        http_echo(403, 'Invalid CSRF token.');
-}
-
-function http_echo(int $status, string $body, array $headers = []): void
+function http_respond(int $status, string $body, array $headers = []): void
 {
     http_response_code($status);
 
@@ -33,6 +30,9 @@ function http_echo(int $status, string $body, array $headers = []): void
     echo $body;
     exit;
 }
+
+
+
 
 function request_mime(?string $http_accept, ?string $requested_format): string
 {
