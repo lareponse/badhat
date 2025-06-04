@@ -4,7 +4,7 @@ function io(string $in, ?string $out=null)
 {
     $out ??= io_other($in); // convention costs, use $out
 
-    $log = io_run(io_map($in));
+    $log = io_run(vd(io_map($in)));
     $see = io_run(io_map($out));
     if (is_array($see) && is_array($log))
         array_unshift($log, ...$see);
@@ -30,10 +30,10 @@ function io_map(string $home, ?string $path = null): array
             $base_path = $home . $cur;
             $args = array_slice($segments, $depth + 1);
 
-            if (!empty($seg))
-                $map[] = [$base_path . '.php', $args];
+            if (!empty($seg))  // group match
+                $map[] = [$base_path . DIRECTORY_SEPARATOR . $seg . '.php', $args];
+            $map[] = [$base_path . '.php', $args]; // direct match
 
-            $map[] = [$base_path . DIRECTORY_SEPARATOR . $seg . '.php', $args];
         }
 
         krsort($map); //
