@@ -1,12 +1,6 @@
-<?php
-
-
-?>
 <!DOCTYPE html>
 <html lang="en">
-<?php
-$addbad_scaffold_mode = $addbad_scaffold_mode ?: 'in';
-?>
+
 
 <head>
     <meta charset="UTF-8">
@@ -14,26 +8,19 @@ $addbad_scaffold_mode = $addbad_scaffold_mode ?: 'in';
 </head>
 
 <body>
-    <h1>Missing <?= $addbad_scaffold_mode === 'in' ? 'route' : 'render' ?>  end point <?= $quest['path'] ?></h1>
-    <span>Choose file to create in: <strong><?= io()[$addbad_scaffold_mode === 'in' ? 0 : 1] ?>/</strong></span>
+    <h1>Missing <?= $in_or_out === 'in' ? 'route' : 'render' ?>  end point <?= $quest['path'] ?></h1>
+    <span>Choose file to create in: <strong><?= realpath(__DIR__ . '/../io/route') ?>/</strong></span>
 
     <dl>
         <?php
-        foreach (io_look($plan, $gps[0])[1] ?? [] as $depth => $response) {
-            $handler = $response['handler'];
-            $handlerArgs = empty($response['args']) ? 'no arguments' : "Expected arguments: '" . implode(',', $response['args']) . "'";
-            $templateCode = "<?php\n// $handlerArgs\nreturn function (\$quest, \$request) {\n\treturn ['status' => 200, 'body' => __FILE__];\n};";
+        foreach ($quest['map'] as $depth => $handler_and_args) {
+            list($handler, $args) = $handler_and_args;
+            $handlerArgs = empty($args) ? 'no arguments' : "Expected arguments: '" . implode(',', $args) . "'";
+            $templateCode = "<?php\n// $handlerArgs\nreturn function (\$quest) {\n\treturn ['status' => 200, 'body' => __FILE__];\n};";
         ?>
-            <dt><strong>
-                    <?= htmlspecialchars(
-                        trim(
-                            str_replace(io()[0], '', $handler),
-                            '/'
-                        )
-                    ) ?>
-                </strong></dt>
+            <dt><strong><?= htmlspecialchars($handler); ?></strong></dt>
             <dd>
-                <pre><?= $addbad_scaffold_mode === 'in' ? htmlspecialchars($templateCode) : '' ?></pre>
+                <pre><?= htmlspecialchars($templateCode) ?: '' ?></pre>
             </dd>
         <?php
         }

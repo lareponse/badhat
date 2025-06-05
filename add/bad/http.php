@@ -4,7 +4,7 @@
 
 // no http_request(), we are in the request, just ask $_SERVER, $_POST, $_GET, $_COOKIE, they know
 // check if the request is a valid beyond webserver .conf
-function http_guard(): void
+function http_guard($max_path_length = 4096, $max_url_decode = 9)
 {
     // CSRF check
     if (!empty($_POST) && function_exists('csrf') && !csrf($_POST['csrf_token'] ?? ''))
@@ -30,9 +30,6 @@ function http_respond(int $status, string $body, array $headers = []): void
     echo $body;
     exit;
 }
-
-
-
 
 function request_mime(?string $http_accept, ?string $requested_format): string
 {
