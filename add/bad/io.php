@@ -1,20 +1,48 @@
 <?php
 
+// io-quest-states.php
+
+const IO_STATE        = 0;
+
+// ── Top‐level 'quest' keys
+const IO_PATH         = 1;
+const IO_MAP          = 2;
+
+// ── 'route' sub‐array keys (run occurs before file)
+const IO_IN_RUN       = 4;
+const IO_IN_FILE      = 8;
+const IO_IN_ARGS      = 16;
+const IO_IN_FUNC      = 32;
+const IO_IN_LOAD      = 64;
+const IO_IN_HTTP      = 128;
+
+// ── 'render' sub‐array keys (run occurs before file)
+const IO_OUT_RUN      = 256;
+const IO_OUT_FILE     = 512;
+const IO_OUT_ARGS     = 1024;
+const IO_OUT_FUNC     = 2048;
+const IO_OUT_LOAD     = 4096;
+const IO_OUT_HTTP     = 8192;
+
+// ── Composite (macro) constants ────────────────────────────────────────────────
+const IO_IS_INIT         = IO_PATH | IO_MAP;
+const IO_HAS_CONTENT     = IO_IN_LOAD | IO_OUT_LOAD;
+
+
 function io(string $route, string $render, $when_empty = 'index')
 {
-    $quest = [];
+    $quest = [IO_STATE => IO_STATE];
 
-    $quest['path'] = $path = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH);
+    ($quest[IO_PATH]      = io_path())                                            && $quest[IO_STATE] |= IO_PATH;
+    ($quest[IO_MAP]       = io_map($quest[IO_PATH], $when_empty))                 && $quest[IO_STATE] |= IO_MAP;
 
-    $quest['map'] = $map = (io_map($path, $when_empty));
+    if (!($quest[IO_STATE] & IO_IS_INIT))                                         return $quest;
 
-    $quest['route'] = io_run($route, $map); // initialize quest with default values
-    if (isset($quest['route']['status']))
-        return $quest['route'];
+    ($quest = io_run($route, $quest) + $quest)                                    && $quest[IO_STATE] |= IO_IN_RUN; 
+    
+    if ($quest[IO_STATE] & IO_IN_HTTP)                                            return $quest;
 
-    $quest['render'] = io_run($render, $map); // initialize quest with default values
-    if (isset($quest['render']['status']))
-        return $quest['render']; // if the quest has a response, return it directly
+    ($quest = io_run($render, $quest) + $quest)                                   && $quest[IO_STATE] |= IO_OUT_RUN;
 
     return $quest;
 }
@@ -25,12 +53,9 @@ function io_map(string $path, string $when_empty): array
     $segments = (empty($path) || $path === '/') ? [$when_empty] : explode('/', trim($path, '/'));
 
     $cur = '';
-    vd($segments);
     foreach ($segments as $depth => $seg) {
         $cur .= DIRECTORY_SEPARATOR . $seg;
-        vd($cur);
         $args = array_slice($segments, $depth + 1);
-        vd($cur);
         if (!empty($seg))  // group match
             $map[] = [$cur . DIRECTORY_SEPARATOR . $seg . '.php', $args];
         $map[] = [$cur . '.php', $args]; // direct match
@@ -40,24 +65,27 @@ function io_map(string $path, string $when_empty): array
     return $map;
 }
 
-function io_run($start, $map): ?array
+function io_run($start, $quest): ?array
 {
-    foreach ($map as $checkpoint)
-        if ($closure_or_content = io_dig(vd($start . $checkpoint[0]))) {
-            $quest = [
-                'file' => $checkpoint[0],
-                'args' => $checkpoint[1] ?? [],
-            ];
+    // ask quest state to determine if we are running a route or render, using & IO_IN and IO_OUT
+    [$IO___FILE, $IO___ARGS, $IO___FUNC,  $IO___LOAD] = ($quest[IO_STATE] & IO_IN_RUN)
+        ? [IO_IN_FILE,  IO_IN_ARGS,  IO_IN_FUNC,  IO_IN_LOAD]
+        : [IO_OUT_FILE, IO_OUT_ARGS, IO_OUT_FUNC, IO_OUT_LOAD];
+
+    foreach ($quest[IO_MAP] as $checkpoint)
+        if ($closure_or_content = io_dig($start . $checkpoint[0] ?? '')) {
+            ($quest[$IO___FILE] = $checkpoint[0] ?? null)                               && $quest[IO_STATE] |= $IO___FILE;
+            ($quest[$IO___ARGS] = $checkpoint[1] ?? null)                               && $quest[IO_STATE] |= $IO___ARGS;
             if (is_callable($closure_or_content)) {
-                $quest['func'] = $closure_or_content; // store callable closure
-                $quest['load'] = $closure_or_content(...$quest['args']); // execute closure with args
-            } else {
-                $quest['load'] = $closure_or_content; // store content
-            }
+                ($quest[$IO___FUNC] = $closure_or_content)                              && $quest[IO_STATE] |= $IO___FUNC; // store closure
+                ($quest[$IO___LOAD] = $closure_or_content(...$quest[$IO___ARGS]))       && $quest[IO_STATE] |= $IO___LOAD; // execute closure with args
+            } else ($quest[$IO___LOAD] = $closure_or_content)                           && $quest[IO_STATE] |= $IO___LOAD; // store content
+
 
             return $quest; // return the first found closure or content
         }
-    return null;
+
+    return $quest;
 }
 
 function io_dig(string $file)
@@ -81,7 +109,7 @@ function io_path(?string $path = null, $rx_remove = '#[^A-Za-z0-9\/\.\-\_]+#')
         $coded = $decoded;
     $max_url_decode             ?: throw new DomainException('Path decoding loop detected', 400);
     $path = $coded;
-    
+
     $path = $rx_remove ? preg_replace($rx_remove, '', $path) : $path;       // removes non alphanum /.-_
     $path = preg_replace('#\.\.+#', '', $path);                             // remove serial dots
     $path = preg_replace('#(?:\./|/\.|/\./)#', '/', $path);                 // replace(/): /. ./ /./
