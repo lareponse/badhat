@@ -1,77 +1,62 @@
 <?php
 
-function io(string $route, string $render)
+function io(string $route, string $render, $when_empty = 'index')
 {
-    $path = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH);
-    $map = vd(io_map($path));
+    $quest = [];
 
-    $quest = $route = (io_run($route, $map));
-    if (isset($quest['status']))
-        return $quest; // if the quest has a response, return it directly
+    $quest['path'] = $path = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH);
 
-    $quest = (io_run($render, $map));
-    if (isset($quest['status']))
-        return $quest; // if the quest has a response, return it directly
+    $quest['map'] = $map = (io_map($path, $when_empty));
 
-    if (is_array($route) && is_array($quest))
-        array_push($quest, ...$route);
-    elseif (is_array($route))
-        array_push($quest, $route);
+    $quest['route'] = io_run($route, $map); // initialize quest with default values
+    if (isset($quest['route']['status']))
+        return $quest['route'];
+
+    $quest['render'] = io_run($render, $map); // initialize quest with default values
+    if (isset($quest['render']['status']))
+        return $quest['render']; // if the quest has a response, return it directly
 
     return $quest;
 }
 
-function io_path(?string $path = null, $rx_remove = '#[^A-Za-z0-9\/\.\-\_]+#')
-{
-    $coded = $path ?? parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) ?? '';
-
-    (strlen($coded) > 4096)  && throw new DomainException('Path Exceeds Maximum Allowed', 400);
-
-    $loop_limit = 9;              // max iterations to prevent infinite loop
-    while ($loop_limit-- > 0 && ($decoded = rawurldecode($coded)) !== $coded)
-        $coded = $decoded;
-    $loop_limit             ?: throw new DomainException('Path decoding loop detected', 400);
-    $path = $coded;
-
-    $path = $rx_remove ? preg_replace($rx_remove, '', $path) : $path;       // removes non alphanum /.-_
-    $path = preg_replace('#\.\.+#', '', $path);                             // remove serial dots
-    $path = preg_replace('#(?:\./|/\.|/\./)#', '/', $path);                 // replace(/): /. ./ /./
-    $path = preg_replace('#\/\/+#', '/', $path);                            // replace(/): //+, 
-    $path = trim($path, '/');                                               // remove leading and trailing slashes
-    $path = str_replace('/', DIRECTORY_SEPARATOR, $path);                   // convert to system directory separator
-
-    return $path;
-}
-
-function io_map(string $path, ?string $when_empty = 'index'): array
+function io_map(string $path, string $when_empty): array
 {
     $map = [];
-    $segments = (empty($path) || $path === '/')
-        ? [$when_empty] // default to index if path is empty
-        : explode('/', trim($path, '/'));
+    $segments = (empty($path) || $path === '/') ? [$when_empty] : explode('/', trim($path, '/'));
 
     $cur = '';
+    vd($segments);
     foreach ($segments as $depth => $seg) {
         $cur .= DIRECTORY_SEPARATOR . $seg;
+        vd($cur);
         $args = array_slice($segments, $depth + 1);
-
+        vd($cur);
         if (!empty($seg))  // group match
             $map[] = [$cur . DIRECTORY_SEPARATOR . $seg . '.php', $args];
         $map[] = [$cur . '.php', $args]; // direct match
     }
 
     krsort($map); // deep first, keep depth data
-
     return $map;
 }
 
 function io_run($start, $map): ?array
 {
-    // vd($map, 'io_run'); // debug output
-    foreach ($map as $quest)
-        if ($loot = io_dig($start . DIRECTORY_SEPARATOR . current($quest)))
-            return [$loot, ...$quest];
+    foreach ($map as $checkpoint)
+        if ($closure_or_content = io_dig(vd($start . $checkpoint[0]))) {
+            $quest = [
+                'file' => $checkpoint[0],
+                'args' => $checkpoint[1] ?? [],
+            ];
+            if (is_callable($closure_or_content)) {
+                $quest['func'] = $closure_or_content; // store callable closure
+                $quest['load'] = $closure_or_content(...$quest['args']); // execute closure with args
+            } else {
+                $quest['load'] = $closure_or_content; // store content
+            }
 
+            return $quest; // return the first found closure or content
+        }
     return null;
 }
 
@@ -82,4 +67,26 @@ function io_dig(string $file)
     $content    = trim(ob_get_clean()); // trim helps return ?: null (no opinion, significant whitespaces are in tags)
 
     return is_callable($callable) ? $callable : ($content ?: null);
+}
+
+function io_path(?string $path = null, $rx_remove = '#[^A-Za-z0-9\/\.\-\_]+#')
+{
+    $max_path_length = 4096; // max path length
+    $max_url_decode  = 9;   // max number of rawurldecode iterations
+    $coded = $path ?? parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) ?? '';
+
+    (strlen($coded) > $max_path_length)  && throw new DomainException('Path Exceeds Maximum Allowed', 400);
+
+    while ($max_url_decode-- > 0 && ($decoded = rawurldecode($coded)) !== $coded)
+        $coded = $decoded;
+    $max_url_decode             ?: throw new DomainException('Path decoding loop detected', 400);
+    $path = $coded;
+    
+    $path = $rx_remove ? preg_replace($rx_remove, '', $path) : $path;       // removes non alphanum /.-_
+    $path = preg_replace('#\.\.+#', '', $path);                             // remove serial dots
+    $path = preg_replace('#(?:\./|/\.|/\./)#', '/', $path);                 // replace(/): /. ./ /./
+    $path = preg_replace('#\/\/+#', '/', $path);                            // replace(/): //+, 
+    $path = trim($path, '/');                                               // remove leading and trailing slashes
+
+    return $path;
 }
