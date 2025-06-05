@@ -1,20 +1,24 @@
 <?php
 
-function io(string $in, ?string $out = null)
+function io(string $route, string $render)
 {
-    $out ??= io_other($in); // convention costs, use $out
-
     $path = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH);
     $map = vd(io_map($path));
-    $log = (io_run($in, $map));
-    $see = (io_run($out, $map));
 
-    if (is_array($see) && is_array($log))
-        array_unshift($log, ...$see);
-    elseif (is_array($log))
-        array_unshift($log, $see);
+    $quest = $route = (io_run($route, $map));
+    if (isset($quest['status']))
+        return $quest; // if the quest has a response, return it directly
 
-    return $log;
+    $quest = (io_run($render, $map));
+    if (isset($quest['status']))
+        return $quest; // if the quest has a response, return it directly
+
+    if (is_array($route) && is_array($quest))
+        array_push($quest, ...$route);
+    elseif (is_array($route))
+        array_push($quest, $route);
+
+    return $quest;
 }
 
 function io_path(?string $path = null, $rx_remove = '#[^A-Za-z0-9\/\.\-\_]+#')
@@ -78,15 +82,4 @@ function io_dig(string $file)
     $content    = trim(ob_get_clean()); // trim helps return ?: null (no opinion, significant whitespaces are in tags)
 
     return is_callable($callable) ? $callable : ($content ?: null);
-}
-
-function io_other(string $one)
-{
-    return (
-        true                                                                // return other child if
-        && ($io = realpath(dirname($one)))                                  //      the parent is real
-        && ($ios = glob($io . '/*', GLOB_ONLYDIR))                          //      the parent has children
-        && isset($ios[0], $ios[1]) && !isset($ios[2]))                      //      exactly two children
-        ? ($ios[0] === $one ? $ios[1] : $ios[0])
-        : throw new RuntimeException('IO Other Reality Rescinded', 500);
 }
