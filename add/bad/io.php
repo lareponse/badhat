@@ -17,13 +17,35 @@ function io(string $in, ?string $out = null)
     return $log;
 }
 
+function io_path(?string $path = null, $rx_remove = '#[^A-Za-z0-9\/\.\-\_]+#')
+{
+    $coded = $path ?? parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) ?? '';
+
+    (strlen($coded) > 4096)  && throw new DomainException('Path Exceeds Maximum Allowed', 400);
+
+    $loop_limit = 9;              // max iterations to prevent infinite loop
+    while ($loop_limit-- > 0 && ($decoded = rawurldecode($coded)) !== $coded)
+        $coded = $decoded;
+    $loop_limit             ?: throw new DomainException('Path decoding loop detected', 400);
+    $path = $coded;
+
+    $path = $rx_remove ? preg_replace($rx_remove, '', $path) : $path;       // removes non alphanum /.-_
+    $path = preg_replace('#\.\.+#', '', $path);                             // remove serial dots
+    $path = preg_replace('#(?:\./|/\.|/\./)#', '/', $path);                 // replace(/): /. ./ /./
+    $path = preg_replace('#\/\/+#', '/', $path);                            // replace(/): //+, 
+    $path = trim($path, '/');                                               // remove leading and trailing slashes
+    $path = str_replace('/', DIRECTORY_SEPARATOR, $path);                   // convert to system directory separator
+
+    return $path;
+}
+
 function io_map(string $path, ?string $when_empty = 'index'): array
 {
     $map = [];
-    $segments = (empty($path) || $path === '/') 
+    $segments = (empty($path) || $path === '/')
         ? [$when_empty] // default to index if path is empty
         : explode('/', trim($path, '/'));
-    
+
     $cur = '';
     foreach ($segments as $depth => $seg) {
         $cur .= DIRECTORY_SEPARATOR . $seg;
@@ -61,10 +83,10 @@ function io_dig(string $file)
 function io_other(string $one)
 {
     return (
-        true                                            // return other child if
-        && ($io = realpath(dirname($one)))              //      the parent is real
-        && ($ios = glob($io . '/*', GLOB_ONLYDIR))      //      the parent has children
-        && isset($ios[0], $ios[1]) && !isset($ios[2]))  //      exactly two children
+        true                                                                // return other child if
+        && ($io = realpath(dirname($one)))                                  //      the parent is real
+        && ($ios = glob($io . '/*', GLOB_ONLYDIR))                          //      the parent has children
+        && isset($ios[0], $ios[1]) && !isset($ios[2]))                      //      exactly two children
         ? ($ios[0] === $one ? $ios[1] : $ios[0])
         : throw new RuntimeException('IO Other Reality Rescinded', 500);
 }
