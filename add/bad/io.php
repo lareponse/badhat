@@ -1,55 +1,50 @@
 <?php
+declare(strict_types=1);
 
-// Init flags
-const IO_PATH         = 1;
-const IO_MAP          = 2;
+const IO_GUARD        = 1;      // Init flags
+const IO_DRAFT        = 2;
 
-// Phase flags
-const IO_IN           = 4;
+const IO_IN           = 4;      // Phase flags
 const IO_OUT          = 8;
 const IO_HTTP         = 16;
-// Operation flags  
-const IO_FILE         = 32;
+
+const IO_FILE         = 32;     // Operation flags
 const IO_ARGS         = 64;
 const IO_FUNC         = 128;
 const IO_LOAD         = 256;
 
-// Terminal flag
-
-
 function io(string $route, string $render, $when_empty = 'index')
 {
-    $quest[IO_PATH] = io_path();
-    $quest[IO_MAP]  = io_map($quest[IO_PATH], $when_empty);
+    $path = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) ?? '';
+    $quest[IO_GUARD] = io_guard($path);
+    $quest[IO_DRAFT] = io_draft($quest[IO_GUARD], $when_empty);
 
-    if (!isset($quest[IO_MAP])) return $quest;
+    foreach (io_probe($route, $quest) as $flag => $value) $quest[IO_IN | $flag] = $value;
+    $quest[IO_IN] = true;
 
-    foreach (io_run($route, $quest[IO_MAP]) as $flag => $value) $quest[IO_IN | $flag] = $value;
-    $quest[IO_IN] = true; // IN is done, even if io_run was empty
+    if (io_state($quest) & IO_HTTP) return $quest; // quest is ready for HTTP response
 
-    if (io_state($quest) & IO_HTTP) return $quest;
-
-    foreach (io_run($render, $quest[IO_MAP]) as $flag => $value) $quest[IO_OUT | $flag] = $value;
-    $quest[IO_OUT] = true; // IN is done, even if io_run was empty
+    foreach (io_probe($render, $quest) as $flag => $value) $quest[IO_OUT | $flag] = $value;
+    $quest[IO_OUT] = true;
 
     return $quest;
 }
 
-function io_map(string $path, string $when_empty): array
+function io_draft(string $path, string $when_empty): array
 {
-    $map = [];
+    $candidates = [];
     $segments = (empty($path) || $path === '/') ? [$when_empty] : explode('/', trim($path, '/'));
 
     $relative_path = '';
     foreach ($segments as $depth => $seg) {
         $relative_path .= DIRECTORY_SEPARATOR . $seg;
         $args = array_slice($segments, $depth + 1, null, true); // get remaining segments as args
-        $map[] = [$relative_path . DIRECTORY_SEPARATOR . $seg . '.php', $args];
-        $map[] = [$relative_path . '.php', $args]; // direct match
+        $candidates[] = [$relative_path . DIRECTORY_SEPARATOR . $seg . '.php', $args];
+        $candidates[] = [$relative_path . '.php', $args]; // direct match
     }
 
-    krsort($map); // deep first, keep depth data
-    return $map;
+    krsort($candidates); // deep first, keep depth data
+    return $candidates;
 }
 
 function io_state($quest, $__state = 0): int
@@ -58,29 +53,28 @@ function io_state($quest, $__state = 0): int
     return $__state;
 }
 
-function io_run($start, $map): array
+function io_probe($start, $quest, $__mission = []): array
 {
-    $result = [];
-    foreach ($map as $checkpoint)
-        if ($closure_or_content = io_dig($start . $checkpoint[0])) {
-            
-            $result[IO_FILE] = $checkpoint[0];
-            $result[IO_ARGS] = $checkpoint[1];
+    foreach ($quest[IO_DRAFT] as $checkpoint)
+        if ($yield = io_fetch($start . $checkpoint[0])) {
 
-            if (is_callable($closure_or_content)) {
-                $result[IO_FUNC] = $closure_or_content;
-                $result[IO_LOAD] = $closure_or_content(...($checkpoint[1]));
+            $__mission[IO_FILE] = $checkpoint[0];
+            $__mission[IO_ARGS] = $checkpoint[1];
+
+            if (is_callable($yield)) {
+                $__mission[IO_FUNC] = $yield;
+                $__mission[IO_LOAD] = $yield($quest, ...($checkpoint[1]));
             } else {
-                $result[IO_LOAD] = $closure_or_content;
+                $__mission[IO_LOAD] = $yield;
             }
 
-            return $result;
+            return $__mission;
         }
 
-    return $result;
+    return $__mission;
 }
 
-function io_dig(string $file)
+function io_fetch(string $file)
 {
     ob_start();
     $callable   = @include $file;
@@ -89,18 +83,14 @@ function io_dig(string $file)
     return is_callable($callable) ? $callable : ($content ?: null);
 }
 
-function io_path(?string $path = null, $rx_remove = '#[^A-Za-z0-9\/\.\-\_]+#')
+function io_guard(string $coded, $max_length = 4096, $max_decode = 9, $rx_remove = '#[^A-Za-z0-9\/\.\-\_]+#'): string
 {
-    $max_path_length = 4096; // max path length
-    $max_url_decode  = 9;   // max number of rawurldecode iterations
-    $coded = $path ?? parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) ?? '';
-
-    (strlen($coded) > $max_path_length)  && throw new DomainException('Path Exceeds Maximum Allowed', 400);
-
-    while ($max_url_decode-- > 0 && ($decoded = rawurldecode($coded)) !== $coded)
-        $coded = $decoded;
-    $max_url_decode             ?: throw new DomainException('Path decoding loop detected', 400);
-    $path = $coded;
+    do {
+        $path = rawurldecode($coded);
+    } while ($max_decode-- > 0 && $path !== $coded && ($coded = $path));
+    
+    $max_decode                       ?: throw new DomainException('Path decoding loop detected', 400);
+    (strlen($path) > $max_length)  && throw new DomainException('Path Exceeds Maximum Allowed', 400);
 
     $path = $rx_remove ? preg_replace($rx_remove, '', $path) : $path;       // removes non alphanum /.-_
     $path = preg_replace('#\.\.+#', '', $path);                             // remove serial dots
