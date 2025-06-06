@@ -1,48 +1,36 @@
 <?php
 
-// io-quest-states.php
-
-const IO_STATE        = 0;
-
-// ── Top‐level 'quest' keys
+// Init flags
 const IO_PATH         = 1;
 const IO_MAP          = 2;
 
-// ── 'route' sub‐array keys (run occurs before file)
-const IO_IN_RUN       = 4;
-const IO_IN_FILE      = 8;
-const IO_IN_ARGS      = 16;
-const IO_IN_FUNC      = 32;
-const IO_IN_LOAD      = 64;
-const IO_IN_HTTP      = 128;
+// Phase flags
+const IO_IN           = 4;
+const IO_OUT          = 8;
+const IO_HTTP         = 16;
+// Operation flags  
+const IO_FILE         = 32;
+const IO_ARGS         = 64;
+const IO_FUNC         = 128;
+const IO_LOAD         = 256;
 
-// ── 'render' sub‐array keys (run occurs before file)
-const IO_OUT_RUN      = 256;
-const IO_OUT_FILE     = 512;
-const IO_OUT_ARGS     = 1024;
-const IO_OUT_FUNC     = 2048;
-const IO_OUT_LOAD     = 4096;
-const IO_OUT_HTTP     = 8192;
-
-// ── Composite (macro) constants ────────────────────────────────────────────────
-const IO_IS_INIT         = IO_PATH | IO_MAP;
-const IO_HAS_CONTENT     = IO_IN_LOAD | IO_OUT_LOAD;
+// Terminal flag
 
 
 function io(string $route, string $render, $when_empty = 'index')
 {
-    $quest = [IO_STATE => IO_STATE];
+    $quest[IO_PATH] = io_path();
+    $quest[IO_MAP]  = io_map($quest[IO_PATH], $when_empty);
 
-    ($quest[IO_PATH]      = io_path())                                            && $quest[IO_STATE] |= IO_PATH;
-    ($quest[IO_MAP]       = io_map($quest[IO_PATH], $when_empty))                 && $quest[IO_STATE] |= IO_MAP;
+    if (!isset($quest[IO_MAP])) return $quest;
 
-    if (!($quest[IO_STATE] & IO_IS_INIT))                                         return $quest;
+    foreach (io_run($route, $quest[IO_MAP]) as $flag => $value) $quest[IO_IN | $flag] = $value;
+    $quest[IO_IN] = true; // IN is done, even if io_run was empty
 
-    ($quest = io_run($route, $quest) + $quest)                                    && $quest[IO_STATE] |= IO_IN_RUN; 
-    
-    if ($quest[IO_STATE] & IO_IN_HTTP)                                            return $quest;
+    if (io_state($quest) & IO_HTTP) return $quest;
 
-    ($quest = io_run($render, $quest) + $quest)                                   && $quest[IO_STATE] |= IO_OUT_RUN;
+    foreach (io_run($render, $quest[IO_MAP]) as $flag => $value) $quest[IO_OUT | $flag] = $value;
+    $quest[IO_OUT] = true; // IN is done, even if io_run was empty
 
     return $quest;
 }
@@ -52,40 +40,44 @@ function io_map(string $path, string $when_empty): array
     $map = [];
     $segments = (empty($path) || $path === '/') ? [$when_empty] : explode('/', trim($path, '/'));
 
-    $cur = '';
+    $relative_path = '';
     foreach ($segments as $depth => $seg) {
-        $cur .= DIRECTORY_SEPARATOR . $seg;
-        $args = array_slice($segments, $depth + 1);
-        if (!empty($seg))  // group match
-            $map[] = [$cur . DIRECTORY_SEPARATOR . $seg . '.php', $args];
-        $map[] = [$cur . '.php', $args]; // direct match
+        $relative_path .= DIRECTORY_SEPARATOR . $seg;
+        $args = array_slice($segments, $depth + 1, null, true); // get remaining segments as args
+        $map[] = [$relative_path . DIRECTORY_SEPARATOR . $seg . '.php', $args];
+        $map[] = [$relative_path . '.php', $args]; // direct match
     }
 
     krsort($map); // deep first, keep depth data
     return $map;
 }
 
-function io_run($start, $quest): ?array
+function io_state($quest, $__state = 0): int
 {
-    // ask quest state to determine if we are running a route or render, using & IO_IN and IO_OUT
-    [$IO___FILE, $IO___ARGS, $IO___FUNC,  $IO___LOAD] = ($quest[IO_STATE] & IO_IN_RUN)
-        ? [IO_IN_FILE,  IO_IN_ARGS,  IO_IN_FUNC,  IO_IN_LOAD]
-        : [IO_OUT_FILE, IO_OUT_ARGS, IO_OUT_FUNC, IO_OUT_LOAD];
+    foreach ($quest as $step => $v) $__state |= $step;
+    return $__state;
+}
 
-    foreach ($quest[IO_MAP] as $checkpoint)
-        if ($closure_or_content = io_dig($start . $checkpoint[0] ?? '')) {
-            ($quest[$IO___FILE] = $checkpoint[0] ?? null)                               && $quest[IO_STATE] |= $IO___FILE;
-            ($quest[$IO___ARGS] = $checkpoint[1] ?? null)                               && $quest[IO_STATE] |= $IO___ARGS;
+function io_run($start, $map): array
+{
+    $result = [];
+    foreach ($map as $checkpoint)
+        if ($closure_or_content = io_dig($start . $checkpoint[0])) {
+            
+            $result[IO_FILE] = $checkpoint[0];
+            $result[IO_ARGS] = $checkpoint[1];
+
             if (is_callable($closure_or_content)) {
-                ($quest[$IO___FUNC] = $closure_or_content)                              && $quest[IO_STATE] |= $IO___FUNC; // store closure
-                ($quest[$IO___LOAD] = $closure_or_content(...$quest[$IO___ARGS]))       && $quest[IO_STATE] |= $IO___LOAD; // execute closure with args
-            } else ($quest[$IO___LOAD] = $closure_or_content)                           && $quest[IO_STATE] |= $IO___LOAD; // store content
+                $result[IO_FUNC] = $closure_or_content;
+                $result[IO_LOAD] = $closure_or_content(...($checkpoint[1]));
+            } else {
+                $result[IO_LOAD] = $closure_or_content;
+            }
 
-
-            return $quest; // return the first found closure or content
+            return $result;
         }
 
-    return $quest;
+    return $result;
 }
 
 function io_dig(string $file)
