@@ -2,94 +2,91 @@
 
 declare(strict_types=1);
 
-const IO_PATH = 1;      // Init flags
-const IO_PLAN = 2;
+const IO_SEEK =  0;     // Phase flags, makes even numbers SEEK phase operations, 
+const IO_SEND =  1;
 
-const IO_SEEK = 4;      // Phase flags
-const IO_SEND = 8;
-const IO_HTTP = 16;
+const IO_FILE =  2;     // Operation flags
+const IO_ARGS =  4;
+const IO_CALL =  8;
+const IO_LOAD = 16;
 
-const IO_FILE = 32;     // Operation flags
-const IO_ARGS = 64;
-const IO_FUNC = 128;
-const IO_LOAD = 256;
+const IO_PLAN = 32;
 
+const IO_SEEK_CALL = IO_SEEK | IO_CALL | IO_ARGS;
+const IO_SEND_CALL = IO_SEND | IO_CALL | IO_SEEK;
+
+// io calls might/should trigger an http_response
+// if not, return the quest array for end-dev
 function io(string $route, string $render, $when_empty = 'index')
 {
-    $path = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) ?? '';
-    $quest[IO_PATH] = io_guard($path);
-    $quest[IO_PLAN] = io_draft($quest[IO_PATH], $when_empty);
+    $paths = io_clean(parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) ?? '', $when_empty);
+    $plans = io_draft($paths);
 
-    foreach (io_probe($route, $quest) as $flag => $value) $quest[IO_SEEK | $flag] = $value;
-    $quest[IO_SEEK] = true;
+    $quest = io_probe(IO_SEEK, $route, $plans, $quest ?? []);
+    is_callable(($cl = $quest[IO_SEEK | IO_CALL] ?? null))
+        && ($quest[IO_SEEK_CALL] = ($cl($quest[IO_SEEK | IO_ARGS] ?? [])));
 
-    if (!(io_state($quest) & IO_HTTP)) // quest is ready for HTTP response
-        foreach (io_probe($render, $quest) as $flag => $value) $quest[IO_SEND | $flag] = $value;
+
+    if (!$quest[IO_SEEK_CALL]['status']) { // quest is ready for HTTP response
+        $quest = io_probe(IO_SEND, $render, $plans, $quest ?? []);
+        is_callable(($cl = $quest[IO_SEND | IO_CALL] ?? null))
+            && ($quest[IO_SEND_CALL] = ($cl($quest[IO_SEEK_CALL])));
+    }
 
     return $quest;
 }
 
-function io_guard(string $coded, $max_length = 4096, $max_decode = 9, $rx_remove = '#[^A-Za-z0-9\/\.\-\_]+#'): string
+function io_draft(array $segments): array
+{
+    $candidates = [];
+    $relative_path = '';
+    foreach ($segments as $depth => $seg) {
+        $relative_path .= DIRECTORY_SEPARATOR . $seg;
+
+        $args = array_slice($segments, $depth + 1, null, true); // get remaining segments as args
+        $candidates[$relative_path . DIRECTORY_SEPARATOR . $seg . '.php'] = $args;
+        $candidates[$relative_path . '.php'] = $args; // direct match
+    }
+
+    return array_reverse($candidates);              // deep first, so that the most specific match is first
+}
+
+function io_probe($PHASE, $start, $plans, $quest = []): array
+{
+    foreach ($plans as $path => $args) {
+        [$cl, $ob] = io_fetch($start . $path);      // fetch the file
+
+        if (!$cl && !$ob) continue;                 // skip if no callable or output buffer
+
+        $quest[$PHASE | IO_FILE] = $path;
+        $quest[$PHASE | IO_ARGS] = $args;
+        $quest[$PHASE | IO_CALL] = $cl;
+        $quest[$PHASE | IO_LOAD] = $ob;
+        break;
+    }
+    return $quest;
+}
+
+function io_fetch(string $file)     // returns [?callable, ?string] from $file
+{
+    return ob_start() ? [@include $file, ob_get_clean()] : [@include $file, null];
+}
+
+function io_clean(string $coded, $when_empty, $max_length = 4096, $max_decode = 9, $rx_remove = '#[^A-Za-z0-9\/\.\-\_]+#'): array
 {
     do {
         $path = rawurldecode($coded);
     } while ($max_decode-- > 0 && $path !== $coded && ($coded = $path));
 
-    $max_decode                       ?: throw new DomainException('Path decoding loop detected', 400);
-    (strlen($path) > $max_length)  && throw new DomainException('Path Exceeds Maximum Allowed', 400);
+    $max_decode                     ?: throw new DomainException('Path decoding loop detected', 400);
+    (strlen($path) > $max_length)   && throw new DomainException('Path Exceeds Maximum Allowed', 400);
 
     $path = $rx_remove ? preg_replace($rx_remove, '', $path) : $path;       // removes non alphanum /.-_
     $path = preg_replace('#\.\.+#', '', $path);                             // remove serial dots
     $path = preg_replace('#(?:\./|/\.|/\./)#', '/', $path);                 // replace(/): /. ./ /./
     $path = preg_replace('#\/\/+#', '/', $path);                            // replace(/): //+, 
-    $path = trim($path, '/');                                               // remove leading and trailing slashes
-
-    return $path;
-}
-
-function io_draft(string $path, string $when_empty): array
-{
-    $candidates = [];
-    $segments = (empty($path) || $path === '/') ? [$when_empty] : explode('/', trim($path, '/'));
-
-    $relative_path = '';
-    foreach ($segments as $depth => $seg) {
-        $relative_path .= DIRECTORY_SEPARATOR . $seg;
-        $args = array_slice($segments, $depth + 1, null, true); // get remaining segments as args
-        $candidates[] = [$relative_path . DIRECTORY_SEPARATOR . $seg . '.php', $args];
-        $candidates[] = [$relative_path . '.php', $args]; // direct match
-    }
-
-    krsort($candidates); // deep first, keep depth data
-    return $candidates;
-}
-
-function io_probe($start, $quest, $__mission = []): array
-{
-    foreach ($quest[IO_PLAN] as $checkpoint)
-        if ($yield = io_fetch($start . $checkpoint[0])) {
-
-            $__mission[IO_FILE] = $checkpoint[0];
-            $__mission[IO_ARGS] = $checkpoint[1];
-
-            if (is_callable($yield)) {
-                $__mission[IO_FUNC] = $yield;
-                $__mission[IO_LOAD] = $yield($quest, ...($checkpoint[1]));
-            } else {
-                $__mission[IO_LOAD] = $yield;
-            }
-
-            return $__mission;
-        }
-    return $__mission;
-}
-
-function io_fetch(string $file)
-{
-    ob_start();
-    $callable   = @include $file;
-    $content    = trim(ob_get_clean()); // trim helps return ?: null (no opinion, significant whitespaces are in tags)
-    return is_callable($callable) ? $callable : ($content ?: null);
+    $path = trim($path, '/') ?: $when_empty;                                // trim leading and trailing slashes
+    return explode('/', $path);
 }
 
 function io_state($quest, $__state = 0): int
