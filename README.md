@@ -1,6 +1,6 @@
-# BADGE
+# BADDAD
 
-**BADGE** is not a PHP framework. It's a refusal.
+**BADDAD** is not a PHP framework. It's a refusal.
 
 A refusal of boilerplate, magic, and engineering theater.
 
@@ -12,7 +12,7 @@ A refusal of boilerplate, magic, and engineering theater.
 
 Just **files**, **functions**, **arrays**, and **conventions**.
 
-BADGE is ~300 lines of core code that give you everything needed to build real applications—and nothing you don't explicitly ask for.
+BADDAD is ~300 lines of core code that give you everything needed to build real applications—and nothing you don't explicitly ask for.
 
 ---
 
@@ -42,7 +42,7 @@ BADGE is ~300 lines of core code that give you everything needed to build real a
 ### 1. Setup Structure
 ```bash
 mkdir myapp && cd myapp
-git clone https://github.com/lareponse/BADGE.git add
+git clone https://github.com/lareponse/BADDAD.git add
 mkdir -p app/{io/{route,views},data,public}
 ```
 
@@ -92,7 +92,7 @@ return function() {
 <!DOCTYPE html>
 <html>
 <head>
-    <title>BADGE App</title>
+    <title>BADDAD App</title>
     <?= implode("\n", slot('head')) ?>
 </head>
 <body>
@@ -164,7 +164,7 @@ return ['status' => 200, 'body' => render(['user' => $user])];
 
 ```
 myapp/
-├── add/                    # BADGE framework
+├── add/                    # BADDAD framework
 ├── app/
 │   ├── io/                # Parent folder (route + views only)
 │   │   ├── route/         # Route handlers
@@ -194,7 +194,7 @@ export DB_USER="user"
 export DB_PASS="password"
 
 # Auth (optional)
-export BADGE_AUTH_HMAC_SECRET="your-secret-key"
+export BADDAD_AUTH_HMAC_SECRET="your-secret-key"
 
 # Development (optional)
 export DEV_MODE=true
@@ -204,7 +204,7 @@ export DEV_MODE=true
 
 ## Philosophy
 
-BADGE doesn't scale by adding abstractions.  
+BADDAD doesn't scale by adding abstractions.  
 It scales by composition of simple, understandable parts.
 
 - **~300 lines** vs 10,000+ in typical frameworks
