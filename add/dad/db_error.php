@@ -1,10 +1,11 @@
 <?php
-const TYPE_FOREIGN_KEY = 1;
-const TYPE_UNIQUE = 2;
-const TYPE_CHECK = 4;
-const TYPE_NOT_NULL = 8;
-const TYPE_EXCLUSION = 16;
-const TYPE_UNKNOWN = 32;
+const DB_ERR_RAW = 0;
+const DB_ERR_FOREIGN_KEY  = 1;
+const DB_ERR_UNIQUE       = 2;
+const DB_ERR_CHECK        = 4;
+const DB_ERR_NOT_NULL     = 8;
+const DB_ERR_EXCLUSION    = 16;
+const DB_ERR_UNKNOWN      = 32;
 
 
 function parse_constraint_error(string $message, PDO $pdo): array
@@ -18,24 +19,24 @@ function parse_error_mysql(string $message): array
 {
     $result = [];
 
-    if (preg_match('/^ERROR\s+(\d+)\s+\(([A-Z0-9]+)\):/', $message, $matches)) {
-        $result['error_code'] = (int)$matches[1];
-        $result['sqlstate'] = $matches[2];
+    // map each constraint‐type constant to a single‐capture regex
+    $rules = [
+        DB_ERR_UNIQUE      => "/Duplicate entry '.*?' for key '(.+?)'/",
+        DB_ERR_FOREIGN_KEY => "/foreign key constraint fails .*CONSTRAINT `(.+?)`/",
+        DB_ERR_CHECK       => "/Check constraint '(.+?)' is violated/",
+        DB_ERR_NOT_NULL    => "/Column '(.+?)' cannot be null/",
+    ];
+
+    foreach ($rules as $type => $pattern) {
+        if (preg_match($pattern, $message, $matches)) {
+            // just one capture per type, and no duplicate‐value
+            $result[$type] = $type === DB_ERR_NOT_NULL
+                ? $matches[1] . '-not-null'
+                : $matches[1];
+            break;
+        }
     }
-    if (preg_match("/Duplicate entry '(.+?)' for key '(.+?)'/", $message, $matches)) {
-        $result['constraint_type'] = TYPE_UNIQUE;
-        $result['constraint_name'] = $matches[2];
-        $result['duplicate_value'] = $matches[1];
-    } elseif (preg_match('/.+foreign key constraint fails \(`(.+?)`.`(.+?)`, CONSTRAINT `(.+?)`/', $message, $matches)) {
-        $result['constraint_type'] = TYPE_FOREIGN_KEY;
-        $result['constraint_name'] = $matches[3];
-    } elseif (preg_match("/Check constraint '(.+?)' is violated/", $message, $matches)) {
-        $result['constraint_type'] = TYPE_CHECK;
-        $result['constraint_name'] = $matches[1];
-    } elseif (preg_match("/Column '(.+?)' cannot be null/", $message, $matches)) {
-        $result['constraint_type'] = TYPE_NOT_NULL;
-        $result['column_name'] = $matches[1];
-    }
+
     return $result;
 }
 
@@ -43,7 +44,7 @@ function parse_error_mariadb(string $message): array
 {
     $result = [];
     if (preg_match('/CONSTRAINT `(.+?)` failed for `(.+?)`.`(.+?)`/', $message, $matches)) {
-        $result['constraint_type'] = TYPE_CHECK;
+        $result['constraint_type'] = DB_ERR_CHECK;
         $result['constraint_name'] = $matches[1];
     } else {
         $result = parse_error_mysql($message);
@@ -56,23 +57,22 @@ function parse_error_pgsql(string $message): array
 {
     $result = [];
 
-    if (preg_match('/violates unique constraint "(.+?)"/', $message, $matches)) {
-        $result['constraint_name'] = $matches[1];
-        $result['constraint_type'] = TYPE_UNIQUE;
-        if (preg_match('/Key \((.+?)\)=\((.+?)\)/', $message, $keyMatches))
-            $result['duplicate_value'] = $keyMatches[2];
-    } elseif (preg_match('/violates foreign key constraint "(.+?)"/', $message, $matches)) {
-        $result['constraint_type'] = TYPE_FOREIGN_KEY;
-        $result['constraint_name'] = $matches[1];
-    } elseif (preg_match('/null value in column "(.+?)" violates not-null constraint/', $message, $matches)) {
-        $result['constraint_type'] = TYPE_NOT_NULL;
-        $result['column_name'] = $matches[1];
-    } elseif (preg_match('/violates check constraint "(.+?)"/', $message, $matches)) {
-        $result['constraint_type'] = TYPE_CHECK;
-        $result['constraint_name'] = $matches[1];
-    } elseif (preg_match('/violates exclusion constraint "(.+?)"/', $message, $matches)) {
-        $result['constraint_type'] = TYPE_EXCLUSION;
-        $result['constraint_name'] = $matches[1];
+    // map each constraint‐type constant to its regex
+    $rules = [
+        DB_ERR_UNIQUE       => '/violates unique constraint "(.+?)"/',
+        DB_ERR_FOREIGN_KEY  => '/violates foreign key constraint "(.+?)"/',
+        DB_ERR_NOT_NULL     => '/null value in column "(.+?)" violates not-null constraint/',
+        DB_ERR_CHECK        => '/violates check constraint "(.+?)"/',
+        DB_ERR_EXCLUSION    => '/violates exclusion constraint "(.+?)"/',
+    ];
+
+    foreach ($rules as $type => $pattern) {
+        if (preg_match($pattern, $message, $matches)) {
+            $result[$type] = $type === DB_ERR_NOT_NULL
+                ? $matches[1] . '-not-null'
+                : $matches[1];
+            break; // stop after first match
+        }
     }
 
     return $result;
@@ -80,10 +80,8 @@ function parse_error_pgsql(string $message): array
 
 function db_server(PDO $pdo): string
 {
-    $driver = $pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
-
-    if ($driver === 'mysql' && stripos($pdo->getAttribute(PDO::ATTR_SERVER_VERSION), 'mariadb') !== false)
-        return 'mariadb';
-
-    return $driver;
+    return ($drv = $pdo->getAttribute(PDO::ATTR_DRIVER_NAME)) === 'mysql'
+        && stripos($pdo->getAttribute(PDO::ATTR_SERVER_VERSION), 'mariadb') !== false
+        ? 'mariadb'
+        : $drv;
 }
