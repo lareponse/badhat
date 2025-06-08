@@ -86,11 +86,11 @@ function vd($first, $second = null, ...$others)
     $arity >= 3 && [$label, $depth, $vars] = [$first, is_int($second) ? $second : 1, array_slice(func_get_args(), 2)];
 
     ob_start(); {
-        debug_print_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, $depth);
+        if ($label)
+            echo '#--' . $label . PHP_EOL;
+        debug_print_backtrace(0, $depth);
     }
     $frames = trim(ob_get_clean());
-    $function_signature = __FUNCTION__ . '(' . sprintf('%s [%s]', $label, http_build_query(['depth' => $depth, 'arity' => $arity], '', ', '));
-    $frames = str_replace(__FUNCTION__ . '(', $function_signature, $frames);
     $skip_dirs = realpath(__DIR__ . '/../..') . DIRECTORY_SEPARATOR;
     $frames = str_replace($skip_dirs, DIRECTORY_SEPARATOR, $frames);
 
