@@ -1,11 +1,11 @@
-# BADGE MANIFESTO  
+# BADDAD MANIFESTO  
 **A declaration of independence from bloated software.**
 ---
 
 
 ## CODE IS NOT PROGRESS. FUNCTION IS.
 
-BADGE is not a framework. It’s a **refusal**.
+BADDAD is not a framework. It’s a **refusal**.
 
 A refusal of:
 - Indirection
@@ -65,9 +65,9 @@ Every convenience you add hides one more moving part.
 “Developer Experience” is just User Experience for devs who don’t want to learn.
 
 
-## BADGE IS THE ALTERNATIVE
+## BADDAD IS THE ALTERNATIVE
 
-BADGE is a procedural micro-stack for serious developers.
+BADDAD is a procedural micro-stack for serious developers.
 
 - ~300 lines of PHP
 - No magic
@@ -85,7 +85,7 @@ You know what runs. You control what executes.
 - Build what you understand.
 - Ship something small and sane.
 
-BADGE doesn’t scale by indirection.  
+BADDAD doesn’t scale by indirection.  
 It scales by composition.
 
 
