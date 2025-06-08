@@ -2,77 +2,115 @@
 
 declare(strict_types=1);
 
-const IO_SEEK =  0;     // Phase flags, makes even numbers SEEK phase operations, 
-const IO_SEND =  1;
+const IO_STATE = 0;     // State bitmask
 
-const IO_FILE =  2;     // Operation flags
-const IO_ARGS =  4;
-const IO_CALL =  8;
-const IO_LOAD = 16;
+const IO_SEEK =  1;     // Parity Phase flags:  - any ODD flag  is a seek step,
+const IO_SEND =  2;     //                      - any EVEN flag is a send step  
 
-const IO_PLAN = 32;
+const IO_FILE =  4;     // Steps flags:     - the found file, , a ?callable, and ?string (output buffer)
+const IO_ARGS =  8;     //                  - an ?array (remainder of /url_segments/) for the callable
+const IO_CALL = 16;     //                  - a ?callable to execute ?
+const IO_LOAD = 32;     //                  - a ?string output buffer ?
 
 const IO_SEEK_CALL = IO_SEEK | IO_CALL | IO_ARGS;
-const IO_SEND_CALL = IO_SEND | IO_CALL | IO_SEEK;
+const IO_SEND_CALL = IO_SEND | IO_CALL | IO_LOAD;
 
-// io calls might/should trigger an http_response
-// if not, return the quest array for end-dev
-function io(string $route, string $render, $when_empty = 'index')
+// io calls might/should trigger an http_response, if not, return the quest array for end-dev
+function io(?string $in_path = null, ?string $out_path = null, ?callable $renderer): array
 {
-    $paths = io_clean(parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) ?? '', $when_empty);
-    $plans = io_draft($paths);
+    $in_path  ?: $out_path  ?:  throw new BadFunctionCallException('No input or output path provided', 400);
+    $candidates = io_paths('index');
+    $candidates             ?:  throw new DomainException('No IO paths found', 404);
 
-    $quest = io_probe(IO_SEEK, $route, $plans, $quest ?? []);
-    is_callable(($cl = $quest[IO_SEEK | IO_CALL] ?? null))
-        && ($quest[IO_SEEK_CALL] = ($cl($quest[IO_SEEK | IO_ARGS] ?? [])));
+    if ($in_path && ($found = io_probe($in_path, $candidates))) {
+        foreach ($found as $step => $value)
+            io_quest(IO_SEEK | $step, $value);       // set the quest values
 
-
-    if (!$quest[IO_SEEK_CALL]['status']) { // quest is ready for HTTP response
-        $quest = io_probe(IO_SEND, $render, $plans, $quest ?? []);
-        is_callable(($cl = $quest[IO_SEND | IO_CALL] ?? null))
-            && ($quest[IO_SEND_CALL] = ($cl($quest[IO_SEEK_CALL])));
+        if (is_callable($found[IO_CALL]))
+            io_quest(IO_SEEK_CALL, $found[IO_CALL]($found[IO_ARGS]));
     }
+    if ($out_path && ($found = io_probe($out_path, $candidates))) {
+        foreach ($found as $step => $value) {
+           io_quest(IO_SEND | $step, $value);       // set the quest values
+        }
+
+        if (is_callable($found[IO_CALL]))
+            io_quest(IO_SEND_CALL, $found[IO_CALL]($found[IO_LOAD]));
+    }
+
+    return $renderer === null ? io_quest() : $renderer(io_quest());
+}
+
+function io_quest(?int $flag = null, $value = null): mixed
+{
+    static $quest = [IO_STATE => 0];
+
+    if (isset($flag, $value) && $flag !== IO_STATE) {   // quest update
+        $quest[$flag] = $value;                         //  - sets the flag value
+        $quest[IO_STATE] |= $flag;                      //  - updates the state flag
+    } else if (isset($flag))
+        return $quest[$flag] ?? null;
 
     return $quest;
 }
 
-function io_draft(array $segments): array
+function io_fetch(string $file)                 // returns null on failure, [null, null] on empty, or [?callable, ?output_buffer] on success
 {
+    ob_start();
+    $call = @include $file;
+    $echo = ob_get_clean() ?: null;
+
+    if ($call === false)
+        return null;
+
+    if (!is_callable($call))
+        $call = null;  // ensure $call is a callable, or null
+
+    return [$call, $echo];
+}
+
+function io_probe(string $start, array $candidates): ?array
+{
+    foreach ($candidates as $path => $args) {
+        $yield = io_fetch($start . $path);             // fetch the file
+
+        if ($yield === null) continue;                 // skip if no callable or output buffer
+
+        [$cl, $ob] = $yield;
+        return [IO_FILE => $path, IO_ARGS => $args, IO_CALL => $cl, IO_LOAD => $ob];
+    }
+    return null;
+}
+
+function io_paths(string $default_url_path): array
+{
+    $url_path = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) ?? '';
+    $url_path = io_clean($url_path) ?: $default_url_path ?: throw new DomainException('Empty URL path, empty default provided', 400);
+    return io_draft($url_path);
+}
+
+function io_draft(string $url_path, $target=null): array
+{
+    $segments = explode('/', $url_path);
     $candidates = [];
     $relative_path = '';
     foreach ($segments as $depth => $seg) {
-        $relative_path .= DIRECTORY_SEPARATOR . $seg;
-
         $args = array_slice($segments, $depth + 1, null, true); // get remaining segments as args
-        $candidates[$relative_path . DIRECTORY_SEPARATOR . $seg . '.php'] = $args;
-        $candidates[$relative_path . '.php'] = $args; // direct match
+        if(null === $target) {
+            $relative_path .= DIRECTORY_SEPARATOR . $seg;
+            $candidates[$relative_path . DIRECTORY_SEPARATOR . $seg . '.php'] = $args;
+            $candidates[$relative_path . '.php'] = $args;       // direct match
+        }
+        else{
+            $candidates[$relative_path . DIRECTORY_SEPARATOR . $target . '.php'] = $args;  // direct match
+            $candidates[$relative_path . DIRECTORY_SEPARATOR . $seg . DIRECTORY_SEPARATOR . $target . '.php'] = $args;
+            $relative_path .= DIRECTORY_SEPARATOR . $seg; // save the current relative path
+        }
     }
-
-    return array_reverse($candidates);              // deep first, so that the most specific match is first
+    return array_reverse($candidates);  // deep first, so that the most specific match is first
 }
 
-function io_probe($PHASE, $start, $plans, $quest = []): array
-{
-    foreach ($plans as $path => $args) {
-        [$cl, $ob] = io_fetch($start . $path);      // fetch the file
-
-        if (!$cl && !$ob) continue;                 // skip if no callable or output buffer
-
-        $quest[$PHASE | IO_FILE] = $path;
-        $quest[$PHASE | IO_ARGS] = $args;
-        $quest[$PHASE | IO_CALL] = $cl;
-        $quest[$PHASE | IO_LOAD] = $ob;
-        break;
-    }
-    return $quest;
-}
-
-function io_fetch(string $file)     // returns [?callable, ?string] from $file
-{
-    return ob_start() ? [@include $file, ob_get_clean()] : [@include $file, null];
-}
-
-function io_clean(string $coded, $when_empty, $max_length = 4096, $max_decode = 9, $rx_remove = '#[^A-Za-z0-9\/\.\-\_]+#'): array
+function io_clean(string $coded, $max_length = 4096, $max_decode = 9, $rx_remove = '#[^A-Za-z0-9\/\.\-\_]+#'): string
 {
     do {
         $path = rawurldecode($coded);
@@ -85,12 +123,6 @@ function io_clean(string $coded, $when_empty, $max_length = 4096, $max_decode = 
     $path = preg_replace('#\.\.+#', '', $path);                             // remove serial dots
     $path = preg_replace('#(?:\./|/\.|/\./)#', '/', $path);                 // replace(/): /. ./ /./
     $path = preg_replace('#\/\/+#', '/', $path);                            // replace(/): //+, 
-    $path = trim($path, '/') ?: $when_empty;                                // trim leading and trailing slashes
-    return explode('/', $path);
-}
-
-function io_state($quest, $__state = 0): int
-{
-    foreach ($quest as $step => $v) $__state |= $step;
-    return $__state;
+    $path = trim($path, '/');                                               // trim leading and trailing slashes
+    return $path;
 }
