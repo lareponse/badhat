@@ -1,8 +1,8 @@
-# BADGE vs Modern Frameworks
+# BADDAD vs Modern Frameworks
 
-This document provides code comparisons between BADGE and popular modern PHP frameworks, showcasing the simplicity of BADGE's design philosophy.
+This document provides code comparisons between BADDAD and popular modern PHP frameworks, showcasing the simplicity of BADDAD's design philosophy.
 
-## Code Comparison: BADGE vs. Modern Frameworks
+## Code Comparison: BADDAD vs. Modern Frameworks
 
 ### Entity/Data Model Definition
 
@@ -42,7 +42,7 @@ class User implements JsonSerializable
 }
 ```
 
-**BADGE:**
+**BADDAD:**
 
 ```php
 // A simple contact form submission
@@ -80,7 +80,7 @@ class UserController extends BaseController
 }
 ```
 
-**BADGE:**
+**BADDAD:**
 
 ```php
 // app/route/users/show.php
@@ -110,7 +110,7 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'admin']], function 
 });
 ```
 
-**BADGE's simple folder structure:**
+**BADDAD's simple folder structure:**
 
 ```
 app/route/admin/users/disable.php
@@ -137,7 +137,7 @@ app/route/admin/prepare.php  // Contains auth checks for all admin routes
 @endsection
 ```
 
-**BADGE:**
+**BADDAD:**
 
 ```php
 <!-- views/users/profile.php -->
@@ -181,7 +181,7 @@ $entityManager->persist($user);
 $entityManager->flush();
 ```
 
-**BADGE:**
+**BADDAD:**
 
 ```php
 $user = dbq("SELECT * FROM users WHERE email = ?", [$email])->fetch();
@@ -231,7 +231,7 @@ public function processOrder(Request $request)
 }
 ```
 
-**BADGE:**
+**BADDAD:**
 
 ```php
 // payment.php
@@ -288,7 +288,7 @@ class UserController extends Controller
 }
 ```
 
-**BADGE:**
+**BADDAD:**
 
 ```php
 // Initialize once in your entry point
@@ -306,7 +306,7 @@ function get_user($id) {
 
 **Modern framework approach:** 3,000+ files, 50+ database tables, complex migrations, 100+ service classes
 
-**BADGE approach:**
+**BADDAD approach:**
 
 ```
 app/
@@ -397,12 +397,12 @@ return function ($quest) {
 };
 ```
 
-## Benchmarks: BADGE vs. Popular Frameworks
+## Benchmarks: BADDAD vs. Popular Frameworks
 
 | Framework  | Request Time | Memory Usage | Files Loaded |
 | ---------- | ------------ | ------------ | ------------ |
 | Laravel 10 | 120-180ms    | 20-32MB      | 800-1200     |
 | Symfony 6  | 90-120ms     | 15-22MB      | 600-900      |
-| BADGE      | 5-8ms        | 1-2MB        | 4-15         |
+| BADDAD      | 5-8ms        | 1-2MB        | 4-15         |
 
 _Note: Benchmarks performed on a simple "show user profile" page with database access._

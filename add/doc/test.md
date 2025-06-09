@@ -1,10 +1,10 @@
-# BADGE Testing Guide
+# BADDAD Testing Guide
 
-**Testing the BADGE way: No magic, just files and functions.**
+**Testing the BADDAD way: No magic, just files and functions.**
 
 ## Philosophy
 
-BADGE testing follows the same principles as the framework itself:
+BADDAD testing follows the same principles as the framework itself:
 
 - **No classes** - Pure functions for testing
 - **No frameworks** - No PHPUnit, no complex setup
@@ -573,7 +573,7 @@ ini_set('display_errors', 1);
 
 ## Advantages Over Framework Testing
 
-| BADGE Testing | PHPUnit/Other |
+| BADDAD Testing | PHPUnit/Other |
 |---------------|---------------|
 | 15 lines of code | 10,000+ lines |
 | Built-in assert() + exception validation | Complex assertion classes |

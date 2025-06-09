@@ -1,11 +1,11 @@
-# BADGE Development Workflow
+# BADDAD Development Workflow
 
 ## Quick Start (5 minutes)
 
 ### 1. Setup Structure
 ```bash
 mkdir myapp && cd myapp
-git clone https://github.com/lareponse/BADGE.git add
+git clone https://github.com/lareponse/BADDAD.git add
 mkdir -p app/public/assets
 cp add/doc/setup/* app/public/
 mv app/public/index.base.php app/public/index.php
@@ -32,7 +32,7 @@ $route = route(__DIR__ . '/../src/controllers');
 // Expects: app/src/controllers/ and app/src/views/
 ```
 
-You pass the path to the **route child**. BADGE infers the views folder is the sibling. The parent can only contain these two folders.
+You pass the path to the **route child**. BADDAD infers the views folder is the sibling. The parent can only contain these two folders.
 
 **URL mapping:** `/user/edit` → `app/io/route/user/edit.php` → `app/io/views/user/edit.php`
 
@@ -66,7 +66,7 @@ SetEnv DEV_MODE true
 return function() {
     return [
         'status' => 200,
-        'body' => render(['title' => 'Welcome to BADGE'])
+        'body' => render(['title' => 'Welcome to BADDAD'])
     ];
 };
 ```
@@ -74,7 +74,7 @@ return function() {
 **app/io/views/home.php:**
 ```php
 <h1><?= $title ?></h1>
-<p>Your BADGE app is running.</p>
+<p>Your BADDAD app is running.</p>
 ```
 
 **app/io/views/layout.php:**
@@ -82,7 +82,7 @@ return function() {
 <!DOCTYPE html>
 <html>
 <head>
-    <title><?= $title ?? 'BADGE App' ?></title>
+    <title><?= $title ?? 'BADDAD App' ?></title>
     <?= implode("\n", tray('head')) ?>
 </head>
 <body>
@@ -162,7 +162,7 @@ if ($_FILES['upload']['error'] === UPLOAD_ERR_OK) {
 ## Production Deployment
 
 1. **Disable dev mode:** Remove `DEV_MODE` env var
-2. **Set auth secret:** Generate strong `BADGE_AUTH_HMAC_SECRET`
+2. **Set auth secret:** Generate strong `BADDAD_AUTH_HMAC_SECRET`
 3. **Configure database:** Update credentials for production
 4. **Set document root:** Point to `app/public/`
 5. **Enable opcache:** PHP performance optimization

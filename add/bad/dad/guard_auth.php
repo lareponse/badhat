@@ -13,7 +13,7 @@ function whoami(): ?string
 
 function auth_http(): ?string
 {
-    $secret = getenv('BADGE_AUTH_HMAC_SECRET');
+    $secret = getenv('BADDAD_AUTH_HMAC_SECRET');
     if (!$secret) {
         throw new DomainException('Auth HMAC secret is missing', 500);
     }

@@ -78,7 +78,7 @@
  * // + facade creation
  * ```
  *
- * BADGE ALTERNATIVE: This function. 11 lines. Done.
+ * BADDAD ALTERNATIVE: This function. 11 lines. Done.
  *
  * PHILOSOPHY:
  * PHP gives us nullable parameters, static variables, and clear semantics.
@@ -111,7 +111,7 @@ function tray(?string $name, ?string $value): array
 
 ## The Three-Mode Pattern: PHP Native Elegance
 
-This function demonstrates why BADGE's approach is superior to enterprise orthodoxy:
+This function demonstrates why BADDAD's approach is superior to enterprise orthodoxy:
 
 **Mode Detection via Native Nullability:**
 - PHP provides nullable parameters for exactly this pattern
@@ -127,7 +127,7 @@ const MODE_CONSUME = 'consume';
 function tray(string $mode, ?string $name = null, ?string $value = null)
 ```
 
-**BADGE Response:** PHP already has a mode system. It's called "nullable parameters." Use it.
+**BADDAD Response:** PHP already has a mode system. It's called "nullable parameters." Use it.
 
 **Zero-Overhead Polymorphism:**
 - No reflection, no method dispatch, no virtual tables
