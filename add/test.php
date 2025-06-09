@@ -2,37 +2,40 @@
 
 declare(strict_types=1);
 
+/* 
+use PHP assert() and addbad assert_throws() to test exceptions
+test('named test', function () {
+    assert(true, 'This is a dummy test that always passes');
+});
 
-function &get_tests(): array
+run all tests with tests() function, which will output the results
+tests();
+*/
+function test(?string $name = null, ?callable $test_func = null): array
 {
     static $tests = [];
+
+    isset($name, $test_func) && $tests[] = ['name' => $name, 'func' => $test_func];
+
     return $tests;
 }
 
-function test(string $name, callable $test_func): void
+function tests(): void
 {
-    get_tests()[] = ['name' => $name, 'func' => $test_func];
-}
-
-function run_tests(): void
-{
-    $tests = &get_tests();
+    $tests = test();
     $passed = $failed = 0;
-
-    echo "Running tests...\n\n";
 
     foreach ($tests as $test) {
         try {
-            $test['func']();
-            echo "x {$test['name']}\n";
-            $passed++;
+            $test['func'](); // If it completes without throwing, it passed
+            ++$passed;
+            echo PHP_EOL . " | {$test['name']}";
         } catch (Throwable $e) {
-            echo "! {$test['name']}: {$e->getMessage()}\n";
-            $failed++;
+            ++$failed;
+            echo PHP_EOL . " x {$test['name']}: {$e->getMessage()}";
         }
     }
-
-    echo "\n" . ($passed + $failed) . " tests, {$passed} passed, {$failed} failed\n";
+    echo PHP_EOL . ($passed + $failed) . " tests, {$passed} passed, {$failed} failed" . PHP_EOL;
     if ($failed > 0) exit(1);
 }
 
