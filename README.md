@@ -174,10 +174,10 @@ myapp/
 
 ## Documentation
 
-- **[Philosophy](./add/doc/philosophy.md)** - Why BADDAD exists, core principles
-- **[Guide](./add/doc/guide.md)** - Complete API reference, advanced patterns  
-- **[Benchmarks](./add/doc/benchmarks.md)** - Performance measurements, scaling analysis
-- **[Comparison](./add/doc/comparison.md)** - Code examples vs modern frameworks
+- **[Philosophy](./add/doc/readme-addbad.md)** - Where ADDBAD came from
+- **[Manifest](./add/doc/readme-baddad.md)** - What BADDAD stands for
+- **[Comparison](./add/doc/readme-comparison.md)** - Code examples vs modern frameworks
+- **[Guide](./add/doc/readme-guide.md)** - Complete API reference, advanced patterns  
 
 ---
 
