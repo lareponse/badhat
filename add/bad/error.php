@@ -14,14 +14,12 @@ set_error_handler(function (int $errno, string $errstr): bool {
 
 // Uncaught exceptions are logged and a structured HTTP response is sent
 set_exception_handler(function (Throwable $e) {
-    $message  = $e->getMessage();
     $code     = $e->getCode() ?: 500;
     $error_id = base_convert((string)random_int(100000, 999999), 10, 36);
-
+    $message = ($e->getMessage() ?: 'Uncaught exception') . " ($error_id)";
     error_log(sprintf(
-        "UNCAUGHT %s %s: [%d] %s in %s:%d",
+        "UNCAUGHT %s: [%d] %s in %s:%d",
         get_class($e),
-        $error_id,
         $code,
         $message,
         $e->getFile(),
@@ -29,11 +27,11 @@ set_exception_handler(function (Throwable $e) {
     ));
 
     if (is_dev()) {
-        vd("$message in {$e->getFile()}:{$e->getLine()}", 0);
+        vd($message, 0);
         die;
     }
 
-    http_respond($code, "Exception $error_id: $message");
+    http_respond($code, "Exception: $message");
 });
 
 
