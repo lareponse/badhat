@@ -6,7 +6,7 @@ require 'add/http.php';
 require 'add/io.php';
 require 'add/core.php';
 require 'add/bad/error.php';
-require 'add/bad/db.php';
+require 'add/bad/dad/db.php';
 require 'add/bad/ui.php';
 require 'add/bad/guard_auth.php';
 
