@@ -6,19 +6,10 @@ function http_guard($max_path_length = 4096, $max_url_decode = 9)
 {
     // CSRF check
     if (!empty($_POST) && function_exists('csrf') && !csrf($_POST['csrf_token'] ?? ''))
-        http_respond(403, 'Invalid CSRF token.');
+        http_respond(403, 'Invalid CSRF token.', ['Content-Type' => 'text/plain; charset=UTF-8']);
 }
 
 // no http_request(), we are in the request, just ask $_SERVER, $_POST, $_GET, $_COOKIE, they know
-
-function http_response(int $http_code, string $body, array $http_headers = []): array
-{
-    return [
-        'status'  => $http_code,
-        'headers' => $http_headers,
-        'body'    => $body,
-    ];
-}
 
 function http_respond(int $status, string $body, array $headers = []): void
 {
