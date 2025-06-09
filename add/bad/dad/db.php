@@ -23,6 +23,9 @@ function db(mixed $arg = null, string $profile = ''): ?PDO
     static $store = [];
 
     if ($arg instanceof PDO) {
+        if (isset($store[$profile])) {
+            throw new LogicException("Profile '$profile' already set");
+        }
         $store[$profile] = $arg;
         return $store[$profile];
     }
@@ -37,7 +40,7 @@ function db(mixed $arg = null, string $profile = ''): ?PDO
             $existing->query('SELECT 1'); // ping
             return $existing;
         } catch (PDOException $e) {
-            unset($store[$profile]);
+            unset($store[$profile]); // unset stale connection for auto reconnect
         }
     }
 
@@ -73,9 +76,8 @@ function db(mixed $arg = null, string $profile = ''): ?PDO
  *   dbq("SELECT * FROM users WHERE id = ?", [$id])
  *   dbq("...", [...], 'read')
  */
-function dbq(string $sql, array $bind = [], string $profile = ''): PDOStatement
+function dbq(PDO $pdo, string $sql, array $bind = []): PDOStatement
 {
-    $pdo = db($profile);
     return $bind
         ? (($stmt = $pdo->prepare($sql))->execute($bind) ? $stmt : $stmt)
         : (($stmt = $pdo->query($sql)) ?: $stmt);
@@ -89,12 +91,11 @@ function dbq(string $sql, array $bind = [], string $profile = ''): PDOStatement
  *       return dbq("SELECT * FROM users WHERE name = ?", ['Alice'])->fetchAll();
  *   });
  */
-function dbt(callable $fn, string $profile = ''): mixed
+function dbt(PDO $pdo, callable $transaction): mixed
 {
-    $pdo = db($profile) ?: throw new LogicException("No PDO connection available for profile '$profile'");
     $pdo->beginTransaction();
     try {
-        $out = $fn();
+        $out = $transaction();
         $pdo->commit();
         return $out;
     } catch (Throwable $e) {
