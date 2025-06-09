@@ -77,14 +77,6 @@ function qb_update(string $table, array $data, array|string $where = [], array $
     return [$sql, $set_binds + $where_binds];
 }
 
-
-// ajouter un log ou une option 'allow_delete' contrôlée
-function qb_delete(string $table, array $where): array
-{
-    error_log("Delete attempted on {$table} — denied by ADDBAD convention.");
-    throw new BadMethodCallException("Automated deletes are forbidden. Use manual SQL.");
-}
-
 // qb_where(['status' => 'published', 'user_id' => 5, 'tag_id' => [3, 4]])
 // qb_where(['status' => 'published', 'user_id' => 5, 'tag_id' => [3, 4]], 'OR')
 function qb_where(array $conds, string $connective = 'AND'): array
