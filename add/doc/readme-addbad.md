@@ -1,4 +1,4 @@
-# BADDAD Philosophy
+# ADDBAD Philosophy
 
 **For architects and technical leads evaluating BADDAD**
 
