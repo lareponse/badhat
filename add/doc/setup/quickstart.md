@@ -1,88 +1,54 @@
-# BADDAD Development Workflow
+# BADDAD Quick Start
 
-## Quick Start (5 minutes)
+**Get running in 5 minutes**
 
-### 1. Setup Structure
+---
+
+## Setup
+
 ```bash
 mkdir myapp && cd myapp
 git clone https://github.com/lareponse/BADDAD.git add
-mkdir -p app/public/assets
-cp add/doc/setup/* app/public/
-mv app/public/index.base.php app/public/index.php
+mkdir -p app/{route,views,data}
 ```
 
-### 2. Create Entry Point
-**app/public/index.php:**
-
-**Critical:** `route(__DIR__ . '/../io/route')` defines your entire app architecture.
-
-**Rule:** You must have a parent folder with exactly two children - one for routes, one for views. You can name them anything:
-
-```php
-// Option 1: parent "io", route child "route"
-$route = route(__DIR__ . '/../io/route');
-// Expects: app/io/route/ and app/io/views/
-
-// Option 2: parent "web", route child "handlers"  
-$route = route(__DIR__ . '/../web/handlers');
-// Expects: app/web/handlers/ and app/web/views/
-
-// Option 3: parent "src", route child "controllers"
-$route = route(__DIR__ . '/../src/controllers');
-// Expects: app/src/controllers/ and app/src/views/
-```
-
-You pass the path to the **route child**. BADDAD infers the views folder is the sibling. The parent can only contain these two folders.
-
-**URL mapping:** `/user/edit` → `app/io/route/user/edit.php` → `app/io/views/user/edit.php`
-
-**app/data/credentials.php:**
+**index.php:**
 ```php
 <?php
-$host = getenv('DB_HOST') ?: 'localhost';
-$name = getenv('DB_NAME') ?: 'myapp';
-$user = getenv('DB_USER') ?: 'root';
-$pass = getenv('DB_PASS') ?: '';
+require 'add/bad/io.php';
+require 'add/bad/dad/db.php';
 
-return ["mysql:host=$host;dbname=$name;charset=utf8mb4", $user, $pass];
+// Database connection
+[$dsn, $user, $pass] = require 'app/data/credentials.php';
+db(new PDO($dsn, $user, $pass, [
+    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
+]));
+
+// Route processing
+$quest = io(__DIR__ . '/app/route');
+http_respond(deliver($quest));
 ```
 
-**.htaccess:**
-```apache
-RewriteEngine On
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule . /index.php [QSA,L]
+---
 
-<IfModule mod_env.c>
-SetEnv DEV_MODE true
-</IfModule>
-```
+## First Route
 
-### 4. Create First Route
-**app/io/route/home.php:**
+**app/route/home.php:**
 ```php
 <?php
 return function() {
-    return [
-        'status' => 200,
-        'body' => render(['title' => 'Welcome to BADDAD'])
-    ];
+    tray('main', '<h1>BADDAD Running</h1>');
+    return ['status' => 200, 'body' => render_layout()];
 };
 ```
 
-**app/io/views/home.php:**
-```php
-<h1><?= $title ?></h1>
-<p>Your BADDAD app is running.</p>
-```
-
-**app/io/views/layout.php:**
+**app/views/layout.php:**
 ```php
 <!DOCTYPE html>
 <html>
 <head>
-    <title><?= $title ?? 'BADDAD App' ?></title>
+    <title>BADDAD App</title>
     <?= implode("\n", tray('head')) ?>
 </head>
 <body>
@@ -92,84 +58,198 @@ return function() {
 </html>
 ```
 
-### 5. Test Setup
-Visit `http://localhost/myapp/app/public/` or configure virtual host.
+---
+
+## URL Mapping
+
+| URL | File | Args |
+|-----|------|------|
+| `/` | `app/route/home.php` | `[]` |
+| `/users` | `app/route/users.php` | `[]` |
+| `/users/42` | `app/route/users.php` | `['42']` |
+| `/admin/users/edit/42` | `app/route/admin/users/edit.php` | `['42']` |
+
+---
+
+## Common Patterns
+
+### Database Operations
+```php
+// app/route/users.php
+<?php
+return function($id = null) {
+    if ($id) {
+        $user = dbq("SELECT * FROM users WHERE id = ?", [$id])->fetch();
+        if (!$user) trigger_error('404 User not found', E_USER_ERROR);
+        
+        tray('main', render('users/show', ['user' => $user]));
+    } else {
+        $users = dbq("SELECT * FROM users ORDER BY name")->fetchAll();
+        tray('main', render('users/list', ['users' => $users]));
+    }
+    
+    return ['status' => 200, 'body' => render_layout()];
+};
+```
+
+### Form Handling
+```php
+// app/route/users/create.php
+<?php
+return function() {
+    if ($_POST) {
+        csrf($_POST['csrf_token']);
+        
+        [$sql, $binds] = qb_create('users', null, $_POST);
+        dbq($sql, $binds);
+        
+        header('Location: /users');
+        exit;
+    }
+    
+    tray('main', render('users/create'));
+    return ['status' => 200, 'body' => render_layout()];
+};
+```
+
+### Authentication Guard
+```php
+// app/route/admin/prepare.php
+<?php
+return function() {
+    if (!whoami()) {
+        header('Location: /login');
+        exit;
+    }
+};
+```
+
+### API Endpoint
+```php
+// app/route/api/users.php
+<?php
+return function($id = null) {
+    header('Content-Type: application/json');
+    
+    if ($id) {
+        $user = dbq("SELECT * FROM users WHERE id = ?", [$id])->fetch();
+        return ['status' => $user ? 200 : 404, 'body' => json_encode($user ?: ['error' => 'Not found'])];
+    }
+    
+    $users = dbq("SELECT * FROM users")->fetchAll();
+    return ['status' => 200, 'body' => json_encode($users)];
+};
+```
+
+---
+
+## Folder Structure Examples
+
+### Simple Blog
+```
+app/
+├── route/
+│   ├── home.php
+│   ├── post.php
+│   └── archive.php
+├── views/
+├── functions/
+└── data/
+```
+
+### SaaS Application
+```
+app/
+├── route/
+│   ├── tenant/
+│   │   ├── prepare.php
+│   │   ├── dashboard.php
+│   │   └── settings.php
+│   ├── admin/
+│   │   ├── prepare.php
+│   │   └── tenants.php
+│   └── api/
+│       ├── prepare.php
+│       └── webhooks.php
+├── views/
+│   ├── tenant/
+│   └── admin/
+├── functions/
+│   ├── tenant.php
+│   └── billing.php
+└── data/
+```
+
+---
 
 ## Development Workflow
 
-### Adding Routes
-1. **Simple route:** Create `app/io/route/about.php`
-2. **Nested route:** Create `app/io/route/blog/post.php`
-3. **Dynamic route:** Create `app/io/route/user.php` (takes ID as arg)
+### 1. Add Route
+Create `app/route/path.php` → handles `/path`
 
-### Database Operations
-1. **Create mapper:** `app/mapper/user.php`
-2. **Add functions:** `user_create()`, `user_get_by_id()`
-3. **Use in routes:** `require_once '../mapper/user.php'`
+### 2. Add View (Optional)
+Create `app/views/path.php` → use with `render('path', $data)`
 
-### Adding Authentication
-1. **Protect routes:** Add `app/io/route/admin/prepare.php`
-2. **Check auth:** Use `whoami()`
+### 3. Add Database
+Use `dbq()` for queries, `dbt()` for transactions
 
-### Development Mode Features
-- **Missing routes:** Shows scaffold templates
-- **Error display:** Full stack traces
-- **No caching:** Immediate code changes
+### 4. Add Functions
+Create `app/functions/feature.php` → require where needed
 
-### File Organization Pattern
-```
-app/io/route/
-├── admin/
-│   ├── prepare.php     # Auth check for all /admin/*
-│   ├── users.php       # /admin/users
-│   └── posts/
-│       ├── prepare.php # Additional checks for /admin/posts/*
-│       └── edit.php    # /admin/posts/edit
-├── api/
-│   └── users.php       # /api/users
-└── home.php            # /home or /
-```
+### 5. Test
+Visit URL → BADDAD executes route function
 
-### Common Patterns
+---
 
-**Form handling:**
+## Essential Functions
+
 ```php
-if ($_POST) {
-    if (!csrf($_POST['csrf_token'])) {
-        trigger_error('403 Forbidden: Invalid CSRF', E_USER_ERROR);
-    }
-    // Process form
-}
+// Database
+dbq($sql, $binds);                    // Execute query
+dbt(function() { /* queries */ });    // Transaction
+
+// Content
+tray('main', $html);                  // Add to slot
+render('template', $data);            // Render view
+render_layout();                      // Complete page
+
+// Auth
+whoami();                             // Current user
+auth_post($user, $pass, $remember);   // Login
+csrf($token);                         // Validate CSRF
+
+// Utilities
+[$sql, $binds] = qb_create('table', null, $data);  // Query builder
+trigger_error('404 Not found', E_USER_ERROR);      // HTTP errors
 ```
 
-**API responses:**
-```php
-return [
-    'status' => 200,
-    'body' => json_encode($data),
-    'headers' => ['Content-Type' => 'application/json']
-];
-```
+---
 
-**File uploads:**
-```php
-if ($_FILES['upload']['error'] === UPLOAD_ERR_OK) {
-    $path = 'uploads/' . uniqid() . '.pdf';
-    move_uploaded_file($_FILES['upload']['tmp_name'], $path);
-}
-```
+## Production Checklist
 
-## Production Deployment
+1. **Set database credentials** in environment variable
+2. **Configure web server** document root to `/app/public/`
+3. **Enable opcache** for performance
+4. **Set auth secret** `BADDAD_AUTH_HMAC_SECRET` environment variable
+5. **Remove debug flags** and error display
+6. **Test routes** and database connections
 
-1. **Disable dev mode:** Remove `DEV_MODE` env var
-2. **Set auth secret:** Generate strong `BADDAD_AUTH_HMAC_SECRET`
-3. **Configure database:** Update credentials for production
-4. **Set document root:** Point to `app/public/`
-5. **Enable opcache:** PHP performance optimization
+---
 
-## Debugging Tips
+## Common Issues
 
-- **Route issues:** Check DEV_MODE scaffold suggestions
-- **DB problems:** Use `db()->errorInfo()` after queries
-- **Auth failures:** Verify HMAC secret and headers
-- **View errors:** Check variable extraction in templates
+**Route not found:** Check file exists at `app/route/path.php`
+
+**Database error:** Verify credentials in `app/data/credentials.php`
+
+**CSRF failed:** Include `<?= csrf_field() ?>` in forms
+
+**View not rendering:** Check `app/views/template.php` exists
+
+**Performance slow:** Enable opcache, check query efficiency
+
+---
+
+That's it. URL → file → function → response.
+
+No configuration files, no service containers, no magic.
