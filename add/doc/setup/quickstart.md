@@ -83,11 +83,11 @@ return function() {
 <html>
 <head>
     <title><?= $title ?? 'BADGE App' ?></title>
-    <?= implode("\n", slot('head')) ?>
+    <?= implode("\n", tray('head')) ?>
 </head>
 <body>
-    <?= implode("\n", slot('main')) ?>
-    <?= implode("\n", slot('scripts')) ?>
+    <?= implode("\n", tray('main')) ?>
+    <?= implode("\n", tray('scripts')) ?>
 </body>
 </html>
 ```

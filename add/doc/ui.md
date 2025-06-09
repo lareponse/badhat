@@ -1,5 +1,5 @@
 /**
- * slot() - Minimalist content accumulation with native PHP elegance
+ * tray() - Minimalist content accumulation with native PHP elegance
  *
  * Three modes, zero ceremony, maximum clarity.
  * This is what PHP was designed for before frameworks ruined it.
@@ -9,9 +9,9 @@
  * @return array             Slot contents or all slots
  *
  * MODES:
- *   slot(null)              // Return all slots (debugging/inspection)
- *   slot('head', '<meta>')  // Append to named slot, return current contents
- *   slot('head')            // Consume and return slot contents
+ *   tray(null)              // Return all slots (debugging/inspection)
+ *   tray('head', '<meta>')  // Append to named slot, return current contents
+ *   tray('head')            // Consume and return slot contents
  *
  * BEHAVIOR:
  * - Write: appends to internal heap, returns current heap
@@ -22,7 +22,7 @@
  * - Memory automatically cleaned on consumption
  * - Cross-request contamination impossible
  * - Test isolation automatic
- * - Debug inspection trivial: slot(null)
+ * - Debug inspection trivial: tray(null)
  *
  * ENTERPRISE DEVELOPERS WILL PANIC:
  * "You can't use static variables! What about dependency injection!"
@@ -48,7 +48,7 @@
  * "But you can't inspect the internal state!"
  *
  * RESPONSE:
- * slot(null) returns complete internal state.
+ * tray(null) returns complete internal state.
  * More transparent than your private $container properties.
  *
  * "But what if someone calls it wrong!"
@@ -88,7 +88,7 @@
  *
  * This is not "quick and dirty." This is software engineering.
  */
-function slot(?string $name, ?string $value): array
+function tray(?string $name, ?string $value): array
 {
     static $slots = [];
 
@@ -124,7 +124,7 @@ const MODE_INSPECT = 'inspect';
 const MODE_APPEND = 'append';  
 const MODE_CONSUME = 'consume';
 
-function slot(string $mode, ?string $name = null, ?string $value = null)
+function tray(string $mode, ?string $name = null, ?string $value = null)
 ```
 
 **BADGE Response:** PHP already has a mode system. It's called "nullable parameters." Use it.

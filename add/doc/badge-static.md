@@ -101,7 +101,7 @@ This is **security-critical correct usage**.
 
 ## 5. **Slot Content Management** (Updated)
 ```php
-function slot(?string $name, ?string $value): array
+function tray(?string $name, ?string $value): array
 {
     static $slots = [];
     // consume-on-read pattern
@@ -114,7 +114,7 @@ function slot(?string $name, ?string $value): array
 - ✅ **Consume-on-read** - automatic cleanup
 - ✅ **Request-scoped** - no cross-request leakage  
 - ✅ **Memory efficient** - cleared after use
-- ✅ **Debug support** - `slot(null)` for inspection
+- ✅ **Debug support** - `tray(null)` for inspection
 
 **Revolutionary improvement** over typical static usage.
 

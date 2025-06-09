@@ -50,7 +50,7 @@ mkdir -p app/{io/{route,views},data,public}
 ```php
 <?php
 require '../../add/core.php';
-require '../../add/bad/db.php';
+require '../../add/bad/dad/db.php';
 require '../../add/bad/ui.php';
 require '../../add/bad/error.php';
 
@@ -93,10 +93,10 @@ return function() {
 <html>
 <head>
     <title>BADDAD App</title>
-    <?= implode("\n", slot('head')) ?>
+    <?= implode("\n", tray('head')) ?>
 </head>
 <body>
-    <?= implode("\n", slot('main')) ?>
+    <?= implode("\n", tray('main')) ?>
 </body>
 </html>
 ```
@@ -151,8 +151,8 @@ return function() {
 ### Views & Slots
 ```php
 // Add content to layout slots
-slot('head', '<meta name="description" content="User profile">');
-slot('scripts', '<script src="/js/app.js"></script>');
+tray('head', '<meta name="description" content="User profile">');
+tray('scripts', '<script src="/js/app.js"></script>');
 
 // Render view
 return ['status' => 200, 'body' => render(['user' => $user])];
