@@ -51,7 +51,6 @@ mkdir -p app/{io/{route,views},data,public}
 <?php
 require '../../add/core.php';
 require '../../add/bad/dad/db.php';
-require '../../add/bad/ui.php';
 require '../../add/bad/error.php';
 
 // Database setup
