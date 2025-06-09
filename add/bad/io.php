@@ -16,7 +16,7 @@ const IO_SEEK_CALL = IO_SEEK | IO_CALL | IO_ARGS;
 const IO_SEND_CALL = IO_SEND | IO_CALL | IO_LOAD;
 
 // io calls might/should trigger an http_response, if not, return the quest array for end-dev
-function io(?string $in_path = null, ?string $out_path = null, ?callable $renderer): array
+function io(?string $in_path = null, ?string $out_path = null): array
 {
     $in_path  ?: $out_path  ?:  throw new BadFunctionCallException('No input or output path provided', 400);
     $candidates = io_paths('index');
@@ -38,7 +38,7 @@ function io(?string $in_path = null, ?string $out_path = null, ?callable $render
             io_quest(IO_SEND_CALL, $found[IO_CALL]($found[IO_LOAD]));
     }
 
-    return $renderer === null ? io_quest() : $renderer(io_quest());
+    return io_quest();
 }
 
 function io_quest(?int $flag = null, $value = null): mixed

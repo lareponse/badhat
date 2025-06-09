@@ -11,11 +11,11 @@
     </style>
 </head>
 <body>
-    <h1>Missing <?= (io_state($quest) & IO_SEEK) ? 'render' : 'route' ?> end point <?= $quest[IO_PATH] ?></h1>
+    <h1>Missing <?= ($quest[IO_STATE] & IO_SEEK) ? 'render' : 'route' ?> end point <?= $quest[IO_PATH] ?></h1>
     <span>Choose file to create in: <strong><?= realpath(__DIR__ . '/../io/route') ?>/</strong></span>
 
     <dl>
-        <?php foreach ($quest[IO_PLAN] as $depth => $checkpoint): ?>
+        <?php foreach (io_paths('index') as $depth => $checkpoint): ?>
             <dt><strong><?= htmlspecialchars($checkpoint[0]); ?></strong></dt>
         <?php endforeach; ?>
         <dd>
