@@ -1,6 +1,6 @@
-# Error Handling in BADGE
+# Error Handling in BADDAD
 
-BADGE uses PHP’s native error mechanisms to simulate `PSR` log levels, provide meaningful HTTP responses, and maintain full control without abstraction.
+BADDAD uses PHP’s native error mechanisms to simulate `PSR` log levels, provide meaningful HTTP responses, and maintain full control without abstraction.
 
 No middleware. No annotations. No wrappers. Just procedural handling, routed through three native layers:
 
@@ -78,7 +78,7 @@ exit("503 Application overloaded – Try again later");
 
 ## HTTP Code Routing
 
-Error and exception messages can begin with a status code prefix. If so, BADGE will extract and route them accordingly.
+Error and exception messages can begin with a status code prefix. If so, BADDAD will extract and route them accordingly.
 
 ```php
 throw new RuntimeException("404 User not found");
@@ -104,7 +104,7 @@ Use `base_convert(mt_rand(), 10, 36)` to generate short error IDs.
 
 ## No Try/Catch
 
-BADGE does not use try/catch blocks. Exceptions must be allowed to bubble to the top, where they are caught and logged by the global `set_exception_handler()`.
+BADDAD does not use try/catch blocks. Exceptions must be allowed to bubble to the top, where they are caught and logged by the global `set_exception_handler()`.
 
 ---
 
@@ -117,7 +117,7 @@ Fatal errors not caught by PHP (E\_ERROR, E\_PARSE, etc.) are handled in a `regi
 undefined_function();
 ```
 
-If an error is fatal and headers are not yet sent, BADGE will respond with:
+If an error is fatal and headers are not yet sent, BADDAD will respond with:
 
 ```
 500 FATAL <id>: <message>

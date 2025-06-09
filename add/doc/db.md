@@ -1,4 +1,4 @@
-# BADGE Database Layer
+# BADDAD Database Layer
 
 **Three functions. No classes. No abstraction.**
 ---
@@ -20,7 +20,7 @@ If you know PDO, you already know everything.
 
 No DSL, no wrapper. Full PDO and PDOStatement API at your disposal.
 
-BADGE just removes the noise.
+BADDAD just removes the noise.
 
 ## Design Philosophy
 

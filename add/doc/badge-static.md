@@ -1,6 +1,6 @@
 
 
-# Static Variables in BADGE Codebase
+# Static Variables in BADDAD Codebase
 
 ## 1. **Request Singleton** (`add/core.php`)
 ```php
@@ -24,7 +24,7 @@ function request(?string $route_root = null, ?callable $path = null): array
 
 **Enterprise Critique:** "Global state! Hard to test!"
 
-**BADGE Reality:** 
+**BADDAD Reality:** 
 - ✅ **Immutable after initialization** - request data doesn't change mid-request
 - ✅ **Request-scoped lifecycle** - dies with process  
 - ✅ **Performance optimization** - avoids re-parsing $_SERVER
@@ -48,7 +48,7 @@ function db()
 
 **Enterprise Critique:** "No dependency injection! Hard to mock!"
 
-**BADGE Reality:**
+**BADDAD Reality:**
 - ✅ **Classic singleton pattern** - expensive resource, create once
 - ✅ **Connection reuse** - standard database optimization
 - ✅ **Testable** - pass different DSN for test database
@@ -73,7 +73,7 @@ function io_candidates(string $in_or_out): array
 
 **Enterprise Critique:** "Caching in business logic!"
 
-**BADGE Reality:**
+**BADDAD Reality:**
 - ✅ **Parse-once optimization** - URL doesn't change during request
 - ✅ **Immutable data** - segments computed once, reused
 - ✅ **Request-scoped** - automatically cleared between requests
@@ -91,7 +91,7 @@ function csp_nonce(string $key = 'default'): string
 
 **Enterprise Critique:** "Mutable state!"
 
-**BADGE Reality:**
+**BADDAD Reality:**
 - ✅ **Security requirement** - same nonce must be used throughout request
 - ✅ **Lazy generation** - only create when needed
 - ✅ **Request-scoped** - new nonces per request
@@ -110,7 +110,7 @@ function tray(?string $name, ?string $value): array
 
 **Enterprise Critique:** "Global state accumulator!"
 
-**BADGE Reality:**
+**BADDAD Reality:**
 - ✅ **Consume-on-read** - automatic cleanup
 - ✅ **Request-scoped** - no cross-request leakage  
 - ✅ **Memory efficient** - cleared after use
@@ -161,7 +161,7 @@ function run_tests(): void
 ## **Criticism 1: "Hidden Global State"**
 **Enterprise View:** Static variables create unpredictable global state.
 
-**BADGE Reality:** Every static variable in BADGE is:
+**BADDAD Reality:** Every static variable in BADDAD is:
 - Request-scoped (dies with process)
 - Immutable after initialization (request, pdo, segments)
 - Or consume-on-read (slots)
@@ -172,7 +172,7 @@ function run_tests(): void
 ## **Criticism 2: "Testing Difficulties"**
 **Enterprise View:** Can't mock or reset static state.
 
-**BADGE Reality:**
+**BADDAD Reality:**
 - Database: Pass test DSN to get test connection
 - Request: Pass test parameters to override
 - Slots: Consume-on-read provides automatic isolation
@@ -183,25 +183,25 @@ function run_tests(): void
 ## **Criticism 3: "Memory Leaks"**
 **Enterprise View:** Static variables accumulate memory.
 
-**BADGE Reality:**
+**BADDAD Reality:**
 - Request data: Fixed size, immutable
 - Database connection: Single object, reused efficiently  
 - Slots: Consume-on-read eliminates accumulation
 - Route cache: Bounded by URL complexity
 
-**Verdict:** BADGE's patterns **actively prevent memory leaks**.
+**Verdict:** BADDAD's patterns **actively prevent memory leaks**.
 
 ## **Criticism 4: "Concurrency Issues"**
 **Enterprise View:** Static state creates race conditions.
 
-**BADGE Reality:** PHP is single-threaded per request. No concurrency within request scope.
+**BADDAD Reality:** PHP is single-threaded per request. No concurrency within request scope.
 
 **Verdict:** Criticism doesn't apply to PHP's execution model.
 
 ## **Criticism 5: "No Dependency Injection"**
 **Enterprise View:** Can't swap implementations.
 
-**BADGE Reality:** 
+**BADDAD Reality:** 
 ```php
 // Enterprise way:
 $container->bind(DatabaseInterface::class, PostgreSQLDatabase::class);
@@ -210,9 +210,9 @@ $container->bind(DatabaseInterface::class, PostgreSQLDatabase::class);
 
 **Verdict:** Parameter passing **is** dependency injection without the ceremony.
 
-# **BADGE Uses Static Variables Correctly**
+# **BADDAD Uses Static Variables Correctly**
 
-Every static variable in BADGE follows these principles:
+Every static variable in BADDAD follows these principles:
 
 1. ✅ **Request-scoped lifecycle** - automatic cleanup
 2. ✅ **Immutable or consume-on-read** - no state accumulation  
@@ -230,9 +230,9 @@ The "architectural weaknesses" of static variables apply to:
 - Complex object hierarchies
 - Poorly designed APIs
 
-**None of these apply to BADGE's usage patterns.**
+**None of these apply to BADDAD's usage patterns.**
 
-BADGE demonstrates that static variables, used correctly, provide:
+BADDAD demonstrates that static variables, used correctly, provide:
 - Better performance than DI containers
 - Simpler code than service locators  
 - More predictable behavior than framework magic
@@ -240,4 +240,4 @@ BADGE demonstrates that static variables, used correctly, provide:
 
 **The enterprise community has been brainwashed into fearing PHP's native features.**
 
-BADGE proves static variables are not the problem - **bad static variable design** is the problem.
+BADDAD proves static variables are not the problem - **bad static variable design** is the problem.
