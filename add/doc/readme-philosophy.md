@@ -9,7 +9,7 @@
 BADDAD is not a framework. It's a **refusal**.
 
 A refusal of:
-- Classes and object-oriented ceremony  
+- Custom classes and object-oriented ceremony
 - Namespaces and autoloading overhead
 - Routing tables and middleware stacks
 - Template engines and abstraction layers
