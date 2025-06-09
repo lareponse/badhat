@@ -32,7 +32,7 @@ function request(?string $route_root = null, ?callable $path = null): array
 
 This is **textbook correct** static variable usage.
 
-## 2. **Database Connection Singleton** (`add/bad/db.php`)
+## 2. **Database Connection Singleton** (`add/bad/dad/db.php`)
 ```php
 function db()
 {

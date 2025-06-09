@@ -45,7 +45,7 @@ Create `test/database/user_test.php`:
 <?php
 
 require_once __DIR__ . '/../test.php';
-require_once __DIR__ . '/../../add/bad/db.php';
+require_once __DIR__ . '/../../add/bad/dad/db.php';
 require_once __DIR__ . '/../../mapper/user.php';
 
 function setup_test_db(): void

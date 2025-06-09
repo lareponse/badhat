@@ -1,5 +1,5 @@
 <?php
-require_once 'add/dad/qb.php';
+require_once 'add/bad/dad/qb.php';
 
 function whoami(): ?string
 {
