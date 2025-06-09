@@ -2,25 +2,30 @@
 
 set_include_path(get_include_path() . PATH_SEPARATOR . __DIR__ . '/../..');
 
+require 'add/bad/error.php';
 require 'add/bad/http.php';
 require 'add/bad/io.php';
-require 'add/bad/error.php';
-require 'add/bad/dad/db.php';
-require 'add/bad/guard_auth.php';
+require 'add/bad/dad/html.php';
 
+require 'add/bad/dad/auth.php';
 
-$request   = http_request();
-// vd($request, 'http_request()');
+http_guard();
 
-$plan       = http_guard($request);
-$base       = io(__DIR__ . '/../io/route');
-$map        = io_look($plan, $base[0]);
-$quest      = io_read($map);
-$quest      = io_walk($quest);
-$response   = deliver($quest) ?: http_response(404, "Not Found", ['Content-Type' => 'text/plain']);
+$origin = realpath(__DIR__ . '/../io');
+$in_path = $origin . '/route';
+$out_path = $origin . '/render';
 
-if (is_dev() && empty($response['status']) || $response['status'] >= 400) {
-    $response = http_response(404, io_scaffold('in'), ['Content-Type' => 'text/html; charset=UTF-8']);
+$quest = io($in_path, $out_path);
+
+tray('main', $quest[IO_SEND | IO_LOAD]);
+$layout = io_probe($out_path, io_draft(io_clean($_SERVER['REQUEST_URI']), 'layout'));
+http_respond(200, $layout[IO_LOAD], ['Content-Type' => 'text/html; charset=UTF-8']);
+
+if (is_dev() && empty($response) || $response >= 400) {
+    ob_start();
+    @include 'add/bad/dad/scaffold.php';
+    $scaffold   = trim(ob_get_clean()); // trim helps return ?: null (no opinion, significant whitespaces are in tags)
+    http_respond(404, $scaffold, ['Content-Type' => 'text/html; charset=UTF-8']);
 }
 
 http_respond(...$response);
