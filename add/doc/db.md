@@ -63,22 +63,22 @@ $dbTest    = db($custom, 'test'); // sets profile 'test'
 
 ---
 
-## 2. dbq()
+## 2. dbq(db(), )
 
 ```php
 $pdo   = db();
 
 // Simple query
-$all   = dbq($pdo, "SELECT * FROM products")->fetchAll();
+$all   = dbq(db(), $pdo, "SELECT * FROM products")->fetchAll();
 
 // With positional bindings
-$user  = dbq($pdo, "SELECT * FROM users WHERE id = ?", [$id])->fetch();
+$user  = dbq(db(), $pdo, "SELECT * FROM users WHERE id = ?", [$id])->fetch();
 
 // Named parameters
-$rows  = dbq($pdo, "UPDATE products SET price = :price WHERE id = :id", ['price' => 19.99, 'id' => 42])->rowCount();
+$rows  = dbq(db(), $pdo, "UPDATE products SET price = :price WHERE id = :id", ['price' => 19.99, 'id' => 42])->rowCount();
 ```
 
-`dbq()` returns a `PDOStatement` and throws on failure. It delegates to `query()` if no bindings, otherwise `prepare()` + `execute()`.
+`dbq(db(), )` returns a `PDOStatement` and throws on failure. It delegates to `query()` if no bindings, otherwise `prepare()` + `execute()`.
 
 ---
 
@@ -88,11 +88,11 @@ $rows  = dbq($pdo, "UPDATE products SET price = :price WHERE id = :id", ['price'
 $pdo = db();
 
 $result = dbt($pdo, function() use ($pdo) {
-    dbq($pdo, "INSERT INTO orders (customer_id) VALUES (?)", [5]);
+    dbq(db(), $pdo, "INSERT INTO orders (customer_id) VALUES (?)", [5]);
     $orderId = $pdo->lastInsertId();
 
-    dbq($pdo, "INSERT INTO order_items (order_id, product_id) VALUES (?, ?)", [$orderId, 7]);
-    dbq($pdo, "INSERT INTO order_items (order_id, product_id) VALUES (?, ?)", [$orderId, 8]);
+    dbq(db(), $pdo, "INSERT INTO order_items (order_id, product_id) VALUES (?, ?)", [$orderId, 7]);
+    dbq(db(), $pdo, "INSERT INTO order_items (order_id, product_id) VALUES (?, ?)", [$orderId, 8]);
 
     return $orderId;
 });
@@ -105,8 +105,8 @@ $result = dbt($pdo, function() use ($pdo) {
 ## Notes
 
 * Connections are stored per profile; re-injecting a PDO for an existing profile throws `LogicException`.
-* Use `db()` to select or inject a connection, then `dbq()`/`dbt()` to execute queries.
-* `db()` returns `?PDO`, `dbq()` returns `PDOStatement`, `dbt()` returns mixed (callback result).
+* Use `db()` to select or inject a connection, then `dbq(db(), )`/`dbt()` to execute queries.
+* `db()` returns `?PDO`, `dbq(db(), )` returns `PDOStatement`, `dbt()` returns mixed (callback result).
 * Errors surface as exceptions (`PDOException`, `RuntimeException`, etc.).
 
 ---
@@ -127,7 +127,7 @@ $replica = db('read');    // read-only replica
 $logs    = db('analytics'); // analytics DB
 
 // Then:
-$users = dbq($main, "SELECT * FROM users");
+$users = dbq(db(), $main, "SELECT * FROM users");
 ```
 
 ### Can I still use environment injection?
@@ -136,13 +136,13 @@ Yes. `db()` auto-connects via ENV when no PDO is provided. To bypass ENV, inject
 
 ### What about prepared statement re-use?
 
-You can hold onto a `PDOStatement` returned by `dbq()` and call `execute()` on it again with new bindings.
+You can hold onto a `PDOStatement` returned by `dbq(db(), )` and call `execute()` on it again with new bindings.
 ### How do I handle errors?
-Use try-catch blocks around `dbq()` and `dbt()` calls. They throw exceptions on errors, which you can catch and handle appropriately.
+Use try-catch blocks around `dbq(db(), )` and `dbt()` calls. They throw exceptions on errors, which you can catch and handle appropriately.
 
 ```php
 try {
-    $result = dbq($pdo, "SELECT * FROM non_existent_table")->fetchAll();
+    $result = dbq(db(), $pdo, "SELECT * FROM non_existent_table")->fetchAll();
 } catch (PDOException $e) {
     // Handle error
     echo "Database error: " . $e->getMessage();
@@ -154,11 +154,11 @@ Yes, `dbt()` is specifically designed for transactions. It automatically begins 
 ```php
 try {
     $orderId = dbt($pdo, function() use ($pdo) {
-        dbq($pdo, "INSERT INTO orders (customer_id) VALUES (?)", [5]);
+        dbq(db(), $pdo, "INSERT INTO orders (customer_id) VALUES (?)", [5]);
         $orderId = $pdo->lastInsertId();
 
-        dbq($pdo, "INSERT INTO order_items (order_id, product_id) VALUES (?, ?)", [$orderId, 7]);
-        dbq($pdo, "INSERT INTO order_items (order_id, product_id) VALUES (?, ?)", [$orderId, 8]);
+        dbq(db(), $pdo, "INSERT INTO order_items (order_id, product_id) VALUES (?, ?)", [$orderId, 7]);
+        dbq(db(), $pdo, "INSERT INTO order_items (order_id, product_id) VALUES (?, ?)", [$orderId, 8]);
 
         return $orderId;
     });
