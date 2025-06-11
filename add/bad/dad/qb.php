@@ -6,6 +6,7 @@ declare(strict_types=1);
  * qb_create('articles', null, ['title' => 'Hello', 'content' => '...'])
  * sql: INSERT INTO articles (title, content) VALUES (:title_0, :content_0)
  * binds: [':title_0' => 'Hello', ':content_0' => '...']
+ * 
  * qb_create('articles', ['title', 'content'], [...], [...])
  * sql: INSERT INTO articles (title, content) VALUES (:title_0, :content_0), (:title_1, :content_1)
  * binds: [':title_0' => '...', ':content_0' => '...', ':title_1' => '...', ':content_1' => '...']  
@@ -59,7 +60,7 @@ function qb_update(string $table, array $data, array|string $where = [], array $
 {
     if (!$data) return ['', []];
 
-    [$set_clause, $set_binds] = qb_compass($data, '=', 'update');
+    [$set_clause, $set_binds] = qb_op($data, '=', 'update');
 
     if (is_string($where)) {
         $where_clause = 'WHERE ' . $where;
@@ -88,26 +89,15 @@ function qb_where(array $conds, string $connective = 'AND'): array
 
     foreach ($conds as $col => $val) {
         if (is_array($val)) {
-            [$clause, $bind] = qb_in($col, $val, 'where');
-        } elseif (preg_match('/^(.+)\s+(=|!=|<>|<|>|<=|>=|LIKE|NOT LIKE|IS|IS NOT)$/i', $col, $m)) {
-            [$clause, $bind] = qb_compass([$m[1] => $val], $m[2], 'where');
+            [$clause, $bind] = qb_in($col, $val, 'qbw_in');
         } else {
-            [$clause, $bind] = qb_compass([$col => $val], '=', 'where');
+            [$clause, $bind] = qb_op([$col => $val], '=', 'qbw_op');
         }
         $where[] = $clause;
         $binds = array_merge($binds, $bind);
     }
-
+    
     return ['WHERE ' . implode(" $connective ", $where), $binds];
-}
-
-// qb_limit(10)
-// qb_limit(10, 20)
-function qb_limit(int $limit, int $offset = 0): array
-{
-    return $offset > 0
-        ? ["LIMIT :limit OFFSET :offset", [':limit' => $limit, ':offset' => $offset]]
-        : ["LIMIT :limit", [':limit' => $limit]];
 }
 
 // qb_in('tag_id', [3, 4])
@@ -116,24 +106,39 @@ function qb_in(string $col, array $val, string $prefix = 'in'): array
 {
     if (!$val) return ["1=0", []]; // or throw exception
 
-    $b = $ph = [];
+    $bindings = $ph = [];
     foreach ($val as $i => $v) {
-        $k = ":{$prefix}_{$col}_{$i}";
-        $b[$k] = $v;
+        $k = qb_placeholder($prefix, $col, $i);
+        $bindings[$k] = $v;
         $ph[] = $k;
     }
-    return ["$col IN(" . implode(',', $ph) . ")", $b];
+    return ["$col IN(" . implode(',', $ph) . ")", $bindings];
 }
 
-// qb_compass(['status' => 'published', 'user_id' => 5], '=')
-// qb_compass(['status' => 'published', 'user_id' => 5], '<>', 'sp')
-function qb_compass(array $data, string $op = '=', string $prefix = 'qbc'): array
+// qb_op(['status' => 'published', 'user_id' => 5], '=')
+// qb_op(['status' => 'published', 'user_id' => 5], '<>', 'sp')
+function qb_op(array $data, string $default_op = '=', string $prefix = 'qbc'): array
 {
-    $clauses = $binds = [];
+    $clauses = $bindings = [];
+    $place_holder_count = -1;
     foreach ($data as $col => $val) {
-        $k = ":{$prefix}_{$col}";
-        $binds[$k] = $val;
+
+        if (preg_match('/^(.+)\s*(=|!=|<>|<|>|<=|>=|LIKE|NOT LIKE|IS|IS NOT)$/i', $col, $m)) {
+            $col = $m[1];
+            $op = $m[2];
+        }
+        else {
+            $op = $default_op;
+        }
+
+        $k = qb_placeholder($prefix, $col, ++$place_holder_count);
+        $bindings[$k] = $val;
         $clauses[] = $op ? "{$col} {$op} {$k}" : "{$col} {$k}";
     }
     return [implode(' AND ', $clauses), $binds];
+}
+
+function qb_placeholder(string $prefix, string $col, int $i): string
+{
+    return ":{$prefix}_{$col}_{$i}";
 }
