@@ -72,9 +72,9 @@ function db(mixed $arg = null, string $profile = ''): ?PDO
 
 /**
  * Execute SQL query with optional bindings
- *   dbq("SELECT * FROM users")
- *   dbq("SELECT * FROM users WHERE id = ?", [$id])
- *   dbq("...", [...], 'read')
+ *   dbq(db(), "SELECT * FROM users")
+ *   dbq(db(), "SELECT * FROM users WHERE id = ?", [$id])
+ *   dbq(db(), "...", [...], 'read')
  */
 function dbq(PDO $pdo, string $sql, array $bind = []): PDOStatement
 {
@@ -86,9 +86,9 @@ function dbq(PDO $pdo, string $sql, array $bind = []): PDOStatement
 /**
  * Execute a transaction block safely
  *   dbt(fn() => {
- *       dbq("INSERT INTO logs (event) VALUES (?)", ['created']);
- *       dbq("INSERT INTO users (name) VALUES (?)", ['Alice']);
- *       return dbq("SELECT * FROM users WHERE name = ?", ['Alice'])->fetchAll();
+ *       dbq(db(), "INSERT INTO logs (event) VALUES (?)", ['created']);
+ *       dbq(db(), "INSERT INTO users (name) VALUES (?)", ['Alice']);
+ *       return dbq(db(), "SELECT * FROM users WHERE name = ?", ['Alice'])->fetchAll();
  *   });
  */
 function dbt(PDO $pdo, callable $transaction): mixed
