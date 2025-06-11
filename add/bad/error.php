@@ -6,11 +6,11 @@ error_reporting(E_ALL);
 
 
 // E_USER_NOTICE and E_USER_WARNING are just logged, php handles the rest
-set_error_handler(function (int $errno, string $errstr): bool {
-    return ($errno === E_USER_NOTICE  && journal(200, $errstr) && error_log("E_USER_NOTICE: $errstr"))
-        || ($errno === E_USER_WARNING && journal(400, $errstr) && error_log("E_USER_WARNING: $errstr"))
-        || false;
+set_error_handler(function ($errno, $errstr) {
+    error_log("PHP [$errno] : $errstr");
+    return true;
 });
+
 
 // Uncaught exceptions are logged and a structured HTTP response is sent
 set_exception_handler(function (Throwable $e) {
@@ -31,7 +31,7 @@ set_exception_handler(function (Throwable $e) {
         die;
     }
 
-    http_respond($code, "Exception: $message");
+    http($code, "Exception: $message");
 });
 
 
@@ -53,7 +53,7 @@ register_shutdown_function(function () {
 
         // Attempt to respond with structured HTTP response if headers not sent
         if (function_exists('respond') && !headers_sent()) {
-            http_respond(500, "Fatal Error $error_id: {$e['message']}");
+            http(500, "Fatal Error $error_id: {$e['message']}");
         } else {
             // Fallback: raw text for CLI or broken HTTP context
             exit("500 FATAL $error_id: {$e['message']}");
