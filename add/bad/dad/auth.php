@@ -24,7 +24,7 @@ function auth_session(): ?string
     if (empty($_SESSION['user_id'])) {
         return null;
     }
-    return dbq(
+    return dbq(db(), 
         "SELECT username FROM users WHERE id = ?",
         [$_SESSION['user_id']]
     )->fetchColumn() ?: null;
@@ -57,7 +57,7 @@ function auth_login(string $username, string $password): bool
         throw new DomainException('CSRF invalid', 403);
     }
 
-    $user = dbq(
+    $user = dbq(db(), 
         "SELECT id, password FROM users WHERE username = ?",
         [$username]
     )->fetch();
