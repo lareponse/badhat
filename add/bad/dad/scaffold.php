@@ -1,34 +1,13 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Scaffold</title>
-    <style>
-        dt:nth-child(2n) {
-            margin-bottom: 1rem;
-            color:darkgray;
-        }
-    </style>
-</head>
-<body>
-    <h1>Missing <?= ($quest[IO_STATE] & IO_SEEK) ? 'render' : 'route' ?> end point <?= $quest[IO_PATH] ?></h1>
-    <span>Choose file to create in: <strong><?= realpath(__DIR__ . '/../io/route') ?>/</strong></span>
+Missing <?= ($quest[QST_CORE] & QST_PULL) ? 'render' : 'route' ?> end point <?= http_guard() ?>
 
-    <dl>
-        <?php foreach (io_paths('index') as $depth => $checkpoint): ?>
-            <dt><strong><?= htmlspecialchars($checkpoint[0]); ?></strong></dt>
-        <?php endforeach; ?>
-        <dd>
-            <?php
-            list($handler, $args) = $handler_and_args;
-            $handlerArgs = empty($args) ? 'no arguments' : "Expected arguments: '" . implode(',', $args) . "'";
-            $templateCode = "<?php\n// $handlerArgs\nreturn function (\$quest) {\n\treturn ['status' => 200, 'body' => __FILE__];\n};";
-            ?>
-            <pre><?= htmlspecialchars($templateCode) ?: '' ?></pre>
-        </dd>
-    </dl>
 
-    <?php vd($quest, 'quest');?>
-</body>
+Choose file to create in: <?= realpath(__DIR__ . '/../../../app/io/route') ?>
 
-</html>
+<?php foreach ((chart(io_guard(http_guard(), 'index'))) as $handler => $args): ?>
+<?= PHP_EOL.htmlspecialchars($handler); ?>
+    <?php
+    $handlerArgs = empty($args) ? 'no arguments' : "Expected arguments: '" . implode(',', $args) . "'";
+    $templateCode = "<?php\n// $handlerArgs\nreturn function (\$quest) {\n\treturn ['status' => 200, 'body' => __FILE__];\n};";
+    ?>
+
+<?php endforeach; ?>
