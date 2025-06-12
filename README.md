@@ -12,8 +12,8 @@ $app->register(new ServiceProvider());
 
 // BADDAD approach  
 require 'add/bad/io.php';              // 4 files, <1MB, 1-2ms boot
-$quest = io(__DIR__ . '/app/route');
-http_respond(deliver($quest));
+$quest = quest(__DIR__ . '/app/route');
+http(deliver($quest));
 ```
 
 **Performance**: 10x faster, 20x less memory, 200x fewer files than modern frameworks.
@@ -34,15 +34,15 @@ require 'add/bad/io.php';
 require 'add/bad/dad/db.php';
 
 db(new PDO('sqlite:app.db'));
-$quest = io(__DIR__ . '/app/route');
-http_respond(deliver($quest));
+$quest = quest(__DIR__ . '/app/route');
+http(deliver($quest));
 ```
 
 **First route** (`app/route/home.php`):
 ```php
 <?php
 return function() {
-    $users = dbq("SELECT name FROM users LIMIT 3")->fetchAll();
+    $users = dbq(db(), "SELECT name FROM users LIMIT 3")->fetchAll();
     
     tray('main', '<h1>Users</h1>');
     foreach ($users as $user) {
@@ -77,12 +77,12 @@ URL                 File                    Arguments
 
 ### Bitwise State Management
 ```php
-const IO_SEEK = 1;   // 001
-const IO_SEND = 2;   // 010  
-const IO_CALL = 4;   // 100
+const QST_PULL = 1;   // 001
+const QST_PUSH = 2;   // 010  
+const QST_CALL = 4;   // 100
 
-$flags = IO_SEEK | IO_SEND;  // 011
-if ($flags & IO_CALL) { /* 3x faster than array checks */ }
+$flags = QST_PULL | QST_PUSH;  // 011
+if ($flags & QST_CALL) { /* 3x faster than array checks */ }
 ```
 
 ### Procedural Everything
@@ -93,14 +93,14 @@ $user->updateLastLogin();
 $entityManager->persist($user);
 
 // This
-$user = dbq("SELECT * FROM users WHERE email = ?", [$email])->fetch();
-dbq("UPDATE users SET last_login = NOW() WHERE id = ?", [$user['id']]);
+$user = dbq(db(), "SELECT * FROM users WHERE email = ?", [$email])->fetch();
+dbq(db(), "UPDATE users SET last_login = NOW() WHERE id = ?", [$user['id']]);
 ```
 
 ### SQL as First-Class
 ```php
 // Direct PDO for complex queries
-$stats = dbq("
+$stats = dbq(db(), "
     SELECT DATE(created_at) as date, COUNT(*) as orders
     FROM orders 
     WHERE created_at >= ? 
@@ -109,7 +109,7 @@ $stats = dbq("
 
 // Query builders for repetitive operations
 [$sql, $binds] = qb_create('users', ['name' => 'John', 'email' => 'john@example.com']);
-dbq($sql, $binds);
+dbq(db(), $sql, $binds);
 ```
 
 ---
@@ -119,11 +119,11 @@ dbq($sql, $binds);
 ```php
 // Database
 db(new PDO($dsn, $user, $pass));           // Connect once
-$user = dbq($sql, $binds)->fetch();        // Query with bindings
+$user = dbq(db(), $sql, $binds)->fetch();        // Query with bindings
 [$sql, $binds] = qb_update('users', $data, ['id' => 42]);  // Query builder
 
 // Routing  
-$quest = io('/path/to/routes');            // Route resolution
+$quest = quest('/path/to/routes');            // Route resolution
 return ['status' => 200, 'body' => $html]; // Route response
 
 // Templates
