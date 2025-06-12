@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-require 'add/bad/http.php';
 require 'add/bad/io.php';
 
 
@@ -76,9 +75,9 @@ function chart(string $url_path, ?string $target = null): array
         $path_prefix = implode(DIRECTORY_SEPARATOR, array_slice($segments, 0, $depth+1));
         if ($target === null) {
             $candidates[$path_prefix . DIRECTORY_SEPARATOR . $segment . '.php'] = $args;
-            if ($depth > 0) {
+            // if ($depth > 0) {
                 $candidates[$path_prefix . '.php'] = $args;
-            }
+            // }
         } else {
             $candidates[$path_prefix . DIRECTORY_SEPARATOR . $target . '.php'] = $args;
             $candidates[$path_prefix . DIRECTORY_SEPARATOR . $segment . DIRECTORY_SEPARATOR . $target . '.php'] = $args;
@@ -89,9 +88,9 @@ function chart(string $url_path, ?string $target = null): array
 }
 
 function scout(string $start, array $candidates): array
-{    
+{   
     foreach ($candidates as $path => $args) {
-        $yield = io($start . $path);             // fetch the file
+        $yield = io($start . DIRECTORY_SEPARATOR . $path);             // fetch the file
         if (!$yield[0] && !$yield[1]) continue;  // skip if no callable or output buffer
         return [QST_FILE => $path, QST_ARGS => $args, QST_ECHO => $yield[1], QST_CALL => $yield[0]];
     }

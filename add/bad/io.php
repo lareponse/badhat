@@ -17,14 +17,14 @@ function http_guard($max_length = 4096, $max_decode = 9): string
     return parse_url($path ?? '', PHP_URL_PATH) ?? '';
 }
 
-function io_guard(string $guarded_path, string $default_url_path, string $rx_remove = '#[^A-Za-z0-9\/\.\-\_]+#'): string
+function io_guard(string $guarded_path, string $rx_remove = '#[^A-Za-z0-9\/\.\-\_]+#'): string
 {
     $path = $rx_remove ? preg_replace($rx_remove, '', $guarded_path) : $guarded_path;       // removes non alphanum /.-_
     $path = preg_replace('#\.\.+#', '', $path);                             // remove serial dots
     $path = preg_replace('#(?:\./|/\.|/\./)#', '/', $path);                 // replace(/): /. ./ /./
     $path = preg_replace('#\/\/+#', '/', $path);                            // replace(/): //+, 
     $path = trim($path, '/');                                               // trim leading and trailing slashes
-    return $path ?: $default_url_path ?: throw new DomainException('Empty URL path and empty default', 400);
+    return $path;
 }
 
 function io(string $file): array
