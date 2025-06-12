@@ -191,7 +191,7 @@ Create `app/route/path.php` → handles `/path`
 Create `app/views/path.php` → use with `render('path', $data)`
 
 ### 3. Add Database
-Use `dbq(db(), )` for queries, `dbt()` for transactions
+Use `dbq(db(), )` for queries, `db_transaction()` for transactions
 
 ### 4. Add Functions
 Create `app/functions/feature.php` → require where needed
@@ -206,7 +206,7 @@ Visit URL → BADDAD executes route function
 ```php
 // Database
 dbq(db(), $sql, $binds);                    // Execute query
-dbt(db(),() { /* queries */ });    // Transaction
+db_transaction(db(),() { /* queries */ });    // Transaction
 
 // Content
 tray('main', $html);                  // Add to slot
