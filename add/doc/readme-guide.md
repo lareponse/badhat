@@ -191,7 +191,7 @@ $orders = dbq(db(),
 
 ```php
 // Transaction blocks
-$order_id = dbt(db(),() {
+$order_id = db_transaction(db(),() {
     dbq(db(), "INSERT INTO orders (user_id, total) VALUES (?, ?)", [42, 99.99]);
     $id = db()->lastInsertId();
     dbq(db(), "INSERT INTO order_items (order_id, product_id) VALUES (?, ?)", [$id, 5]);

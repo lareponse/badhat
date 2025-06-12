@@ -9,7 +9,7 @@ This *is* PDO. Procedural API. If you know `PDO` and `PDOStatement`, you know ev
 
 * `db(mixed $arg = null, string $profile = ''): ?PDO` — Get or inject a PDO instance by profile ('' = default). Existing connections are pinged (`SELECT 1`) for liveness before reuse.
 * `dbq(PDO $pdo, string $sql, array $bind = []): PDOStatement` — Execute a raw or prepared SQL query on the given PDO instance.
-* `dbt(PDO $pdo, callable $transaction): mixed` — Run a transaction block safely on the given PDO instance; automatically commits or rolls back on exception.
+* `db_transaction(PDO $pdo, callable $transaction): mixed` — Run a transaction block safely on the given PDO instance; automatically commits or rolls back on exception.
 
 ---
 
@@ -82,12 +82,12 @@ $rows  = dbq(db(), $pdo, "UPDATE products SET price = :price WHERE id = :id", ['
 
 ---
 
-## 3. dbt()
+## 3. db_transaction()
 
 ```php
 $pdo = db();
 
-$result = dbt($pdo, function() use ($pdo) {
+$result = db_transaction($pdo, function() use ($pdo) {
     dbq(db(), $pdo, "INSERT INTO orders (customer_id) VALUES (?)", [5]);
     $orderId = $pdo->lastInsertId();
 
@@ -98,15 +98,15 @@ $result = dbt($pdo, function() use ($pdo) {
 });
 ```
 
-`dbt()` begins a transaction on the given PDO, commits on success or rolls back if an exception is thrown. Returns whatever the callback returns.
+`db_transaction()` begins a transaction on the given PDO, commits on success or rolls back if an exception is thrown. Returns whatever the callback returns.
 
 ---
 
 ## Notes
 
 * Connections are stored per profile; re-injecting a PDO for an existing profile throws `LogicException`.
-* Use `db()` to select or inject a connection, then `dbq(db(), )`/`dbt()` to execute queries.
-* `db()` returns `?PDO`, `dbq(db(), )` returns `PDOStatement`, `dbt()` returns mixed (callback result).
+* Use `db()` to select or inject a connection, then `dbq(db(), )`/`db_transaction()` to execute queries.
+* `db()` returns `?PDO`, `dbq(db(), )` returns `PDOStatement`, `db_transaction()` returns mixed (callback result).
 * Errors surface as exceptions (`PDOException`, `RuntimeException`, etc.).
 
 ---
@@ -138,7 +138,7 @@ Yes. `db()` auto-connects via ENV when no PDO is provided. To bypass ENV, inject
 
 You can hold onto a `PDOStatement` returned by `dbq(db(), )` and call `execute()` on it again with new bindings.
 ### How do I handle errors?
-Use try-catch blocks around `dbq(db(), )` and `dbt()` calls. They throw exceptions on errors, which you can catch and handle appropriately.
+Use try-catch blocks around `dbq(db(), )` and `db_transaction()` calls. They throw exceptions on errors, which you can catch and handle appropriately.
 
 ```php
 try {
@@ -149,11 +149,11 @@ try {
 }
 ```
 ### Can I use transactions ?
-Yes, `dbt()` is specifically designed for transactions. It automatically begins a transaction, commits on success, and rolls back on any exceptions thrown within the callback.
+Yes, `db_transaction()` is specifically designed for transactions. It automatically begins a transaction, commits on success, and rolls back on any exceptions thrown within the callback.
 
 ```php
 try {
-    $orderId = dbt($pdo, function() use ($pdo) {
+    $orderId = db_transaction($pdo, function() use ($pdo) {
         dbq(db(), $pdo, "INSERT INTO orders (customer_id) VALUES (?)", [5]);
         $orderId = $pdo->lastInsertId();
 
