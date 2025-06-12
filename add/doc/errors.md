@@ -8,6 +8,16 @@ No middleware. No annotations. No wrappers. Just procedural handling, routed thr
 * `throw` for application errors
 * `exit()` for shutdown conditions
 
+## Rule Set
+
+* Use `error_log()` for debug and info
+* Use `trigger_error()` for notice and warning
+* Use `throw` for error and critical (depending on the code)
+* Use `exit()` for emergency
+* Never suppress or silence errors
+* Always log, always format, always route
+
+
 ---
 
 ## Log Level: `debug`, `info`
@@ -43,24 +53,24 @@ trigger_error("Slow response from mail server", E_USER_WARNING);
 
 ---
 
-## Log Level: `error`
+## Log Level: `error`, code 4xx
 
 Use `throw` for application-level errors that should abort current flow and be caught by `set_exception_handler()`.
 
 ```php
-throw new RuntimeException("500 Unable to connect to database", 500);
-throw new InvalidArgumentException("400 Invalid query parameter");
+throw new InvalidArgumentException("Invalid query parameter", 400);
 ```
 
 ---
 
-## Log Level: `critical`
+## Log Level: `critical`, code 5xx
 
 Use for internal logic errors or corrupted application state.
 
 ```php
+throw new DomainException("Missing required configuration", 500);
+throw new RuntimeException("Unable to connect to database", 500);
 throw new Error("Inconsistent session state", 500);
-throw new LogicException("Missing required configuration", 500);
 ```
 
 ---
@@ -68,39 +78,12 @@ throw new LogicException("Missing required configuration", 500);
 ## Log Level: `emergency`
 
 Use for system shutdown, maintenance mode, or overload conditions.
+Always respond with a 503 Service Unavailable status.
 
 ```php
-exit("503 Service Unavailable – Maintenance in progress");
-exit("503 Application overloaded – Try again later");
+exit("Service Unavailable – Maintenance in progress");
+exit("Application overloaded – Try again later");
 ```
-
----
-
-## HTTP Code Routing
-
-Error and exception messages can begin with a status code prefix. If so, BADDAD will extract and route them accordingly.
-
-```php
-throw new RuntimeException("404 User not found");
-throw new Error("500 Unexpected token in response");
-```
-
-These will be parsed automatically and sent as structured HTTP responses.
-
----
-
-## Logging Format
-
-Each error, exception, or shutdown is logged in a consistent format:
-
-```
-UNCAUGHT RuntimeException a1b2c3d4: 404 User not found in /path/to/file.php:123
-SHUTDOWN FATAL e4f5g6h7: [1] Segmentation fault in /path/core.php:99
-```
-
-Use `base_convert(mt_rand(), 10, 36)` to generate short error IDs.
-
----
 
 ## No Try/Catch
 
@@ -125,13 +108,3 @@ If an error is fatal and headers are not yet sent, BADDAD will respond with:
 
 ---
 
-## Final Rule Set
-
-* Use `error_log()` for debug and info
-* Use `trigger_error()` for notice and warning
-* Use `throw` for error and critical
-* Use `exit()` for emergency
-* Never suppress or silence errors
-* Always log, always format, always route
-
-This is full-spectrum error control, without a single class or framework.

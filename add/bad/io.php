@@ -3,7 +3,7 @@
 function http_guard($max_length = 4096, $max_decode = 9): string
 {
     // CSRF check
-    if (!empty($_POST) && function_exists('csrf') && !csrf($_POST['csrf_token'] ?? ''))
+    if (!empty($_POST) && function_exists('csrf') && !csrf_validate())
         http(403, 'Invalid CSRF token.', ['Content-Type' => 'text/plain; charset=UTF-8']);
 
     $coded = $_SERVER['REQUEST_URI'] ?? '';
@@ -24,6 +24,7 @@ function io_guard(string $guarded_path, string $rx_remove = '#[^A-Za-z0-9\/\.\-\
     $path = preg_replace('#(?:\./|/\.|/\./)#', '/', $path);                 // replace(/): /. ./ /./
     $path = preg_replace('#\/\/+#', '/', $path);                            // replace(/): //+, 
     $path = trim($path, '/');                                               // trim leading and trailing slashes
+
     return $path;
 }
 
@@ -36,9 +37,7 @@ function io(string $file): array
 function http(int $status, string $body, array $headers = []): void
 {
     http_response_code($status);
-
-    foreach ($headers as $h => $v)
-        header("$h: $v");
+    foreach ($headers as $h => $v) header("$h: $v");
     echo $body;
     exit;
 }
