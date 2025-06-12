@@ -104,8 +104,8 @@ Most applications can be built from these building blocks:
 User::where('active', true)->with('posts')->get();
 
 // Explicit (clear execution path)
-$users = dbq("SELECT * FROM users WHERE active = 1")->fetchAll();
-$posts = dbq("SELECT * FROM posts WHERE user_id IN (" . implode(',', $user_ids) . ")")->fetchAll();
+$users = dbq(db(), "SELECT * FROM users WHERE active = 1")->fetchAll();
+$posts = dbq(db(), "SELECT * FROM posts WHERE user_id IN (" . implode(',', $user_ids) . ")")->fetchAll();
 ```
 
 ### 6. Automate with Intent
@@ -169,7 +169,7 @@ $posts = dbq("SELECT * FROM posts WHERE user_id IN (" . implode(',', $user_ids) 
 **Application Complexity**
 - Enterprise applications with complex business rules
 - Applications requiring heavy ORM relationships
-- Multi-tenant SaaS with complex permissions
+- Multi-tenant SaaS with complex pergoals
 - Applications where framework conventions reduce cognitive load
 
 ### Hybrid Approach

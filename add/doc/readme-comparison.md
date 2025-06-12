@@ -147,7 +147,7 @@ $users = User::with('posts.comments')
 **BADDAD**
 ```php
 // Exactly what happens ✅
-$users = dbq("
+$users = dbq(db(), "
     SELECT DISTINCT u.* 
     FROM users u 
     JOIN posts p ON u.id = p.user_id 
@@ -155,7 +155,7 @@ $users = dbq("
 ")->fetchAll();
 
 $user_ids = array_column($users, 'id');
-$comments = dbq("
+$comments = dbq(db(), "
     SELECT c.*, p.user_id 
     FROM comments c 
     JOIN posts p ON c.post_id = p.id 
@@ -201,14 +201,14 @@ return function($id) {
         exit;
     }
     
-    // Explicit permission check
-    $user = dbq("SELECT role FROM users WHERE username = ?", [whoami()])->fetch();
+    // Explicit pergoal check
+    $user = dbq(db(), "SELECT role FROM users WHERE username = ?", [whoami()])->fetch();
     if (!in_array($user['role'], ['admin', 'editor'])) {
         trigger_error('403 Forbidden', E_USER_ERROR);
     }
     
     // Explicit data retrieval
-    $post = dbq("SELECT * FROM posts WHERE id = ?", [$id])->fetch();
+    $post = dbq(db(), "SELECT * FROM posts WHERE id = ?", [$id])->fetch();
     if (!$post) {
         trigger_error('404 Post not found', E_USER_ERROR);
     }
@@ -254,13 +254,13 @@ function send_welcome_email($user_email, $user_name) {
     
     $message = render('emails/welcome', ['name' => $user_name]);
     
-    return smtp_send($smtp_config, $user_email, 'Welcome!', $message);
+    return smtp_push($smtp_config, $user_email, 'Welcome!', $message);
 }
 
 // app/route/users/register.php - Explicit usage
 if ($_POST) {
     [$sql, $binds] = qb_create('users', null, $_POST);
-    dbq($sql, $binds);
+    dbq(db(), $sql, $binds);
     
     send_welcome_email($_POST['email'], $_POST['name']);
     
@@ -423,17 +423,17 @@ class UserControllerTest extends TestCase
 test('user creation sends email', function() {
     // Use real in-memory database
     db(new PDO('sqlite::memory:'));
-    dbq("CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT, email TEXT)");
+    dbq(db(), "CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT, email TEXT)");
     
     // Test the actual function
     $result = create_user(['name' => 'John', 'email' => 'john@example.com']);
     
     // Verify real database state
-    $user = dbq("SELECT * FROM users WHERE email = 'john@example.com'")->fetch();
+    $user = dbq(db(), "SELECT * FROM users WHERE email = 'john@example.com'")->fetch();
     assert($user['name'] === 'John');
     
     // Check email was queued (if using queue table)
-    $email = dbq("SELECT * FROM email_queue WHERE recipient = 'john@example.com'")->fetch();
+    $email = dbq(db(), "SELECT * FROM email_queue WHERE recipient = 'john@example.com'")->fetch();
     assert($email !== false);
 });
 ```
