@@ -3,7 +3,7 @@ Missing <?= ($quest[QST_CORE] & QST_PULL) ? 'render' : 'route' ?> end point <?= 
 
 Choose file to create in: <?= realpath(__DIR__ . '/../../../app/io/route') ?>
 
-<?php foreach ((chart(io_guard(http_guard(), 'index'))) as $handler => $args): ?>
+<?php foreach ((chart(io_guard(http_guard()))) as $handler => $args): ?>
 <?= PHP_EOL.htmlspecialchars($handler); ?>
     <?php
     $handlerArgs = empty($args) ? 'no arguments' : "Expected arguments: '" . implode(',', $args) . "'";
