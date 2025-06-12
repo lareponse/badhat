@@ -478,7 +478,7 @@ echo csrf_field();  // Outputs: <input type="hidden" name="csrf_token" value="..
 
 // Validate token in handlers
 if ($_POST) {
-    csrf($_POST['csrf_token']);  // Throws error if invalid
+    csrf_validate($_POST['csrf_token']);  // Throws error if invalid
     // Process form...
 }
 ```

@@ -98,7 +98,7 @@ return function($id = null) {
 <?php
 return function() {
     if ($_POST) {
-        csrf($_POST['csrf_token']);
+        csrf_validate($_POST['csrf_token']);
         
         [$sql, $binds] = qb_create('users', null, $_POST);
         dbq(db(), $sql, $binds);
@@ -216,7 +216,7 @@ render_layout();                      // Complete page
 // Auth
 whoami();                             // Current user
 auth_post($user, $pass, $remember);   // Login
-csrf($token);                         // Validate CSRF
+csrf_validate($token);                         // Validate CSRF
 
 // Utilities
 [$sql, $binds] = qb_create('table', null, $data);  // Query builder
@@ -242,7 +242,7 @@ trigger_error('404 Not found', E_USER_ERROR);      // HTTP errors
 
 **Database error:** Verify credentials in `app/data/credentials.php`
 
-**CSRF failed:** Include `<?= csrf_field() ?>` in forms
+**CSRF failed:** Include `<?= csrf_form() ?>` in forms
 
 **View not rendering:** Check `app/views/template.php` exists
 

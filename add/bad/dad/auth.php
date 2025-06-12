@@ -18,16 +18,13 @@ function auth_resolve(): ?string
 //   1) SESSION-BASED AUTH
 function auth_session(): ?string
 {
-    if (session_status() === PHP_SESSION_NONE) {
+    if (session_status() === PHP_SESSION_NONE)
         session_start();
-    }
-    if (empty($_SESSION['user_id'])) {
+
+    if (empty($_SESSION['user_id']))
         return null;
-    }
-    return dbq(db(), 
-        "SELECT username FROM users WHERE id = ?",
-        [$_SESSION['user_id']]
-    )->fetchColumn() ?: null;
+
+    return dbq(db(), "SELECT username FROM users WHERE id = ?", [$_SESSION['user_id']])->fetchColumn() ?: null;
 }
 
 //   2) HTTP-HMAC
@@ -51,18 +48,12 @@ function auth_http(): ?string
 function auth_login(string $username, string $password): bool
 {
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-        throw new DomainException('POST required', 405);
-    }
-    if (! csrf_validate($_POST['csrf_token'] ?? '')) {
-        throw new DomainException('CSRF invalid', 403);
+        throw new BadMethodCallException('POST required', 405);
     }
 
-    $user = dbq(db(), 
-        "SELECT id, password FROM users WHERE username = ?",
-        [$username]
-    )->fetch();
+    $user = dbq(db(), "SELECT id, password FROM users WHERE username = ?", [$username])->fetch();
     if (!$user || ! password_verify($password, $user['password'])) {
-        throw new DomainException('Auth failed', 401);
+        throw new RuntimeException('Auth failed', 401);
     }
 
     if (session_status() === PHP_SESSION_NONE) {
@@ -82,27 +73,53 @@ function auth_logout(): void
     session_destroy();
 }
 
-function csrf(?string $token = null): string|bool
-{
-    static $secret = null;
-    $secret ??= getenv('CSRF_SECRET') ?: throw new DomainException('CSRF secret missing', 500);
-    if ($token === null) {
-        $time = time();
-        $sig = hash_hmac('sha256', $time, $secret);
-        return base64_encode("$time|$sig");
-    }
-    
-    $decoded = base64_decode($token, true);
-    if (!$decoded || !str_contains($decoded, '|')) return false;
-    
-    [$t, $s] = explode('|', $decoded, 2);
-    if (abs(time() - (int)$t) > 3600) return false;
-    
-    return hash_equals(hash_hmac('sha256', $t, $secret), $s);
-}
-
 function csp_nonce(): string
 {
     static $nonce = null;
     return $nonce ??= bin2hex(random_bytes(16));
+}
+
+function csrf_token(int $ttl=3600): string
+{
+    if (session_status() !== PHP_SESSION_ACTIVE) {
+        session_start();
+    }
+
+    $key  = '_csrf_token';
+    $data = $_SESSION[$key] ?? ['value' => '', 'expires_at' => 0];
+    $now  = time();
+
+    if (empty($data['value']) || $now > $data['expires_at']) {
+        $data['value']      = bin2hex(random_bytes(32));
+        $data['expires_at'] = $now + $ttl;
+        $_SESSION[$key]     = $data;
+    }
+
+    return $data['value'];
+}
+
+function csrf_field(int $ttl): string
+{
+    $token = csrf_token($ttl);
+    return "<input type='hidden' name='csrf_token' value='" .
+        htmlspecialchars($token, ENT_QUOTES) .
+        "'>";
+}
+
+function csrf_validate(?string $token = null): bool
+{
+    if (session_status() !== PHP_SESSION_ACTIVE)
+        session_start();
+
+    $token = $token ?? ($_POST['csrf_token'] ?? '');
+    if ($token === '')
+        return false;
+
+    $key  = '_csrf_token';
+    $data = $_SESSION[$key] ?? ['value' => '', 'expires_at' => 0];
+    $now  = time();
+
+    return !empty($data['value'])
+        && hash_equals($data['value'], $token)
+        && $now <= $data['expires_at'];
 }

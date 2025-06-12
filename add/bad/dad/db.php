@@ -19,7 +19,7 @@ declare(strict_types=1);
  * Before returning a cached PDO, we run “SELECT 1” to verify it’s still alive.
  * If that ping fails, we discard it and reconnect.
  */
-function db(?PDO $pdo, string $suffix = ''): PDO
+function db(?PDO $pdo=null, string $suffix = ''): PDO
 {
     static $cache = null;
 

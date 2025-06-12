@@ -1,7 +1,7 @@
 <?php
 const TRAY_APPEND  = 0;  // put items at the back (default)
 const TRAY_PREPEND = 1;  // put items at the front
-function tray(?string $key, ?string $item = null, int $flags = TRAY_APPEND): array
+function tray(?string $key = null, ?string $item = null, int $flags = TRAY_APPEND): array
 {
     static $trays = [];
 
@@ -27,7 +27,7 @@ function tray(?string $key, ?string $item = null, int $flags = TRAY_APPEND): arr
 
 function xss(?callable $formatter, ?string $inner = null, ...$attributes): array
 {
-    if(empty($formatter) || !is_callable($formatter))
+    if (empty($formatter) || !is_callable($formatter))
         $escape = fn(mixed $v): string => htmlspecialchars((string)$v, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 
     foreach ($attributes as $name => $value) {
@@ -42,19 +42,4 @@ function xss(?callable $formatter, ?string $inner = null, ...$attributes): array
     }
 
     return [$escape($inner), ...$attributes];
-}
-
-function html(string $tag, ?string $inner = null, ...$attributes): string
-{
-    // Build attribute string with proper escaping
-    $attrs = '';
-    foreach ($attributes as $name => $value) {
-        // Handle array values (like classes) by joining with spaces
-        $attr = is_array($value) ? implode(' ', $value) : (string)$value;
-
-        // Support both named attributes and boolean/valueless attributes (integer keys)
-        $attrs .= ' ' . (is_int($name) ? $attr : "$name=\"$attr\"");
-    }
-    // Generate self-closing or regular tag based on inner content
-    return "<{$tag}{$attrs}" . ($inner === null ? '/>' : ">$inner</$tag>");
 }
