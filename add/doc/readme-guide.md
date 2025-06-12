@@ -42,11 +42,11 @@ const USER_WRITE = 2;     // 010
 const USER_DELETE = 4;    // 100
 const USER_ADMIN = USER_READ | USER_WRITE | USER_DELETE; // 111
 
-$permissions = USER_READ | USER_WRITE;  // 011
-if ($permissions & USER_DELETE) { /* check */ }
+$pergoals = USER_READ | USER_WRITE;  // 011
+if ($pergoals & USER_DELETE) { /* check */ }
 
 // NOT arrays of booleans (slow)
-$permissions = ['read' => true, 'write' => true, 'delete' => false];
+$pergoals = ['read' => true, 'write' => true, 'delete' => false];
 ```
 
 **Why bitwise is faster:** PHP constants are more explicit than strings. Bitwise operations map directly to underlying C operations, making them among the fastest operations in PHP.
@@ -82,7 +82,7 @@ function e($value): string {
 
 ```php
 // Acceptable bundling
-function dbq($sql, $binds = []) {
+function dbq(db(), $sql, $binds = []) {
     return db()->prepare($sql)->execute($binds);  // 2+ operations
 }
 ```
@@ -98,7 +98,7 @@ Don't test ahead—expect success, use error handling for failure response.
 
 ```php
 // Expect success
-$user = dbq("SELECT * FROM users WHERE id = ?", [$id])->fetch();
+$user = dbq(db(), "SELECT * FROM users WHERE id = ?", [$id])->fetch();
 if (!$user) {
     trigger_error('404 User not found', E_USER_ERROR);
 }
@@ -130,7 +130,7 @@ db(new PDO($dsn, $user, $pass, [
 
 // Use anywhere without importing/injecting
 function get_user($id) {
-    return dbq("SELECT * FROM users WHERE id = ?", [$id])->fetch();
+    return dbq(db(), "SELECT * FROM users WHERE id = ?", [$id])->fetch();
 }
 
 // Multiple connections
@@ -138,27 +138,27 @@ db(new PDO($replica_dsn, $user, $pass), 'read');
 db(new PDO($analytics_dsn, $user, $pass), 'analytics');
 
 // Use specific connections
-$users = dbq("SELECT * FROM users", [], 'read')->fetchAll();
-dbq("INSERT INTO events (...) VALUES (...)", $data, 'analytics');
+$users = dbq(db(), "SELECT * FROM users", [], 'read')->fetchAll();
+dbq(db(), "INSERT INTO events (...) VALUES (...)", $data, 'analytics');
 ```
 
 ### Bitwise I/O Router
 
 ```php
 // Route resolution with bitwise flags
-$quest = io(__DIR__ . '/app/route');
+$quest = quest(__DIR__ . '/app/route');
 
 // IO constants (bitwise flags)
-const IO_SEEK = 1;   // Seeking handler file
-const IO_SEND = 2;   // Sending response  
-const IO_FILE = 4;   // File found
-const IO_ARGS = 8;   // URL arguments
-const IO_CALL = 16;  // Callable handler
-const IO_LOAD = 32;  // Output buffer
+const QST_PULL = 1;   // Seeking handler file
+const QST_PUSH = 2;   // Sending response  
+const QST_FILE = 4;   // File found
+const QST_ARGS = 8;   // URL arguments
+const QST_CALL = 16;  // Callable handler
+const QST_ECHO = 32;  // Output buffer
 
 // Combined operations
-const IO_SEEK_CALL = IO_SEEK | IO_CALL | IO_ARGS;  // 25
-const IO_SEND_CALL = IO_SEND | IO_CALL | IO_LOAD;  // 50
+const QST_PULL_CALL = QST_PULL | QST_CALL | QST_ARGS;  // 25
+const QST_PUSH_CALL = QST_PUSH | QST_CALL | QST_ECHO;  // 50
 ```
 
 ---
@@ -169,19 +169,19 @@ const IO_SEND_CALL = IO_SEND | IO_CALL | IO_LOAD;  // 50
 
 ```php
 // Simple query
-$users = dbq("SELECT * FROM users WHERE active = 1")->fetchAll();
+$users = dbq(db(), "SELECT * FROM users WHERE active = 1")->fetchAll();
 
 // With bindings
-$user = dbq("SELECT * FROM users WHERE id = ?", [42])->fetch();
+$user = dbq(db(), "SELECT * FROM users WHERE id = ?", [42])->fetch();
 
 // Multiple bindings
-$products = dbq(
+$products = dbq(db(), 
     "SELECT * FROM products WHERE category = ? AND price BETWEEN ? AND ?",
     ['electronics', 100, 500]
 )->fetchAll();
 
 // Named bindings
-$orders = dbq(
+$orders = dbq(db(), 
     "SELECT * FROM orders WHERE user_id = :user_id AND status = :status",
     ['user_id' => 42, 'status' => 'completed']
 )->fetchAll();
@@ -191,18 +191,18 @@ $orders = dbq(
 
 ```php
 // Transaction blocks
-$order_id = dbt(function() {
-    dbq("INSERT INTO orders (user_id, total) VALUES (?, ?)", [42, 99.99]);
+$order_id = dbt(db(),() {
+    dbq(db(), "INSERT INTO orders (user_id, total) VALUES (?, ?)", [42, 99.99]);
     $id = db()->lastInsertId();
-    dbq("INSERT INTO order_items (order_id, product_id) VALUES (?, ?)", [$id, 5]);
+    dbq(db(), "INSERT INTO order_items (order_id, product_id) VALUES (?, ?)", [$id, 5]);
     return $id;
 });
 
 // Manual transaction control
 db()->beginTransaction();
 try {
-    dbq("UPDATE inventory SET qty = qty - ? WHERE product_id = ?", [1, 5]);
-    dbq("INSERT INTO sales (product_id, qty) VALUES (?, ?)", [5, 1]);
+    dbq(db(), "UPDATE inventory SET qty = qty - ? WHERE product_id = ?", [1, 5]);
+    dbq(db(), "INSERT INTO sales (product_id, qty) VALUES (?, ?)", [5, 1]);
     db()->commit();
 } catch (Exception $e) {
     db()->rollback();
@@ -219,14 +219,14 @@ try {
     'email' => 'john@example.com',
     'created_at' => date('Y-m-d H:i:s')
 ]);
-dbq($sql, $binds);
+dbq(db(), $sql, $binds);
 
 // Multi-row inserts
 [$sql, $binds] = qb_create('users', ['name', 'email'], 
     ['Alice', 'alice@example.com'],
     ['Bob', 'bob@example.com']
 );
-dbq($sql, $binds);
+dbq(db(), $sql, $binds);
 
 // Read with conditions  
 [$sql, $binds] = qb_read('users', [
@@ -234,7 +234,7 @@ dbq($sql, $binds);
     'role' => ['admin', 'editor'],
     'created_at >=' => '2024-01-01'
 ]);
-$users = dbq($sql, $binds)->fetchAll();
+$users = dbq(db(), $sql, $binds)->fetchAll();
 
 // Complex WHERE conditions
 [$sql, $binds] = qb_read('products', [
@@ -248,11 +248,11 @@ $users = dbq($sql, $binds)->fetchAll();
     ['last_login' => date('Y-m-d H:i:s')], 
     ['id' => 42]
 );
-dbq($sql, $binds);
+dbq(db(), $sql, $binds);
 
 // Delete operations
 [$sql, $binds] = qb_delete('sessions', ['expires_at <' => date('Y-m-d H:i:s')]);
-dbq($sql, $binds);
+dbq(db(), $sql, $binds);
 ```
 
 ### Advanced Query Building
@@ -263,7 +263,7 @@ dbq($sql, $binds);
 [$limit_sql, $limit_binds] = qb_limit(10, 20);
 
 $sql = "SELECT * FROM users $where_sql ORDER BY created_at DESC $limit_sql";
-$users = dbq($sql, array_merge($where_binds, $limit_binds))->fetchAll();
+$users = dbq(db(), $sql, array_merge($where_binds, $limit_binds))->fetchAll();
 
 // Custom WHERE clauses
 [$sql, $binds] = qb_read('orders', [
@@ -297,7 +297,7 @@ URL                     →  File                    →  Arguments
 return function($id = null) {
     if ($id) {
         // Show single user
-        $user = dbq("SELECT * FROM users WHERE id = ?", [$id])->fetch();
+        $user = dbq(db(), "SELECT * FROM users WHERE id = ?", [$id])->fetch();
         if (!$user) {
             trigger_error('404 User not found', E_USER_ERROR);
         }
@@ -305,7 +305,7 @@ return function($id = null) {
         tray('main', render('users/show', ['user' => $user]));
     } else {
         // List users
-        $users = dbq("SELECT * FROM users ORDER BY name")->fetchAll();
+        $users = dbq(db(), "SELECT * FROM users ORDER BY name")->fetchAll();
         tray('main', render('users/list', ['users' => $users]));
     }
     
@@ -322,7 +322,7 @@ return function($id = null) {
         trigger_error('400 User ID required', E_USER_ERROR);
     }
     
-    $user = dbq("SELECT * FROM users WHERE id = ?", [$id])->fetch();
+    $user = dbq(db(), "SELECT * FROM users WHERE id = ?", [$id])->fetch();
     if (!$user) {
         trigger_error('404 User not found', E_USER_ERROR);  
     }
@@ -338,7 +338,7 @@ return function($id = null) {
                 'name' => $_POST['name'],
                 'email' => $_POST['email']
             ], ['id' => $id]);
-            dbq($sql, $binds);
+            dbq(db(), $sql, $binds);
             
             header('Location: /users/' . $id);
             exit;
@@ -362,10 +362,10 @@ return function($id = null) {
     
     if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         if ($id) {
-            $user = dbq("SELECT id, name, email FROM users WHERE id = ?", [$id])->fetch();
+            $user = dbq(db(), "SELECT id, name, email FROM users WHERE id = ?", [$id])->fetch();
             return ['status' => $user ? 200 : 404, 'body' => json_encode($user ?: ['error' => 'Not found'])];
         } else {
-            $users = dbq("SELECT id, name, email FROM users")->fetchAll();
+            $users = dbq(db(), "SELECT id, name, email FROM users")->fetchAll();
             return ['status' => 200, 'body' => json_encode($users)];
         }
     }
@@ -374,7 +374,7 @@ return function($id = null) {
         $data = json_decode(file_get_contents('php://input'), true);
         
         [$sql, $binds] = qb_create('users', null, $data);
-        dbq($sql, $binds);
+        dbq(db(), $sql, $binds);
         $new_id = db()->lastInsertId();
         
         return ['status' => 201, 'body' => json_encode(['id' => $new_id])];
@@ -396,7 +396,7 @@ return function() {
     }
     
     // Additional admin checks
-    $user = dbq("SELECT role FROM users WHERE username = ?", [whoami()])->fetch();
+    $user = dbq(db(), "SELECT role FROM users WHERE username = ?", [whoami()])->fetch();
     if ($user['role'] !== 'admin') {
         trigger_error('403 Forbidden', E_USER_ERROR);
     }
@@ -655,7 +655,7 @@ function cache_set($key, $value) {
 $cache_key = "user_posts_" . $user_id;
 $posts = cache_get($cache_key);
 if (!$posts) {
-    $posts = dbq("SELECT * FROM posts WHERE user_id = ?", [$user_id])->fetchAll();
+    $posts = dbq(db(), "SELECT * FROM posts WHERE user_id = ?", [$user_id])->fetchAll();
     cache_set($cache_key, $posts);
 }
 ```
@@ -671,26 +671,26 @@ function queue_task($task_name, $data) {
         'created_at' => date('Y-m-d H:i:s'),
         'status' => 'pending'
     ]);
-    dbq($sql, $binds);
+    dbq(db(), $sql, $binds);
 }
 
 // Worker script
 function process_tasks() {
-    $tasks = dbq("SELECT * FROM task_queue WHERE status = 'pending' LIMIT 10")->fetchAll();
+    $tasks = dbq(db(), "SELECT * FROM task_queue WHERE status = 'pending' LIMIT 10")->fetchAll();
     
     foreach ($tasks as $task) {
         try {
             // Mark as processing
-            dbq("UPDATE task_queue SET status = 'processing' WHERE id = ?", [$task['id']]);
+            dbq(db(), "UPDATE task_queue SET status = 'processing' WHERE id = ?", [$task['id']]);
             
             // Process task
             $data = json_decode($task['data'], true);
             call_user_func($task['task_name'], $data);
             
             // Mark as completed
-            dbq("UPDATE task_queue SET status = 'completed' WHERE id = ?", [$task['id']]);
+            dbq(db(), "UPDATE task_queue SET status = 'completed' WHERE id = ?", [$task['id']]);
         } catch (Exception $e) {
-            dbq("UPDATE task_queue SET status = 'failed', error = ? WHERE id = ?", 
+            dbq(db(), "UPDATE task_queue SET status = 'failed', error = ? WHERE id = ?", 
                 [$e->getMessage(), $task['id']]);
         }
     }
@@ -710,31 +710,31 @@ require_once 'add/test.php';
 test('user creation works', function() {
     // Setup in-memory database
     db(new PDO('sqlite::memory:'));
-    dbq("CREATE TABLE users (id INTEGER PRIMARY KEY, username TEXT UNIQUE)");
+    dbq(db(), "CREATE TABLE users (id INTEGER PRIMARY KEY, username TEXT UNIQUE)");
     
     // Test creation
     [$sql, $binds] = qb_create('users', null, ['username' => 'testuser']);
-    $stmt = dbq($sql, $binds);
+    $stmt = dbq(db(), $sql, $binds);
     
     assert($stmt->rowCount() === 1);
     
     // Verify data
-    $user = dbq("SELECT * FROM users WHERE username = 'testuser'")->fetch();
+    $user = dbq(db(), "SELECT * FROM users WHERE username = 'testuser'")->fetch();
     assert($user['username'] === 'testuser');
 });
 
 test('handles duplicate usernames', function() {
     db(new PDO('sqlite::memory:'));
-    dbq("CREATE TABLE users (id INTEGER PRIMARY KEY, username TEXT UNIQUE)");
+    dbq(db(), "CREATE TABLE users (id INTEGER PRIMARY KEY, username TEXT UNIQUE)");
     
     // First insert should work
     [$sql, $binds] = qb_create('users', null, ['username' => 'duplicate']);
-    dbq($sql, $binds);
+    dbq(db(), $sql, $binds);
     
     // Second should throw
     assert_throws(function() {
         [$sql, $binds] = qb_create('users', null, ['username' => 'duplicate']);
-        dbq($sql, $binds);
+        dbq(db(), $sql, $binds);
     }, 'PDOException');
 });
 
@@ -837,8 +837,8 @@ db(new PDO($dsn, $user, $pass, [
     PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => false  // Memory optimization
 ]));
 
-$quest = io(__DIR__ . '/app/route');
-http_respond(deliver($quest));
+$quest = quest(__DIR__ . '/app/route');
+http(deliver($quest));
 ```
 
 ### Nginx Configuration
@@ -963,7 +963,7 @@ echo "Peak: " . memory_get_peak_usage() . " bytes\n";
 **Enable query logging**
 ```php
 // Log all database queries
-function dbq($sql, $binds = [], $connection = 'default') {
+function dbq(db(), $sql, $binds = [], $connection = 'default') {
     error_log("SQL: $sql " . json_encode($binds));
     return db($connection)->prepare($sql)->execute($binds);
 }
@@ -972,11 +972,11 @@ function dbq($sql, $binds = [], $connection = 'default') {
 **Route debugging**
 ```php
 // Debug route resolution
-function io($route_path) {
+function quest($route_path) {
     $quest = parse_url($_SERVER['REQUEST_URI']);
     error_log("Resolving: " . $quest['path']);
     
-    // ... normal io() logic ...
+    // ... normal quest() logic ...
     
     error_log("Resolved to: $file_path");
     return $quest;

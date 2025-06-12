@@ -26,8 +26,8 @@ db(new PDO($dsn, $user, $pass, [
 ]));
 
 // Route processing
-$quest = io(__DIR__ . '/app/route');
-http_respond(deliver($quest));
+$quest = quest(__DIR__ . '/app/route');
+http(deliver($quest));
 ```
 
 ---
@@ -79,12 +79,12 @@ return function() {
 <?php
 return function($id = null) {
     if ($id) {
-        $user = dbq("SELECT * FROM users WHERE id = ?", [$id])->fetch();
+        $user = dbq(db(), "SELECT * FROM users WHERE id = ?", [$id])->fetch();
         if (!$user) trigger_error('404 User not found', E_USER_ERROR);
         
         tray('main', render('users/show', ['user' => $user]));
     } else {
-        $users = dbq("SELECT * FROM users ORDER BY name")->fetchAll();
+        $users = dbq(db(), "SELECT * FROM users ORDER BY name")->fetchAll();
         tray('main', render('users/list', ['users' => $users]));
     }
     
@@ -101,7 +101,7 @@ return function() {
         csrf($_POST['csrf_token']);
         
         [$sql, $binds] = qb_create('users', null, $_POST);
-        dbq($sql, $binds);
+        dbq(db(), $sql, $binds);
         
         header('Location: /users');
         exit;
@@ -132,11 +132,11 @@ return function($id = null) {
     header('Content-Type: application/json');
     
     if ($id) {
-        $user = dbq("SELECT * FROM users WHERE id = ?", [$id])->fetch();
+        $user = dbq(db(), "SELECT * FROM users WHERE id = ?", [$id])->fetch();
         return ['status' => $user ? 200 : 404, 'body' => json_encode($user ?: ['error' => 'Not found'])];
     }
     
-    $users = dbq("SELECT * FROM users")->fetchAll();
+    $users = dbq(db(), "SELECT * FROM users")->fetchAll();
     return ['status' => 200, 'body' => json_encode($users)];
 };
 ```
@@ -191,7 +191,7 @@ Create `app/route/path.php` → handles `/path`
 Create `app/views/path.php` → use with `render('path', $data)`
 
 ### 3. Add Database
-Use `dbq()` for queries, `dbt()` for transactions
+Use `dbq(db(), )` for queries, `dbt()` for transactions
 
 ### 4. Add Functions
 Create `app/functions/feature.php` → require where needed
@@ -205,8 +205,8 @@ Visit URL → BADDAD executes route function
 
 ```php
 // Database
-dbq($sql, $binds);                    // Execute query
-dbt(function() { /* queries */ });    // Transaction
+dbq(db(), $sql, $binds);                    // Execute query
+dbt(db(),() { /* queries */ });    // Transaction
 
 // Content
 tray('main', $html);                  // Add to slot
