@@ -1,9 +1,15 @@
 <?php
+
+const IO_PATH = 0;
+const IO_ARGS = 1;
+const IO_INC = 2;
+const IO_OUT = 4;
+
 // check if the request is a valid beyond webserver .conf
 function http_guard($max_length = 4096, $max_decode = 9): string
 {
     // CSRF check
-    if (!empty($_POST) && function_exists('csrf') && !csrf_validate())
+    if (!empty($_POST) && function_exists('csrf_validate') && !csrf_validate())
         http(403, 'Invalid CSRF token.', ['Content-Type' => 'text/plain; charset=UTF-8']);
 
     $coded = $_SERVER['REQUEST_URI'] ?? '';
@@ -28,10 +34,19 @@ function io_guard(string $guarded_path, string $rx_remove = '#[^A-Za-z0-9\/\.\-\
     return $path;
 }
 
-function io(string $file): array
+function ob_inc_out(string $file): array
 {
     ob_start();
     return [@include($file), ob_get_clean()];
+}
+
+function ob_capture(string $file, ...$args)
+{
+    [$i, $o] = ob_inc_out($file);
+    // vd($file, 0);
+    // vd($i, 'Include Result');
+    // vd($o, 'Output Buffer');
+    return is_callable($i) ? $i($o, ...$args) ?? $o : $o;
 }
 
 function http(int $status, string $body, array $headers = []): void
@@ -41,3 +56,35 @@ function http(int $status, string $body, array $headers = []): void
     echo $body;
     exit;
 }
+
+function in(string $start, string $uri, string $default = 'index')
+{
+    $segments = explode('/', trim(parse_url($uri, PHP_URL_PATH), '/'));
+
+    for ($i = count($segments); $i >= 0; --$i) {
+        $path     = implode('/', array_slice($segments, 0, $i)) ?: $default;
+        $basename = basename($path);
+        $args     = array_slice($segments, $i);
+
+        $files = [$path . '.php'];
+        if ($i > 0)
+            $files[] = $path . DIRECTORY_SEPARATOR . $basename . '.php';
+
+        foreach ($files as $suffix) {
+            $file = $start . DIRECTORY_SEPARATOR . $suffix;
+            if (($yield = ob_inc_out($file)) && $yield[0] !== false)
+                return [$suffix, $args, $yield[0] ?: null, $yield[1]?: null];
+        }
+    }
+
+    http(404, '404 Not Found');
+}
+
+// function io(string $mirror): array
+// {
+//     // content negotiation to generate headers
+//     $code = 200;
+//     $body = $mirror;
+//     $head = ['Content-Type' => 'text/html; charset=UTF-8'];
+//     return [$code, $body, $head];
+// }
