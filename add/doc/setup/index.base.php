@@ -15,7 +15,7 @@ $way_out = realpath(__DIR__ . '/../io') . '/render';
 
 $quest = quest($path, $way_in, $way_out);
 if (function_exists('is_dev') && track(QST_CORE) === 0) {
-    [$ret, $buf] = io('add/bad/dad/scaffold.php');
+    [$ret, $buf] = ob_inc_out('add/bad/dad/scaffold.php');
     http(404, $buf, ['Content-Type' => 'text/plain; charset=UTF-8']);
     exit;
 }
