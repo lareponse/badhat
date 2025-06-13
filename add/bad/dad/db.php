@@ -79,28 +79,28 @@ function db_transaction(PDO $pdo, callable $transaction): mixed
 
 function db_pool(string $profile = '', ?PDO $pdo = null, int $set_ttl = 0): ?PDO
 {
-    static $store = [];
-    static $pulse  = [];
+    static $pool = [];
+    static $expire  = [];
 
     $fetch = null;
     if ($pdo) { //setter
-        empty($store[$profile]) && throw new LogicException("Profile '$profile' already set");
+        empty($pool[$profile]) && throw new LogicException("Profile '$profile' already set");
 
         if ($set_ttl)
-            $pulse[$profile] = time() + $set_ttl;
+            $expire[$profile] = time() + $set_ttl;
 
-        $fetch = $store[$profile] = $pdo;
+        $fetch = $pool[$profile] = $pdo;
     }
-    // has pulse profile? and not expired? or is it just set? return it
-    else if (isset($store[$profile]) && ($pulse[$profile] ?? true || time() < $pulse[$profile]))
-        $fetch = $store[$profile];
-    else if (isset($store[$profile])) { // profile with pulse is expired
+    // has expire profile? and not expired? or is it just set? return it
+    else if (isset($pool[$profile]) && ($expire[$profile] ?? true || time() < $expire[$profile]))
+        $fetch = $pool[$profile];
+    else if (isset($pool[$profile])) { // profile with expire is expired
         try {
-            $store[$profile]->query('SELECT 1');
-            $pulse[$profile] = time();
-            $fetch = $store[$profile];
+            $pool[$profile]->query('SELECT 1');
+            $expire[$profile] = time();
+            $fetch = $pool[$profile];
         } catch (PDOException) {
-            unset($store[$profile], $pulse[$profile]);
+            unset($pool[$profile], $expire[$profile]);
             return null;
         }
     }
