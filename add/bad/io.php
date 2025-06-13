@@ -30,7 +30,7 @@ function io_guard(string $guarded_path, string $rx_remove = '#[^A-Za-z0-9\/\.\-\
     // strip any double dots, collapse single dot segments and multiple slashes
     $path = preg_replace(
         ['#\.\.+#',     '#(?:\./|/\./|/\.)#',   '#\/\/+#'],
-        ['',            '/',                    '/'],       
+        ['',            '/',                    '/'],
         $path
     );
 
@@ -40,32 +40,25 @@ function io_guard(string $guarded_path, string $rx_remove = '#[^A-Za-z0-9\/\.\-\
 function io(string $start, string $guarded_uri, string $default, $payload = null): array
 {
     $start = realpath($start) ?: throw new DomainException("Invalid start path: $start", 400);
-    
     $segments = explode('/', trim(parse_url($guarded_uri, PHP_URL_PATH), '/'));
-
     for ($i = count($segments); $i >= 0; --$i) {
 
-        $path     = implode('/', array_slice($segments, 0, $i)) ?: $default;
-        $basename = basename($path);
-        $args     = array_slice($segments, $i);
-
-        $files = [$path . '.php'];
-        if ($i > 0)
-            $files[] = $path . DIRECTORY_SEPARATOR . $basename . '.php';
-
-        foreach ($files as $suffix) {
-            
-            $file = $start . DIRECTORY_SEPARATOR . $suffix;
-            
-            if (($real = realpath($file) === false) || strpos($real, $start) !== 0)
-                continue;
-
-            if (($yield = ob_capture($file, $payload)))   // this should trigger an http() call
-                return [$suffix, $args, $yield];          // or now is the time to look inside the system
+        $path  = implode('/', array_slice($segments, 0, $i)) ?: $default;
+        $files = [
+            $path . '.php',
+            $path . DIRECTORY_SEPARATOR . basename($path) . '.php'
+        ];
+        foreach ($files as $relative) {
+            $file =  realpath($start . DIRECTORY_SEPARATOR . $relative);
+            if ($file && strpos($file, $start) === 0) {
+                $args = array_slice($segments, $i);
+                $yield = ob_invoke($file, ...$args, ...($payload ?? []));
+                return [IO_PATH => $file, IO_ARGS => $args, IO_YIELD => $yield];
+            }
         }
     }
 
-    return [$guarded_uri, $args, null];
+    return [];
 }
 
 function http(int $status, string $body, array $headers = []): void
@@ -82,11 +75,8 @@ function ob_inc_out(string $file): array
     return [@include($file), ob_get_clean()];
 }
 
-function ob_capture(string $file, ...$args)
+function ob_invoke(string $file, ...$args)
 {
     [$i, $o] = ob_inc_out($file);
-    // vd($file, 0);
-    // vd($i, 'Include Result');
-    // vd($o, 'Output Buffer');
     return is_callable($i) ? $i($o, ...$args) ?? $o : $o;
 }
