@@ -79,12 +79,3 @@ function in(string $start, string $uri, string $default = 'index')
 
     http(404, '404 Not Found');
 }
-
-// function io(string $mirror): array
-// {
-//     // content negotiation to generate headers
-//     $code = 200;
-//     $body = $mirror;
-//     $head = ['Content-Type' => 'text/html; charset=UTF-8'];
-//     return [$code, $body, $head];
-// }
