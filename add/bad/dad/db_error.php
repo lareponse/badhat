@@ -1,12 +1,9 @@
 <?php
-const DB_ERR_RAW = 0;
 const DB_ERR_FOREIGN_KEY  = 1;
 const DB_ERR_UNIQUE       = 2;
 const DB_ERR_CHECK        = 4;
 const DB_ERR_NOT_NULL     = 8;
 const DB_ERR_EXCLUSION    = 16;
-const DB_ERR_UNKNOWN      = 32;
-
 
 function parse_constraint_error(string $message, PDO $pdo): array
 {
