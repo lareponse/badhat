@@ -37,7 +37,7 @@ function io_guard(string $guarded_path, string $rx_remove = '#[^A-Za-z0-9\/\.\-\
     return $path;
 }
 
-function io(string $start, string $guarded_uri, string $default, $payload = null): array
+function io_start(string $start, string $guarded_uri, string $default, $payload = null): array
 {
     $start = realpath($start) ?: throw new DomainException("Invalid start path: $start", 400);
     $segments = explode('/', trim(parse_url($guarded_uri, PHP_URL_PATH), '/'));
@@ -52,7 +52,7 @@ function io(string $start, string $guarded_uri, string $default, $payload = null
             $file =  realpath($start . DIRECTORY_SEPARATOR . $relative);
             if ($file && strpos($file, $start) === 0) {
                 $args = array_slice($segments, $i);
-                $yield = ob_invoke($file, ...$args, ...($payload ?? []));
+                $yield = io_invoke($file, ...$args, ...($payload ?? []));
                 return [IO_PATH => $file, IO_ARGS => $args, IO_YIELD => $yield];
             }
         }
@@ -69,14 +69,20 @@ function http(int $status, string $body, array $headers = []): void
     exit;
 }
 
-function ob_inc_out(string $file): array
+function io(string $file): array
 {
     ob_start();
     return [@include($file), ob_get_clean()];
 }
 
-function ob_invoke(string $file, ...$args)
+function io_invoke(string $file, ...$args)
 {
-    [$i, $o] = ob_inc_out($file);
+    [$i, $o] = io($file);
+    return is_callable($i) ? [$i(...$args), $o] : [$i, $o];
+}
+
+function io_absorb(string $file, ...$args)
+{
+    [$i, $o] = io($file);
     return is_callable($i) ? $i($o, ...$args) ?? $o : $o;
 }
