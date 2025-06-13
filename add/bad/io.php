@@ -24,20 +24,27 @@ function http_guard($max_length = 4096, $max_decode = 9): string
 
 function io_guard(string $guarded_path, string $rx_remove = '#[^A-Za-z0-9\/\.\-\_]+#'): string
 {
+    strpos($guarded_path, '://') === false || throw new DomainException("Stream wrappers not allowed", 400);
+
     $path = $rx_remove ? preg_replace($rx_remove, '', $guarded_path) : $guarded_path;       // removes non alphanum /.-_
-    $path = preg_replace('#\.\.+#', '', $path);                             // remove serial dots
-    $path = preg_replace('#(?:\./|/\.|/\./)#', '/', $path);                 // replace(/): /. ./ /./
-    $path = preg_replace('#\/\/+#', '/', $path);                            // replace(/): //+, 
-    $path = trim($path, '/');                                               // trim leading and trailing slashes
+    // strip any double dots, collapse single dot segments and multiple slashes
+    $path = preg_replace(
+        ['#\.\.+#',     '#(?:\./|/\./|/\.)#',   '#\/\/+#'],
+        ['',            '/',                    '/'],       
+        $path
+    );
 
     return $path;
 }
 
-function io(string $start, string $uri, string $default, $payload = null): array
+function io(string $start, string $guarded_uri, string $default, $payload = null): array
 {
-    $segments = explode('/', trim(parse_url($uri, PHP_URL_PATH), '/'));
+    $start = realpath($start) ?: throw new DomainException("Invalid start path: $start", 400);
+    
+    $segments = explode('/', trim(parse_url($guarded_uri, PHP_URL_PATH), '/'));
 
     for ($i = count($segments); $i >= 0; --$i) {
+
         $path     = implode('/', array_slice($segments, 0, $i)) ?: $default;
         $basename = basename($path);
         $args     = array_slice($segments, $i);
@@ -47,13 +54,18 @@ function io(string $start, string $uri, string $default, $payload = null): array
             $files[] = $path . DIRECTORY_SEPARATOR . $basename . '.php';
 
         foreach ($files as $suffix) {
+            
             $file = $start . DIRECTORY_SEPARATOR . $suffix;
-            if (($yield = ob_capture($file, $payload)))       // this should trigger an http() call
-                return [$suffix, $args, $yield];    // or now is the time to look inside the system
+            
+            if (($real = realpath($file) === false) || strpos($real, $start) !== 0)
+                continue;
+
+            if (($yield = ob_capture($file, $payload)))   // this should trigger an http() call
+                return [$suffix, $args, $yield];          // or now is the time to look inside the system
         }
     }
 
-    return [$uri, $args, null];
+    return [$guarded_uri, $args, null];
 }
 
 function http(int $status, string $body, array $headers = []): void
