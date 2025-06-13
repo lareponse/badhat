@@ -2,8 +2,7 @@
 
 const IO_PATH = 0;
 const IO_ARGS = 1;
-const IO_INC = 2;
-const IO_OUT = 4;
+const IO_YIELD = 2;
 
 // check if the request is a valid beyond webserver .conf
 function http_guard($max_length = 4096, $max_decode = 9): string
@@ -34,30 +33,7 @@ function io_guard(string $guarded_path, string $rx_remove = '#[^A-Za-z0-9\/\.\-\
     return $path;
 }
 
-function ob_inc_out(string $file): array
-{
-    ob_start();
-    return [@include($file), ob_get_clean()];
-}
-
-function ob_capture(string $file, ...$args)
-{
-    [$i, $o] = ob_inc_out($file);
-    // vd($file, 0);
-    // vd($i, 'Include Result');
-    // vd($o, 'Output Buffer');
-    return is_callable($i) ? $i($o, ...$args) ?? $o : $o;
-}
-
-function http(int $status, string $body, array $headers = []): void
-{
-    http_response_code($status);
-    foreach ($headers as $h => $v) header("$h: $v");
-    echo $body;
-    exit;
-}
-
-function in(string $start, string $uri, string $default = 'index')
+function io(string $start, string $uri, string $default, $payload = null): array
 {
     $segments = explode('/', trim(parse_url($uri, PHP_URL_PATH), '/'));
 
@@ -72,10 +48,33 @@ function in(string $start, string $uri, string $default = 'index')
 
         foreach ($files as $suffix) {
             $file = $start . DIRECTORY_SEPARATOR . $suffix;
-            if (($yield = ob_inc_out($file)) && $yield[0] !== false)
-                return [$suffix, $args, $yield[0] ?: null, $yield[1]?: null];
+            if (($yield = ob_capture($file, $payload)))       // this should trigger an http() call
+                return [$suffix, $args, $yield];    // or now is the time to look inside the system
         }
     }
 
-    http(404, '404 Not Found');
+    return [$uri, $args, null];
+}
+
+function http(int $status, string $body, array $headers = []): void
+{
+    http_response_code($status);
+    foreach ($headers as $h => $v) header("$h: $v");
+    echo $body;
+    exit;
+}
+
+function ob_inc_out(string $file): array
+{
+    ob_start();
+    return [@include($file), ob_get_clean()];
+}
+
+function ob_capture(string $file, ...$args)
+{
+    [$i, $o] = ob_inc_out($file);
+    // vd($file, 0);
+    // vd($i, 'Include Result');
+    // vd($o, 'Output Buffer');
+    return is_callable($i) ? $i($o, ...$args) ?? $o : $o;
 }
