@@ -61,14 +61,6 @@ function io_start(string $start, string $guarded_uri, string $default, $payload 
     return [];
 }
 
-function http(int $status, string $body, array $headers = []): void
-{
-    http_response_code($status);
-    foreach ($headers as $h => $v) header("$h: $v");
-    echo $body;
-    exit;
-}
-
 function io(string $file): array
 {
     ob_start();
@@ -85,4 +77,12 @@ function io_absorb(string $file, ...$args)
 {
     [$i, $o] = io($file);
     return is_callable($i) ? $i($o, ...$args) ?? $o : $o;
+}
+
+function http(int $status, string $body, array $headers = []): void
+{
+    http_response_code($status);
+    foreach ($headers as $h => $v) header("$h: $v");
+    echo $body;
+    exit;
 }
