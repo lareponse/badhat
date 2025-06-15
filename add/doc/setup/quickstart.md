@@ -114,14 +114,11 @@ return function() {
 
 ### Authentication Guard
 ```php
-// app/route/admin/prepare.php
 <?php
-return function() {
-    if (!whoami()) {
-        header('Location: /login');
-        exit;
-    }
-};
+if (!whoami()) {
+    header('Location: /login');
+    exit;
+}
 ```
 
 ### API Endpoint
@@ -162,14 +159,11 @@ app/
 app/
 ├── route/
 │   ├── tenant/
-│   │   ├── prepare.php
 │   │   ├── dashboard.php
 │   │   └── settings.php
 │   ├── admin/
-│   │   ├── prepare.php
 │   │   └── tenants.php
 │   └── api/
-│       ├── prepare.php
 │       └── webhooks.php
 ├── views/
 │   ├── tenant/

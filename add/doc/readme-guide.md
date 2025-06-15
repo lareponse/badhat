@@ -384,53 +384,6 @@ return function($id = null) {
 };
 ```
 
-### Auth Guards (`prepare.php`)
-
-```php
-<?php
-// route/admin/prepare.php - Runs before all /admin/* routes
-return function() {
-    if (!whoami()) {
-        header('Location: /login?return=' . urlencode($_SERVER['REQUEST_URI']));
-        exit;
-    }
-    
-    // Additional admin checks
-    $user = dbq(db(), "SELECT role FROM users WHERE username = ?", [whoami()])->fetch();
-    if ($user['role'] !== 'admin') {
-        trigger_error('403 Forbidden', E_USER_ERROR);
-    }
-    
-    // Add admin-specific content to all admin pages
-    tray('head', '<link rel="stylesheet" href="/css/admin.css">');
-    tray('scripts', '<script src="/js/admin.js"></script>');
-};
-```
-
-**Multiple Guard Levels**
-```php
-<?php
-// route/api/prepare.php - API authentication
-return function() {
-    $token = $_SERVER['HTTP_AUTHORIZATION'] ?? '';
-    if (!validate_api_token($token)) {
-        http_response_code(401);
-        echo json_encode(['error' => 'Invalid token']);
-        exit;
-    }
-};
-
-// route/api/admin/prepare.php - Admin API access
-return function() {
-    $user = get_current_api_user();
-    if ($user['role'] !== 'admin') {
-        http_response_code(403);
-        echo json_encode(['error' => 'Admin access required']);
-        exit;
-    }
-};
-```
-
 ---
 
 ## Authentication
