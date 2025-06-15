@@ -13,7 +13,10 @@ set_exception_handler(function (Throwable $e) {
     error_log(sprintf("%s in %s:%d", $message, $e->getFile(), $e->getLine()));
 
     if (function_exists('http') && !headers_sent()) {
-        http($e->getCode() ?: 500, "Exception: $message");
+        // vd(0, $e);
+        // test getCode return value >99 and <600
+        $code = $e->getCode() >= 100 && $e->getCode() <= 500 ? (int)$e->getCode(): 500;
+        http($code, $message);
     }
 });
 
