@@ -163,7 +163,6 @@ myapp/
 │   ├── route/             # URL handlers
 │   │   ├── api/
 │   │   ├── admin/
-│   │   │   └── prepare.php    # Auth guard for /admin/*
 │   │   └── home.php
 │   ├── views/             # Templates  
 │   └── data/              # Config, credentials

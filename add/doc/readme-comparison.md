@@ -64,14 +64,11 @@ app/
 app/
 ├── route/
 │   ├── tenant/
-│   │   ├── prepare.php        # Tenant resolution
 │   │   ├── dashboard.php
 │   │   └── settings/
 │   ├── admin/
-│   │   ├── prepare.php        # Admin auth
 │   │   └── tenants.php
 │   └── api/
-│       ├── prepare.php        # API auth
 │       └── v1/
 ├── views/
 │   ├── tenant/
@@ -101,11 +98,9 @@ app/
 │   │   ├── products.php
 │   │   ├── cart.php
 │   │   └── checkout/
-│   │       ├── prepare.php    # Cart validation
 │   │       ├── payment.php
 │   │       └── complete.php
 │   ├── admin/
-│   │   ├── prepare.php        # Admin access
 │   │   ├── orders/
 │   │   └── inventory/
 │   └── api/
