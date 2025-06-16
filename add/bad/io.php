@@ -1,8 +1,12 @@
 <?php
 
-const IO_PATH = 0;
-const IO_ARGS = 1;
-const IO_YIELD = 2;
+const IO_PATH = 1;
+const IO_ARGS = 2;
+
+const IO_RETURN = 4;
+const IO_OB_GET = 8;
+const IO_INVOKE = 16;
+const IO_ABSORB = 32;
 
 // check if the request is a valid beyond webserver .conf
 function http_guard($max_length = 4096, $max_decode = 9): string
@@ -37,14 +41,14 @@ function io_guard(string $guarded_path, string $rx_remove = '#[^A-Za-z0-9\/\.\-\
     return $path;
 }
 
-function io_route(string $start, string $guarded_uri, string $default): array
+function io_route(string $start, string $guarded_uri, string $default, int $flags = 0): array
 {
     // vd(1, __FUNCTION__, func_get_args());
     $start = realpath($start) ?: throw new DomainException("Invalid start path: $start", 400);
 
     // $segments = explode('/', trim($guarded_uri, '/'));
     $uri = trim($guarded_uri, '/');
-    do{
+    do {
         $path = $uri !== '' ? $uri : $default;
         $files = [
             $path . '.php',
@@ -58,27 +62,51 @@ function io_route(string $start, string $guarded_uri, string $default): array
             }
         }
         $uri = substr($uri, 0, (int)strrpos($uri, '/'));
-    } while($uri);
+    } while ($uri);
+
     return [];
 }
 
-function io(string $file, $io = null): array
+function io(array $io_route, array $include_vars = [], int $behave = 0): array
 {
-    ob_start();
+    // vd(2, __FUNCTION__, func_get_args());
+    if (empty($io_route[IO_PATH]) || !is_file($io_route[IO_PATH]))
+        throw new DomainException("Invalid file path: {$io_route[IO_PATH]}", 404);
+
+    [$return, $buffer] = ob_ret_get($io_route[IO_PATH], $include_vars);
+    $quest = $io_route + [IO_RETURN => $return, IO_OB_GET => $buffer];
+
+    if ($behave & (IO_INVOKE | IO_ABSORB) && is_callable($return)) {
+        $behave & IO_INVOKE && ($quest[IO_INVOKE] = $return($quest[IO_ARGS]));
+        $behave & IO_ABSORB && ($quest[IO_ABSORB] = $return($quest[IO_OB_GET], $quest[IO_ARGS]));
+    }
+    
+    return $quest;
+}
+
+function ob_ret_get(string $file, array $include_vars = []): array
+{
+    ob_start() && $include_vars && extract($include_vars);
     return [@include($file), ob_get_clean()];
 }
 
-function io_invoke(string $file, $args=null)
-{
-    [$i, $o] = io($file, $args);
-    return is_callable($i) ? [$i($args), $o] : [$i, $o];
-}
+// function io_invoke(string $file, $args = null)
+// {
+//     ($io = ob_ret_get($file, $args))
+//         && is_callable($io[IO_RETURN])
+//         && ($io[IO_INVOKE] = $io[IO_RETURN]($args));
 
-function io_absorb(string $file, $args=null)
-{
-    [$i, $o] = io($file, $args);
-    return is_callable($i) ? $i($o, $args) ?? $o : $o;
-}
+//     return $io;
+// }
+
+// function io_absorb(string $file, $args = null)
+// {
+//     ($io = ob_ret_get($file, $args))
+//         && is_callable($io[IO_RETURN])
+//         && ($io[IO_ABSORB] = $io[IO_RETURN]($io[IO_OB_GET], $args));
+
+//     return $io;
+// }
 
 function http(int $status, string $body, array $headers = []): void
 {
