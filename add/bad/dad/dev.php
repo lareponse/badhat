@@ -27,7 +27,7 @@ function vd($first, ...$others)
     }
     $dump = ob_get_clean();
 
-    error_log($dump);
+    // error_log($dump);
     if (PHP_SAPI !== 'cli' && is_dev()) {
         echo '<pre class="vd">' . $dump . PHP_EOL . '</pre>';
     }
