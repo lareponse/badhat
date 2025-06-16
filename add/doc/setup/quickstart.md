@@ -16,7 +16,7 @@ mkdir -p app/{route,views,data}
 ```php
 <?php
 require 'add/bad/io.php';
-require 'add/bad/dad/db.php';
+require 'add/bad/db.php';
 
 // Database connection
 [$dsn, $user, $pass] = require 'app/data/credentials.php';
