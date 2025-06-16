@@ -775,11 +775,11 @@ if (getenv('ENABLE_DEBUG') !== 'true') {
 // Preload critical files (PHP 7.4+)
 if (function_exists('opcache_compile_file')) {
     opcache_compile_file(__DIR__ . '/add/bad/io.php');
-    opcache_compile_file(__DIR__ . '/add/bad/dad/db.php');
+    opcache_compile_file(__DIR__ . '/add/bad/db.php');
 }
 
 require 'add/bad/io.php';
-require 'add/bad/dad/db.php';
+require 'add/bad/db.php';
 require 'add/bad/error.php';
 
 // Database connection with production settings

@@ -5,20 +5,25 @@ set_include_path(get_include_path() . PATH_SEPARATOR . __DIR__ . '/../..');
 require 'add/bad/dad/dev.php';
 require 'add/bad/error.php';
 require 'add/bad/io.php';
+require 'add/bad/db.php';
 require 'add/bad/auth.php';
 
-define('BASE', realpath(__DIR__ . '/../io'));
-define('PATH', io_guard(http_guard(4096, 9)));
+require 'app/morph/html.php';
 
-$continue   = io_start(BASE . '/route', PATH, 'index');
+define('HOME_BASE', realpath(__DIR__ . '/../io'));
+define('SAFE_PATH', io_guard(http_guard(4096, 9)));
+define('FILE_ROOT', 'index');
 
-// no http() call made in the route, we continue with custom handling
-$mirror     = BASE . '/render/' . $continue[IO_PATH];
-$mirror     = io_absorb($mirror, $continue[IO_ARGS] ?: []);
+$in_route     = io_route(HOME_BASE . '/route', SAFE_PATH, FILE_ROOT);
+$in_quest     = io($in_route, [], IO_INVOKE);
 
-if (is_array($mirror)) {
-    http(...$mirror);
+$out_route    = io_route(HOME_BASE . '/render/', SAFE_PATH, FILE_ROOT);
+$out_quest    = io($out_route, $in_quest[IO_INVOKE], IO_ABSORB);
+
+if (is_string($out_quest[IO_ABSORB])) {
+    http(200, $out_quest[IO_ABSORB], ['Content-Type' => 'text/html; charset=utf-8']);
     exit;
 }
 
-throw new RuntimeException('Not Found', 404);
+error_log('404 Not Found for ' . SAFE_PATH . ' in ' . HOME_BASE);
+http(404, 'Not Found');
