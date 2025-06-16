@@ -37,13 +37,15 @@ function io_guard(string $guarded_path, string $rx_remove = '#[^A-Za-z0-9\/\.\-\
     return $path;
 }
 
-function io_start(string $start, string $guarded_uri, string $default, $payload = null): array
+function io_route(string $start, string $guarded_uri, string $default): array
 {
+    // vd(1, __FUNCTION__, func_get_args());
     $start = realpath($start) ?: throw new DomainException("Invalid start path: $start", 400);
-    $segments = explode('/', trim(parse_url($guarded_uri, PHP_URL_PATH), '/'));
-    for ($i = count($segments); $i >= 0; --$i) {
 
-        $path  = implode('/', array_slice($segments, 0, $i)) ?: $default;
+    // $segments = explode('/', trim($guarded_uri, '/'));
+    $uri = trim($guarded_uri, '/');
+    do{
+        $path = $uri !== '' ? $uri : $default;
         $files = [
             $path . '.php',
             $path . DIRECTORY_SEPARATOR . basename($path) . '.php'
@@ -51,32 +53,31 @@ function io_start(string $start, string $guarded_uri, string $default, $payload 
         foreach ($files as $relative) {
             $file =  realpath($start . DIRECTORY_SEPARATOR . $relative);
             if ($file && strpos($file, $start) === 0) {
-                $args = array_slice($segments, $i);
-                $yield = io_invoke($file, ...$args, ...($payload ?? []));
-                return [IO_PATH => $file, IO_ARGS => $args, IO_YIELD => $yield];
+                $args = explode('/', substr($uri, strlen($path) + 1));
+                return [IO_PATH => $file, IO_ARGS => $args];
             }
         }
-    }
-
+        $uri = substr($uri, 0, (int)strrpos($uri, '/'));
+    } while($uri);
     return [];
 }
 
-function io(string $file): array
+function io(string $file, $io = null): array
 {
     ob_start();
     return [@include($file), ob_get_clean()];
 }
 
-function io_invoke(string $file, ...$args)
+function io_invoke(string $file, $args=null)
 {
-    [$i, $o] = io($file);
-    return is_callable($i) ? [$i(...$args), $o] : [$i, $o];
+    [$i, $o] = io($file, $args);
+    return is_callable($i) ? [$i($args), $o] : [$i, $o];
 }
 
-function io_absorb(string $file, ...$args)
+function io_absorb(string $file, $args=null)
 {
-    [$i, $o] = io($file);
-    return is_callable($i) ? $i($o, ...$args) ?? $o : $o;
+    [$i, $o] = io($file, $args);
+    return is_callable($i) ? $i($o, $args) ?? $o : $o;
 }
 
 function http(int $status, string $body, array $headers = []): void
