@@ -43,7 +43,7 @@ function db(?PDO $pdo=null, string $suffix = ''): PDO
 /**
  * Execute SQL query with optional bindings
  *   dbq(db(), "SELECT * FROM users")
- *   dbq(db(), "SELECT * FROM users WHERE id = ?", [$id])
+ *   dbq(db(), "SELECT * FROM operator WHERE id = ?", [$id])
  *   dbq(db(), "...", [...], 'read')
  */
 function dbq(PDO $pdo, string $sql, array $bind = []): PDOStatement
@@ -58,7 +58,7 @@ function dbq(PDO $pdo, string $sql, array $bind = []): PDOStatement
  *   db_transaction(fn() => {
  *       dbq(db(), "INSERT INTO logs (event) VALUES (?)", ['created']);
  *       dbq(db(), "INSERT INTO users (name) VALUES (?)", ['Alice']);
- *       return dbq(db(), "SELECT * FROM users WHERE name = ?", ['Alice'])->fetchAll();
+ *       return dbq(db(), "SELECT * FROM operator WHERE name = ?", ['Alice'])->fetchAll();
  *   });
  */
 function db_transaction(PDO $pdo, callable $transaction): mixed
