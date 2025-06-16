@@ -24,7 +24,7 @@ function auth_session(): ?string
     if (empty($_SESSION['user_id']))
         return null;
 
-    return dbq(db(), "SELECT username FROM users WHERE id = ?", [$_SESSION['user_id']])->fetchColumn() ?: null;
+    return dbq(db(), "SELECT username FROM operator WHERE id = ?", [$_SESSION['user_id']])->fetchColumn() ?: null;
 }
 
 //   2) HTTP-HMAC
@@ -51,8 +51,8 @@ function auth_login(string $username, string $password): bool
         throw new BadMethodCallException('POST required', 405);
     }
 
-    $user = dbq(db(), "SELECT id, password FROM users WHERE username = ?", [$username])->fetch();
-    if (!$user || ! password_verify($password, $user['password'])) {
+    $user = dbq(db(), "SELECT id, password_hash FROM operator WHERE username = ?", [$username])->fetch();
+    if (!$user || ! password_verify($password, $user['password_hash'])) {
         throw new RuntimeException('Auth failed', 401);
     }
 
@@ -98,7 +98,7 @@ function csrf_token(int $ttl=3600): string
     return $data['value'];
 }
 
-function csrf_field(int $ttl): string
+function csrf_field(int $ttl=3600): string
 {
     $token = csrf_token($ttl);
     return "<input type='hidden' name='csrf_token' value='" .
