@@ -791,7 +791,7 @@ db(new PDO($dsn, $user, $pass, [
 ]));
 
 $quest = quest(__DIR__ . '/app/route');
-http(deliver($quest));
+http_out(deliver($quest));
 ```
 
 ### Nginx Configuration

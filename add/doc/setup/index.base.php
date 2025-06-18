@@ -10,20 +10,23 @@ require 'add/bad/auth.php';
 
 require 'app/morph/html.php';
 
-define('HOME_BASE', realpath(__DIR__ . '/../io'));
-define('SAFE_PATH', io_guard(http_guard(4096, 9)));
-define('FILE_ROOT', 'index');
+// config: where to start (io), where to go (re_quest)
+$io        = realpath(__DIR__ . '/../io');
+$re_quest  = http_in(4096, 9);
 
-$in_route     = io_route(HOME_BASE . '/route', SAFE_PATH, FILE_ROOT);
-$in_quest     = io($in_route, [], IO_INVOKE);
+// coding: find the route and invoke it
+$in_route  = io_route("$io/route", $re_quest, 'index');
+$in_quest  = io_quest($in_route, [], IO_INVOKE);
 
-$out_route    = io_route(HOME_BASE . '/render/', SAFE_PATH, FILE_ROOT);
-$out_quest    = io($out_route, $in_quest[IO_INVOKE], IO_ABSORB);
+// render: find the render file and absorb it
+$out_route = io_route("$io/render/", $re_quest, 'index');
+$out_quest = io_quest($out_route, $in_quest[IO_INVOKE], IO_ABSORB);
 
 if (is_string($out_quest[IO_ABSORB])) {
-    http(200, $out_quest[IO_ABSORB], ['Content-Type' => 'text/html; charset=utf-8']);
+    http_out(200, $out_quest[IO_ABSORB], ['Content-Type' => 'text/html; charset=utf-8']);
     exit;
 }
 
-error_log('404 Not Found for ' . SAFE_PATH . ' in ' . HOME_BASE);
-http(404, 'Not Found');
+error_log('404 Not Found for ' . $re_quest . ' in ' . $io);
+
+http_out(404, 'Not Found');
