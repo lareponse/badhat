@@ -27,7 +27,7 @@ db(new PDO($dsn, $user, $pass, [
 
 // Route processing
 $quest = quest(__DIR__ . '/app/route');
-http(deliver($quest));
+http_out(deliver($quest));
 ```
 
 ---

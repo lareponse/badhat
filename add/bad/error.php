@@ -12,7 +12,7 @@ set_exception_handler(function (Throwable $e) {
 
     if (function_exists('http') && !headers_sent()) {
         $code = $e->getCode() >= 100 && $e->getCode() <= 500 ? (int)$e->getCode() : 500;
-        http($code, $message);
+        http_out($code, $message);
         exit;
     }
 });
@@ -24,7 +24,7 @@ register_shutdown_function(function () {
         error_log(sprintf("%s in %s:%d", $message, $err['file'], $err['line']));
 
         if (function_exists('http') && !headers_sent())
-            http(500, $message);
+            http_out(500, $message);
         else
             echo PHP_SAPI === 'cli' ? $message : "<pre>$message</pre>";
 

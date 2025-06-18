@@ -13,7 +13,7 @@ $app->register(new ServiceProvider());
 // BADDAD approach  
 require 'add/bad/io.php';              // 4 files, <1MB, 1-2ms boot
 $quest = quest(__DIR__ . '/app/route');
-http(deliver($quest));
+http_out(deliver($quest));
 ```
 
 **Performance**: 10x faster, 20x less memory, 200x fewer files than modern frameworks.
@@ -31,11 +31,11 @@ mkdir -p app/{route,views,data}
 ```php
 <?php
 require 'add/bad/io.php';
-require 'add/bad/dad/db.php';
+require 'add/bad/db.php';
 
 db(new PDO('sqlite:app.db'));
 $quest = quest(__DIR__ . '/app/route');
-http(deliver($quest));
+http_out(deliver($quest));
 ```
 
 **First route** (`app/route/home.php`):
