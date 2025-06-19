@@ -1,12 +1,13 @@
 <?php
 
-const IO_PATH = 1;
-const IO_ARGS = 2;
+const IO_PATH = 1;    // Route result: resolved file path
+const IO_ARGS = 2;    // Route result: remaining path segments
 
-const IO_RETURN = 4;
-const IO_OB_GET = 8;
-const IO_INVOKE = 16;
-const IO_ABSORB = 32;
+const IO_RETURN = 4;  // Quest result: included file return value
+const IO_OB_GET = 8;  // Quest result: output buffer content
+
+const IO_INVOKE = 16; // Quest behavior: call return value with args
+const IO_ABSORB = 32; // Quest behavior: call return value with buffer+args
 
 // check if the request is a valid beyond webserver .conf
 function http_in($max_length = 4096, $max_decode = 9): string
