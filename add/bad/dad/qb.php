@@ -1,41 +1,25 @@
 <?php
 
 declare(strict_types=1);
-  
-/**
- * qb_create('articles', null, ['title' => 'Hello', 'content' => '...'])
- * sql: INSERT INTO articles (title, content) VALUES (:title_0, :content_0)
- * binds: [':title_0' => 'Hello', ':content_0' => '...']
- * 
- * qb_create('articles', ['title', 'content'], [...], [...])
- * sql: INSERT INTO articles (title, content) VALUES (:title_0, :content_0), (:title_1, :content_1)
- * binds: [':title_0' => '...', ':content_0' => '...', ':title_1' => '...', ':content_1' => '...']  
- */
-function qb_create(string $table, ?array $fields, array ...$rows): array
+
+// qb_create('articles', ['title' => 'My Article', 'content' => 'This is the content.']);
+// qb_create('articles', ['title' => 'My Article', 'content' => 'This is the content.', 'permissions' => 0], ['title', 'content']);
+function qb_create(string $table, array $data, array $fields = []): array
 {
-    $rows ?: throw new InvalidArgumentException('Rows cannot be empty.');
-    $fields = $fields ?: array_keys(array_replace_recursive(...$rows));
+    $fields = $fields ?: array_keys($data);
 
     $bindings = $placeholders = [];
-
-    foreach ($rows as $i => $row) {
-        $holders = [];
-
-        foreach ($fields as $col) {
-            $ph = ":{$col}_{$i}";
-            $holders[] = $ph;
-            $bindings[$ph] = $row[$col];
-        }
-
-        $placeholders[] = '(' . implode(',', $holders) . ')';
+    $placeholders = [];
+    foreach ($data as $col => $val) {
+        $ph = ":qb_$col";
+        $placeholders[] = $ph;
+        $bindings[$ph] = $val;
     }
 
     $sql = "INSERT INTO {$table} (" . implode(',', $fields) . ") VALUES " . implode(',', $placeholders);
 
     return [$sql, $bindings];
 }
-
-
 
 // qb_read('articles', 'id', 42)
 // qb_read('articles', ['status' => 'published', 'user_id' => 5, 'tag_id' => [3, 4]])
@@ -51,27 +35,23 @@ function qb_read($table, ...$args): array
     return ["SELECT * FROM {$table} {$where}", $params];
 }
 
-// qb_update('articles', $SET_assoc, 'id = ?', [42])
-// == qb_update('articles', $SET_assoc, ['id' => 42]);
+// qb_update('articles', $data_assoc, 'id = ?', [42])
+// == qb_update('articles', $data_assoc, ['id' => 42]);
 
-// qb_update('articles', $SET_assoc, "status = 'draft' AND id = ?", [42]);
-// == qb_update('articles', $SET_assoc, ['status' => 'draft', 'id' => 42]);
-function qb_update(string $table, array $data, array|string $where = [], array $binds = []): array
+// qb_update('articles', $data_assoc, "status = 'draft' AND id = ?", [42]);
+// == qb_update('articles', $data_assoc, ['status' => 'draft', 'id' => 42]);
+function qb_update(string $table, array $data, string $where, array $where_binds = []): array
 {
     if (!$data) return ['', []];
 
     [$set_clause, $set_binds] = qb_op($data, '=', 'update');
 
-    if (is_string($where)) {
+    if ($where) {
         $where_clause = 'WHERE ' . $where;
-        $where_binds = $binds;
-    } elseif (is_array($where) && $where) {
-        [$where_clause, $where_binds] = qb_where($where);
     } else {
         $where_clause = '';
         $where_binds = [];
     }
-
     $sql = "UPDATE {$table} SET {$set_clause}";
     if ($where_clause) $sql .= " {$where_clause}";
 
@@ -96,7 +76,7 @@ function qb_where(array $conds, string $connective = 'AND'): array
         $where[] = $clause;
         $binds = array_merge($binds, $bind);
     }
-    
+
     return ['WHERE ' . implode(" $connective ", $where), $binds];
 }
 
@@ -126,8 +106,7 @@ function qb_op(array $data, string $default_op = '=', string $prefix = 'qbc'): a
         if (preg_match('/^(.+)\s*(=|!=|<>|<|>|<=|>=|LIKE|NOT LIKE|IS|IS NOT)$/i', $col, $m)) {
             $col = $m[1];
             $op = $m[2];
-        }
-        else {
+        } else {
             $op = $default_op;
         }
 
