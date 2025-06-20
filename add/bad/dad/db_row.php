@@ -8,10 +8,10 @@ require_once 'add/bad/dad/qb.php';
 const ROW_ID     = 'id';
 
 const ROW_TABLE = 1;
-const ROW_SAVED = 2;
-const ROW_ALTER = 4;
-const ROW_EXTRA = 8;
-const ROW_FIELD = 16;
+const ROW_FIELD = 2;
+const ROW_SAVED = 4;
+const ROW_ALTER = 8;
+const ROW_EXTRA = 16;
 
 const ROW_IMPORT = 32;
 const ROW_EXPORT = 64;
@@ -20,10 +20,9 @@ const ROW_RELOAD = 128;
 const ROW_PERSIST = 256;
 
 
-function row_innit(string $table, array $data = [], int $init = ROW_ALTER): array
+function row_innit(string $table): array
 {
-    $init & (ROW_SAVED | ROW_ALTER | ROW_EXTRA) || throw new BadFunctionCallException('db_row_innit requires ROW_SAVED, ROW_ALTER or ROW_EXTRA', 500);
-    return [ROW_TABLE => $table, $init => $data];
+    return [ROW_TABLE => $table];
 }
 
 function row($row, int $behave = ROW_IMPORT, array $boat = [])
@@ -40,9 +39,10 @@ function row($row, int $behave = ROW_IMPORT, array $boat = [])
     }
 
     if ($behave & ROW_IMPORT) {
-
         foreach ($boat as $col => $value)
-            if (!$row[ROW_SAVED] || !isset($row[ROW_SAVED][$col]) || $row[ROW_SAVED][$col] !== $value)
+            if($col === ROW_ID)
+                continue;
+            else if (!$row[ROW_SAVED] || !isset($row[ROW_SAVED][$col]) || $row[ROW_SAVED][$col] !== $value)
                 if ($row[ROW_FIELD] && isset($row[ROW_FIELD][$col]))
                     $row[ROW_ALTER][$col] = $value;
                 else
@@ -51,9 +51,10 @@ function row($row, int $behave = ROW_IMPORT, array $boat = [])
     }
 
     if ($behave & ROW_PERSIST && $row[ROW_ALTER]) {
+        vd($row);
         $row[ROW_PERSIST] = dbq(db(), ...($row[ROW_SAVED]
-            ? qb_update($row[ROW_TABLE], $row[ROW_ALTER], ...qb_where(['id' => $row[ROW_SAVED]['id']]))
-            : qb_create($row[ROW_TABLE], $row[ROW_ALTER], $row[ROW_FIELD])));
+            ? qb_update($row[ROW_TABLE], $row[ROW_ALTER], ...qb_where([ROW_ID => $row[ROW_SAVED][ROW_ID]]))
+            : (qb_create($row[ROW_TABLE], $row[ROW_ALTER], array_keys($row[ROW_FIELD])))));
         return $row;
     }
 

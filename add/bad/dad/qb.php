@@ -6,17 +6,20 @@ declare(strict_types=1);
 // qb_create('articles', ['title' => 'My Article', 'content' => 'This is the content.', 'permissions' => 0], ['title', 'content']);
 function qb_create(string $table, array $data, array $fields = []): array
 {
+    // vd(1, __FUNCTION__, func_get_args());
+    if ($fields && $data) {
+        $fields = array_keys(array_intersect_key($data, array_flip($fields)));
+    }
     $fields = $fields ?: array_keys($data);
-
     $bindings = $placeholders = [];
     $placeholders = [];
-    foreach ($data as $col => $val) {
+    foreach ($fields as $col) {
         $ph = ":qb_$col";
         $placeholders[] = $ph;
-        $bindings[$ph] = $val;
+        $bindings[$ph] = $data[$col];
     }
 
-    $sql = "INSERT INTO {$table} (" . implode(',', $fields) . ") VALUES " . implode(',', $placeholders);
+    $sql = "INSERT INTO {$table} (" . implode(',', $fields) . ") VALUES (" . implode(',', $placeholders) . ')';
 
     return [$sql, $bindings];
 }
@@ -31,7 +34,6 @@ function qb_read($table, ...$args): array
         $args = [$args[0] => $args[1]];
 
     [$where, $params] = qb_where($args, 'AND');
-
     return ["SELECT * FROM {$table} {$where}", $params];
 }
 
@@ -65,7 +67,7 @@ function qb_where(array $conds, string $connective = 'AND'): array
     if (!$conds) return ['', []];
 
     $where = [];
-    $binds = [];
+    $qbw_bindings = [];
 
     foreach ($conds as $col => $val) {
         if (is_array($val)) {
@@ -74,10 +76,10 @@ function qb_where(array $conds, string $connective = 'AND'): array
             [$clause, $bind] = qb_op([$col => $val], '=', 'qbw_op');
         }
         $where[] = $clause;
-        $binds = array_merge($binds, $bind);
+        $qbw_bindings = array_merge($qbw_bindings, $bind ?? []);
     }
 
-    return ['WHERE ' . implode(" $connective ", $where), $binds];
+    return ['WHERE ' . implode(" $connective ", $where), $qbw_bindings];
 }
 
 // qb_in('tag_id', [3, 4])
@@ -114,7 +116,7 @@ function qb_op(array $data, string $default_op = '=', string $prefix = 'qbc'): a
         $bindings[$k] = $val;
         $clauses[] = $op ? "{$col} {$op} {$k}" : "{$col} {$k}";
     }
-    return [implode(' AND ', $clauses), $binds];
+    return [implode(' AND ', $clauses), $bindings];
 }
 
 function qb_placeholder(string $prefix, string $col, int $i): string
