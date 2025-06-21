@@ -46,10 +46,10 @@ function qb_update(string $table, array $data, string $where, array $where_binds
 {
     if (!$data) return ['', []];
 
-    [$set_clause, $set_binds] = qb_op($data, '=', 'update');
+    [$set_clause, $set_binds] = qb_set($data);
 
     if ($where) {
-        $where_clause = 'WHERE ' . $where;
+        $where_clause = $where;
     } else {
         $where_clause = '';
         $where_binds = [];
@@ -73,7 +73,7 @@ function qb_where(array $conds, string $connective = 'AND'): array
         if (is_array($val)) {
             [$clause, $bind] = qb_in($col, $val, 'qbw_in');
         } else {
-            [$clause, $bind] = qb_op([$col => $val], '=', 'qbw_op');
+            [$clause, $bind] = qb_condition([$col => $val], '=', __FUNCTION__);
         }
         $where[] = $clause;
         $qbw_bindings = array_merge($qbw_bindings, $bind ?? []);
@@ -90,16 +90,28 @@ function qb_in(string $col, array $val, string $prefix = 'in'): array
 
     $bindings = $ph = [];
     foreach ($val as $i => $v) {
-        $k = qb_placeholder($prefix, $col, $i);
+        $k = __qb_placeholder($prefix, $col, $i);
         $bindings[$k] = $v;
         $ph[] = $k;
     }
     return ["$col IN(" . implode(',', $ph) . ")", $bindings];
 }
 
-// qb_op(['status' => 'published', 'user_id' => 5], '=')
-// qb_op(['status' => 'published', 'user_id' => 5], '<>', 'sp')
-function qb_op(array $data, string $default_op = '=', string $prefix = 'qbc'): array
+function qb_condition(array $data, string $default_op = '=', $andor = 'AND'): array
+{
+    $cubi = __qb_op($data, $default_op, __FUNCTION__);
+    return [implode(" $andor ", $cubi[0]), $cubi[1]];
+}
+
+function qb_set(array $data): array
+{
+    $cubi = __qb_op($data, '=', __FUNCTION__);
+    return [implode(', ', $cubi[0]), $cubi[1]];
+}
+
+// __qb_op(['status' => 'published', 'user_id' => 5], '=')
+// __qb_op(['status' => 'published', 'level<' => 5], '<>', 'sp')
+function __qb_op(array $data, string $default_op = '=', string $prefix = 'qbc'): array
 {
     $clauses = $bindings = [];
     $place_holder_count = -1;
@@ -112,14 +124,14 @@ function qb_op(array $data, string $default_op = '=', string $prefix = 'qbc'): a
             $op = $default_op;
         }
 
-        $k = qb_placeholder($prefix, $col, ++$place_holder_count);
+        $k = __qb_placeholder($prefix, $col, ++$place_holder_count);
         $bindings[$k] = $val;
         $clauses[] = $op ? "{$col} {$op} {$k}" : "{$col} {$k}";
     }
-    return [implode(' AND ', $clauses), $bindings];
+    return [$clauses, $bindings];
 }
 
-function qb_placeholder(string $prefix, string $col, int $i): string
+function __qb_placeholder(string $prefix, string $col, int $i): string
 {
     return ":{$prefix}_{$col}_{$i}";
 }
