@@ -7,78 +7,86 @@ require_once 'add/bad/dad/qb.php';
 
 const ROW_ID     = 'id';
 
-const ROW_TABLE = 1;
-const ROW_FIELD = 2;
-const ROW_SAVED = 4;
-const ROW_ALTER = 8;
-const ROW_EXTRA = 16;
+const ROW_LOAD   = 1;       // boat are where conditions, nulled
+const ROW_EDIT   = 2;       // boat are values to set, nulled
+const ROW_MORE   = 4;       // boat 
+const ROW_FIELDS = 8;
 
-const ROW_IMPORT = 32;
-const ROW_EXPORT = 64;
-const ROW_RELOAD = 128;
+const ROW_SET    = 16;
+const ROW_GET    = 32;
+const ROW_SAVE   = 64;
 
-const ROW_PERSIST = 256;
-
-
-function row_innit(string $table): array
+function row(PDO $pdo, string $table): callable
 {
-    return [ROW_TABLE => $table];
+    return function (int $behave, array $boat = []) use ($pdo, $table) {
+
+        static $row = [];
+
+        if ($behave & ROW_LOAD) {
+            $st = dbq($pdo, ...qb_read($table, $boat));
+            $st->rowCount() === 1 || throw new BadFunctionCallException('db_row ROW_LOAD yields rowCount() !==1', 500);
+
+            $row[ROW_LOAD] = $st->fetch(PDO::FETCH_ASSOC);
+            $boat = null;
+        }
+
+        if ($behave & ROW_FIELDS && empty($row[ROW_FIELDS])) {
+            $row[ROW_FIELDS] = $boat ?: row_schema($pdo, $table, $row);
+            $boat = null;
+        }
+
+        if ($behave & ROW_SET && $boat)
+            row_import($row, $boat, $behave);
+        
+        if ($behave & ROW_SAVE && $row[ROW_EDIT]) {
+            $qb = $row[ROW_LOAD]
+                ? qb_update($table, $row[ROW_EDIT], ...qb_where([ROW_ID => $row[ROW_LOAD][ROW_ID]]))
+                : qb_create($table, $row[ROW_EDIT], array_keys($row[ROW_FIELDS]));
+            $row[ROW_SAVE] = dbq($pdo, ...$qb);
+        }
+
+        if ($behave & ROW_GET){
+            $export = row_export($row, $boat);
+            return !isset($boat[0]) || isset($boat[1]) ? $export : $export[$boat[0]];
+        }
+
+        return $row;
+    };
 }
 
-function row($row, int $behave = ROW_IMPORT, array $boat = [])
+function row_import(array &$row, array $boat, int $behave=0): void
 {
-    if ($behave & ROW_RELOAD) {
-        $st = dbq(db(), ...qb_read($row[ROW_TABLE], $boat));
-        $st->rowCount() === 1 || throw new BadFunctionCallException('db_row ROW_RELOAD yields rowCount() !==1', 500);
-        $row[ROW_SAVED] = $st->fetch(PDO::FETCH_ASSOC) ?: false;
-    }
-
-    if ($behave & ROW_FIELD && empty($row[ROW_FIELD])) {
-        $row[ROW_FIELD] = $boat ?: row_schema($row);
-        return $row;
-    }
-
-    if ($behave & ROW_IMPORT) {
-        foreach ($boat as $col => $value)
-            if($col === ROW_ID)
-                continue;
-            else if (!$row[ROW_SAVED] || !isset($row[ROW_SAVED][$col]) || $row[ROW_SAVED][$col] !== $value)
-                if ($row[ROW_FIELD] && isset($row[ROW_FIELD][$col]))
-                    $row[ROW_ALTER][$col] = $value;
-                else
-                    $row[ROW_EXTRA][$col] = $value;
-        return $row;
-    }
-
-    if ($behave & ROW_PERSIST && $row[ROW_ALTER]) {
-        vd($row);
-        $row[ROW_PERSIST] = dbq(db(), ...($row[ROW_SAVED]
-            ? qb_update($row[ROW_TABLE], $row[ROW_ALTER], ...qb_where([ROW_ID => $row[ROW_SAVED][ROW_ID]]))
-            : (qb_create($row[ROW_TABLE], $row[ROW_ALTER], array_keys($row[ROW_FIELD])))));
-        return $row;
-    }
-
-    if ($behave & ROW_EXPORT) {
-        $ret = [];
-        foreach ($boat as $col)
-            $ret[$col] = $row[ROW_ALTER][$col] ?? $row[ROW_SAVED][$col];
-
-        return $ret;
-    }
-    
-    return $row;
+    foreach ($boat as $col => $value)
+        // skip id and existing values
+        if ($col === ROW_ID || isset($row[ROW_LOAD][$col]) && $row[ROW_LOAD][$col] === $value)
+            continue;
+        else if ($behave & ROW_EDIT || $row[ROW_FIELDS] && isset($row[ROW_FIELDS][$col]))
+            $row[ROW_EDIT][$col] = $value;
+        else
+            $row[ROW_MORE][$col] = $value;
 }
 
-function row_schema($row): array
+function row_export(array &$row, array $boat = []): array
 {
-    $pdo = db();
-    $table = $row[ROW_TABLE];
+    $fields = $boat ?: array_keys($row[ROW_FIELDS] ?? []);
 
-    if ($row[ROW_FIELD])
-        return $row[ROW_FIELD];
+    if (empty($fields))
+        return array_merge($row[ROW_LOAD] ?? [], $row[ROW_EDIT] ?? []);
 
-    if ($row[ROW_SAVED] && $row[ROW_SAVED] !== false)
-        return $row[ROW_SAVED];
+    $ret = [];
+    foreach ($fields as $col)
+        $ret[$col] = $row[ROW_EDIT][$col] ?? $row[ROW_LOAD][$col];
+
+    return $ret;
+}
+
+function row_schema(PDO $pdo, string $table, array $row): array
+{
+    if ($row[ROW_FIELDS])
+        return $row[ROW_FIELDS];
+
+    if ($row[ROW_LOAD] && $row[ROW_LOAD] !== false)
+        return ($row[ROW_FIELDS] = array_flip(array_keys($row[ROW_LOAD])));
 
     $fields = [];
     $fields_query = dbq($pdo, "SELECT * FROM `$table` LIMIT 1");
