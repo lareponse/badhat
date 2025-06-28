@@ -1,41 +1,39 @@
 <?php
 
-// 1. auth('username', 'hashed_password'); init the field names
+const AUTH_SETUP = 1;
+const AUTH_VERIFY = 2;
+const AUTH_REVOKE = 4;
+const AUTH_ERROR = 16;
+const AUTH_MUST = 32;
+
+// 1. auth(AUTH_SETUP, 'username', 'SELECT password FROM .. WHERE ..'); init the field names
+// 3. auth(AUTH_VERIFY, 'myusername', 'superhashedunreadablepassword'); logins
+// 4. auth(AUTH_REVOKE); logout
+// 5. auth(AUTH_MUST); check if logged in, throw exception if not
 // 2. auth(); check if logged in return username or null
-// 3. auth('myusername', 'superhashedunreadablepassword'); logins
-// 4. auth(null, null); logout
-function auth(?string $u=null, ?string $p=null): ?string
+function auth(int $behave=0, ?string $u=null, ?string $p=null): ?string
 {
     static $username_field = null;
-    static $password_field = null;
+    static $password_query = null;
     
-    session_status() === PHP_SESSION_NONE   && session_start();
+    session_status() === PHP_SESSION_NONE  && session_start();
 
-    // auth('username', 'hashed_password'); init the field names, returns username is already loggedin
-    if(!isset($username_field, $password_field)) {
-        $username_field = $u;
-        $password_field = $p;
+    $behave & AUTH_REVOKE    && session_destroy()    && ($password_query = $username_field = null);
 
-        return $_SESSION[$username_field] ?? null;
-    }
+    $behave & AUTH_SETUP     && $u && $p && ($username_field = $u) && ($password_query = $p);
+    
+    $behave & AUTH_MUST      && !isset($username_field, $_SESSION[$username_field])       && throw new RuntimeException('Unauthorized', 401);
 
-    //auth(null, null); logout 
-    if(func_num_args() === 2 && !isset($u, $p) && session_destroy()){
-        return null;
-    }
+    $behave & AUTH_VERIFY    && !isset($u, $p, $username_field, $password_query)          && throw new BadFunctionCallException('Username and password must be setup and provided');
+    $behave & AUTH_VERIFY    && isset($_SESSION[$username_field])                         && throw new BadFunctionCallException('Already logged in');
+    $behave & AUTH_VERIFY    && (empty($_POST) || empty($_POST[$u]) || empty($_POST[$p])) && throw new BadMethodCallException('Login must be a valid POST request');
+    
+    $behave & AUTH_VERIFY    && ($db_password = dbq(db(), $password_query, [$u])->fetchColumn())
+                             && password_verify($p, $db_password) 
+                             && session_regenerate_id(true)
+                             && ($_SESSION[$username_field] = $u);
 
-    // Not logged in ?
-    if(!isset($_SESSION[$username_field]) && $_SERVER['REQUEST_METHOD'] === 'POST'){
-
-        $user = dbq(db(), "SELECT `$username_field`, `$password_field` FROM `operator` WHERE `$username_field` = ?", [$u])->fetch();
-
-        !$user || !password_verify($p, $user[$password_field]) || throw new RuntimeException('Auth failed', 401);
-
-        session_regenerate_id(true);
-        $_SESSION['username'] = $user['username'];
-    }
-
-    return $_SESSION[$username_field];
+    return $_SESSION[$username_field] ?? null;
 }
 
 function csp_nonce(): string
