@@ -11,27 +11,26 @@ const AUTH_MUST = 32;
 // 4. auth(AUTH_REVOKE); logout
 // 5. auth(AUTH_MUST); check if logged in, throw exception if not
 // 2. auth(); check if logged in return username or null
-function auth(int $behave=0, ?string $u=null, ?string $p=null): ?string
+function auth(int $behave = 0, ?string $u = null, ?string $p = null): ?string
 {
     static $username_field = null;
     static $password_query = null;
-    
+
     session_status() === PHP_SESSION_NONE  && session_start();
 
-    $behave & AUTH_REVOKE    && session_destroy()    && ($password_query = $username_field = null);
+    $behave & AUTH_SETUP    && $u && $p && ($username_field = $u) && ($password_query = $p);
 
-    $behave & AUTH_SETUP     && $u && $p && ($username_field = $u) && ($password_query = $p);
-    
-    $behave & AUTH_MUST      && !isset($username_field, $_SESSION[$username_field])       && throw new RuntimeException('Unauthorized', 401);
+    $behave & AUTH_REVOKE   && session_destroy() && ($password_query = $username_field = null);
 
-    $behave & AUTH_VERIFY    && !isset($u, $p, $username_field, $password_query)          && throw new BadFunctionCallException('Username and password must be setup and provided');
-    $behave & AUTH_VERIFY    && isset($_SESSION[$username_field])                         && throw new BadFunctionCallException('Already logged in');
-    $behave & AUTH_VERIFY    && (empty($_POST) || empty($_POST[$u]) || empty($_POST[$p])) && throw new BadMethodCallException('Login must be a valid POST request');
-    
-    $behave & AUTH_VERIFY    && ($db_password = dbq(db(), $password_query, [$u])->fetchColumn())
-                             && password_verify($p, $db_password) 
-                             && session_regenerate_id(true)
-                             && ($_SESSION[$username_field] = $u);
+    $behave & AUTH_MUST     && !isset($username_field, $_SESSION[$username_field])       && throw new RuntimeException('Unauthorized', 401);
+
+    $behave & AUTH_VERIFY   && !isset($u, $p, $username_field, $password_query)          && throw new BadFunctionCallException('Username and password must be setup and provided');
+    $behave & AUTH_VERIFY   && isset($_SESSION[$username_field])                         && throw new BadFunctionCallException('Already logged in');
+    $behave & AUTH_VERIFY   && (empty($_POST) || empty($_POST[$u]) || empty($_POST[$p])) && throw new BadMethodCallException('Login must be a valid POST request');
+
+    $behave & AUTH_VERIFY   && ($db_password = dbq(db(), $password_query, [$_POST[$u]])) && ($db_password = ($db_password->fetchColumn()))
+                            && password_verify($_POST[$p], vd($db_password)) && session_regenerate_id(true)
+                            && ($_SESSION[$username_field] = $u);
 
     return $_SESSION[$username_field] ?? null;
 }
