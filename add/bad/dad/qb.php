@@ -70,11 +70,13 @@ function qb_where(array $conds, string $connective = 'AND'): array
     $qbw_bindings = [];
 
     foreach ($conds as $col => $val) {
-        if (is_array($val)) {
+        if (is_array($val))
             [$clause, $bind] = qb_in($col, $val, 'qbw_in');
-        } else {
+        else if(null === $val)
+            $clause = "$col IS NULL";
+        else
             [$clause, $bind] = qb_condition([$col => $val], '=', __FUNCTION__);
-        }
+        
         $where[] = $clause;
         $qbw_bindings = array_merge($qbw_bindings, $bind ?? []);
     }
