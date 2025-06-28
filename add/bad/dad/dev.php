@@ -10,8 +10,10 @@ function is_dev(): bool
 // vd(2, $var1, $var2): backtrace depth 2 with $var1 and $var2
 function vd($first, ...$others)
 {
+    $die = false;
     if(!empty($others) && is_int($first)){
-        $depth = $first;
+        $die = $first < 0;
+        $depth = $die ? 0 : $first;
     }
     else{
         array_unshift($others, $first);
@@ -32,5 +34,6 @@ function vd($first, ...$others)
         echo '<pre class="vd">' . $dump . PHP_EOL . '</pre>';
     }
 
+    $die && die;
     return $first; // allows chaining like vd($var)->someMethod() or if(vd($var, 'label')->anotherMethod())
 }
