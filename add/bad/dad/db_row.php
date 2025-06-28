@@ -3,18 +3,19 @@
 declare(strict_types=1);
 
 require_once 'add/bad/db.php';
-require_once 'add/bad/dad/qb.php';
 
 const ROW_ID     = 'id';
 
 const ROW_LOAD   = 1;       // boat are where conditions, nulled
 const ROW_EDIT   = 2;       // boat are values to set, nulled
 const ROW_MORE   = 4;       // boat 
-const ROW_FIELDS = 8;
 
 const ROW_SET    = 16;
 const ROW_GET    = 32;
 const ROW_SAVE   = 64;
+const ROW_ERROR = 128; // errors from row_save
+const ROW_SCHEMA = 8;
+
 
 function row(PDO $pdo, string $table): callable
 {
@@ -23,76 +24,165 @@ function row(PDO $pdo, string $table): callable
         static $row = [];
 
         if ($behave & ROW_LOAD) {
-            $st = dbq($pdo, ...qb_read($table, $boat));
-            $st->rowCount() === 1 || throw new BadFunctionCallException('db_row ROW_LOAD yields rowCount() !==1', 500);
-
-            $row[ROW_LOAD] = $st->fetch(PDO::FETCH_ASSOC);
-            $boat = null;
+            $boat && ($row[ROW_LOAD] = row_load($pdo, $table, $boat));
+            return $row[ROW_LOAD] ?? null;
         }
 
-        if ($behave & ROW_FIELDS && empty($row[ROW_FIELDS])) {
-            $row[ROW_FIELDS] = $boat ?: row_schema($pdo, $table, $row);
-            $boat = null;
+        if ($behave & ROW_SCHEMA) {
+            $boat                                   && ($row[ROW_SCHEMA] = $boat);                                      // payload is always set
+            !$row[ROW_SCHEMA] && $row[ROW_LOAD]     && ($row[ROW_SCHEMA] = array_flip(array_keys($row[ROW_LOAD])));     // skip schema query if we have row_load (updates)
+            !$row[ROW_SCHEMA]                       && ($row[ROW_SCHEMA] = row_schema($pdo, $table, $row));             // cant skip it for inserts
+
+            return $row[ROW_SCHEMA];
         }
 
         if ($behave & ROW_SET && $boat)
-            row_import($row, $boat, $behave);
-        
-        if ($behave & ROW_SAVE && $row[ROW_EDIT]) {
-            $qb = $row[ROW_LOAD]
-                ? qb_update($table, $row[ROW_EDIT], ...qb_where([ROW_ID => $row[ROW_LOAD][ROW_ID]]))
-                : qb_create($table, $row[ROW_EDIT], array_keys($row[ROW_FIELDS]));
-            $row[ROW_SAVE] = dbq($pdo, ...$qb);
-        }
+            return row_import($row, $boat, $behave);
 
-        if ($behave & ROW_GET){
-            $export = row_export($row, $boat);
+        if ($behave & ROW_GET) {
+            $export = row_export($row, $boat, $behave);
             return !isset($boat[0]) || isset($boat[1]) ? $export : $export[$boat[0]];
         }
+
+        if ($behave & ROW_SAVE && $row[ROW_EDIT]) {
+            $save = row_save($pdo, $table, $row);
+
+            if (!$save || !$save instanceof PDOStatement || $save->errorCode() !== PDO::ERR_NONE) {
+                $row[ROW_ERROR] = $save ? $save->errorInfo() : 'Unknown error';
+            } else {
+                $row[ROW_EDIT] = [];
+                $row[ROW_SAVE] = $save;
+            }
+
+            return $save;
+        }
+
+        if ($behave & ROW_ERROR)
+            return $row[ROW_ERROR] ?? null;
+
 
         return $row;
     };
 }
 
-function row_import(array &$row, array $boat, int $behave=0): void
+function row_save(PDO $pdo, string $table, array $row): ?PDOStatement
 {
-    foreach ($boat as $col => $value)
-        // skip id and existing values
-        if ($col === ROW_ID || isset($row[ROW_LOAD][$col]) && $row[ROW_LOAD][$col] === $value)
-            continue;
-        else if ($behave & ROW_EDIT || $row[ROW_FIELDS] && isset($row[ROW_FIELDS][$col]))
-            $row[ROW_EDIT][$col] = $value;
-        else
-            $row[ROW_MORE][$col] = $value;
+    if (!$row[ROW_EDIT] || !$table || !$pdo) return null; // nothing to save
+
+    $qb = $row[ROW_LOAD]
+        ? qb_update($table, $row[ROW_EDIT], $row[ROW_LOAD][ROW_ID])
+        : qb_insert($table, $row[ROW_EDIT], array_keys($row[ROW_SCHEMA]));
+
+    return ($stmt = $pdo->prepare($qb[0])) && $stmt->execute($qb[1]) ? $stmt : null;
 }
 
-function row_export(array &$row, array $boat = []): array
+function row_load(PDO $pdo, string $table, array $boat): ?array
 {
-    $fields = $boat ?: array_keys($row[ROW_FIELDS] ?? []);
+    $qb = qb_select($table, $boat);
+    $stmt = $pdo->prepare($qb[0]);
+    if (!$stmt || !$stmt->execute($qb[1]) || $stmt->rowCount() !== 1)
+        return null;
 
-    if (empty($fields))
+    return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+}
+
+function row_schema(PDO $pdo, string $table): array
+{
+    $fields = [];
+    $fields_query = dbq($pdo, "SELECT * FROM `$table` LIMIT 1");
+    $cnt = $fields_query->columnCount();
+    for ($i = 0; $i < $cnt; ++$i) {
+        $m = $fields_query->getColumnMeta($i);
+        $fields[$m['name']] = $m['pdo_type'] ?? true;
+    }
+
+    return $fields;
+}
+
+function row_import(array &$row, array $boat, int $behave = 0): void
+{
+    foreach ($boat as $col => $value) {
+        if ($col === ROW_ID || isset($row[ROW_LOAD][$col]) && $row[ROW_LOAD][$col] === $value)
+            continue; // skip id or existing identical values
+
+        // force edit      or if we have fields restriction and applicable ?
+        $add_to_edit = $behave & ROW_EDIT || $row[ROW_SCHEMA] && isset($row[ROW_SCHEMA][$col]);
+        $row[$add_to_edit ? ROW_EDIT : ROW_MORE][$col] = $value;
+    }
+}
+
+function row_export(array $row, array $fieldters = [], int $behave = 0): array
+{
+    if ($behave & ROW_LOAD) return $row[ROW_LOAD] ?? [];
+    if ($behave & ROW_EDIT) return $row[ROW_EDIT] ?? [];
+    if ($behave & ROW_MORE) return $row[ROW_MORE] ?? [];
+
+    $fieldters = $fieldters ?: array_keys($row[ROW_SCHEMA] ?? []);
+
+    if (empty($fieldters))
         return array_merge($row[ROW_LOAD] ?? [], $row[ROW_EDIT] ?? []);
 
     $ret = [];
-    foreach ($fields as $col)
+    foreach ($fieldters as $col)
         $ret[$col] = $row[ROW_EDIT][$col] ?? $row[ROW_LOAD][$col];
 
     return $ret;
 }
 
-function row_schema(PDO $pdo, string $table, array $row): array
+// qb_select('table', ['a-unique-column' => 'a-unique-value'])
+// qb_select('article', ['slug' => 'my-article', 'deleted_at' => null])
+function qb_select(string $table, array $data): array
 {
-    if ($row[ROW_FIELDS])
-        return $row[ROW_FIELDS];
+    $named_bindings = $placeholders = [];
 
-    if ($row[ROW_LOAD] && $row[ROW_LOAD] !== false)
-        return ($row[ROW_FIELDS] = array_flip(array_keys($row[ROW_LOAD])));
+    foreach ($data as $col => $val) {
+        if (null === $val)
+            $placeholders[] = "`$col` IS NULL";
+        else {
+            $ph = ":row_qb_$col";
+            $placeholders[] = "`$col` = $ph";
+            $named_bindings[$ph] = $val;
+        }
+    }
 
-    $fields = [];
-    $fields_query = dbq($pdo, "SELECT * FROM `$table` LIMIT 1");
-    if (!$fields_query->rowCount() && $fields_query->columnCount() > 0)
-        for ($i = 0, $cnt = $fields_query->columnCount(); $i < $cnt; ++$i)
-            $fields[] = $fields_query->getColumnMeta($i)['name'];
+    $placeholders   = implode(' AND ', $placeholders);
 
-    return array_flip($fields);
+    return ["SELECT * FROM {$table} WHERE {$placeholders}", $named_bindings];
+}
+
+// qb_insert('article', ['title' => 'My Article', 'content' => 'This is the content.']);
+function qb_insert(string $table, array $data): array
+{
+    if (!$table || !$data) return ['', []];
+
+    $named_bindings = $placeholders = [];
+
+    foreach ($data as $col => $val) {
+        $ph = ":row_qb_$col";
+        $named_bindings[$ph] = $val;
+        $placeholders[] = $ph;
+    }
+
+    $fields         = implode('`,`', array_keys($data));
+    $placeholders   = implode(',', $placeholders);
+
+    return ["INSERT INTO {$table} (`$fields`) VALUES ($placeholders);", $named_bindings];
+}
+
+// qb_update('article', ['title' => 'Updated Title'], 42)
+function qb_update(string $table, array $data, int $id): array
+{
+    if (!$table || !$data || $id <= 0) return ['', []];
+
+    $named_bindings = $placeholders = [];
+
+    foreach ($data as $col => $val) {
+        $ph = ":row_qb_{$col}";
+        $named_bindings[$ph] = $val;
+        $placeholders[] = "`$col` = $ph";
+    }
+
+    $placeholders   = implode(', ', $placeholders);
+
+    return ["UPDATE `$table` SET $placeholders WHERE `" . ROW_ID . "` = :qb_update_id;", $named_bindings + [':qb_update_id' => $id]];
 }
