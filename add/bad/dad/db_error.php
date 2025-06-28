@@ -1,18 +1,12 @@
 <?php
-const DB_ERR_FOREIGN_KEY  = 1;
+const DB_ERR_USER         = 1;
+const DB_ERR_FOREIGN_KEY  = 32;
 const DB_ERR_UNIQUE       = 2;
 const DB_ERR_CHECK        = 4;
 const DB_ERR_NOT_NULL     = 8;
 const DB_ERR_EXCLUSION    = 16;
 
-function parse_constraint_error(string $message, PDO $pdo): array
-{
-    return !function_exists($parser = 'parse_error_' . db_server($pdo))
-        ? []
-        : call_user_func($parser, $message) + ['raw_message' => $message];
-}
-
-function parse_error_mysql(string $message): array
+function mysql_parse_error(string $message): array
 {
     $result = [];
 
@@ -27,7 +21,7 @@ function parse_error_mysql(string $message): array
     foreach ($rules as $type => $pattern) {
         if (preg_match($pattern, $message, $matches)) {
             // just one capture per type, and no duplicate‐value
-            $result[$type] = $type === DB_ERR_NOT_NULL
+            $result[DB_ERR_USER] = $type === DB_ERR_NOT_NULL
                 ? $matches[1] . '-not-null'
                 : $matches[1];
             break;
@@ -44,7 +38,7 @@ function parse_error_mariadb(string $message): array
         $result['constraint_type'] = DB_ERR_CHECK;
         $result['constraint_name'] = $matches[1];
     } else {
-        $result = parse_error_mysql($message);
+        $result = mysql_parse_error($message);
     }
 
     return $result;

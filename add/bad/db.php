@@ -19,7 +19,7 @@ declare(strict_types=1);
  * Before returning a cached PDO, we run “SELECT 1” to verify it’s still alive.
  * If that ping fails, we discard it and reconnect.
  */
-function db(?PDO $pdo=null, string $suffix = ''): PDO
+function db(?PDO $pdo = null, string $suffix = ''): PDO
 {
     static $cache = null;
 
@@ -46,11 +46,14 @@ function db(?PDO $pdo=null, string $suffix = ''): PDO
  *   dbq(db(), "SELECT * FROM operator WHERE id = ?", [$id])
  *   dbq(db(), "...", [...], 'read')
  */
-function dbq(PDO $pdo, string $sql, array $bind = []): PDOStatement
+function dbq(PDO $pdo, string $sql, array $bind = []): ?PDOStatement
 {
-    return $bind
-        ? (($stmt = $pdo->prepare($sql))->execute($bind) ? $stmt : $stmt)
-        : (($stmt = $pdo->query($sql)) ?: $stmt);
+    $stmt = null;
+    try {
+        $bind ? (($stmt = $pdo->prepare($sql))->execute($bind)) : ($stmt = $pdo->query($sql));
+    } catch (PDOException $e) {
+    }
+    return $stmt ?: null;
 }
 
 /**
