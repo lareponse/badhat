@@ -1,76 +1,41 @@
 <?php
 
-//   ENTRYPOINT: WHO’S LOGGED IN?
-function whoami(): ?string
+// 1. auth('username', 'hashed_password'); init the field names
+// 2. auth(); check if logged in return username or null
+// 3. auth('myusername', 'superhashedunreadablepassword'); logins
+// 4. auth(null, null); logout
+function auth(?string $u=null, ?string $p=null): ?string
 {
-    static $user = null;
-    return $user ??= auth_resolve();
-}
+    static $username_field = null;
+    static $password_field = null;
+    
+    session_status() === PHP_SESSION_NONE   && session_start();
 
-function auth_resolve(): ?string
-{
-    // 1) Web-session users
-    return auth_session()
-        // 2) API clients via HMAC headers
-        ?? auth_http();
-}
+    // auth('username', 'hashed_password'); init the field names, returns username is already loggedin
+    if(!isset($username_field, $password_field)) {
+        $username_field = $u;
+        $password_field = $p;
 
-//   1) SESSION-BASED AUTH
-function auth_session(): ?string
-{
-    if (session_status() === PHP_SESSION_NONE)
-        session_start();
+        return $_SESSION[$username_field] ?? null;
+    }
 
-    if (empty($_SESSION['user_id']))
-        return null;
-
-    return dbq(db(), "SELECT username FROM operator WHERE id = ?", [$_SESSION['user_id']])->fetchColumn() ?: null;
-}
-
-//   2) HTTP-HMAC
-function auth_http(): ?string
-{
-    $user = $_SERVER['HTTP_X_AUTH_USER'] ?? '';
-    $sig  = $_SERVER['HTTP_X_AUTH_SIG']  ?? '';
-
-    if (!$user || !$sig) {
+    //auth(null, null); logout 
+    if(func_num_args() === 2 && !isset($u, $p) && session_destroy()){
         return null;
     }
-    $hmac = getenv('BADDAD_AUTH_HMAC_SECRET');
-    $hmac ?: throw new DomainException('HMAC secret missing', 500);
-    $expected = hash_hmac('sha256', $user, $hmac);
-    return hash_equals($sig, $expected)
-        ? $user
-        : null;
-}
 
-//   LOGIN / LOGOUT / CSRF
-function auth_login(string $username, string $password): bool
-{
-    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-        throw new BadMethodCallException('POST required', 405);
+    // Not logged in ?
+    if(!isset($_SESSION[$username_field]) && $_SERVER['REQUEST_METHOD'] === 'POST'){
+
+        $user = dbq(db(), "SELECT `$username_field`, `$password_field` FROM `operator` WHERE `$username_field` = ?", [$u])->fetch();
+
+        !$user || !password_verify($p, $user[$password_field]) || throw new RuntimeException('Auth failed', 401);
+
+        session_regenerate_id(true);
+        $_SESSION['username'] = $user['username'];
     }
 
-    $user = dbq(db(), "SELECT id, password_hash FROM operator WHERE username = ?", [$username])->fetch();
-    if (!$user || ! password_verify($password, $user['password_hash'])) {
-        throw new RuntimeException('Auth failed', 401);
-    }
-
-    if (session_status() === PHP_SESSION_NONE) {
-        session_start();
-    }
-    session_regenerate_id(true);
-    $_SESSION['user_id'] = $user['id'];
-
-    return true;
-}
-
-function auth_logout(): void
-{
-    if (session_status() === PHP_SESSION_NONE) {
-        session_start();
-    }
-    session_destroy();
+    return $_SESSION[$username_field];
 }
 
 function csp_nonce(): string
@@ -79,7 +44,7 @@ function csp_nonce(): string
     return $nonce ??= bin2hex(random_bytes(16));
 }
 
-function csrf_token(int $ttl=3600): string
+function csrf_token(int $ttl = 3600): string
 {
     if (session_status() !== PHP_SESSION_ACTIVE) {
         session_start();
@@ -98,7 +63,7 @@ function csrf_token(int $ttl=3600): string
     return $data['value'];
 }
 
-function csrf_field(int $ttl=3600): string
+function csrf_field(int $ttl = 3600): string
 {
     $token = csrf_token($ttl);
     return "<input type='hidden' name='csrf_token' value='" .
