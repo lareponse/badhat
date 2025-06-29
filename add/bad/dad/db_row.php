@@ -7,41 +7,40 @@ require_once 'add/bad/db.php';
 const ROW_ID     = 'id';
 
 const ROW_LOAD   = 1;       // boat are where conditions, nulled
-const ROW_EDIT   = 2;       // boat are values to set, nulled
-const ROW_MORE   = 4;       // boat 
+const ROW_SCHEMA = 2;       // if boat, uses it to set schema, if not, loads schema from load or db
+const ROW_SET    = 4;       // boat are values to set, nulled
+const ROW_SAVE   = 8;       // save the row
+const ROW_GET    = 16;      // get the row, parts of the row depending on behavior and boat
+const ROW_EDIT   = 32;      // where db-related values are stored
+const ROW_MORE   = 64;      // where db-unrelated values are stored
+const ROW_ERROR  = 128;     // errors from row_save
 
-const ROW_SET    = 16;
-const ROW_GET    = 32;
-const ROW_SAVE   = 64;
-const ROW_ERROR = 128; // errors from row_save
-const ROW_SCHEMA = 8;
 
-
+// $full = $entity(ROW_LOAD | ROW_GET, ['id' => 123]);
+// $entity(ROW_SET | ROW_SAVE, ['name' => 'New Name']);
+// $entity(ROW_GET, ['name', 'email']);
+// $entity(ROW_SET | ROW_SCHEMA); // set schema
+// $entity(ROW_GET | ROW_SCHEMA); // get schema
+// ensure we know the column list, safe set values, extract the merged result
+// $preview = $entity(ROW_SCHEMA | ROW_SET | ROW_GET, ['name' => 'Acme', 'type' => 'widget']);
+// $entity(ROW_SET | ROW_SCHEMA | ROW_SAVE, ['name' => 'New Name', 'relational-goop' => 'goop']);
 function row(PDO $pdo, string $table): callable
 {
     return function (int $behave, array $boat = []) use ($pdo, $table) {
 
         static $row = [];
 
-        if ($behave & ROW_LOAD) {
-            $boat && ($row[ROW_LOAD] = row_load($pdo, $table, $boat));
-            return $row[ROW_LOAD] ?? null;
-        }
+        $behave & ROW_LOAD && $boat && ($row[ROW_LOAD] = row_load($pdo, $table, $boat)) && $boat = null; // reset boat
 
         if ($behave & ROW_SCHEMA) {
-            $boat                                   && ($row[ROW_SCHEMA] = $boat);                                      // payload is always set
+            $boat                                   && ($row[ROW_SCHEMA] = $boat) && $boat = null;                                      // payload is always set
             !$row[ROW_SCHEMA] && $row[ROW_LOAD]     && ($row[ROW_SCHEMA] = array_flip(array_keys($row[ROW_LOAD])));     // skip schema query if we have row_load (updates)
-            !$row[ROW_SCHEMA]                       && ($row[ROW_SCHEMA] = row_schema($pdo, $table, $row));             // cant skip it for inserts
-
-            return $row[ROW_SCHEMA];
+            !$row[ROW_SCHEMA]                       && ($row[ROW_SCHEMA] = select_schema($pdo, $table));             // cant skip it for inserts
         }
 
-        if ($behave & ROW_SET && $boat)
-            return row_import($row, $boat, $behave);
-
-        if ($behave & ROW_GET) {
-            $export = row_export($row, $boat, $behave);
-            return !isset($boat[0]) || isset($boat[1]) ? $export : $export[$boat[0]];
+        if ($behave & ROW_SET){
+            $behave & ROW_SCHEMA && !isset($row[ROW_SCHEMA]) && ($row[ROW_SCHEMA] = select_schema($pdo, $table)); // ensure schema is set
+            $boat && row_set($row, $boat, $behave) && $boat = null;
         }
 
         if ($behave & ROW_SAVE && $row[ROW_EDIT]) {
@@ -53,13 +52,12 @@ function row(PDO $pdo, string $table): callable
                 $row[ROW_EDIT] = [];
                 $row[ROW_SAVE] = $save;
             }
-
-            return $save;
         }
 
-        if ($behave & ROW_ERROR)
-            return $row[ROW_ERROR] ?? null;
-
+        if ($behave & ROW_GET) {
+            $export = row_get($row, $boat, $behave);
+            return isset($boat[0]) && !isset($boat[1]) ? $export[$boat[0]] : $export;
+        }
 
         return $row;
     };
@@ -76,9 +74,9 @@ function row_save(PDO $pdo, string $table, array $row): ?PDOStatement
     return ($stmt = $pdo->prepare($qb[0])) && $stmt->execute($qb[1]) ? $stmt : null;
 }
 
-function row_load(PDO $pdo, string $table, array $boat): ?array
+function row_load(PDO $pdo, string $table, array $data): ?array
 {
-    $qb = qb_select($table, $boat);
+    $qb = qb_select($table, $data);
     $stmt = $pdo->prepare($qb[0]);
     if (!$stmt || !$stmt->execute($qb[1]) || $stmt->rowCount() !== 1)
         return null;
@@ -86,22 +84,10 @@ function row_load(PDO $pdo, string $table, array $boat): ?array
     return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
 }
 
-function row_schema(PDO $pdo, string $table): array
+function row_set(array &$row, array $data, int $behave = 0): bool
 {
-    $fields = [];
-    $fields_query = dbq($pdo, "SELECT * FROM `$table` LIMIT 1");
-    $cnt = $fields_query->columnCount();
-    for ($i = 0; $i < $cnt; ++$i) {
-        $m = $fields_query->getColumnMeta($i);
-        $fields[$m['name']] = $m['pdo_type'] ?? true;
-    }
-
-    return $fields;
-}
-
-function row_import(array &$row, array $boat, int $behave = 0): void
-{
-    foreach ($boat as $col => $value) {
+    $add_to_edit = null;
+    foreach ($data as $col => $value) {
         if ($col === ROW_ID || isset($row[ROW_LOAD][$col]) && $row[ROW_LOAD][$col] === $value)
             continue; // skip id or existing identical values
 
@@ -109,14 +95,33 @@ function row_import(array &$row, array $boat, int $behave = 0): void
         $add_to_edit = $behave & ROW_EDIT || $row[ROW_SCHEMA] && isset($row[ROW_SCHEMA][$col]);
         $row[$add_to_edit ? ROW_EDIT : ROW_MORE][$col] = $value;
     }
+
+    return $add_to_edit !== null;
 }
 
-function row_export(array $row, array $fieldters = [], int $behave = 0): array
+// accepted ROW_GET combination: 
+//      ROW_SCHEMA, 
+//      ROW_ERROR, 
+//      (ROW_LOAD | ROW_EDIT | ROW_MORE)
+// no extra behavior, fieldters, explicitly set 
+//      to null,    cancels all fields filtering, 
+//      to [],      fallbacks to schema then empty
+function row_get(array $row, ?array $fieldters = [], int $behave = 0): ?array
 {
-    if ($behave & ROW_LOAD) return $row[ROW_LOAD] ?? [];
-    if ($behave & ROW_EDIT) return $row[ROW_EDIT] ?? [];
-    if ($behave & ROW_MORE) return $row[ROW_MORE] ?? [];
+    if($behave & ROW_SCHEMA)
+        return $row[ROW_SCHEMA] ?? null;
 
+    if ($behave & ROW_ERROR)
+        return $row[ROW_ERROR] ?? null;
+
+    if ($behave & (ROW_LOAD | ROW_EDIT | ROW_MORE)){
+        $_ = [];
+        $behave & ROW_LOAD && ($_ += $row[ROW_LOAD] ?? []);
+        $behave & ROW_EDIT && ($_ += $row[ROW_EDIT] ?? []);
+        $behave & ROW_MORE && ($_ += $row[ROW_MORE] ?? []);
+        return $_;
+    }
+    
     $fieldters = $fieldters ?: array_keys($row[ROW_SCHEMA] ?? []);
 
     if (empty($fieldters))
@@ -129,6 +134,16 @@ function row_export(array $row, array $fieldters = [], int $behave = 0): array
     return $ret;
 }
 
+function select_schema(PDO $pdo, string $table): array
+{
+    $fields = [];
+    $fields_query = dbq($pdo, "SELECT * FROM `$table` LIMIT 1");
+    for ($i = $fields_query->columnCount() - 1; $i >= 0; --$i) {
+        $m = $fields_query->getColumnMeta($i);
+        $fields[$m['name']] = $m['pdo_type'] ?? true;
+    }
+    return $fields;
+}
 // qb_select('table', ['a-unique-column' => 'a-unique-value'])
 // qb_select('article', ['slug' => 'my-article', 'deleted_at' => null])
 function qb_select(string $table, array $data): array
