@@ -1,6 +1,6 @@
-# BADDAD HTTP Header Guide: Protocol-Adaptive Edition
+# BADHAT HTTP Header Guide: Protocol-Adaptive Edition
 
-> This guide maintains BADDAD's core philosophy of separation of concerns while embracing the evolution of HTTP protocols. We draw firm boundaries between infrastructure, directory context, and application code, all while remaining web server agnostic.
+> This guide maintains BADHAT's core philosophy of separation of concerns while embracing the evolution of HTTP protocols. We draw firm boundaries between infrastructure, directory context, and application code, all while remaining web server agnostic.
 
 This protocol-adaptive approach ensures optimal security and performance across all client capabilities. Your application code remains focused on business logic, while infrastructure handles the protocol-specific adaptations - all independent of your specific web server technology.
 
@@ -10,7 +10,7 @@ This protocol-adaptive approach ensures optimal security and performance across 
 2. **Directory context unlocks only what's explicitly scoped** within protocol constraints
 3. **Application code injects only truly dynamic values** and remains protocol-agnostic
 
-HTTP headers remain the front lines of security, performance, and compliance. By intelligently applying headers based on protocol version, we maximize effectiveness without sacrificing the clean separation that defines BADDAD.
+HTTP headers remain the front lines of security, performance, and compliance. By intelligently applying headers based on protocol version, we maximize effectiveness without sacrificing the clean separation that defines BADHAT.
 
 ## Implementation Layers
 

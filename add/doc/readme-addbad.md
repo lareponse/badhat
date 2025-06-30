@@ -1,12 +1,12 @@
-# ADDBAD Philosophy
+# BADHAT Philosophy
 
-**For architects and technical leads evaluating BADDAD**
+**For architects and technical leads evaluating BADHAT**
 
 ---
 
 ## The Refusal
 
-BADDAD is not a framework. It's a **refusal**.
+BADHAT is not a framework. It's a **refusal**.
 
 A refusal of:
 - Custom classes and object-oriented ceremony
@@ -16,7 +16,7 @@ A refusal of:
 - Configuration files and dependency injection
 
 **Modern frameworks optimize for developer comfort**  
-**BADDAD optimizes for application speed**
+**BADHAT optimizes for application speed**
 
 This is not retro. This is not a learning exercise.  
 This is **first-to-last-bit-performance web development**.
@@ -27,7 +27,7 @@ This is **first-to-last-bit-performance web development**.
 
 Software should deliver precise functionality with minimal overhead. Every line, dependency, and abstraction must justify its place in the system.
 
-BADDAD doesn't scale by adding abstractions.  
+BADHAT doesn't scale by adding abstractions.  
 It scales by composition of simple, measurable parts.
 
 ---
@@ -45,7 +45,7 @@ It scales by composition of simple, measurable parts.
 - Prefer small, single-purpose packages over large monoliths  
 - Bundle only what you use; defer or lazy-load non-critical components
 
-**Example:** A typical Laravel installation includes 200+ packages totaling 50-80MB before writing any application code. BADDAD core is 400 lines across 8 files.
+**Example:** A typical Laravel installation includes 200+ packages totaling 50-80MB before writing any application code. BADHAT core is 400 lines across 8 files.
 
 ### 2. Master Your Tools, Not Just Your Framework
 
@@ -58,7 +58,7 @@ It scales by composition of simple, measurable parts.
 - Read source or spec when behavior is unclear
 - Use frameworks judiciously—understand their lifecycle, conventions, and trade-offs
 
-**Example:** Many PHP developers cannot write efficient PDO queries because they've only used ORMs. BADDAD treats SQL as a first-class language.
+**Example:** Many PHP developers cannot write efficient PDO queries because they've only used ORMs. BADHAT treats SQL as a first-class language.
 
 ### 3. Build for Your Users, Not Vendor Lock-In
 
@@ -71,7 +71,7 @@ It scales by composition of simple, measurable parts.
 - Layer vendor-specific code behind clear interfaces
 - Reevaluate every third-party integration: is it chosen for technical fit or marketing promise?
 
-**Example:** BADDAD uses plain PDO (standard), plain PHP files (portable), and filesystem routing (no vendor-specific concepts).
+**Example:** BADHAT uses plain PDO (standard), plain PHP files (portable), and filesystem routing (no vendor-specific concepts).
 
 ### 4. Focus on Five Core Primitives
 
@@ -123,9 +123,9 @@ $posts = dbq(db(), "SELECT * FROM posts WHERE user_id IN (" . implode(',', $user
 
 ---
 
-## Decision Framework: When to Choose BADDAD
+## Decision Framework: When to Choose BADHAT
 
-### Choose BADDAD When:
+### Choose BADHAT When:
 
 **Performance is Critical**
 - High-traffic applications (1000+ req/sec)
@@ -174,11 +174,11 @@ $posts = dbq(db(), "SELECT * FROM posts WHERE user_id IN (" . implode(',', $user
 
 ### Hybrid Approach
 
-Many successful applications use BADDAD for performance-critical paths and frameworks for complex business logic:
+Many successful applications use BADHAT for performance-critical paths and frameworks for complex business logic:
 
 ```php
-// Hot path: Direct BADDAD for API endpoints
-// /api/* routes use BADDAD for maximum performance
+// Hot path: Direct BADHAT for API endpoints
+// /api/* routes use BADHAT for maximum performance
 
 // Admin interface: Framework for complex forms/validation
 // /admin/* routes can use Laravel/Symfony for developer productivity
@@ -200,7 +200,7 @@ Many successful applications use BADDAD for performance-critical paths and frame
 **Implementation:** Plain PHP files, standard SQL, no framework-specific concepts
 
 **Principle:** Five Core Primitives  
-**Implementation:** Each BADDAD function maps directly to Input, Output, State, Storage, or Logic
+**Implementation:** Each BADHAT function maps directly to Input, Output, State, Storage, or Logic
 
 **Principle:** Clarity Over Convenience  
 **Implementation:** Explicit function calls, no magic methods, clear execution path
@@ -210,7 +210,7 @@ Many successful applications use BADDAD for performance-critical paths and frame
 
 ### Measuring Success
 
-BADDAD's philosophy succeeds when:
+BADHAT's philosophy succeeds when:
 - Response times are consistently under 50ms
 - Memory usage stays under 2MB per request
 - Debugging takes minutes, not hours
@@ -224,7 +224,7 @@ Traditional framework success metrics (developer velocity, code reuse, conventio
 ## Common Objections and Responses
 
 **"This looks like PHP from 2005"**  
-Modern doesn't always mean better. BADDAD uses modern PHP features (7.4+) but avoids abstractions that add overhead without proportional benefit.
+Modern doesn't always mean better. BADHAT uses modern PHP features (7.4+) but avoids abstractions that add overhead without proportional benefit.
 
 **"What about code reuse?"**  
 Function composition provides reuse without inheritance complexity. Small, focused functions are easier to reuse than large, abstract classes.
@@ -233,16 +233,16 @@ Function composition provides reuse without inheritance complexity. Small, focus
 File structure and function naming conventions provide consistency. Code reviews focus on performance and clarity rather than framework compliance.
 
 **"What about testing?"**  
-BADDAD includes a minimal testing framework. Procedural code is often easier to test than complex object hierarchies.
+BADHAT includes a minimal testing framework. Procedural code is often easier to test than complex object hierarchies.
 
-**"Doesn't this create vendor lock-in to BADDAD?"**  
-BADDAD is 400 lines of readable PHP. It's easier to understand and modify than most framework documentation.
+**"Doesn't this create vendor lock-in to BADHAT?"**  
+BADHAT is 400 lines of readable PHP. It's easier to understand and modify than most framework documentation.
 
 ---
 
 ## Conclusion
 
-BADDAD's philosophy prioritizes:
+BADHAT's philosophy prioritizes:
 1. **Runtime performance** over developer convenience
 2. **Explicit behavior** over magical abstractions  
 3. **Minimal dependencies** over rich ecosystems

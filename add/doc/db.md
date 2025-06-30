@@ -1,4 +1,4 @@
-# BADDAD Database Layer
+# BADHAT Database Layer
 
 **Three functions. No classes. No abstraction.**
 
@@ -15,7 +15,7 @@ This *is* PDO. Procedural API. If you know `PDO` and `PDOStatement`, you know ev
 
 ## TL;DR
 
-If you know PDO, you already know everything. No DSL, no wrapper. Full PDO and `PDOStatement` API at your disposal. BADDAD just removes the noise.
+If you know PDO, you already know everything. No DSL, no wrapper. Full PDO and `PDOStatement` API at your disposal. BADHAT just removes the noise.
 
 ---
 
