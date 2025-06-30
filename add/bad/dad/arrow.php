@@ -1,19 +1,45 @@
 <?php
 
-declare(strict_types=1);
+/** ARROW --------------------------------->
+ * 
+ * ARRays
+ * Four for state (load, schema, edit, more)
+ *          ROW_LOAD   (1), 
+ *          ROW_EDIT   (4), 
+ *          ROW_MORE   (8)
+ * 
+ * ROW
+ * Load one, save one, capture errors
+ *          ROW_LOAD     (1),
+ *          ROW_SAVE    (16),
+ *          ROW_ERROR  (128)
+ * 
+ * Restrict
+ * Auto sorts data into edit or more
+ *          ROW_SCHEMA (2), 
+ *          ROW_SET    (32),
+ 
+ * Obtain data and structure
+ *         ROW_GET    (64)
+ * 
+ * Write SQL
+ *   - function qb_select(string $table, array $data): array
+ *   - function qb_insert(string $table, array $data): array
+ *   - function qb_update(string $table, array $data, int $id): array
+ */
 
-require_once 'add/bad/db.php';
+declare(strict_types=1);
 
 const ROW_ID     = 'id';
 
-const ROW_LOAD   = 1;       // boat are where conditions, nulled
-const ROW_SCHEMA = 2;       // if boat, uses it to set schema, if not, loads schema from load or db
-const ROW_SET    = 4;       // boat are values to set, nulled
-const ROW_SAVE   = 8;       // save the row
-const ROW_GET    = 16;      // get the row, parts of the row depending on behavior and boat
-const ROW_EDIT   = 32;      // where db-related values are stored
-const ROW_MORE   = 64;      // where db-unrelated values are stored
-const ROW_ERROR  = 128;     // errors from row_save
+const ROW_LOAD   = 1;
+const ROW_SCHEMA = 2;
+const ROW_EDIT   = 4;
+const ROW_MORE   = 8;
+const ROW_SAVE   = 16;
+const ROW_ERROR  = 128;
+const ROW_SET    = 32;
+const ROW_GET    = 64;
 
 
 // $full = $entity(ROW_LOAD | ROW_GET, ['id' => 123]);
@@ -86,6 +112,7 @@ function row_load(PDO $pdo, string $table, array $data): ?array
 
 function row_set(array &$row, array $data, int $behave = 0): bool
 {
+    $behave & ROW_SCHEMA && ($row[ROW_SCHEMA] = select_schema($row[ROW_LOAD] ?? null, $data)); // ensure schema is set
     $add_to_edit = null;
     foreach ($data as $col => $value) {
         if ($col === ROW_ID || isset($row[ROW_LOAD][$col]) && $row[ROW_LOAD][$col] === $value)
@@ -137,13 +164,14 @@ function row_get(array $row, ?array $fieldters = [], int $behave = 0): ?array
 function select_schema(PDO $pdo, string $table): array
 {
     $fields = [];
-    $fields_query = dbq($pdo, "SELECT * FROM `$table` LIMIT 1");
+    $fields_query = $pdo->query("SELECT * FROM `$table` LIMIT 1");
     for ($i = $fields_query->columnCount() - 1; $i >= 0; --$i) {
         $m = $fields_query->getColumnMeta($i);
         $fields[$m['name']] = $m['pdo_type'] ?? true;
     }
     return $fields;
 }
+
 // qb_select('table', ['a-unique-column' => 'a-unique-value'])
 // qb_select('article', ['slug' => 'my-article', 'deleted_at' => null])
 function qb_select(string $table, array $data): array
