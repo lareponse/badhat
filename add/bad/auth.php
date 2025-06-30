@@ -30,8 +30,7 @@ function auth(int $behave = 0, ?string $u = null, ?string $p = null): ?string
 
     $behave & AUTH_VERIFY   && ($db_password = dbq(db(), $password_query, [$_POST[$u]])) && ($db_password = ($db_password->fetchColumn()))
                             && password_verify($_POST[$p], vd($db_password)) && session_regenerate_id(true)
-                            && ($_SESSION[$username_field] = $u);
-
+                            && ($_SESSION[$username_field] = $_POST[$u]);
     return $_SESSION[$username_field] ?? null;
 }
 
