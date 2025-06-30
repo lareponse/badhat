@@ -4,12 +4,12 @@ const AUTH_SETUP = 1;
 const AUTH_VERIFY = 2;
 const AUTH_REVOKE = 4;
 const AUTH_ERROR = 16;
-const AUTH_MUST = 32;
+const AUTH_GUARD = 32;
 
 // 1. auth(AUTH_SETUP, 'username', 'SELECT password FROM .. WHERE ..'); init the field names
 // 3. auth(AUTH_VERIFY, 'myusername', 'superhashedunreadablepassword'); logins
 // 4. auth(AUTH_REVOKE); logout
-// 5. auth(AUTH_MUST); check if logged in, throw exception if not
+// 5. auth(AUTH_GUARD); check if logged in, throw exception if not
 // 2. auth(); check if logged in return username or null
 function auth(int $behave = 0, ?string $u = null, ?string $p = null): ?string
 {
@@ -22,7 +22,7 @@ function auth(int $behave = 0, ?string $u = null, ?string $p = null): ?string
 
     $behave & AUTH_REVOKE   && session_destroy() && ($password_query = $username_field = null);
 
-    $behave & AUTH_MUST     && !isset($username_field, $_SESSION[$username_field])       && throw new RuntimeException('Unauthorized', 401);
+    $behave & AUTH_GUARD    && !isset($username_field, $_SESSION[$username_field])       && throw new RuntimeException('Unauthorized', 401);
 
     $behave & AUTH_VERIFY   && !isset($u, $p, $username_field, $password_query)          && throw new BadFunctionCallException('Username and password must be setup and provided');
     $behave & AUTH_VERIFY   && isset($_SESSION[$username_field])                         && throw new BadFunctionCallException('Already logged in');
