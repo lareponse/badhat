@@ -1,6 +1,6 @@
-# Error Handling in BADDAD
+# Error Handling in BADHAT
 
-BADDAD uses PHP’s native error mechanisms to simulate `PSR` log levels, provide meaningful HTTP responses, and maintain full control without abstraction.
+BADHAT uses PHP’s native error mechanisms to simulate `PSR` log levels, provide meaningful HTTP responses, and maintain full control without abstraction.
 
 No middleware. No annotations. No wrappers. Just procedural handling, routed through three native layers:
 
@@ -87,7 +87,7 @@ exit("Application overloaded – Try again later");
 
 ## No Try/Catch
 
-BADDAD does not use try/catch blocks. Exceptions must be allowed to bubble to the top, where they are caught and logged by the global `set_exception_handler()`.
+BADHAT does not use try/catch blocks. Exceptions must be allowed to bubble to the top, where they are caught and logged by the global `set_exception_handler()`.
 
 ---
 
@@ -100,7 +100,7 @@ Fatal errors not caught by PHP (E\_ERROR, E\_PARSE, etc.) are handled in a `regi
 undefined_function();
 ```
 
-If an error is fatal and headers are not yet sent, BADDAD will respond with:
+If an error is fatal and headers are not yet sent, BADHAT will respond with:
 
 ```
 500 FATAL <id>: <message>

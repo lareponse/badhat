@@ -39,7 +39,7 @@ return function($args) {
 ```php
 // app/io/route/admin/orders.php
 return function($args) {
-    whoami() ?: http_out(401, 'Admin required');
+    auth() ?: http_out(401, 'Admin required');
     
     $status = $_GET['status'] ?? 'pending';
     $orders = dbq(db(), "
@@ -217,7 +217,7 @@ return function($args) {
 ```php
 // app/io/route/trading/execute.php
 return function($args) {
-    $user = whoami() ?: http_out(401, 'Login required');
+    $user = auth() ?: http_out(401, 'Login required');
     
     $order = [
         'user_id' => $user,

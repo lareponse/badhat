@@ -1,4 +1,4 @@
-# BADDAD Quick Start
+# BADHAT Quick Start
 
 **Get running in 5 minutes**
 
@@ -8,7 +8,7 @@
 
 ```bash
 mkdir myapp && cd myapp
-git clone https://github.com/lareponse/BADDAD.git add
+git clone https://github.com/lareponse/BADHAT.git add
 mkdir -p app/{route,views,data}
 ```
 
@@ -38,7 +38,7 @@ http_out(deliver($quest));
 ```php
 <?php
 return function() {
-    tray('main', '<h1>BADDAD Running</h1>');
+    tray('main', '<h1>BADHAT Running</h1>');
     return ['status' => 200, 'body' => render_layout()];
 };
 ```
@@ -48,7 +48,7 @@ return function() {
 <!DOCTYPE html>
 <html>
 <head>
-    <title>BADDAD App</title>
+    <title>BADHAT App</title>
     <?= implode("\n", tray('head')) ?>
 </head>
 <body>
@@ -115,7 +115,7 @@ return function() {
 ### Authentication Guard
 ```php
 <?php
-if (!whoami()) {
+if (!auth()) {
     header('Location: /login');
     exit;
 }
@@ -191,7 +191,7 @@ Use `dbq(db(), )` for queries, `db_transaction()` for transactions
 Create `app/functions/feature.php` → require where needed
 
 ### 5. Test
-Visit URL → BADDAD executes route function
+Visit URL → BADHAT executes route function
 
 ---
 
@@ -208,7 +208,7 @@ render('template', $data);            // Render view
 render_layout();                      // Complete page
 
 // Auth
-whoami();                             // Current user
+auth();                             // Current user
 auth_post($user, $pass, $remember);   // Login
 csrf_validate($token);                         // Validate CSRF
 
@@ -224,7 +224,7 @@ trigger_error('404 Not found', E_USER_ERROR);      // HTTP errors
 1. **Set database credentials** in environment variable
 2. **Configure web server** document root to `/app/public/`
 3. **Enable opcache** for performance
-4. **Set auth secret** `BADDAD_AUTH_HMAC_SECRET` environment variable
+4. **Set auth secret** `BADHAT_AUTH_HMAC_SECRET` environment variable
 5. **Remove debug flags** and error display
 6. **Test routes** and database connections
 
@@ -236,7 +236,7 @@ trigger_error('404 Not found', E_USER_ERROR);      // HTTP errors
 
 **Database error:** Verify credentials in `app/data/credentials.php`
 
-**CSRF failed:** Include `<?= csrf_form() ?>` in forms
+**CSRF failed:** Include `<?= csrf_field() ?>` in forms
 
 **View not rendering:** Check `app/views/template.php` exists
 

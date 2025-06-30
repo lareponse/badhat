@@ -145,7 +145,7 @@ return function($args) {
 ```php
 // app/io/route/admin/users.php
 return function($args) {
-    whoami() ?: http_out(401, 'Login required');
+    auth() ?: http_out(401, 'Login required');
     return ['users' => dbq(db(), "SELECT * FROM users")->fetchAll()];
 };
 ```
