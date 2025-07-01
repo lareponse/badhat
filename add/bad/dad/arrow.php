@@ -53,103 +53,98 @@ const ROW_GET    = 64;
 function row(PDO $pdo, string $table): callable
 {
     return function (int $behave, array $boat = []) use ($pdo, $table) {
-
         static $row = [];
 
-        $behave & ROW_LOAD && $boat && ($row[ROW_LOAD] = row_load($pdo, $table, $boat)) && $boat = null; // reset boat
+        try {
+            // LOAD ROW
+            $behave & ROW_LOAD
+                && empty($row[ROW_LOAD]) && $boat                                       // can only load once
+                && ($db_io = row_load($pdo, $table, $boat)) && is_array($db_io)         // need PK or UK in assoc
+                && ($row[ROW_LOAD] = $db_io)                                            // load row from DB
+                && ($row[ROW_SCHEMA] = array_flip(array_keys($db_io)))                  // set schema from loaded row
+                && ($boat = null);
 
-        if ($behave & ROW_SCHEMA) {
-            $boat                                   && ($row[ROW_SCHEMA] = $boat) && $boat = null;                                      // payload is always set
-            !$row[ROW_SCHEMA] && $row[ROW_LOAD]     && ($row[ROW_SCHEMA] = array_flip(array_keys($row[ROW_LOAD])));     // skip schema query if we have row_load (updates)
-            !$row[ROW_SCHEMA]                       && ($row[ROW_SCHEMA] = select_schema($pdo, $table));             // cant skip it for inserts
-        }
+            // SET ROW
+            $behave === (ROW_SET | ROW_SCHEMA)
+                && ($row[ROW_SCHEMA] = ($boat ?: select_schema($pdo, $table)))
+                && $boat && ($boat = null);                                             // falsify boat if we had one
 
-        if ($behave & ROW_SET){
-            $behave & ROW_SCHEMA && !isset($row[ROW_SCHEMA]) && ($row[ROW_SCHEMA] = select_schema($pdo, $table)); // ensure schema is set
-            $boat && row_set($row, $boat, $behave) && $boat = null;
-        }
+            $behave & ROW_SET && $boat && row_set($row, $boat, $behave) && ($boat = null);
 
-        if ($behave & ROW_SAVE && $row[ROW_EDIT]) {
-            $save = row_save($pdo, $table, $row);
+            // SAVE ROW
+            $behave & ROW_SAVE && $row[ROW_EDIT]
+                && ($row[ROW_SAVE] = row_save($pdo, $table, $row))
+                && ($row[ROW_EDIT] = []);
 
-            if (!$save || !$save instanceof PDOStatement || $save->errorCode() !== PDO::ERR_NONE) {
-                $row[ROW_ERROR] = $save ? $save->errorInfo() : 'Unknown error';
-            } else {
-                $row[ROW_EDIT] = [];
-                $row[ROW_SAVE] = $save;
+            if ($behave & ROW_GET) {
+
+                if ($behave & ROW_SCHEMA)   return $row[ROW_SCHEMA] ?? null;
+                if ($behave & ROW_ERROR)    return $row[ROW_ERROR] ?? null;
+
+                $export = row_get($row, $boat, $behave);
+                return $boat && isset($boat[0]) && !isset($boat[1])
+                    ? $export[$boat[0]]                                                 // we had a boat with a single field, return that value
+                    : $export;
             }
+        } catch (Throwable $t) {
+            $row[ROW_ERROR] = $t;
         }
-
-        if ($behave & ROW_GET) {
-            $export = row_get($row, $boat, $behave);
-            return isset($boat[0]) && !isset($boat[1]) ? $export[$boat[0]] : $export;
-        }
-
         return $row;
     };
 }
 
-function row_save(PDO $pdo, string $table, array $row): ?PDOStatement
+function row_save(PDO $pdo, string $table, array $row): PDOStatement
 {
-    if (!$row[ROW_EDIT] || !$table || !$pdo) return null; // nothing to save
+    empty($row[ROW_EDIT])               && throw new DomainException('no_alterations');
 
-    $qb = $row[ROW_LOAD]
+    [$sql, $bindings] = $row[ROW_LOAD]
         ? qb_update($table, $row[ROW_EDIT], $row[ROW_LOAD][ROW_ID])
         : qb_insert($table, $row[ROW_EDIT], array_keys($row[ROW_SCHEMA]));
 
-    return ($stmt = $pdo->prepare($qb[0])) && $stmt->execute($qb[1]) ? $stmt : null;
+    $prepared = $pdo->prepare($sql);
+    $prepared                           || throw new DomainException($sql, PDO::PARAM_EVT_EXEC_PRE);
+    $prepared->execute($bindings)       || throw new DomainException(json_encode($prepared->errorInfo()), PDO::PARAM_EVT_EXEC_POST);
+    return $prepared;
 }
 
-function row_load(PDO $pdo, string $table, array $data): ?array
+function row_load(PDO $pdo, string $table, array $data): array
 {
-    $qb = qb_select($table, $data);
-    $stmt = $pdo->prepare($qb[0]);
-    if (!$stmt || !$stmt->execute($qb[1]) || $stmt->rowCount() !== 1)
-        return null;
+    empty($data)                        && throw new DomainException('no_assoc_data');
 
-    return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+    [$sql, $bindings] = qb_select($table, $data);
+
+    $prepared = $pdo->prepare($sql);
+    $prepared                           || throw new DomainException($sql, PDO::PARAM_EVT_EXEC_PRE);
+    $prepared->execute($bindings)       || throw new DomainException(json_encode($prepared->errorInfo()), PDO::PARAM_EVT_EXEC_POST);
+    $prepared->rowCount() === 1         || throw new DomainException("cardinality of $sql is " . $prepared->rowCount());
+
+    return $prepared->fetch(PDO::FETCH_ASSOC) ?: throw new DomainException("Failed to fetch row for $sql");
 }
 
 function row_set(array &$row, array $data, int $behave = 0): bool
 {
-    $behave & ROW_SCHEMA && ($row[ROW_SCHEMA] = select_schema($row[ROW_LOAD] ?? null, $data)); // ensure schema is set
     $add_to_edit = null;
     foreach ($data as $col => $value) {
-        if ($col === ROW_ID || isset($row[ROW_LOAD][$col]) && $row[ROW_LOAD][$col] === $value)
-            continue; // skip id or existing identical values
+        if ($col === ROW_ID || (array_key_exists($col, $row[ROW_LOAD]) && $row[ROW_LOAD][$col] === $value))
+            continue;
 
-        // force edit      or if we have fields restriction and applicable ?
-        $add_to_edit = $behave & ROW_EDIT || $row[ROW_SCHEMA] && isset($row[ROW_SCHEMA][$col]);
+        $add_to_edit = $behave & ROW_EDIT || !empty($row[ROW_SCHEMA]) && isset($row[ROW_SCHEMA][$col]);
         $row[$add_to_edit ? ROW_EDIT : ROW_MORE][$col] = $value;
     }
-
     return $add_to_edit !== null;
 }
 
-// accepted ROW_GET combination: 
-//      ROW_SCHEMA, 
-//      ROW_ERROR, 
-//      (ROW_LOAD | ROW_EDIT | ROW_MORE)
-// no extra behavior, fieldters, explicitly set 
-//      to null,    cancels all fields filtering, 
-//      to [],      fallbacks to schema then empty
-function row_get(array $row, ?array $fieldters = [], int $behave = 0): ?array
+function row_get(array $row, ?array $data = [], int $behave = 0): ?array
 {
-    if($behave & ROW_SCHEMA)
-        return $row[ROW_SCHEMA] ?? null;
-
-    if ($behave & ROW_ERROR)
-        return $row[ROW_ERROR] ?? null;
-
-    if ($behave & (ROW_LOAD | ROW_EDIT | ROW_MORE)){
-        $_ = [];
-        $behave & ROW_LOAD && ($_ += $row[ROW_LOAD] ?? []);
-        $behave & ROW_EDIT && ($_ += $row[ROW_EDIT] ?? []);
-        $behave & ROW_MORE && ($_ += $row[ROW_MORE] ?? []);
-        return $_;
+    if ($behave & (ROW_LOAD | ROW_EDIT | ROW_MORE)) {
+        $parts = [];
+        $behave & ROW_LOAD && ($parts[] = $row[ROW_LOAD] ?? []);
+        $behave & ROW_EDIT && ($parts[] = $row[ROW_EDIT] ?? []);
+        $behave & ROW_MORE && ($parts[] = $row[ROW_MORE] ?? []);
+        return $parts ? array_merge(...$parts) : [];
     }
-    
-    $fieldters = $fieldters ?: array_keys($row[ROW_SCHEMA] ?? []);
+
+    $fieldters = $data ?: array_keys($row[ROW_SCHEMA] ?? []);
 
     if (empty($fieldters))
         return array_merge($row[ROW_LOAD] ?? [], $row[ROW_EDIT] ?? []);
@@ -164,9 +159,10 @@ function row_get(array $row, ?array $fieldters = [], int $behave = 0): ?array
 function select_schema(PDO $pdo, string $table): array
 {
     $fields = [];
-    $fields_query = $pdo->query("SELECT * FROM `$table` LIMIT 1");
-    for ($i = $fields_query->columnCount() - 1; $i >= 0; --$i) {
-        $m = $fields_query->getColumnMeta($i);
+    $query = $pdo->query("SELECT * FROM `$table` LIMIT 1");
+    $query || throw new DomainException("Failed to query schema for table `$table`");
+    for ($i = $query->columnCount() - 1; $i >= 0; --$i) {
+        $m = $query->getColumnMeta($i);
         $fields[$m['name']] = $m['pdo_type'] ?? true;
     }
     return $fields;
