@@ -125,7 +125,7 @@ function row_set(array &$row, array $data, int $behave = 0): bool
 {
     $add_to_edit = null;
     foreach ($data as $col => $value) {
-        if ($col === ROW_ID || (array_key_exists($col, $row[ROW_LOAD]) && $row[ROW_LOAD][$col] === $value))
+        if ($col === ROW_ID || ($row[ROW_LOAD] && array_key_exists($col, $row[ROW_LOAD]) && $row[ROW_LOAD][$col] === $value))
             continue;
 
         $add_to_edit = $behave & ROW_EDIT || !empty($row[ROW_SCHEMA]) && isset($row[ROW_SCHEMA][$col]);
