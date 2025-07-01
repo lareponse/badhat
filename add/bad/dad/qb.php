@@ -6,7 +6,6 @@ declare(strict_types=1);
 // qb_create('articles', ['title' => 'My Article', 'content' => 'This is the content.', 'permissions' => 0], ['title', 'content']);
 function qb_create(string $table, array $data, array $fields = []): array
 {
-    // vd(1, __FUNCTION__, func_get_args());
     if ($fields && $data) {
         $fields = array_keys(array_intersect_key($data, array_flip($fields)));
     }

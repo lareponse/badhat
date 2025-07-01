@@ -85,7 +85,7 @@ return function($id = null) {
         tray('main', render('users/show', ['user' => $user]));
     } else {
         $users = dbq(db(), "SELECT * FROM users ORDER BY name")->fetchAll();
-        tray('main', render('users/list', ['users' => $users]));
+        tray('main', render('users', ['users' => $users]));
     }
     
     return ['status' => 200, 'body' => render_layout()];
