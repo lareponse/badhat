@@ -2,106 +2,130 @@
 
 declare(strict_types=1);
 
-// this is query i need to write:
-// $or = clause(CLAUSE_OR);
-// $and = clause(CLAUSE_AND);
+const CLAUSE_SELECT   =    1;
+const CLAUSE_WHERE    =    2;
+const CLAUSE_GROUP_BY =   64;
+const CLAUSE_ORDER_BY =   32;
+const CLAUSE_SET      =  128;
+const CLAUSE_VALUES   =  512;
 
-// SELECT * 
-// FROM client 
-// WHERE enabled_at > 1995-01-01 
-// AND (status = 'active' OR category = 'archive') 
-// AND (tag_id IN(3, 4) OR tag_id IS NULL)
-/*
+const OP_AND      =    4;
+const OP_OR       =    8;
+const OP_IN       =   16;
+const PH_LIST   = 1024;
 
-this is the solution i think is best:
-<?php
-$selected_ids = $_POST['relational_ids']; // example selected tag IDs
-$filtered = array_intersect_key($_GET, array_flip(['status', 'category']));
-$select = clause(CLAUSE_SELECT);
-$and = clause(CLAUSE_AND);
-$or = clause(CLAUSE_OR, '=');
-$list = clause(CLAUSE_LIST, 'tag_id');
+const CLAUSE_QUERY    =  256;
 
-$sql = "SELECT id, name, status, category, tag_id, enabled_at, created_at AS created, updated_at AS updated";
-$sql .= " FROM client WHERE ";
-$sql .= $and(
-    'enabled_at > 1995-01-01',
-    $or($filtered, '='),
-    $or('tag_id IN ' . $list($selected_ids), 'tag_id IS NULL')
-);
-*/
+const IN_LIST = OP_IN | PH_LIST;
+const VALUES_LIST = CLAUSE_VALUES | PH_LIST;
 
-const CLAUSE_SELECT   = 1;
-const CLAUSE_AND      = 8;
-const CLAUSE_OR       = 16;
-const CLAUSE_ORDER_BY = 64;
-const CLAUSE_GROUP_BY = 128;
-const CLAUSE_LIST     = 512;
-const CLAUSE_SET      = 16384;
-
-/**
- * Returns a SQL‐fragment closure for the given clause‐type.
- * Internally defines & caches all your clause‐builders and helper closures.
- */
-function clause(int $type, $glue = '='): callable
+function statement(...$args)
 {
-    static $cache = [];
-    static $calls = null;
+    $sql = [];
+    $bindings = [];
 
-    $q = fn(string $id): string => '`' . str_replace('`', '``', $id) . '`';
-    $dir = fn(string $d): string => strtoupper($d) === 'DESC' ? 'DESC' : 'ASC';
+    foreach ($args as $arg) {
+        if (empty($arg)) continue;
 
-    if ($calls === null) {
-        $calls = [
-            CLAUSE_SELECT => [
-                fn($k, $v) => is_int($k) ? $q($v) : "{$q($v)} AS {$q($k)}",
-                fn($parts) => 'SELECT ' . implode(', ', $parts)
-            ],
+        if (is_array($arg) && isset($arg[0])) {
+            $sql []= $arg[0];
+            isset($arg[1]) && is_array($arg[1]) && ($bindings = array_merge($bindings, $arg[1]));
+        } else
+            $sql []= $arg;
+    }
+    return [implode(' ',$sql), $bindings];
+}
 
-            CLAUSE_ORDER_BY => [
-                fn($k, $v) => "{$q($k)} {$dir((string)$v)}",
-                fn($parts) => 'ORDER BY ' . implode(', ', $parts)
-            ],
+function clause(int $type, string $glue = ''): callable
+{
+    static $formats;
 
-            CLAUSE_GROUP_BY => [
-                fn($k) => $q($k),
-                fn($parts) => 'GROUP BY ' . implode(', ', $parts)
-            ],
-            CLAUSE_SET => [
-                fn($k, $v, $prefix) => "{$q($k)} = :{$prefix}_{$k}",
-                fn($parts) => 'SET ' . implode(', ', $parts)
-            ],
-
-            CLAUSE_LIST => [
-                fn($k, $v, $prefix) => ":{$prefix}_{$k}",
-                fn($parts) => '(' . implode(', ', $parts) . ')'
-            ],
-            CLAUSE_AND => [
-                fn($k, $v, $glue = '=') => is_int($k) ? $v : "`{$k}` {$glue} :{$k}",
-                fn($parts) => '(' . implode(' AND ', $parts) . ')'
-            ],
-            CLAUSE_OR => [
-                fn($k, $v, $glue = '=') => is_int($k) ? $v : "`{$k}` {$glue} :{$k}",
-                // fn($k, $v, $glue = '=') => "{$q($k)} {$glue} {$v}",
-                fn($parts) => '(' . implode(' OR ', $parts) . ')'
-            ],
-
+    if (!$formats) {
+        $formats = [
+            CLAUSE_SELECT               => ['SELECT ',   ', ',    ''],
+            CLAUSE_WHERE                => ['WHERE ',    ' AND ', ''],
+            CLAUSE_WHERE | OP_OR        => ['WHERE ',    ' OR ',  ''],
+            OP_AND                      => ['(',         ' AND ', ')'],
+            OP_OR                       => ['(',         ' OR ',  ')'],
+            CLAUSE_VALUES               => ['VALUES (',  ',',     ')'],
+            CLAUSE_SET                  => ['SET ',      ',',     ''],
+            CLAUSE_ORDER_BY             => ['ORDER BY ', ',',     ''],
+            CLAUSE_GROUP_BY             => ['GROUP BY ', ',',     ''],
+            CLAUSE_QUERY                => ['',          ' ',     ''],
         ];
     }
+    $fmt = $formats[$type] ?? ['', ' ', ''];
 
-    if (!isset($cache[$type])) {
-        [$transform, $format] = $calls[$type] ?? [fn($k, $v) => "$k $v", fn($p) => implode(' ', $p)];
-        $cache[$type] = function (...$parts) use ($transform, $format, $glue): string {
-            if (count($parts) === 1 && is_array($parts[0])) {
-                $src = $parts[0];
-                $parts = [];
-                foreach ($src as $k => $v) {
-                    $parts[] = $transform($k, $v, $glue);
+    return function (...$args) use ($fmt, $glue, $type) {
+        [$pre, $delim, $suf] = $fmt;
+        $parts = $bindings = [];
+
+        if ($type & CLAUSE_QUERY) {
+            $sql = '';
+            // vd($args);
+            foreach ($args as $arg) {
+                if (empty($arg)) continue;
+                if (is_array($arg) && isset($arg[0])) {
+                    $sql .= ' ' . $arg[0];
+                    $bindings = array_merge($bindings, $arg[1] ?? []);
+                } else {
+                    $sql .= ' ' . $arg;
                 }
             }
-            return $format($parts);
-        };
-    }
+            return [$sql, $bindings];
+        }
 
-    return $cache[$type];
+        if ($type & (PH_LIST)) {
+            vd($args);
+            $params = [];
+            foreach ($args as $i => $v) {
+                $ph = ":{$glue}_in_{$i}";
+                $params[] = $ph;
+                $bindings[$ph] = $v;
+            }
+            $prefix = $type & OP_IN ? "IN" : "VALUES";
+            $sql = "$prefix (" . implode(', ', $params) . ")";
+            return [$sql, $bindings];
+        }
+
+        if (count($args) === 1 && is_array($args[0])) {
+            foreach ($args[0] as $k => $v) {
+                if ($type & CLAUSE_SELECT) {
+                    $frag = is_int($k) ? "$v" : "$v AS `$k`";
+                } elseif ($type & (OP_AND | OP_OR | CLAUSE_WHERE)) {
+                    if (is_int($k)) {
+                        $frag = $v;
+                    } else {
+                        $frag = "`$k` $glue :$k";
+                        $bindings[$k] = $v;
+                    }
+                } elseif ($type & CLAUSE_ORDER_BY) {
+                    $frag = "`$k` " . (strtoupper($v) === 'DESC' ? 'DESC' : 'ASC');
+                } elseif ($type & CLAUSE_GROUP_BY) {
+                    $frag = "`$k`";
+                } elseif ($type & (PH_LIST | CLAUSE_VALUES)) {
+                    $frag = ":$k";
+                    $bindings[$k] = $v;
+                } elseif ($type & CLAUSE_SET) {
+                    $frag = "`$k` = :$k";
+                    $bindings[$k] = $v;
+                } else {
+                    $frag = "$k$glue$v";
+                }
+                $parts[] = $frag;
+            }
+        } else {
+            // vd($args);
+            foreach ($args as $arg) {
+                if (is_array($arg) && isset($arg[0])) {
+                    $parts[] = $arg[0];
+                    isset($arg[1]) && is_array($arg[1]) && ($bindings = array_merge($bindings, $arg[1]));
+                } elseif (is_string($arg)) {
+                    $parts[] = $arg;
+                }
+            }
+        }
+
+        return [$pre . implode($delim, $parts) . $suf, $bindings];
+    };
 }
