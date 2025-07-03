@@ -12,11 +12,8 @@ const CLAUSE_VALUES   =  512;
 const OP_AND      =    4;
 const OP_OR       =    8;
 const OP_IN       =   16;
-const PH_LIST   = 1024;
+const PH_LIST     = 1024;
 
-const CLAUSE_QUERY    =  256;
-
-const IN_LIST = OP_IN | PH_LIST;
 const VALUES_LIST = CLAUSE_VALUES | PH_LIST;
 
 function statement(...$args)
@@ -51,29 +48,15 @@ function clause(int $type, string $glue = ''): callable
             CLAUSE_SET                  => ['SET ',      ',',     ''],
             CLAUSE_ORDER_BY             => ['ORDER BY ', ',',     ''],
             CLAUSE_GROUP_BY             => ['GROUP BY ', ',',     ''],
-            CLAUSE_QUERY                => ['',          ' ',     ''],
         ];
     }
-    $fmt = $formats[$type] ?? ['', ' ', ''];
+    
+    $fmt        = $formats[$type] ?? ['', ' ', ''];
+    $bindings   = [];
+    $parts      = [];
 
-    return function (...$args) use ($fmt, $glue, $type) {
+    return function (...$args) use ($type, $glue, $fmt, &$bindings, &$parts) {
         [$pre, $delim, $suf] = $fmt;
-        $parts = $bindings = [];
-
-        if ($type & CLAUSE_QUERY) {
-            $sql = '';
-            // vd($args);
-            foreach ($args as $arg) {
-                if (empty($arg)) continue;
-                if (is_array($arg) && isset($arg[0])) {
-                    $sql .= ' ' . $arg[0];
-                    $bindings = array_merge($bindings, $arg[1] ?? []);
-                } else {
-                    $sql .= ' ' . $arg;
-                }
-            }
-            return [$sql, $bindings];
-        }
 
         if ($type & (PH_LIST)) {
             vd($args);
@@ -88,33 +71,47 @@ function clause(int $type, string $glue = ''): callable
             return [$sql, $bindings];
         }
 
-        if (count($args) === 1 && is_array($args[0])) {
-            foreach ($args[0] as $k => $v) {
-                if ($type & CLAUSE_SELECT) {
-                    $frag = is_int($k) ? "$v" : "$v AS `$k`";
-                } elseif ($type & (OP_AND | OP_OR | CLAUSE_WHERE)) {
-                    if (is_int($k)) {
-                        $frag = $v;
-                    } else {
-                        $frag = "`$k` $glue :$k";
-                        $bindings[$k] = $v;
-                    }
-                } elseif ($type & CLAUSE_ORDER_BY) {
-                    $frag = "`$k` " . (strtoupper($v) === 'DESC' ? 'DESC' : 'ASC');
-                } elseif ($type & CLAUSE_GROUP_BY) {
-                    $frag = "`$k`";
-                } elseif ($type & (PH_LIST | CLAUSE_VALUES)) {
-                    $frag = ":$k";
-                    $bindings[$k] = $v;
-                } elseif ($type & CLAUSE_SET) {
-                    $frag = "`$k` = :$k";
-                    $bindings[$k] = $v;
-                } else {
-                    $frag = "$k$glue$v";
+        // browse the $or('raw sql', ['bind' => 'value'], 'raw sql', $and('raw sql', ['bind' => 'value'], 'raw sql'))
+        foreach ($args as $arg) {
+            if(is_string($arg)){
+                $parts[] = $arg;
+            } elseif (is_array($arg)){
+                // 1. return of a closure
+                if(count($args) === 2 && isset($arg['clausure_query']) && isset($arg['clausure_bindings'])) { // result of another closure
+                    $parts += $arg['clausure_query'];
+                    isset($arg[1]) && is_array($arg[1]) && ($bindings = array_merge($bindings, $arg['clausure_bindings']));
                 }
-                $parts[] = $frag;
+                else{
+                    foreach ($args[0] as $k => $v) {
+                        if ($type & CLAUSE_SELECT) {
+                            $frag = is_int($k) ? "$v" : "$v AS `$k`";
+                        } elseif ($type & (OP_AND | OP_OR | CLAUSE_WHERE)) {
+                            if (is_int($k)) {
+                                $frag = $v;
+                            } else {
+                                $frag = "`$k` $glue :$k";
+                                $bindings[$k] = $v;
+                            }
+                        } elseif ($type & CLAUSE_ORDER_BY) {
+                            $frag = "`$k` " . (strtoupper($v) === 'DESC' ? 'DESC' : 'ASC');
+                        } elseif ($type & CLAUSE_GROUP_BY) {
+                            $frag = "`$k`";
+                        } elseif ($type & (PH_LIST | CLAUSE_VALUES)) {
+                            $frag = ":$k";
+                            $bindings[$k] = $v;
+                        } elseif ($type & CLAUSE_SET) {
+                            $frag = "`$k` = :$k";
+                            $bindings[$k] = $v;
+                        } else {
+                            $frag = "$k$glue$v";
+                        }
+                        $parts[] = $frag;
+                    }
+                }
             }
-        } else {
+        } 
+        /*
+        else {
             // vd($args);
             foreach ($args as $arg) {
                 if (is_array($arg) && isset($arg[0])) {
@@ -125,6 +122,7 @@ function clause(int $type, string $glue = ''): callable
                 }
             }
         }
+        */
 
         return [$pre . implode($delim, $parts) . $suf, $bindings];
     };
