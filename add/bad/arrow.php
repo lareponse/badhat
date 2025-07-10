@@ -115,7 +115,7 @@ function row_load(PDO $pdo, string $table, array $data): array
     $prepared = $pdo->prepare($sql);
     $prepared                           || throw new DomainException($sql, PDO::PARAM_EVT_EXEC_PRE);
     $prepared->execute($bindings)       || throw new DomainException(json_encode($prepared->errorInfo()), PDO::PARAM_EVT_EXEC_POST);
-    $prepared->rowCount() === 1         || throw new DomainException("cardinality of $sql is " . $prepared->rowCount());
+    $prepared->rowCount() === 1         || throw new DomainException('cardinality of '. $prepared->rowCount() . ' for  ' . $sql);
 
     return $prepared->fetch(PDO::FETCH_ASSOC) ?: throw new DomainException("Failed to fetch row for $sql");
 }
