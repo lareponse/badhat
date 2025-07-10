@@ -70,8 +70,7 @@ function row(PDO $pdo, string $table, string $aipk = 'id'): callable
 
             // SAVE --no boat
             $behave & ROW_SAVE && !empty($row[ROW_EDIT])
-                && ($row[ROW_SAVE] = row_save($pdo, $row))
-                && ($row[ROW_EDIT] = []);
+                && ($row[ROW_SAVE] = row_save($pdo, $row));
 
             // GET  -- boat optional, last thing to do
             if ($behave & ROW_GET) {
