@@ -3,75 +3,70 @@
 declare(strict_types=1);
 
 /**
- * db() — Get or inject a PDO instance by profile ('' = unnamed)
- *
+ * db() { Get or set a SINGLE cached PDO connection }
+ * 
  * Usage:
- *   db()                         get default connection (env credentials)
- *   db('read')                   get 'read' connection
- *   db(PDO)                      override default connection ('')
- *   db(PDO, 'read')              set named connection
+ *   db()                         get cached connection or create from default env vars (empty suffix)
+ *   db(string)                   create connection from 'read' suffix env vars, cache and return it
+ *   db(PDO)                      set the cached connection and return it
  *
- * Expects these environment variables per profile:
- *   DB_DSN_$PROFILE
- *   DB_USER_$PROFILE
- *   DB_PASS_$PROFILE
- *
- * Before returning a cached PDO, we run “SELECT 1” to verify it’s still alive.
- * If that ping fails, we discard it and reconnect.
+ * Note: Only one connection cached. Each string suffix call replaces the cache.
+ * Note: falsy values of $param are interpreted as empty suffix ''
+ * Note: Yes, trailing underscore for default connection ENV variables (DB_DSN_, DB_USER_, DB_PASS_)
+ * 
+ * @throws DomainException          If required env var DB_DSN_${suffix} is missing
+ * @throws LogicException           If $param is neither string nor PDO, and not cache hit
+ * @throws PDOException             If PDO connection fails
  */
-function db(?PDO $pdo = null, string $suffix = ''): PDO
+function db($param = null, array $param_options = [
+    PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+    PDO::ATTR_EMULATE_PREPARES   => false,
+]): PDO
 {
     static $cache = null;
 
-    if ($pdo instanceof PDO)
-        return $cache = $pdo;
+    if (!$param)
+        $cache ??= db_connect('', $param_options); 
 
-    if ($cache instanceof PDO)
-        return $cache;
+    else if ($param instanceof PDO)
+        $cache = $param;
 
-    $dsn  = getenv('DB_DSN_' . $suffix)  ?: throw new DomainException("SetEnv DB_DSN_$suffix");
-    $user = getenv('DB_USER_' . $suffix) ?: null;
-    $pass = getenv('DB_PASS_' . $suffix) ?: null;
-
-    return $pdo = new PDO($dsn, $user, $pass, [
-        PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
-        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-        PDO::ATTR_EMULATE_PREPARES   => false,
-    ]);
+    else if (is_string($param)) 
+        $cache = db_connect($param, $param_options);
+    
+    return $cache ?? throw new LogicException('db() requires a string suffix or PDO instance');
 }
 
 /**
- * Execute SQL query with optional bindings
- *   dbq(db(), "SELECT * FROM users")
- *   dbq(db(), "SELECT * FROM operator WHERE id = ?", [$id])
- *   dbq(db(), "...", [...], 'read')
+ * Query Prepare (and execute with non empty binding params.
+ *
+ * Usage:
+ *   qp(PDO, "SELECT * FROM operator WHERE id = :id", [':id' => $id]);
+ *   qp(PDO, "SELECT * FROM events WHERE type = ?", ['click'], [PDO::ATTR_CURSOR => PDO::CURSOR_SCROLL]);
+ *   qp(PDO, "SELECT * FROM users", []); // works, but use db()->query()
+ *   qp(PDO, "SELECT * FROM users", null); // prepares only, no execution
  */
-function dbq(PDO $pdo, string $sql, array $bind = []): ?PDOStatement
+function qp(PDO $pdo, string $query, ?array $params, array $prepareOptions = []): PDOStatement|false
 {
-    $stmt = null;
-    try {
-        $bind ? (($stmt = $pdo->prepare($sql))->execute($bind)) : ($stmt = $pdo->query($sql));
-    } catch (PDOException $e) {
-    }
-    return $stmt ?: null;
+    $_ = $pdo->prepare($query, $prepareOptions);
+    $_ && $params!==null && $_->execute($params);
+    return $_;
 }
 
 /**
- * Execute a transaction block safely (require PDO::ERRMODE_EXCEPTION)
- *   db_transaction(fn() => {
- *       dbq(db(), "INSERT INTO logs (event) VALUES (?)", ['created']);
- *       dbq(db(), "INSERT INTO users (name) VALUES (?)", ['Alice']);
- *       return dbq(db(), "SELECT * FROM operator WHERE name = ?", ['Alice'])->fetchAll();
- *   });
+ * @requires PDO::ERRMODE_EXCEPTION
+ * @throws DomainException        If the PDO isn’t in ERRMODE_EXCEPTION
+ * @throws Throwable              Any exception from inside your callable (after rollback)
  */
 function db_transaction(PDO $pdo, callable $transaction): mixed
 {
     $pdo->getAttribute(PDO::ATTR_ERRMODE) !== PDO::ERRMODE_EXCEPTION
-        && throw new LogicException('db_transaction requires PDO::ERRMODE_EXCEPTION');
+        && throw new DomainException('db_transaction requires PDO::ERRMODE_EXCEPTION');
 
     $pdo->beginTransaction();
     try {
-        $out = $transaction();
+        $out = $transaction($pdo);
         $pdo->commit();
         return $out;
     } catch (Throwable $e) {
@@ -80,33 +75,11 @@ function db_transaction(PDO $pdo, callable $transaction): mixed
     }
 }
 
-function db_pool(string $profile = '', ?PDO $pdo = null, int $set_ttl = 0): ?PDO
+function db_connect($getenv_suffix = '', ?array $options = null): PDO
 {
-    static $pool = [];
-    static $expire  = [];
+    $dsn  = getenv('DB_DSN_' . $getenv_suffix)  ?: throw new DomainException("empty getenv(DB_DSN_$getenv_suffix)");
+    $user = getenv('DB_USER_' . $getenv_suffix) ?: null;
+    $pass = getenv('DB_PASS_' . $getenv_suffix) ?: null;
 
-    $fetch = null;
-    if ($pdo) { //setter
-        empty($pool[$profile]) && throw new LogicException("Profile '$profile' already set");
-
-        if ($set_ttl)
-            $expire[$profile] = time() + $set_ttl;
-
-        $fetch = $pool[$profile] = $pdo;
-    }
-    // has expire profile? and not expired? or is it just set? return it
-    else if (isset($pool[$profile]) && ($expire[$profile] ?? true || time() < $expire[$profile]))
-        $fetch = $pool[$profile];
-    else if (isset($pool[$profile])) { // profile with expire is expired
-        try {
-            $pool[$profile]->query('SELECT 1');
-            $expire[$profile] = time();
-            $fetch = $pool[$profile];
-        } catch (PDOException) {
-            unset($pool[$profile], $expire[$profile]);
-            return null;
-        }
-    }
-
-    return $fetch;
+    return new PDO($dsn, $user, $pass, $options);
 }
