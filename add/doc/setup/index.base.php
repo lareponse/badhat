@@ -2,31 +2,25 @@
 
 set_include_path(get_include_path() . PATH_SEPARATOR . __DIR__ . '/../..');
 
-require 'add/build.php';
 require 'add/error.php';
 require 'add/io.php';
 require 'add/db.php';
 require 'add/auth.php';
+require 'add/build.php';
 
-require 'app/morph/html.php';
+$io      = realpath(__DIR__ . '/../io');
+$request = http_in();
 
-// config: where to start (io), where to go (re_quest)
-$io        = realpath(__DIR__ . '/../io');
-$re_quest  = http_in(4096, 9);
+// Phase 1: Logic
+$route = io_route("$io/route", $request, 'index');
+$data  = io_quest($route, [], IO_INVOKE);
 
-// coding: find the route and invoke it
-$in_route  = io_route("$io/route", $re_quest, 'index');
-$in_quest  = io_quest($in_route, [], IO_INVOKE);
+// Phase 2: Presentation
+$render = io_route("$io/render", $request, 'index');
+$html   = io_quest($render, $data[IO_INVOKE] ?? [], IO_ABSORB);
 
-// render: find the render file and absorb it
-$out_route = io_route("$io/render/", $re_quest, 'index');
-$out_quest = io_quest($out_route, $in_quest[IO_INVOKE], IO_ABSORB);
-
-if (is_string($out_quest[IO_ABSORB])) {
-    http_out(200, $out_quest[IO_ABSORB], ['Content-Type' => 'text/html; charset=utf-8']);
-    exit;
-}
-
-error_log('404 Not Found for ' . $re_quest . ' in ' . $io);
-
-http_out(404, 'Not Found');
+// Output with 404 fallback
+$output = $html[IO_ABSORB] ?? null;
+$output && is_string($output)
+    ? http_out(200, $output, ['Content-Type' => 'text/html; charset=utf-8'])
+    : http_out(404, 'Not Found');
