@@ -2,11 +2,11 @@
 
 set_include_path(get_include_path() . PATH_SEPARATOR . __DIR__ . '/../..');
 
-require 'add/bad/dad/dev.php';
-require 'add/bad/error.php';
-require 'add/bad/io.php';
-require 'add/bad/db.php';
-require 'add/bad/auth.php';
+require 'add/build.php';
+require 'add/error.php';
+require 'add/io.php';
+require 'add/db.php';
+require 'add/auth.php';
 
 require 'app/morph/html.php';
 

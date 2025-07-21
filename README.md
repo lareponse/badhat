@@ -33,7 +33,7 @@ mkdir -p app/io/{route,render}
 
 ```php
 <?php
-require 'add/bad/io.php';
+require 'add/io.php';
 
 $io      = realpath(__DIR__ . '/../io');
 $request = http_in();
@@ -78,12 +78,12 @@ No flags → include render template directly; echo output is sent immediately. 
 
 ### 2. Two-Act Play
 
-* **Act I (IO\_INVOKE):** route returns an array of data.
-* **Act II (IO\_ABSORB):** render buffers output, invokes closures, collects HTML, then sends it.
+* **Act I (IO_INVOKE):** route returns an array of data.
+* **Act II (IO_ABSORB):** render buffers output, invokes closures, collects HTML, then sends it.
 
 ### 3. API-Only Performance
 
-Skip render. In your route (invoked with IO\_INVOKE), gather data, `json_encode()` it, call `http_out()`, and exit.
+Skip render. In your route (invoked with IO_INVOKE), gather data, `json_encode()` it, call `http_out()`, and exit.
 
 ---
 
@@ -105,9 +105,12 @@ Skip render. In your route (invoked with IO\_INVOKE), gather data, `json_encode(
 
 /deep/missing/path → tries:
   • app/io/route/deep/missing/path.php
-  • app/io/route/deep/missing.php (args: ['path'])
-  • app/io/route/deep.php (args: ['missing','path'])
-  • app/io/route/index.php (args: ['deep','missing','path'])
+  • app/io/route/deep/missing/path/path.php
+  • app/io/route/deep/missing.php           (args: ['path'])
+  • app/io/route/deep/missing/missing.php   (args: ['path'])
+  • app/io/route/deep.php                   (args: ['missing','path'])
+  • app/io/route/deep/deep.php              (args: ['missing','path'])
+  • app/io/route/index.php                  (args: ['deep','missing','path'])
 ```
 
 ---
