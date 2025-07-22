@@ -13,7 +13,7 @@ const OP_AND      =    4;
 const OP_OR       =    8;
 const OP_IN       =   16;
 const PH_LIST     = 1024;
-
+const SINGLETON   = 2048; // NEW : used to indicate a single value, not reusable
 const VALUES_LIST = CLAUSE_VALUES | PH_LIST;
 
 function statement(...$args)
@@ -79,7 +79,7 @@ function clause(int $type, string $glue = ''): callable
                 // 1. return of a closure
                 if(count($args) === 2 && isset($arg['clausure_query']) && isset($arg['clausure_bindings'])) { // result of another closure
                     $parts += $arg['clausure_query'];
-                    isset($arg[1]) && is_array($arg[1]) && ($bindings = array_merge($bindings, $arg['clausure_bindings']));
+                    $bindings = array_merge($bindings, $arg['clausure_bindings']);
                 }
                 else{
                     foreach ($args[0] as $k => $v) {
