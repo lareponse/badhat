@@ -41,6 +41,10 @@ function error_log_context(?Throwable $t = null): void
     if ($t) {
         error_log($t->getTraceAsString());
     }
+
+    error_log('EXECUTION_TIME: ' . (microtime(true) - $_SERVER['REQUEST_TIME_FLOAT']));
+    error_log('MEMORY_PEAK: ' . memory_get_peak_usage(true));
+    
     // Superglobals
     error_log('REQUEST_URI: ' . ($_SERVER['REQUEST_URI']   ?? 'cli'));
     error_log('METHOD: '      . ($_SERVER['REQUEST_METHOD'] ?? 'cli'));
