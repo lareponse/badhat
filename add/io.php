@@ -39,11 +39,11 @@ function http_out(int $status, string $body, array $headers = []): void
     exit;
 }
 
-function io_route(string $start, string $guarded_uri, string $default, int $behave = 0): array
+function io_route(string $start, string $guarded_uri, int $behave = 0): array
 {
     $base = realpath($start) ?: throw new DomainException("Invalid start path: $start", 400);
     $base_len = strlen($base);
-    $guarded_uri = trim($guarded_uri, '/') ?: $default;
+    $guarded_uri = trim($guarded_uri, '/');
 
     if ($behave & (IO_DEEP | IO_ROOT)) {
         $count = substr_count($guarded_uri, '/') + 1;
@@ -55,29 +55,17 @@ function io_route(string $start, string $guarded_uri, string $default, int $beha
         while ($depth !== $end) {
             // Find depth-th slash position
             $pos = -1;
-            for ($i = 0; $i < $depth; $i++) {
+            for ($i = 0; $i < $depth && $pos !== false; $i++) 
                 $pos = strpos($guarded_uri, '/', $pos + 1);
-                if ($pos === false) break;
-            }
-
-            $candidate = $pos === false ? $guarded_uri : substr($guarded_uri, 0, $pos);
-            $args_start = $pos === false ? strlen($guarded_uri) : $pos + 1;
-
-            $path = safe_path($base, $candidate, $base_len, $behave);
-            if ($path) {
-                $args = $args_start >= strlen($guarded_uri)
-                    ? []
-                    : explode('/', substr($guarded_uri, $args_start));
+            
+            $candidate = $pos ? substr($guarded_uri, 0, $pos) : $guarded_uri;
+            if ($path = safe_path($base, $candidate, $base_len, $behave)) {
+                $args_start = $pos === false ? strlen($guarded_uri) : $pos + 1;
+                $args = $args_start >= strlen($guarded_uri) ? [] : explode('/', substr($guarded_uri, $args_start));
+                
                 return [IO_PATH => $path, IO_ARGS => $args];
             }
-
             $depth += $step;
-        }
-
-        // Finally try default fallback
-        $path = safe_path($base, $default, $base_len, $behave);
-        if ($path) {
-            return [IO_PATH => $path, IO_ARGS => explode('/', $guarded_uri)];
         }
 
         return [];
