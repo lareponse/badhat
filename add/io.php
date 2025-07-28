@@ -39,6 +39,18 @@ function http_out(int $status, string $body, array $headers = []): void
     exit;
 }
 
+function io_path(string $base, string $candidate, int $base_len, int $behave): ?string
+{
+    $real = realpath($base . '/' . $candidate . '.php');
+    if ($real && strncmp($real, $base, $base_len) === 0)
+        return $real;
+
+    return ($behave & IO_FLEX)
+        ? io_path($base, $candidate . '/' . basename($candidate), $base_len, 0)
+        : null;
+}
+
+
 function io_route(string $start, string $guarded_uri, int $behave = 0): array
 {
     $base = realpath($start) ?: throw new DomainException("Invalid start path: $start", 400);
@@ -51,18 +63,16 @@ function io_route(string $start, string $guarded_uri, int $behave = 0): array
         $depth = $behave & IO_ROOT ? 1 : $count;
         $end = $behave & IO_ROOT ? $count + 1 : 0;
 
-        // Try specific depths first
         while ($depth !== $end) {
-            // Find depth-th slash position
             $pos = -1;
-            for ($i = 0; $i < $depth && $pos !== false; $i++) 
+            for ($i = 0; $i < $depth && $pos !== false; $i++)
                 $pos = strpos($guarded_uri, '/', $pos + 1);
-            
+
             $candidate = $pos ? substr($guarded_uri, 0, $pos) : $guarded_uri;
-            if ($path = safe_path($base, $candidate, $base_len, $behave)) {
+            if ($path = io_path($base, $candidate, $base_len, $behave)) {
                 $args_start = $pos === false ? strlen($guarded_uri) : $pos + 1;
                 $args = $args_start >= strlen($guarded_uri) ? [] : explode('/', substr($guarded_uri, $args_start));
-                
+
                 return [IO_PATH => $path, IO_ARGS => $args];
             }
             $depth += $step;
@@ -72,20 +82,10 @@ function io_route(string $start, string $guarded_uri, int $behave = 0): array
     }
 
     // mirroring mode REQUEST_URI is filesystem path  
-    $path = safe_path($base, $guarded_uri, $base_len, $behave);
+    $path = io_path($base, $guarded_uri, $base_len, $behave);
     return $path ? [IO_PATH => $path, IO_ARGS => []] : [];
 }
 
-function safe_path(string $base, string $candidate, int $base_len, int $behave): ?string
-{
-    $real = realpath($base . '/' . $candidate . '.php');
-    if ($real && strncmp($real, $base, $base_len) === 0)
-        return $real;
-
-    return ($behave & IO_FLEX)
-        ? safe_path($base, $candidate . '/' . basename($candidate), $base_len, 0)
-        : null;
-}
 
 function io_quest($io_route = [], $include_vars = [], $behave = 0): array
 {
