@@ -14,11 +14,10 @@ const IO_ROOT = 256;   // Root-first route lookup
 const IO_FLEX = 512;   // Flexible routing: try file + file/file patterns
 
 // check if the request is a valid beyond webserver .conf
-function http_in($max_length = 4096, $max_decode = 9): string
+function http_in(int $max_length = 4096, int $max_decode = 9): string
 {
     // CSRF check
-    if (!empty($_POST) && function_exists('csrf_validate') && !csrf_validate())
-        http_out(403, 'Invalid CSRF token.', ['Content-Type' => 'text/plain; charset=UTF-8']);
+    !empty($_POST) && function_exists('csrf_validate') && !csrf_validate() && http_out(403, 'Invalid CSRF token.', ['Content-Type' => 'text/plain; charset=utf-8']);
 
     $coded = $_SERVER['REQUEST_URI'] ?? '';
     do {
@@ -27,10 +26,9 @@ function http_in($max_length = 4096, $max_decode = 9): string
 
     $max_decode                    ?: throw new DomainException('Path decoding loop detected', 400);
     strpos($path, '://') === false || throw new DomainException('Stream wrappers not allowed', 400);
-    (strlen($path) > $max_length)  && throw new DomainException('Path exceeds allowed length', 400);
+    strlen($path) > $max_length    && throw new DomainException('Path exceeds allowed length', 400);
 
-    $path = preg_replace('#\/\/+#', '/', $path);
-    return parse_url($path ?: '', PHP_URL_PATH) ?? '';
+    return parse_url(preg_replace('#\/\/+#', '/', $path ?: ''), PHP_URL_PATH) ?? '';
 }
 
 function http_out(int $status, string $body, array $headers = []): void
@@ -41,38 +39,57 @@ function http_out(int $status, string $body, array $headers = []): void
     exit;
 }
 
-// requires glibc AFTER version 2.26
 function io_route(string $start, string $guarded_uri, string $default, int $behave = 0): array
 {
-    $start = realpath($start) ?: throw new DomainException("Invalid start path: $start", 400);
+    // Common setup
+    $base = realpath($start) ?: throw new DomainException("Invalid start path: $start", 400);
+    $base_len = strlen($base); // micro-optimization for realpath checks
 
-    $baseSlash = rtrim($start, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
+    $segments = $guarded_uri === '' ? [] : explode('/', trim($guarded_uri, '/'));
 
-    $segments = explode('/', trim($guarded_uri, '/'));
-    $segments = $segments[0] === '' ? [] : $segments;
+    // Delegate based on behavior
+    if ($behave & (IO_DEEP | IO_ROOT)) {
+        $count = count($segments);
+        $step   = $behave & IO_ROOT ? 1 : -1;
+        $depth  = $behave & IO_ROOT ? 0 : $count;
+        $end    = $behave & IO_ROOT ? $count + 1 : -1;
 
-    if ($behave & (IO_DEEP | IO_ROOT))
-        return io_walk($baseSlash, $segments, $default, $behave);
-    
-    $path = safe_path($baseSlash, ...$segments);
-    
-    if (!$path && ($behave & IO_FLEX)) {
-        array_push($segments, basename($segments[count($segments) - 1]));
-        $path = safe_path($baseSlash, ...$segments);
+        while ($depth !== $end) {
+            $path_segments = $depth > 0 ? array_slice($segments, 0, $depth) : [$default];
+
+            $path = safe_path($base, $path_segments, $base_len, $behave);
+            if ($path)
+                return [IO_PATH => $path, IO_ARGS => array_slice($segments, $depth)];
+            $depth += $step;
+        }
+
+        return [];
+
     }
+
+    // mirroring mode REQUEST_URI is filesystem path
+    $path = safe_path($base, $segments ?: [$default], $base_len, $behave);
     return $path ? [IO_PATH => $path, IO_ARGS => []] : [];
 }
 
+function safe_path(string $base, array $chunks, int $base_len, int $behave = 0): ?string
+{
+    $real = realpath($base . DIRECTORY_SEPARATOR . implode(DIRECTORY_SEPARATOR, $chunks) . '.php');
+    if($real && strncmp($real, $base, $base_len) === 0)
+        return $real;
+
+    return ($behave & IO_FLEX) ? safe_path($base, array_merge($chunks, [end($chunks)]), $base_len, 0) : null;
+}
 
 function io_quest($io_route = [], $include_vars = [], $behave = 0): array
 {
-    [$return, $buffer] = ob_ret_get($io_route[IO_PATH], $include_vars);
+    [$return, $buffer] = ob_ret_get($io_route[IO_PATH] ?? null, $include_vars);
     $quest = $io_route + [IO_RETURN => $return, IO_OB_GET => $buffer];
 
-    if ($behave & (IO_INVOKE | IO_ABSORB) && is_callable($return)) {
-
-        $behave & IO_INVOKE && ($quest[IO_INVOKE] = $return($quest[IO_ARGS]));
-        $behave & IO_ABSORB && ($quest[IO_ABSORB] = $return($quest[IO_OB_GET], $quest[IO_ARGS]));
+    if (($behave & (IO_INVOKE | IO_ABSORB)) && is_callable($return)) {
+        $args = $quest[IO_ARGS] ?? [];
+        ($behave & IO_INVOKE) && ($quest[IO_INVOKE] = $return($args));
+        ($behave & IO_ABSORB) && ($quest[IO_ABSORB] = $return($quest[IO_OB_GET], $args));
     }
 
     return $quest;
@@ -82,41 +99,4 @@ function ob_ret_get($path, $include_vars = []): array
 {
     ob_start() && $include_vars && extract($include_vars);
     return $path ? [@include($path), ob_get_clean()] : [];
-}
-
-function io_walk(string $base, array $segments, string $default, int $behave): array {
-    $count = count($segments);
-    $range = ($behave & IO_ROOT) ? range(0, $count) : range($count, 0, -1);
-    
-    foreach ($range as $depth) {
-        if ($depth > 0) {
-            $relative = array_slice($segments, 0, $depth);
-            $path = safe_path($base, ...$relative);
-
-            if (!$path && ($behave & IO_FLEX)) {
-                array_push($relative, basename(end($relative)));
-                $path = safe_path($base, ...$relative);
-            }
-        } else {
-            $path = safe_path($base, $default);
-        }
-
-        if ($path) {
-            return [
-                IO_PATH => $path,
-                IO_ARGS => array_slice($segments, $depth),
-            ];
-        }
-    }
-
-    return [];
-}
-
-function safe_path($base, ...$chunks): ?string
-{
-    $file = $base . implode(DIRECTORY_SEPARATOR, $chunks) . '.php';
-    $real = realpath($file);
-    return ($real && strncmp($real, $base, strlen($base)) === 0)
-        ? $real
-        : null;
 }
