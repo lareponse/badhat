@@ -39,55 +39,19 @@ function http_out(int $status, string $body, array $headers = []): void
     exit;
 }
 
-function io_path(string $base, string $candidate, int $base_len, int $behave): ?string
+function io_route(string $base, string $guarded_uri, int $behave = 0): array
 {
-    $real = realpath($base . '/' . $candidate . '.php');
-    if ($real && strncmp($real, $base, $base_len) === 0)
-        return $real;
-
-    return ($behave & IO_FLEX)
-        ? io_path($base, $candidate . '/' . basename($candidate), $base_len, 0)
-        : null;
-}
-
-
-function io_route(string $start, string $guarded_uri, int $behave = 0): array
-{
-    $base = realpath($start) ?: throw new DomainException("Invalid start path: $start", 400);
-    $base_len = strlen($base);
     $guarded_uri = trim($guarded_uri, '/');
 
-    if ($behave & (IO_DEEP | IO_ROOT)) {
-        $count = substr_count($guarded_uri, '/') + 1;
-        $step = $behave & IO_ROOT ? 1 : -1;
-        $depth = $behave & IO_ROOT ? 1 : $count;
-        $end = $behave & IO_ROOT ? $count + 1 : 0;
-
-        while ($depth !== $end) {
-            $pos = -1;
-            for ($i = 0; $i < $depth && $pos !== false; $i++)
-                $pos = strpos($guarded_uri, '/', $pos + 1);
-
-            $candidate = $pos ? substr($guarded_uri, 0, $pos) : $guarded_uri;
-            if ($path = io_path($base, $candidate, $base_len, $behave)) {
-                $args_start = $pos === false ? strlen($guarded_uri) : $pos + 1;
-                $args = $args_start >= strlen($guarded_uri) ? [] : explode('/', substr($guarded_uri, $args_start));
-
-                return [IO_PATH => $path, IO_ARGS => $args];
-            }
-            $depth += $step;
-        }
-
-        return [];
-    }
+    if ($behave & (IO_DEEP | IO_ROOT)) 
+        return io_find($base, $guarded_uri, $behave);
 
     // mirroring mode REQUEST_URI is filesystem path  
-    $path = io_path($base, $guarded_uri, $base_len, $behave);
+    $path = io_path($base, $guarded_uri, strlen($base), $behave);
     return $path ? [IO_PATH => $path, IO_ARGS => []] : [];
 }
 
-
-function io_quest($io_route = [], $include_vars = [], $behave = 0): array
+function io_fetch($io_route = [], $include_vars = [], $behave = 0): array
 {
     [$return, $buffer] = ob_ret_get($io_route[IO_PATH] ?? null, $include_vars);
     $quest = $io_route + [IO_RETURN => $return, IO_OB_GET => $buffer];
@@ -99,6 +63,47 @@ function io_quest($io_route = [], $include_vars = [], $behave = 0): array
     }
 
     return $quest;
+}
+
+function io_path(string $base, string $candidate, int $base_len, int $behave): ?string
+{
+    $attempted = false;
+    do {
+        $attempted && ($candidate = $candidate . DIRECTORY_SEPARATOR . basename($candidate));
+
+        $real = realpath($base . DIRECTORY_SEPARATOR . $candidate . '.php');
+        if ($real && strncmp($real, $base, $base_len) === 0)
+            return $real;
+    } while (($behave & IO_FLEX) && ($attempted = !$attempted));
+
+    return null;
+}
+
+function io_find(string $base, string $guarded_uri, int $behave = 0)
+{
+    $count  = substr_count($guarded_uri, '/') + 1;
+    $base_len = strlen($base);
+
+    $step   = $behave & IO_ROOT ? 1 : -1;
+    $depth  = $behave & IO_ROOT ? 1 : $count;
+    $end    = $behave & IO_ROOT ? $count + 1 : 0;
+
+    while ($depth !== $end) {
+        $pos = -1;
+        for ($i = 0; $i < $depth && $pos !== false; $i++)
+            $pos = strpos($guarded_uri, '/', $pos + 1);
+
+        $candidate = $pos ? substr($guarded_uri, 0, $pos) : $guarded_uri;
+        if ($path = io_path($base, $candidate, $base_len, $behave)) {
+            $args_start = $pos === false ? strlen($guarded_uri) : $pos + 1;
+            $args = $args_start >= strlen($guarded_uri) ? [] : explode('/', substr($guarded_uri, $args_start));
+
+            return [IO_PATH => $path, IO_ARGS => $args];
+        }
+        $depth += $step;
+    }
+
+    return [];
 }
 
 function ob_ret_get($path, $include_vars = []): array
