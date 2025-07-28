@@ -41,44 +41,62 @@ function http_out(int $status, string $body, array $headers = []): void
 
 function io_route(string $start, string $guarded_uri, string $default, int $behave = 0): array
 {
-    // Common setup
     $base = realpath($start) ?: throw new DomainException("Invalid start path: $start", 400);
-    $base_len = strlen($base); // micro-optimization for realpath checks
+    $base_len = strlen($base);
+    $guarded_uri = trim($guarded_uri, '/') ?: $default;
 
-    $segments = $guarded_uri === '' ? [] : explode('/', trim($guarded_uri, '/'));
-
-    // Delegate based on behavior
     if ($behave & (IO_DEEP | IO_ROOT)) {
-        $count = count($segments);
-        $step   = $behave & IO_ROOT ? 1 : -1;
-        $depth  = $behave & IO_ROOT ? 0 : $count;
-        $end    = $behave & IO_ROOT ? $count + 1 : -1;
+        $count = substr_count($guarded_uri, '/') + 1;
+        $step = $behave & IO_ROOT ? 1 : -1;
+        $depth = $behave & IO_ROOT ? 1 : $count;
+        $end = $behave & IO_ROOT ? $count + 1 : 0;
 
+        // Try specific depths first
         while ($depth !== $end) {
-            $path_segments = $depth > 0 ? array_slice($segments, 0, $depth) : [$default];
+            // Find depth-th slash position
+            $pos = -1;
+            for ($i = 0; $i < $depth; $i++) {
+                $pos = strpos($guarded_uri, '/', $pos + 1);
+                if ($pos === false) break;
+            }
 
-            $path = safe_path($base, $path_segments, $base_len, $behave);
-            if ($path)
-                return [IO_PATH => $path, IO_ARGS => array_slice($segments, $depth)];
+            $candidate = $pos === false ? $guarded_uri : substr($guarded_uri, 0, $pos);
+            $args_start = $pos === false ? strlen($guarded_uri) : $pos + 1;
+
+            $path = safe_path($base, $candidate, $base_len, $behave);
+            if ($path) {
+                $args = $args_start >= strlen($guarded_uri)
+                    ? []
+                    : explode('/', substr($guarded_uri, $args_start));
+                return [IO_PATH => $path, IO_ARGS => $args];
+            }
+
             $depth += $step;
         }
 
-        return [];
+        // Finally try default fallback
+        $path = safe_path($base, $default, $base_len, $behave);
+        if ($path) {
+            return [IO_PATH => $path, IO_ARGS => explode('/', $guarded_uri)];
+        }
 
+        return [];
     }
 
-    // mirroring mode REQUEST_URI is filesystem path
-    $path = safe_path($base, $segments ?: [$default], $base_len, $behave);
+    // mirroring mode REQUEST_URI is filesystem path  
+    $path = safe_path($base, $guarded_uri, $base_len, $behave);
     return $path ? [IO_PATH => $path, IO_ARGS => []] : [];
 }
 
-function safe_path(string $base, array $chunks, int $base_len, int $behave = 0): ?string
+function safe_path(string $base, string $candidate, int $base_len, int $behave): ?string
 {
-    $real = realpath($base . DIRECTORY_SEPARATOR . implode(DIRECTORY_SEPARATOR, $chunks) . '.php');
-    if($real && strncmp($real, $base, $base_len) === 0)
+    $real = realpath($base . '/' . $candidate . '.php');
+    if ($real && strncmp($real, $base, $base_len) === 0)
         return $real;
 
-    return ($behave & IO_FLEX) ? safe_path($base, array_merge($chunks, [end($chunks)]), $base_len, 0) : null;
+    return ($behave & IO_FLEX)
+        ? safe_path($base, $candidate . '/' . basename($candidate), $base_len, 0)
+        : null;
 }
 
 function io_quest($io_route = [], $include_vars = [], $behave = 0): array
