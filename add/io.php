@@ -106,8 +106,9 @@ function io_find(string $base, string $guarded_uri, int $behave = 0)
     return [];
 }
 
-function ob_ret_get($path, $include_vars = []): array
+function ob_ret_get($path, array $include_vars = []): array
 {
-    ob_start() && $include_vars && extract($include_vars);
+    foreach ($include_vars as $k => $v) $$k = $v;
+    ob_start();
     return $path ? [@include($path), ob_get_clean()] : [];
 }
