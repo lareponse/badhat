@@ -40,11 +40,11 @@ $request = http_in();
 
 // Phase 1: Logic
 $route   = io_route("$io/route", $request, 'index');
-$data    = io_quest($route, [], IO_INVOKE);
+$data    = io_fetch($route, [], IO_INVOKE);
 
 // Phase 2: Presentation
 $render  = io_route("$io/render", $request, 'index');
-$html    = io_quest($render, $data[IO_INVOKE], IO_ABSORB);
+$html    = io_fetch($render, $data[IO_INVOKE], IO_ABSORB);
 
 http_out(200, $html[IO_ABSORB]);
 ```
@@ -62,7 +62,7 @@ http_out(200, $html[IO_ABSORB]);
 * **`io_route($dir, $request, $default)`**
   Map URI to a PHP file (supports dynamic args & fallbacks).
 
-* **`io_quest($file, $vars, $flag)`**
+* **`io_fetch($file, $vars, $flag)`**
   Invoke or absorb a script:
 
   * **`IO_INVOKE`**: call returned closure with args → returns data array.

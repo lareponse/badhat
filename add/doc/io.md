@@ -32,7 +32,7 @@
 **Returns:** `[IO_PATH => $filepath, IO_ARGS => $remaining_segments]`
 
 
-`io_quest(io_route, include_vars, behave): array`
+`io_fetch(io_route, include_vars, behave): array`
 
 >Executes route with configurable behavior.
 >
@@ -53,5 +53,5 @@
 ```php
 $uri = http_in();
 $route = io_route('/app/controllers', $uri, 'index');
-$result = io_quest($route, ['db' => $pdo], IO_INVOKE);
+$result = io_fetch($route, ['db' => $pdo], IO_INVOKE);
 ```

@@ -13,11 +13,11 @@ $request = http_in();
 
 // Phase 1: Logic
 $route = io_route("$io/route", $request, 'index');
-$data  = io_quest($route, [], IO_INVOKE);
+$data  = io_fetch($route, [], IO_INVOKE);
 
 // Phase 2: Presentation
 $render = io_route("$io/render", $request, 'index');
-$html   = io_quest($render, $data[IO_INVOKE] ?? [], IO_ABSORB);
+$html   = io_fetch($render, $data[IO_INVOKE] ?? [], IO_ABSORB);
 
 // Output with 404 fallback
 $output = $html[IO_ABSORB] ?? null;
