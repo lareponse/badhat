@@ -2,13 +2,13 @@
 
 /** ARROW --------------------------------->
  * 
- * ARRays
+ * ARrays
  * Four for state (load, schema, edit, more)
  *          ROW_LOAD   (1), 
  *          ROW_EDIT   (4), 
  *          ROW_MORE   (8)
  * 
- * ROW
+ * Row
  * Load one, save one, capture errors
  *          ROW_LOAD     (1),
  *          ROW_SAVE    (16),
@@ -43,15 +43,22 @@ const ROW_GET    = 64;
 const ROW_ERROR  = 128;
 const ROW_RESET  = 256;
 
+const ROW_CREATE = ROW_SCHEMA | ROW_SET | ROW_SAVE;
+const ROW_UPDATE = ROW_LOAD | ROW_SET | ROW_SAVE; // update row context, save to DB, return row
+
 function row(PDO $pdo, string $table, string $aipk = 'id'): callable
 {
     $row = [ROW_TABLE => $table, ROW_AIPK => $aipk]; // each row() call creates a new row context to use in the closure
-    return function (int $behave, array $boat = []) use ($pdo, $table,&$row) {
+    return function (int $behave, array $boat = []) use ($pdo, &$row) {
         try {
             // RESET -- first thing to do if requested
-            $behave & ROW_RESET 
-                && ($row = array_intersect_key($row, [ROW_TABLE=>0, ROW_AIPK=>0])) // reset row context
+            $behave & ROW_RESET
+                && ($row = array_intersect_key($row, [ROW_TABLE => 0, ROW_AIPK => 0])) // reset row context
                 && ($behave &= ~ROW_RESET);
+
+            $behave & (ROW_UPDATE | ROW_CREATE) && ($setter = $boat);
+            $behave & ROW_UPDATE && ($boat = [$row[ROW_AIPK] => $boat[$row[ROW_AIPK]]]);
+            $behave & ROW_CREATE && ($boat = null);
 
             // LOAD -- needs boat of PK/UK
             $behave & ROW_LOAD
@@ -66,7 +73,8 @@ function row(PDO $pdo, string $table, string $aipk = 'id'): callable
                 && ($row[ROW_SCHEMA] = ($boat ?: select_schema($pdo, $row[ROW_TABLE])))
                 && $boat && ($boat = null);                                             // falsify boat if we had one
 
-            $behave & ROW_SET && $boat && row_set($row, $boat, $behave) && ($boat = null);
+            // put the boat back
+            $behave & ROW_SET && ($boat || $setter) && row_set($row, $setter ?? $boat, $behave) && ($boat = null);
 
             // SAVE --no boat
             $behave & ROW_SAVE && !empty($row[ROW_EDIT])
@@ -93,9 +101,9 @@ function row(PDO $pdo, string $table, string $aipk = 'id'): callable
 function row_save(PDO $pdo, array $row): PDOStatement
 {
     empty($row[ROW_EDIT])               && throw new DomainException(__FUNCTION__ . ':no_alterations');
-    empty($row[ROW_TABLE])              && throw new DomainException(__FUNCTION__.':no_table');
+    empty($row[ROW_TABLE])              && throw new DomainException(__FUNCTION__ . ':no_table');
 
-    $aipk_value = $row[ROW_LOAD][$row[ROW_AIPK]] ?? null;                               
+    $aipk_value = $row[ROW_LOAD][$row[ROW_AIPK]] ?? null;
     [$sql, $bindings] = $aipk_value ? qb_update($row, (int)$aipk_value) : qb_insert($row);
 
     $prepared = $pdo->prepare($sql);
@@ -114,7 +122,7 @@ function row_load(PDO $pdo, string $table, array $data): array
     $prepared = $pdo->prepare($sql);
     $prepared                           || throw new DomainException($sql, PDO::PARAM_EVT_EXEC_PRE);
     $prepared->execute($bindings)       || throw new DomainException(json_encode($prepared->errorInfo()), PDO::PARAM_EVT_EXEC_POST);
-    $prepared->rowCount() === 1         || throw new DomainException('cardinality of '. $prepared->rowCount() . ' for  ' . $sql);
+    $prepared->rowCount() === 1         || throw new DomainException('cardinality of ' . $prepared->rowCount() . ' for  ' . $sql);
 
     return $prepared->fetch(PDO::FETCH_ASSOC) ?: throw new DomainException("Failed to fetch row for $sql");
 }
@@ -198,9 +206,9 @@ function qb_insert(array $row): array
     $named_bindings = $placeholders = $fields = [];
     foreach ($data as $col => $val) {
         $ph = ":row_qb_$col";
-        $named_bindings  [$ph] = $val;
-        $placeholders       [] = $ph;
-        $fields             [] = "`$col`";
+        $named_bindings[$ph] = $val;
+        $placeholders[] = $ph;
+        $fields[] = "`$col`";
     }
 
     $fields         = implode(',', $fields);
@@ -220,8 +228,8 @@ function qb_update(array $row, int $id): array
 
     foreach ($data as $col => $val) {
         $ph = ":row_qb_{$col}";
-        $named_bindings  [$ph] = $val;
-        $placeholders       [] = "`$col` = $ph";
+        $named_bindings[$ph] = $val;
+        $placeholders[] = "`$col` = $ph";
     }
 
     $placeholders   = implode(', ', $placeholders);
