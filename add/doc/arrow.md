@@ -1,104 +1,205 @@
-<?php
+# ARROW: Bitwise Row Operations
+
+**Single-row database operations using bitwise behavior flags**
+
+---
+
+## Core Concept
+
+Arrow encapsulates a single database row's lifecycle in a closure, controlled by bitwise flags. Each flag represents a specific operation or data state.
+
+```php
 $article = row(db(), 'article');
-
-// most calls returns the row state array
-// except when using ROW_GET, then what you get is an array of what you asked for, 
-
-// first
-// load the article in ROW_LOAD with unique slug 'how-to-php', return internal state
-$article(ROW_LOAD, ['slug' => 'how-to-php']); // the [] is nulled
-
-// then
-// get the assoc to fill the view form
-$form_data = $article(ROW_GET | ROW_LOAD);
-
-// after form submission
-// load and alter the article
-$article(ROW_LOAD, ['slug' => 'how-to-php']); // the [] is nulled
-$article(ROW_SET, [
-    'published_at' => date('Y-m-d H:i:s'),
-    'title' => 'How to PHP',
-    'article_tags' => ['php', 'tutorial']
-]);
-// finally
-// save the changes to the database
+$article(ROW_LOAD, ['slug' => 'how-to-php']);
+$article(ROW_SET, ['title' => 'Updated Title']);
 $article(ROW_SAVE);
-// resulting sql: UPDATE `article` SET `published_at` = '2023-10-01 12:00:00' WHERE `slug` = 'how-to-php';
-// something seems missing? yes, it is coming in 10 lines **PROMISE**
+```
 
+---
 
-// or, faster
+## Bitwise Flags
+
+### State Management
+* **`ROW_LOAD (1)`** - Load row from database, set schema
+* **`ROW_SCHEMA (2)`** - Manage column definitions
+* **`ROW_EDIT (4)`** - Valid alterations (in schema)
+* **`ROW_MORE (8)`** - Auxiliary data (outside schema)
+
+### Operations
+* **`ROW_SAVE (16)`** - Persist changes to database
+* **`ROW_SET (32)`** - Apply data to internal state
+* **`ROW_GET (64)`** - Retrieve data from internal state
+* **`ROW_ERROR (128)`** - Access error state
+* **`ROW_RESET (256)`** - Clear internal state
+
+### Compound Operations
+* **`ROW_CREATE`** - `ROW_SCHEMA | ROW_SET | ROW_SAVE`
+* **`ROW_UPDATE`** - `ROW_LOAD | ROW_SET | ROW_SAVE`
+
+---
+
+## Basic Usage
+
+### Load and Display
+```php
 $article = row(db(), 'article');
 $form_data = $article(ROW_GET | ROW_LOAD, ['slug' => 'how-to-php']);
+```
 
-// then
-$article(ROW_LOAD, ['slug' => 'how-to-php']); // the [] is nulled
-$article(ROW_SET | ROW_SAVE, $post_data);
+### Update Existing
+```php
+$article(ROW_LOAD, ['slug' => 'how-to-php']);
+$article(ROW_SET, ['title' => 'New Title', 'published_at' => date('Y-m-d H:i:s')]);
+$article(ROW_SAVE);
+```
 
+### Compound Update
+```php
+$article(ROW_UPDATE, ['id' => 42, 'title' => 'New Title']);
+// Equivalent to: LOAD by id, SET title, SAVE
+```
 
-// now if your chair is on fire :
-$default_form_data = row(db(), 'article')(ROW_GET | ROW_LOAD, ['slug' => 'this-has-default-form-values-for-inserts']);
-// then
-row(db(), 'article')(ROW_SET | ROW_EDIT | ROW_SAVE, $post_data);
+### Create New
+```php
+row(db(), 'article')(ROW_CREATE, ['title' => 'New Article', 'content' => 'Content']);
+```
 
-// if your $post_data match the row schema, the record has been inserted (no ROW_LOAD)
-// you can now huppel for your life
+---
 
-// **PROMISE**
-// resulting sql: UPDATE `article` SET `published_at` = '2023-10-01 12:00:00' WHERE `slug` = 'how-to-php';
-// ? title did not change from load, so no update for it
-// ? article_tags is not part of the loaded schema, so it is not part of query
+## Data Separation
 
-// !? are article_tags lost 
-$auxiliary_data_assoc = $article(ROW_GET | ROW_MORE);
+Arrow automatically sorts incoming data based on schema:
 
-// ? can i see the validated changes
-$fresh_data_assoc = $article(ROW_GET | ROW_EDIT);
+```php
+$article(ROW_SET, [
+    'title' => 'Valid field',           // → ROW_EDIT (in schema)
+    'article_tags' => ['php', 'web']    // → ROW_MORE (outside schema)
+]);
+```
 
-// ? how does it know what to do with the article_tags
-$field_list = $article(ROW_GET | ROW_SCHEMA);
+### Retrieving Data
+```php
+$all_data = $article(ROW_GET);                    // LOAD + EDIT merged
+$valid_only = $article(ROW_GET | ROW_EDIT);       // Only schema fields
+$extra_only = $article(ROW_GET | ROW_MORE);       // Only auxiliary data
+$everything = $article(ROW_GET | ROW_LOAD | ROW_EDIT | ROW_MORE);
+```
 
-// ? where does schema come from
-// 10 more lines **PROMISE**
+### Single Field Access
+```php
+$title = $article(ROW_GET, ['title']);             // Returns string, not array
+```
 
-// ? can i bypass the schema control :
-$article(ROW_SET | ROW_EDIT, ['published_at' => date('Y-m-d H:i:s')]);
-$article(ROW_SET | ROW_MORE, ['subscription_consent' => date('Y-m-d H:i:s')]);
-// ROW_MORE content are NOT saved in the database
+---
 
-//------ GETTING STUFF OUT --------------------
-// to get the final merged state (everything loaded, with alterations applied), call
-$data_assoc = $article(ROW_GET);
-// this would be the same as $article(ROW_GET | ROW_LOAD | ROW_EDIT);
+## Schema Management
 
-// to get the merged state of any array, call any combination of ROW_LOAD, ROW_EDIT, ROW_MORE
-// whatever the combination order is, the order of precedence will be:
-// 1. ROW_LOAD - the data loaded from the database
-// 2. ROW_EDIT - the valid alterations from the request
-// 3. ROW_MORE - the auxiliary data from the request
-$data_assoc = $article(ROW_GET | ROW_LOAD | ROW_EDIT | ROW_MORE);
+### Automatic Schema
+Schema is set automatically when loading a row:
+```php
+$article(ROW_LOAD, ['slug' => 'how-to-php']);
+$schema = $article(ROW_GET | ROW_SCHEMA);          // Array of column names
+```
 
-// only alterations, licit or not
-$data_assoc = $article(ROW_GET | ROW_EDIT | ROW_MORE);
-
-// **PROMISE**
-//------ THE SCHEMA --------------------
-// arrow does not introspect schema, it uses loaded content or single query SELECT * FROM .. LIMIT 1 when load is missing
-// arrow assumes that updating a row starts by loading the row, giving all the information needed to create the persistence query
-
-// when calling ROW_LOAD with a boat (an associative array with the primary key or unique key)
-// it will set the schema from the keys of the loaded row
-
-// if you want to set the schema, call
+### Manual Schema
+```php
 $article(ROW_SCHEMA | ROW_SET, ['slug', 'title', 'content', 'published_at']);
+```
 
-// if you want to set the schema using the select_schema function
-$article(ROW_SCHEMA | ROW_SET);
+### Schema Introspection
+```php
+$article(ROW_SCHEMA | ROW_SET);                    // Uses select_schema() function
+```
 
+---
 
-//------ ERRORS --------------------
-// if anything goes wrong during the save, the row will be in error state
+## Force Data Placement
 
-// what went wrong?
-$errors = $article(ROW_GET | ROW_ERROR);
-// return null if no error
+Override automatic schema sorting:
+
+```php
+$article(ROW_SET | ROW_EDIT, ['published_at' => date('Y-m-d H:i:s')]);  // Force to EDIT
+$article(ROW_SET | ROW_MORE, ['subscription_consent' => date('Y-m-d H:i:s')]);  // Force to MORE
+```
+
+**Note**: `ROW_MORE` data is never saved to database.
+
+---
+
+## SQL Generation
+
+Arrow only generates SQL for changed values:
+
+```php
+$article(ROW_LOAD, ['slug' => 'how-to-php']);     // Loads: title='How to PHP', published_at=NULL
+$article(ROW_SET, ['title' => 'How to PHP']);     // No change - same value
+$article(ROW_SET, ['published_at' => '2023-10-01 12:00:00']);
+$article(ROW_SAVE);
+// SQL: UPDATE `article` SET `published_at` = '2023-10-01 12:00:00' WHERE `slug` = 'how-to-php';
+```
+
+---
+
+## Error Handling
+
+```php
+try {
+    $article(ROW_SAVE);
+} catch (Throwable $e) {
+    // Error automatically captured in internal state
+}
+
+$error = $article(ROW_GET | ROW_ERROR);            // Returns Throwable or null
+```
+
+---
+
+## State Reset
+
+```php
+$article(ROW_RESET);                               // Clear all internal state except table/pk
+```
+
+---
+
+## Performance Patterns
+
+### One-shot Operations
+```php
+// No intermediate variables
+row(db(), 'article')(ROW_CREATE, $post_data);
+```
+
+### Reusable Closures
+```php
+$article = row(db(), 'article');
+// Reuse $article for multiple operations
+```
+
+### Compound Flags
+```php
+// Single call instead of three separate calls
+$article(ROW_LOAD | ROW_SET | ROW_SAVE, ['id' => 42, 'title' => 'New Title']);
+```
+
+---
+
+## Return Values
+
+* **Most operations**: Return internal state array
+* **`ROW_GET` operations**: Return requested data
+* **`ROW_GET | ROW_SCHEMA`**: Return schema array
+* **`ROW_GET | ROW_ERROR`**: Return error or null
+* **Single field access**: Return field value directly
+
+---
+
+## Best Practices
+
+1. **Load before update**: Always `ROW_LOAD` before `ROW_SET` for updates
+2. **Use compound operations**: `ROW_UPDATE` and `ROW_CREATE` for common patterns
+3. **Check errors**: Always handle `ROW_ERROR` after `ROW_SAVE`
+4. **Schema-first**: Let schema determine what gets saved vs. auxiliary data
+5. **Reuse closures**: Create once, operate multiple times
+
+Arrow provides precise control over single-row operations while maintaining the BADHAT philosophy of explicit, bitwise-controlled behavior.
