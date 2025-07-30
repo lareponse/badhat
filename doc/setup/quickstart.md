@@ -18,21 +18,15 @@ touch .gitignore
 
 ```bash
 # Add BADHAT core to add/ directory
-git subtree add --prefix=add https://github.com/lareponse/BADHAT.git main --squash
-
-# Verify core files
-ls add/
-# Should see: io.php, db.php, auth.php, error.php, build.php, etc.
+git subtree add --prefix=add git@github.com:lareponse/BADHAT.git main --squash
 ```
 
 ## 3. Add Arrow Library via Subtree
 
 ```bash
 # Add arrow to add/arrow/ directory  
-git subtree add --prefix=add/arrow https://github.com/lareponse/arrow.git main --squash
+git subtree add --prefix=add/arrow git@github.com:lareponse/arrow.git main --squash
 
-# Verify arrow files
-ls add/arrow/
 # Should see arrow-specific files
 ```
 
