@@ -166,13 +166,21 @@ cd public && php -S localhost:8000
 
 ```bash
 # Update BADHAT core
-git subtree pull --prefix=add https://github.com/lareponse/BADHAT.git main --squash
+git subtree pull --prefix=add git@github.com:lareponse/BADHAT.git main --squash
 
 # Update arrow library  
-git subtree pull --prefix=add/arrow https://github.com/lareponse/arrow.git main --squash
+git subtree pull --prefix=add/arrow git@github.com:lareponse/arrow.git main --squash
 
 # Commit updates
 git commit -m "Update BADHAT and arrow"
+```
+
+```bash
+# Update BADHAT core
+git subtree push --prefix=add badhat main
+
+# Update arrow library  
+git subtree push --prefix=add/arrow arrow main
 ```
 
 ## 12. Deployment
