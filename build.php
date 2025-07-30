@@ -40,6 +40,7 @@ function vd($first, ...$others)
 
 // recovered from scaffold.php
 function scaffold(){
+    /*
     echo 'Missing ' .  (($quest[QST_CORE] & QST_PULL) ? 'render' : 'route' .' end point ') . http_in();
     echo 'Choose file to create in: '.realpath(__DIR__ . '/../../../app/io/route');
     foreach ((io_route(http_in())) as $handler => $args){
@@ -50,4 +51,5 @@ function scaffold(){
 
         echo PHP_EOL . htmlspecialchars($templateCode);
     }
+    */
 }
