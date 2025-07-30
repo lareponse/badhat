@@ -37,3 +37,17 @@ function vd($first, ...$others)
     $die && die;
     return $first; // allows chaining like vd($var)->someMethod() or if(vd($var, 'label')->anotherMethod())
 }
+
+// recovered from scaffold.php
+function scaffold(){
+    echo 'Missing ' .  (($quest[QST_CORE] & QST_PULL) ? 'render' : 'route' .' end point ') . http_in();
+    echo 'Choose file to create in: '.realpath(__DIR__ . '/../../../app/io/route');
+    foreach ((io_route(http_in())) as $handler => $args){
+        echo PHP_EOL . htmlspecialchars($handler);
+
+        $handlerArgs = empty($args) ? 'no arguments' : "Expected arguments: '" . implode(',', $args) . "'";
+        $templateCode = "<?php\n// $handlerArgs\nreturn function (\$quest) {\n\treturn ['status' => 200, 'body' => __FILE__];\n};";
+
+        echo PHP_EOL . htmlspecialchars($templateCode);
+    }
+}
