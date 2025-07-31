@@ -5,9 +5,9 @@
 !README.md
 !auth.php
 !build.php
+!core.php
 !db.php
 !error.php
-!io.php
 
 # Whitelist doc directory and contents
 !doc/
