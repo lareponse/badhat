@@ -18,7 +18,7 @@ touch .gitignore
 
 ```bash
 # Add BADHAT core to add/ directory
-git subtree add --prefix=add git@github.com:lareponse/BADHAT.git main --squash
+git subtree add --prefix=add/badhat git@github.com:lareponse/BADHAT.git main --squash
 ```
 
 ## 3. Add Arrow Library via Subtree
@@ -37,10 +37,13 @@ git subtree add --prefix=add/arrow git@github.com:lareponse/arrow.git main --squ
 // public/index.php
 set_include_path(__DIR__ . '/..' . PATH_SEPARATOR . get_include_path());
 
-require 'add/error.php';
-require 'add/io.php';
-require 'add/db.php';
-require 'add/auth.php';
+
+require 'add/badhat/build.php';
+require 'add/badhat/error.php';
+require 'add/badhat/io.php';
+require 'add/badhat/db.php';
+require 'add/badhat/auth.php';
+
 require 'add/arrow/arrow.php';  // Load arrow library
 
 $request = http_in();
