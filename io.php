@@ -25,7 +25,6 @@ function http_in(int $max_length = 4096, int $max_decode = 9): string
     } while ($max_decode-- > 0 && $path !== $coded && ($coded = $path));
 
     $max_decode                    ?: throw new DomainException('Path decoding loop detected', 400);
-    strpos($path, '://') === false || throw new DomainException('Stream wrappers not allowed', 400);
     strlen($path) > $max_length    && throw new DomainException('Path exceeds allowed length', 400);
 
     return parse_url(preg_replace('#\/\/+#', '/', $path ?: ''), PHP_URL_PATH) ?? '';
