@@ -6,6 +6,10 @@ const AUTH_REVOKE = 4;
 const AUTH_ERROR = 16;
 const AUTH_GUARD = 32;
 
+const CSRF_KEY = '_csrf_token';
+
+session_status() === PHP_SESSION_NONE  && session_start() || throw new RuntimeException('Session cannot be started', 500);
+
 // 1. auth(AUTH_SETUP, 'username', 'SELECT password FROM .. WHERE ..'); init the field names
 // 3. auth(AUTH_VERIFY, 'myusername', 'superhashedunreadablepassword'); logins
 // 4. auth(AUTH_REVOKE); logout
@@ -15,8 +19,6 @@ function auth(int $behave = 0, ?string $u = null, ?string $p = null): ?string
 {
     static $username_field = null;
     static $password_query = null;
-
-    session_status() === PHP_SESSION_NONE  && session_start();
 
     $behave & AUTH_SETUP    && $u && $p && ($username_field = $u) && ($password_query = $p);
 
@@ -29,8 +31,8 @@ function auth(int $behave = 0, ?string $u = null, ?string $p = null): ?string
     $behave & AUTH_VERIFY   && (empty($_POST) || empty($_POST[$u]) || empty($_POST[$p])) && throw new BadMethodCallException('Login must be a valid POST request');
 
     $behave & AUTH_VERIFY   && ($db_password = qp(db(), $password_query, [$_POST[$u]])) && ($db_password = ($db_password->fetchColumn()))
-                            && password_verify($_POST[$p], ($db_password)) && session_regenerate_id(true)
-                            && ($_SESSION[$username_field] = $_POST[$u]);
+        && password_verify($_POST[$p], ($db_password)) && session_regenerate_id(true)
+        && ($_SESSION[$username_field] = $_POST[$u]);
     return $_SESSION[$username_field] ?? null;
 }
 
@@ -42,18 +44,12 @@ function csp_nonce(): string
 
 function csrf_token(int $ttl = 3600): string
 {
-    if (session_status() !== PHP_SESSION_ACTIVE) {
-        session_start();
-    }
-
-    $key  = '_csrf_token';
-    $data = $_SESSION[$key] ?? ['value' => '', 'expires_at' => 0];
+    $data = $_SESSION[CSRF_KEY] ?? ['value' => '', 'expires_at' => 0];
     $now  = time();
-
     if (empty($data['value']) || $now > $data['expires_at']) {
         $data['value']      = bin2hex(random_bytes(32));
         $data['expires_at'] = $now + $ttl;
-        $_SESSION[$key]     = $data;
+        $_SESSION[CSRF_KEY] = $data;
     }
 
     return $data['value'];
@@ -61,25 +57,17 @@ function csrf_token(int $ttl = 3600): string
 
 function csrf_field(int $ttl = 3600): string
 {
-    $token = csrf_token($ttl);
-    return "<input type='hidden' name='csrf_token' value='" .
-        htmlspecialchars($token, ENT_QUOTES) .
-        "'>";
+    return '<input type="hidden" name="' . CSRF_KEY . '" value="' . htmlspecialchars(csrf_token($ttl), ENT_QUOTES) . '" />';
 }
 
 function csrf_validate(?string $token = null): bool
 {
-    if (session_status() !== PHP_SESSION_ACTIVE)
-        session_start();
-
-    $token = $token ?? ($_POST['csrf_token'] ?? '');
+    $token = $token ?? ($_POST[CSRF_KEY] ?? '');
     if ($token === '')
         return false;
 
-    $key  = '_csrf_token';
-    $data = $_SESSION[$key] ?? ['value' => '', 'expires_at' => 0];
+    $data = $_SESSION[CSRF_KEY] ?? ['value' => '', 'expires_at' => 0];
     $now  = time();
-
     return !empty($data['value'])
         && hash_equals($data['value'], $token)
         && $now <= $data['expires_at'];
