@@ -1,11 +1,17 @@
 # BADHAT
 
 ```
-Bits As Decision
-HTTP As Terminal
+Bits 
+As 
+Decision
+HTTP 
+As 
+Terminal
 ```
 
-A minimalist, two-phase PHP engine that treats HTTP like a terminal: route files decide, render files display. No magic, no ORM, no framework lock-in. Just \~500 lines of PHP.
+A minimalist, PHP phase engine that treats HTTP like a terminal: route files decide, render files display. No magic, no ORM, no framework lock-in. 
+
+Just ~200 lines of PHP that covers 80% of web app needs
 
 ---
 
@@ -33,7 +39,7 @@ mkdir -p app/io/{route,render}
 
 ```php
 <?php
-require 'add/io.php';
+require 'add/badhat/core.php';
 
 $io      = realpath(__DIR__ . '/../io');
 $request = http_in();
