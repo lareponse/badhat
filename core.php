@@ -52,7 +52,7 @@ function io_route(string $base, string $guarded_uri, int $behave = 0): array
 
 function io_fetch($io_route = [], $include_vars = [], $behave = 0): array
 {
-    [$return, $buffer] = ob_ret_get($io_route[IO_PATH] ?? null, $include_vars);
+    [$return, $buffer] = ob_ret_get($io_route[IO_PATH] ?? null, $include_vars ?? []);
     $quest = $io_route + [IO_RETURN => $return, IO_OB_GET => $buffer];
 
     if (($behave & (IO_INVOKE | IO_ABSORB)) && is_callable($return)) {
