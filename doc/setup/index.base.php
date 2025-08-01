@@ -2,11 +2,13 @@
 
 set_include_path(get_include_path() . PATH_SEPARATOR . __DIR__ . '/../..');
 
-require 'add/error.php';
-require 'add/io.php';
-require 'add/db.php';
-require 'add/auth.php';
-require 'add/build.php';
+require 'add/badhat/build.php';
+require 'add/badhat/error.php';
+require 'add/badhat/io.php';
+require 'add/badhat/db.php';
+require 'add/badhat/auth.php';
+
+require 'add/arrow/arrow.php';  // Load arrow library
 
 $io      = realpath(__DIR__ . '/../io');
 $request = http_in();
