@@ -35,7 +35,6 @@ function http_out(int $status, string $body, array $headers = []): void
     exit;
 }
 
-
 function io_map(string $base, string $guarded_uri, string $ext = 'php', int $behave = 0): array
 {
     $guarded_uri = trim($guarded_uri, '/');
@@ -77,28 +76,26 @@ function io_path(string $base, string $candidate, string $ext, int $behave = 0):
 
 function io_find(string $base, string $guarded_uri, string $ext, int $behave = 0): array
 {
-    $count  = substr_count($guarded_uri, '/') + 1;
-    $step   = $behave & IO_ROOT ? 1 : -1;
-    $depth  = $behave & IO_ROOT ? 1 : $count;
-    $end    = $behave & IO_ROOT ? $count + 1 : 0;
+    $slashes_positions = [];
+    $slashes = 0;
+    for ($pos = -1; ($pos = strpos($guarded_uri, '/', $pos+1)) !== false; ++$slashes)
+        $slashes_positions[] = $pos;
 
-    while ($depth !== $end) {
-        $pos = -1;
-        for ($i = 0; $i < $depth && $pos !== false; ++$i)
-            $pos = strpos($guarded_uri, '/', $pos + 1);
+    $segments = $slashes + 1;
 
-        $candidate = $pos ? substr($guarded_uri, 0, $pos) : $guarded_uri;
-        
+    $depth  = $behave & IO_ROOT ? 1 : $segments;
+    $end    = $behave & IO_ROOT ? $segments + 1 : 0; // +1 ? off-by-one workaround for !==
+
+    for($step = $behave & IO_ROOT ? 1 : -1; $depth !== $end; $depth += $step) {
+        $candidate = $depth <= $slashes
+            ? substr($guarded_uri, 0, $slashes_positions[$depth - 1])
+            : $guarded_uri;
+
         if ($path = io_path($base, $candidate, $ext, $behave)) {
-            
-            $args_start = $pos === false ? strlen($guarded_uri) : $pos + 1;
-            $args = $args_start >= strlen($guarded_uri) ? [] : explode('/', substr($guarded_uri, $args_start));
-
+            $args = $depth > $slashes ? [] : explode('/', substr($guarded_uri, $slashes_positions[$depth - 1] + 1));
             return [$path, $args];
         }
-        $depth += $step;
     }
-
     return [];
 }
 
