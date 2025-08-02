@@ -1,17 +1,15 @@
 <?php
 
-const IO_PATH = -1;    // Route result: resolved file path
-const IO_ARGS = -2;    // Route result: remaining path segments
+const IO_RETURN = -1;  // Quest result: included file return value
+const IO_BUFFER = -2;  // Quest result: output buffer content
 
-const IO_RETURN = -3;  // Quest result: included file return value
-const IO_BUFFER = -4;  // Quest result: output buffer content
+const IO_DEEP = 1;   // Deep-first route lookup
+const IO_ROOT = 2;   // Root-first route lookup
+const IO_FLEX = 4;   // Flexible routing: try file + file/file patterns
 
-const IO_INVOKE = 1; // Quest behavior: call return value with args
-const IO_ABSORB = 2; // Quest behavior: call return value with buffer+args
+const IO_INVOKE = 8; // Quest behavior: call return value with args
+const IO_ABSORB = 16; // Quest behavior: call return value with buffer+args
 
-const IO_DEEP = 4;   // Deep-first route lookup
-const IO_ROOT = 8;   // Root-first route lookup
-const IO_FLEX = 16;   // Flexible routing: try file + file/file patterns
 
 // check if the request is a valid beyond webserver .conf
 function http_in(int $max_decode = 9): string
@@ -37,30 +35,30 @@ function http_out(int $status, string $body, array $headers = []): void
     exit;
 }
 
-function io_route(string $base, string $guarded_uri, string $ext = 'php', int $behave = 0): array
+
+function io_map(string $base, string $guarded_uri, string $ext = 'php', int $behave = 0): array
 {
     $guarded_uri = trim($guarded_uri, '/');
 
     if ($behave & (IO_DEEP | IO_ROOT)) 
         return io_find($base, $guarded_uri, $ext, $behave);
 
-    // mirroring mode REQUEST_URI is filesystem path  
+    // mirroring mode: REQUEST_URI is filesystem path
     $path = io_path($base, $guarded_uri, $ext, $behave);
-    return $path ? [IO_PATH => $path, IO_ARGS => []] : [];
+    return $path ? [$path] : [];
 }
 
-function io_fetch($io_route = [], $include_vars = [], $behave = 0): array
+function io_run(string $io_path, array $io_args, $behave = 0): array
 {
-    [$return, $buffer] = ob_ret_get($io_route[IO_PATH] ?? null, $include_vars ?? []);
-    $quest = $io_route + [IO_RETURN => $return, IO_BUFFER => $buffer];
+    [$return, $buffer] = ob_ret_get($io_path, $io_args);
+    $loot = [IO_RETURN => $return, IO_BUFFER => $buffer];
 
     if (($behave & (IO_INVOKE | IO_ABSORB)) && is_callable($return)) {
-        $args = $quest[IO_ARGS] ?? [];
-        ($behave & IO_INVOKE) && ($quest[IO_INVOKE] = $return($args));
-        ($behave & IO_ABSORB) && ($quest[IO_ABSORB] = $return($quest[IO_BUFFER], $args));
+        ($behave & IO_INVOKE) && ($loot[IO_INVOKE] = $return($io_args));
+        ($behave & IO_ABSORB) && ($loot[IO_ABSORB] = $return($loot[IO_BUFFER], $io_args));
     }
 
-    return $quest;
+    return $loot;
 }
 
 // params: no trailing / for base, no trailing / for candidate, no . for extension
@@ -68,9 +66,7 @@ function io_fetch($io_route = [], $include_vars = [], $behave = 0): array
 function io_path(string $base, string $candidate, string $ext, int $behave = 0): ?string
 {
     $path = $base . DIRECTORY_SEPARATOR . $candidate;
-    if(is_file(vd($res = $path . '.' . $ext))){
-
-    }
+    if(is_file($res = $path . '.' . $ext))
         return $res;
 
     if (($behave & IO_FLEX) && is_file($res = $path . DIRECTORY_SEPARATOR . basename($candidate) . '.' . $ext))
@@ -98,7 +94,7 @@ function io_find(string $base, string $guarded_uri, string $ext, int $behave = 0
             $args_start = $pos === false ? strlen($guarded_uri) : $pos + 1;
             $args = $args_start >= strlen($guarded_uri) ? [] : explode('/', substr($guarded_uri, $args_start));
 
-            return [IO_PATH => $path, IO_ARGS => $args];
+            return [$path, $args];
         }
         $depth += $step;
     }
