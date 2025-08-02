@@ -38,7 +38,7 @@ const IO_ABSORB = 128; // Behavior: call return value with buffer+args
 >Maps URI to filesystem path.
 >
 >- Default: mirroring mode (URI = filesystem path)
->- `IO_DEEP|IO_ROOT`: delegates to `io_find()` for segment matching
+>- `IO_DEEP|IO_ROOT`: delegates to `io_seek()` for segment matching
 >- `IO_FLEX`: tries both `file.ext` and `file/file.ext` patterns
 
 **Returns:** `[filepath]` or `[filepath, args]` or `[]`
@@ -53,7 +53,7 @@ const IO_ABSORB = 128; // Behavior: call return value with buffer+args
 
 **Returns:** Loot array with `IO_RETURN`, `IO_BUFFER`, `IO_INVOKE`, `IO_ABSORB` keys
 
-`io_path(string $base, string $candidate, string $ext, int $behave = 0): ?string`
+`io_look(string $base, string $candidate, string $ext, int $behave = 0): ?string`
 
 >Resolves candidate to existing file path.
 >
@@ -62,13 +62,13 @@ const IO_ABSORB = 128; // Behavior: call return value with buffer+args
 
 **Returns:** Full filepath or `null`
 
-`io_find(string $base, string $guarded_uri, string $ext, int $behave = 0): array`
+`io_seek(string $base, string $guarded_uri, string $ext, int $behave = 0): array`
 
 >Segment-based file matching with directional search.
 >
 >- `IO_ROOT`: searches shallow to deep (1→N segments)
 >- `IO_DEEP`: searches deep to shallow (N→1 segments)
->- Uses `io_path()` for file resolution
+>- Uses `io_look()` for file resolution
 
 **Returns:** `[filepath, remaining_args]` or `[]`
 
