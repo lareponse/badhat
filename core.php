@@ -14,7 +14,7 @@ const IO_ROOT = 8;   // Root-first route lookup
 const IO_FLEX = 16;   // Flexible routing: try file + file/file patterns
 
 // check if the request is a valid beyond webserver .conf
-function http_in(int $max_length = 4096, int $max_decode = 9): string
+function http_in(int $max_decode = 9): string
 {
     // CSRF check
     !empty($_POST) && function_exists('csrf_validate') && !csrf_validate() && http_out(403, 'Invalid CSRF token.', ['Content-Type' => 'text/plain; charset=utf-8']);
@@ -25,7 +25,6 @@ function http_in(int $max_length = 4096, int $max_decode = 9): string
     } while ($max_decode-- > 0 && $path !== $coded && ($coded = $path));
 
     $max_decode                    ?: throw new DomainException('Path decoding loop detected', 400);
-    strlen($path) > $max_length    && throw new DomainException('Path exceeds allowed length', 400);
 
     return parse_url(preg_replace('#\/\/+#', '/', $path ?: ''), PHP_URL_PATH) ?? '';
 }
