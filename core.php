@@ -49,13 +49,15 @@ function io_map(string $base, string $guarded_uri, string $ext = 'php', int $beh
 function io_run(string $io_path, array $io_args, $behave = 0): array
 {
     $loot = [];
-    if (! ($behave & (IO_BUFFER | IO_ABSORB)))
-        $loot[IO_RETURN] = @include($io_path);
-    else{
+
+    if ($behave & (IO_BUFFER | IO_ABSORB)){
         [$return, $buffer] = ob_ret_get($io_path, $io_args);
         $loot[IO_RETURN] = $return;
         $loot[IO_BUFFER] = $buffer;
     }
+    else 
+        $loot[IO_RETURN] = @include($io_path);
+    
 
     if($behave & (IO_INVOKE | IO_ABSORB) && is_callable($loot[IO_RETURN])){
         ($behave & IO_INVOKE) && ($loot[IO_INVOKE] = $loot[IO_RETURN]($io_args));
