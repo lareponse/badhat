@@ -37,15 +37,15 @@ function http_out(int $status, string $body, array $headers = []): void
     exit;
 }
 
-function io_route(string $base, string $guarded_uri, int $behave = 0): array
+function io_route(string $base, string $guarded_uri, string $ext = 'php', int $behave = 0): array
 {
     $guarded_uri = trim($guarded_uri, '/');
 
     if ($behave & (IO_DEEP | IO_ROOT)) 
-        return io_find($base, $guarded_uri, $behave);
+        return io_find($base, $guarded_uri, $ext, $behave);
 
     // mirroring mode REQUEST_URI is filesystem path  
-    $path = io_path($base, $guarded_uri, $behave);
+    $path = io_path($base, $guarded_uri, $ext, $behave);
     return $path ? [IO_PATH => $path, IO_ARGS => []] : [];
 }
 
@@ -65,10 +65,12 @@ function io_fetch($io_route = [], $include_vars = [], $behave = 0): array
 
 // params: no trailing / for base, no trailing / for candidate, no . for extension
 // return: ? full path to an existing file
-function io_path(string $base, string $candidate, string $ext = 'php', int $behave = 0): ?string
+function io_path(string $base, string $candidate, string $ext, int $behave = 0): ?string
 {
     $path = $base . DIRECTORY_SEPARATOR . $candidate;
-    if(is_file($res = $path . '.' . $ext))
+    if(is_file(vd($res = $path . '.' . $ext))){
+
+    }
         return $res;
 
     if (($behave & IO_FLEX) && is_file($res = $path . DIRECTORY_SEPARATOR . basename($candidate) . '.' . $ext))
@@ -77,10 +79,9 @@ function io_path(string $base, string $candidate, string $ext = 'php', int $beha
     return null;
 }
 
-function io_find(string $base, string $guarded_uri, int $behave = 0): array
+function io_find(string $base, string $guarded_uri, string $ext, int $behave = 0): array
 {
     $count  = substr_count($guarded_uri, '/') + 1;
-
     $step   = $behave & IO_ROOT ? 1 : -1;
     $depth  = $behave & IO_ROOT ? 1 : $count;
     $end    = $behave & IO_ROOT ? $count + 1 : 0;
@@ -91,7 +92,9 @@ function io_find(string $base, string $guarded_uri, int $behave = 0): array
             $pos = strpos($guarded_uri, '/', $pos + 1);
 
         $candidate = $pos ? substr($guarded_uri, 0, $pos) : $guarded_uri;
-        if ($path = io_path($base, $candidate, $behave)) {
+        
+        if ($path = io_path($base, $candidate, $ext, $behave)) {
+            
             $args_start = $pos === false ? strlen($guarded_uri) : $pos + 1;
             $args = $args_start >= strlen($guarded_uri) ? [] : explode('/', substr($guarded_uri, $args_start));
 
