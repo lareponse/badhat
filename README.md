@@ -41,7 +41,7 @@ mkdir -p app/io/{route,render}
 <?php
 require 'add/badhat/core.php';
 
-$io      = realpath(__DIR__ . '/../io');
+$io      = __DIR__ . '/../io';
 $request = http_in();
 
 // Phase 1: Logic

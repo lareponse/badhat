@@ -40,7 +40,7 @@
 >- Captures return value and output buffer
 >- Optional callable invocation via `IO_INVOKE|IO_ABSORB` flags
 
-**Returns:** Route array + `IO_RETURN` + `IO_OB_GET` + optional invoke results
+**Returns:** Route array + `IO_RETURN` + `IO_BUFFER` + optional invoke results
 
 `ob_ret_get(path, include_vars): array`
 
