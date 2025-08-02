@@ -14,12 +14,12 @@ $io      = __DIR__ . '/../io';
 $request = http_in();
 
 // Phase 1: Logic
-$route = io_route("$io/route", $request, 'index');
-$data  = io_fetch($route, [], IO_INVOKE);
+$route = io_map("$io/route", $request, 'index');
+$data  = io_run($route, [], IO_INVOKE);
 
 // Phase 2: Presentation
-$render = io_route("$io/render", $request, 'index');
-$html   = io_fetch($render, $data[IO_INVOKE] ?? [], IO_ABSORB);
+$render = io_map("$io/render", $request, 'index');
+$html   = io_run($render, $data[IO_INVOKE] ?? [], IO_ABSORB);
 
 // Output with 404 fallback
 $output = $html[IO_ABSORB] ?? null;

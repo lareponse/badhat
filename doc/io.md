@@ -20,7 +20,7 @@
 
 **Exits**
 
-`io_route(start, guarded_uri, default): array`
+`io_map(start, guarded_uri, default): array`
 
 >File-based routing with directory traversal protection.
 > 
@@ -32,7 +32,7 @@
 **Returns:** `[IO_PATH => $filepath, IO_ARGS => $remaining_segments]`
 
 
-`io_fetch(io_route, include_vars, behave): array`
+`io_run(io_route, include_vars, behave): array`
 
 >Executes route with configurable behavior.
 >
@@ -52,6 +52,6 @@
 
 ```php
 $uri = http_in();
-$route = io_route('/app/controllers', $uri, 'index');
-$result = io_fetch($route, ['db' => $pdo], IO_INVOKE);
+$route = io_map('/app/controllers', $uri, 'index');
+$result = io_run($route, ['db' => $pdo], IO_INVOKE);
 ```

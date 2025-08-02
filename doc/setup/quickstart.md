@@ -49,12 +49,12 @@ require 'add/arrow/arrow.php';  // Load arrow library
 $request = http_in();
 
 // Phase 1: Route logic
-$route = io_route('app/io/route', $request, 'index');
-$data = io_fetch($route, [], IO_INVOKE);
+$route = io_map('app/io/route', $request, 'index');
+$data = io_run($route, [], IO_INVOKE);
 
 // Phase 2: Render output
-$render = io_route('app/io/render', $request, 'index');
-$html = io_fetch($render, $data[IO_INVOKE] ?? [], IO_ABSORB);
+$render = io_map('app/io/render', $request, 'index');
+$html = io_run($render, $data[IO_INVOKE] ?? [], IO_ABSORB);
 
 http_out(200, $html[IO_ABSORB] ?? 'Not Found');
 ```
