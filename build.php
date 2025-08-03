@@ -43,7 +43,7 @@ function scaffold(){
     /*
     echo 'Missing ' .  (($quest[QST_CORE] & QST_PULL) ? 'render' : 'route' .' end point ') . http_in();
     echo 'Choose file to create in: '.realpath(__DIR__ . '/../../../app/io/route');
-    foreach ((io_route(http_in())) as $handler => $args){
+    foreach ((io_map(http_in())) as $handler => $args){
         echo PHP_EOL . htmlspecialchars($handler);
 
         $handlerArgs = empty($args) ? 'no arguments' : "Expected arguments: '" . implode(',', $args) . "'";
