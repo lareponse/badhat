@@ -83,8 +83,7 @@ function auth_http(): ?string
         return null;
     }
 
-    $secret = getenv('BADHAT_AUTH_HMAC_SECRET')
-        ?: throw new DomainException('HMAC secret missing', 500);
+    $secret = $_SERVER['BADHAT_AUTH_HMAC_SECRET'] ?? getenv('BADHAT_AUTH_HMAC_SECRET') ?: throw new DomainException('HMAC secret missing', 500);
 
     $expected = hash_hmac('sha256', $user, $secret);
     return hash_equals($expected, $sig) ? $user : null;
