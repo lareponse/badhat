@@ -27,14 +27,14 @@ function db($param = null, array $param_options = [
     static $cache = null;
 
     if (!$param)
-        $cache ??= db_connect('', $param_options); 
+        $cache ??= db_connect('', $param_options);
 
     else if ($param instanceof PDO)
         $cache = $param;
 
-    else if (is_string($param)) 
+    else if (is_string($param))
         $cache = db_connect($param, $param_options);
-    
+
     return $cache ?? throw new LogicException('db() requires a string suffix or PDO instance');
 }
 
@@ -50,7 +50,7 @@ function db($param = null, array $param_options = [
 function qp(PDO $pdo, string $query, ?array $params, array $prepareOptions = []): PDOStatement|false
 {
     $_ = $pdo->prepare($query, $prepareOptions);
-    $_ && $params!==null && $_->execute($params);
+    $_ && $params !== null && $_->execute($params);
     return $_;
 }
 
@@ -77,9 +77,9 @@ function db_transaction(PDO $pdo, callable $transaction): mixed
 
 function db_connect($getenv_suffix = '', ?array $options = null): PDO
 {
-    $dsn  = getenv('DB_DSN_' . $getenv_suffix)  ?: throw new DomainException("empty getenv(DB_DSN_$getenv_suffix)");
-    $user = getenv('DB_USER_' . $getenv_suffix) ?: null;
-    $pass = getenv('DB_PASS_' . $getenv_suffix) ?: null;
+    $dsn  = $_SERVER['DB_DSN_'  . $getenv_suffix] ?? (getenv('DB_DSN_'  . $getenv_suffix) ?: throw new DomainException("empty env(DB_DSN_$getenv_suffix)"));
+    $user = $_SERVER['DB_USER_' . $getenv_suffix] ?? (getenv('DB_USER_' . $getenv_suffix) ?: null);
+    $pass = $_SERVER['DB_PASS_' . $getenv_suffix] ?? (getenv('DB_PASS_' . $getenv_suffix) ?: null);
 
     return new PDO($dsn, $user, $pass, $options);
 }
