@@ -163,7 +163,7 @@ return function($args) {
 
 ## Why BADHAT?
 
-* **Simplicity:** \~500 lines of core, zero bloat.
+* **Simplicity:** \~200 lines of core, zero bloat.
 * **Performance:** Direct file execution, minimal overhead.
 * **Flexibility:** Swap or reuse renderers.
 * **Control:** Full-stack ownership, no hidden magic.
