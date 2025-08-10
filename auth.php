@@ -9,12 +9,12 @@ const CSRF_KEY = '_csrf_token';
 
 session_status() === PHP_SESSION_NONE  && (session_start() || throw new RuntimeException('Session cannot be started', 500));
 
-// 1. auth(AUTH_SETUP, 'username', 'SELECT password FROM .. WHERE ..'); init the field names
-// 3. auth(AUTH_VERIFY, 'myusername', 'superhashedunreadablepassword'); logins
-// 4. auth(AUTH_REVOKE); logout
-// 5. auth(AUTH_GUARD); check if logged in, throw exception if not
+// 1. auth(AUTH_SETUP, 'username', PDOStatement); init the field name and the statement to fetch the password hash
+// 3. auth(AUTH_VERIFY, 'myusername', 'superhashedunreadablepassword'); for login POST route
+// 4. auth(AUTH_REVOKE); for logout route
+// 5. auth(AUTH_GUARD, url); redirect to url if not logged in
 // 2. auth(); check if logged in return username or null
-function auth(int $behave = 0, ?string $u = null, $p = null): ?string
+function auth(int $behave=0, ?string $u = null, $p = null): ?string
 {
     static $username_field = null;
     static $password_query = null; // PDOStatement
@@ -22,19 +22,22 @@ function auth(int $behave = 0, ?string $u = null, $p = null): ?string
     // vd(0, $behave, $u, $p, $username_field, $password_query, $_SESSION);
     $behave & AUTH_SETUP    && $u && $p && ($username_field = $u) && ($password_query = $p);
     $behave & AUTH_REVOKE   && session_destroy() && ($password_query = $username_field = null);
-    $behave & AUTH_GUARD    && !isset($username_field, $_SESSION[$username_field])       && throw new RuntimeException('Unauthorized', 401);
-
+    
     if($behave & AUTH_VERIFY){
-        !isset($u, $p, $username_field, $password_query)        && throw new BadFunctionCallException('Missing AUTH_SETUP or verify values', 500);
+        !isset($u, $p, $username_field, $password_query)        && throw new BadFunctionCallException('Missing AUTH_SETUP or function params', 500);
         (empty($_POST[$u]) || empty($_POST[$p]))                && throw new BadMethodCallException('Login must be a valid POST request');
         
         $password_query instanceof PDOStatement                 || throw new InvalidArgumentException('Password query must be a valid PDOStatement');
         $password_query->execute([$_POST[$u]])                  || throw new RuntimeException('Password query execution failed', 500);
         
         $db_password = $password_query->fetchColumn();
-        if($db_password !== false && password_verify($_POST[$p], ($db_password)) && session_regenerate_id(true)) {
-            $_SESSION[$username_field] = $_POST[$u];
-        }
+        if($db_password !== false && password_verify($_POST[$p], ($db_password)) && session_regenerate_id(true))
+            return ($_SESSION[$username_field] = $_POST[$u]);
+    }
+
+    if($behave & AUTH_GUARD && !isset($username_field, $_SESSION[$username_field])){
+        header('Location: ' . ($u ?: '/'));
+        exit;
     }
 
     return $_SESSION[$username_field] ?? null;
