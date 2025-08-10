@@ -47,7 +47,7 @@ function db($param = null, array $param_options = [
  *   qp(PDO, "SELECT * FROM users", []); // works, but use db()->query()
  *   qp(PDO, "SELECT * FROM users", null); // prepares only, no execution
  */
-function qp(PDO $pdo, string $query, ?array $params, array $prepareOptions = []): PDOStatement|false
+function qp(PDO $pdo, string $query, ?array $params = null, array $prepareOptions = []): PDOStatement|false
 {
     $_ = $pdo->prepare($query, $prepareOptions);
     $_ && $params !== null && $_->execute($params);
