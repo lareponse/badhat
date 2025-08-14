@@ -49,6 +49,7 @@ function csp_nonce(): string
     return $nonce ??= bin2hex(random_bytes(16));
 }
 
+
 function csrf_token(int $ttl = 3600): string
 {
     $ttl || throw new InvalidArgumentException('CSRF token TTL must be a positive integer', 400);
@@ -68,13 +69,12 @@ function csrf_validate(?string $token = null): bool
     $token = $token ?: ($_POST[CSRF_KEY] ?? '')     ?: throw new BadFunctionCallException('CSRF token is required', 400);
 
     [$master_token, $expires_at] = $_SESSION[CSRF_KEY];
-
     return time() <= $expires_at && hash_equals($master_token, $token);
 }
 
 function csrf_field(int $ttl = 3600): string
 {
-    return '<input type="hidden" name="' . CSRF_KEY . '" value="' . ($_SESSION[CSRF_KEY][0] ?? csrf_token($ttl)) . '" />';
+    return '<input type="hidden" name="' . CSRF_KEY . '" value="' . csrf_token($ttl) . '" />';
 }
 
 // HTTP-HMAC AUTH
@@ -91,3 +91,4 @@ function auth_http(): ?string
     $expected = hash_hmac('sha256', $user, $secret);
     return hash_equals($expected, $sig) ? $user : null;
 }
+
