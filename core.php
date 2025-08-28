@@ -52,17 +52,13 @@ function io_run(string $file_path, array $io_args, $behave = 0): array
 {
     $loot = [];
 
-    if ($behave & (IO_BUFFER | IO_ABSORB)){
-        [$return, $buffer] = ob_ret_get($file_path, $io_args, $behave);
-        $loot[IO_RETURN] = $return;
-        $loot[IO_BUFFER] = $buffer;
-    }
-    else 
-        $loot[IO_RETURN] = @include($file_path);
-    
-    if($behave & (IO_INVOKE | IO_ABSORB) && is_callable($loot[IO_RETURN])){
-        ($behave & IO_INVOKE) && ($loot[IO_INVOKE] = $loot[IO_RETURN]($io_args));
-        ($behave & IO_ABSORB) && ($loot[IO_ABSORB] = $loot[IO_RETURN]($loot[IO_BUFFER], $io_args));
+    [$return, $buffer] = ob_ret_get($file_path, $io_args, $behave);
+    $loot[IO_RETURN] = $return;
+    $loot[IO_BUFFER] = $buffer;
+
+    if ($behave & (IO_INVOKE | IO_ABSORB) && is_callable($return)) {
+        ($behave & IO_INVOKE) && ($loot[IO_INVOKE] = $return($io_args));
+        ($behave & IO_ABSORB) && ($loot[IO_ABSORB] = $return($buffer, $io_args));
     }
 
     return $loot;
@@ -108,9 +104,9 @@ function io_seek(string $base_dir, string $uri_path, string $file_ext, int $beha
     return [];
 }
 
-function ob_ret_get($path, array $include_vars = [], int $behave = 0): array
+function ob_ret_get($path, array $args = [], int $behave = 0): array
 {
-    if($behave & IO_EXTRACT) foreach ($include_vars as $k => $v) $$k = $v;
+    if ($behave & IO_EXTRACT) foreach ($args as $k => $v) $$k = $v;
     ob_start();
     return $path ? [@include($path), ob_get_clean()] : [];
 }
