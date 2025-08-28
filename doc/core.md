@@ -4,7 +4,7 @@
 ```php
 const IO_DEEP = 1;     // Deep-first route lookup
 const IO_ROOT = 2;     // Root-first route lookup  
-const IO_FLEX = 4;     // Try file + file/file patterns
+const IO_NEST = 4;     // Try file + file/file patterns
 
 const IO_RETURN = 16;  // Loot: included file return value
 const IO_BUFFER = 32;  // Loot: output buffer content
@@ -39,7 +39,7 @@ const IO_ABSORB = 128; // Behavior: call return value with buffer+args
 >
 >- Default: mirroring mode (URI = filesystem path)
 >- `IO_DEEP|IO_ROOT`: delegates to `io_seek()` for segment matching
->- `IO_FLEX`: tries both `file.ext` and `file/file.ext` patterns
+>- `IO_NEST`: tries both `file.ext` and `file/file.ext` patterns
 
 **Returns:** `[filepath]` or `[filepath, args]` or `[]`
 
@@ -58,7 +58,7 @@ const IO_ABSORB = 128; // Behavior: call return value with buffer+args
 >Resolves candidate to existing file path.
 >
 >- Tries `$base/$candidate.$ext`
->- `IO_FLEX`: also tries `$base/$candidate/basename($candidate).$ext`
+>- `IO_NEST`: also tries `$base/$candidate/basename($candidate).$ext`
 
 **Returns:** Full filepath or `null`
 
