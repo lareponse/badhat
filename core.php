@@ -36,16 +36,14 @@ function http_out(int $status, string $body, array $headers = []): void
 }
 
 // return: array with filepath or filepath+args or empty
-function io_map(string $base_dir, string $uri_path, string $file_ext = 'php', int $behave = 0): array
+function io_map(string $base_dir, string $uri_path, string $file_ext = 'php', int $behave = 0): ?array
 {
     $uri_path = trim($uri_path, '/');
 
     if ($behave & (IO_DEEP | IO_ROOT))
         return io_seek($base_dir, $uri_path, $file_ext, $behave);
 
-    // mirroring mode: REQUEST_URI is filesystem path
-    $path = io_look($base_dir, $uri_path, $file_ext, $behave);
-    return $path ? [$path] : [];
+    return ($path = io_look($base_dir, $uri_path, $file_ext, $behave)) ? [$path] : null;
 }
 
 // return: loot array with IO_RETURN and IO_BUFFER/IO_INVOKE/IO_ABSORB keys
@@ -75,8 +73,8 @@ function io_look(string $base_dir, string $candidate, string $file_ext, int $beh
             : null);
 }
 
-// return: array with filepath+args or empty
-function io_seek(string $base_dir, string $uri_path, string $file_ext, int $behave = 0): array
+// return: array with filepath+args or null
+function io_seek(string $base_dir, string $uri_path, string $file_ext, int $behave = 0): ?array
 {
     $slashes_positions = [];
     $slashes = 0;
@@ -98,7 +96,7 @@ function io_seek(string $base_dir, string $uri_path, string $file_ext, int $beha
             return [$path, $args];
         }
     }
-    return [];
+    return null;
 }
 
 // return: array with [include return value, output buffer] or empty
