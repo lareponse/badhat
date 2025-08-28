@@ -2,13 +2,14 @@
 
 const IO_DEEP = 1;      // Deep-first seek
 const IO_ROOT = 2;      // Root-first seek
-const IO_FLEX = 4;      // Flexible routing: try file + file/file patterns
+const IO_NEST = 4;      // Flexible routing: try file + file/file patterns
 
 const IO_RETURN = 16;   // Value of the included file return statement
 const IO_BUFFER = 32;   // Value of the included file output buffer
 const IO_INVOKE = 64;   // Call fn(args) and store return value
 const IO_ABSORB = 128;  // Call fn(buffer, args) and store return value
 
+const IO_EXTRACT = 256; // Extract args to local scope for included file
 // return: clean URI path string
 function http_in(int $max_decode = 9): string
 {
@@ -52,7 +53,7 @@ function io_run(string $file_path, array $io_args, $behave = 0): array
     $loot = [];
 
     if ($behave & (IO_BUFFER | IO_ABSORB)){
-        [$return, $buffer] = ob_ret_get($file_path, $io_args);
+        [$return, $buffer] = ob_ret_get($file_path, $io_args, $behave);
         $loot[IO_RETURN] = $return;
         $loot[IO_BUFFER] = $buffer;
     }
@@ -75,7 +76,7 @@ function io_look(string $base_dir, string $candidate, string $file_ext, int $beh
     if (is_file($res = $path . '.' . $file_ext))
         return $res;
 
-    if (($behave & IO_FLEX) && is_file($res = $path . DIRECTORY_SEPARATOR . basename($candidate) . '.' . $file_ext))
+    if (($behave & IO_NEST) && is_file($res = $path . DIRECTORY_SEPARATOR . basename($candidate) . '.' . $file_ext))
         return $res;
 
     return null;
@@ -107,9 +108,9 @@ function io_seek(string $base_dir, string $uri_path, string $file_ext, int $beha
     return [];
 }
 
-function ob_ret_get($path, array $include_vars = []): array
+function ob_ret_get($path, array $include_vars = [], int $behave = 0): array
 {
-    foreach ($include_vars as $k => $v) $$k = $v;
+    if($behave & IO_EXTRACT) foreach ($include_vars as $k => $v) $$k = $v;
     ob_start();
     return $path ? [@include($path), ob_get_clean()] : [];
 }
