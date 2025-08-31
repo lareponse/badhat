@@ -45,7 +45,6 @@ function dbq(string $query, ?array $params = null, array $prepare_options = []):
     ($prepared = db()->prepare($query, $prepare_options)) && $params && $prepared->execute($params);
     return $prepared;
 }
-
 function db_transaction(PDO $pdo, callable $transaction): mixed
 {
     $pdo->getAttribute(PDO::ATTR_ERRMODE) !== PDO::ERRMODE_EXCEPTION && throw new DomainException('db_transaction requires PDO::ERRMODE_EXCEPTION');
