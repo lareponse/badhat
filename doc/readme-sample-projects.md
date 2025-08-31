@@ -17,12 +17,12 @@ return function($args) {
     if ($_POST) {
         csrf_validate() || http_out(403, 'Invalid token');
         [$sql, $binds] = qb_update('posts', $_POST, ['id' => $id]);
-        dbq(db(), $sql, $binds);
+        dbq($sql, $binds);
         header('Location: /posts/' . $id);
         exit;
     }
     
-    $post = dbq(db(), "SELECT * FROM posts WHERE id = ?", [$id])->fetch();
+    $post = dbq("SELECT * FROM posts WHERE id = ?", [$id])->fetch();
     return compact('post') + ['csrf_token' => csrf_token()];
 };
 ```
@@ -42,7 +42,7 @@ return function($args) {
     auth() ?: http_out(401, 'Admin required');
     
     $status = $_GET['status'] ?? 'pending';
-    $orders = dbq(db(), "
+    $orders = dbq("
         SELECT o.*, u.email, COUNT(oi.id) as items
         FROM orders o 
         JOIN users u ON o.user_id = u.id
@@ -96,7 +96,7 @@ return function($args) {
 return function($args) {
     $range = $args[0] ?? '24h';
     
-    $metrics = dbq(db(), "
+    $metrics = dbq("
         SELECT 
             DATE_FORMAT(timestamp, '%H:00') as hour,
             SUM(requests) as total_requests,
@@ -134,7 +134,7 @@ return function($args) {
     
     move_uploaded_file($file['tmp_name'], $path);
     
-    dbq(db(), "INSERT INTO files (name, path, size, user_id) VALUES (?, ?, ?, ?)", [
+    dbq("INSERT INTO files (name, path, size, user_id) VALUES (?, ?, ?, ?)", [
         $file['name'], $path, $file['size'], session_id()
     ]);
     
@@ -171,7 +171,7 @@ return function($args) {
     }
     
     [$sql, $binds] = qb_create('sensor_readings', null, ...$readings);
-    dbq(db(), $sql, $binds);
+    dbq($sql, $binds);
     
     echo json_encode(['status' => 'ok', 'count' => count($readings)]);
     exit;
@@ -193,7 +193,7 @@ return function($args) {
     $tenant = resolve_tenant($_SERVER['HTTP_HOST']);
     db(tenant_db($tenant['id'])); // Switch database connection
     
-    $projects = dbq(db(), "
+    $projects = dbq("
         SELECT p.*, COUNT(t.id) as task_count
         FROM projects p
         LEFT JOIN tasks t ON p.id = t.project_id
@@ -231,7 +231,7 @@ return function($args) {
     return db_transaction(db(), function() use ($order) {
         // Validate balance, create order, update positions
         [$sql, $binds] = qb_create('orders', null, $order);
-        dbq(db(), $sql, $binds);
+        dbq($sql, $binds);
         
         return ['order_id' => db()->lastInsertId(), 'status' => 'pending'];
     });

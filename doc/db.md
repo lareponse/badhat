@@ -15,6 +15,10 @@ export DB_PASS_="secret"
 # "read" profile (SQLite):
 export DB_DSN_read="sqlite:/path/to/read.db"
 # (no DB_USER_read/DB_PASS_read needed for SQLite)
+
+Notes:
+- Values are read from `$_SERVER[...]` first, then `getenv(...)`.
+- The default connection uses a trailing underscore keys like `DB_DSN_`.
 ```
 
 ---
@@ -34,27 +38,37 @@ function db($param = null, array $param_options = []): PDO
 
 **Throws**: `LogicException` if no cache and invalid param
 
+Defaults when creating a PDO (unless overridden via `$param_options`):
+- `PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION`
+- `PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC`
+- `PDO::ATTR_EMULATE_PREPARES => false`
+
+Details:
+- A single connection is cached; each setter call replaces it.
+- Falsy `$param` values are treated as the empty suffix `''`.
+
 ---
 
 ## 2. Execution
 
 ```php
-function qp(PDO $pdo, string $query, ?array $params, array $prepareOptions = []): PDOStatement|false
+function dbq(string $query, ?array $params = null, array $prepareOptions = []): PDOStatement|false
 ```
 
-**With null `$params`**:
-* `qp($pdo, 'SQL', null)`: return `$pdo->prepare('SQL')` (prepare only, no execute)
+dbq uses the cached `db()` connection internally.
 
-**With non-null `$params`**:
-* `qp($pdo, 'SQL', [])`: prepare and execute with empty bindings
-* `qp($pdo, 'SQL', $bindings)`: prepare and execute with parameter bindings
+Semantics of `$params`:
+- `null`: run via `db()->query($query)` (immediate execute, no prepare)
+- `[]` (empty array): prepare only, no execute yet
+- non-empty array: prepare and execute with bindings
 
-**Flow**:
-1. `$stmt = $pdo->prepare($query, $prepareOptions)`
-2. If `$params !== null`: `$stmt->execute($params)`
-3. Return `$stmt` or `false` on prepare failure
+Flow:
+1. If `$params === null`: return `db()->query($query)`
+2. Else: `$stmt = db()->prepare($query, $prepareOptions)`
+3. If `$params` is non-empty: `$stmt->execute($params)`
+4. Return `$stmt` (or `false` on prepare failure)
 
-**Exceptions** bubble up from PDO.
+Exceptions bubble up from PDO.
 
 ---
 
@@ -77,28 +91,23 @@ function db_transaction(PDO $pdo, callable $transaction): mixed
 ## Examples
 
 ```php
-// Connect
-$pdo = db();
-
-// Query without params
-$stmt = qp($pdo, "SELECT * FROM users");
-$users = $stmt->fetchAll();
+// Query without params (immediate execution)
+$users = dbq("SELECT * FROM users")->fetchAll();
 
 // Query with params
-$stmt = qp($pdo, "SELECT * FROM users WHERE id = ?", [$id]);
-$user = $stmt->fetch();
+$user = dbq("SELECT * FROM users WHERE id = ?", [$id])->fetch();
 
-// Prepare only (no execute)
-$stmt = qp($pdo, "INSERT INTO logs (msg) VALUES (?)", null);
+// Prepare only (no execute yet)
+$stmt = dbq("INSERT INTO logs (msg) VALUES (?)", []);
 $stmt->execute(['login']);
 $stmt->execute(['logout']);
 
 // Transaction
-$result = db_transaction($pdo, function($pdo) use ($data) {
-    qp($pdo, "INSERT INTO orders (total) VALUES (?)", [$data['total']]);
+$result = db_transaction(db(), function($pdo) use ($data) {
+    dbq("INSERT INTO orders (total) VALUES (?)", [$data['total']]);
     $order_id = $pdo->lastInsertId();
-    qp($pdo, "INSERT INTO order_items (order_id, item) VALUES (?, ?)", 
-       [$order_id, $data['item']]);
+    dbq("INSERT INTO order_items (order_id, item) VALUES (?, ?)", 
+        [$order_id, $data['item']]);
     return $order_id;
 });
 ```
@@ -108,6 +117,7 @@ $result = db_transaction($pdo, function($pdo) use ($data) {
 ## Notes
 
 * Single cached connection; each setter call replaces it
-* `qp` returns `false` on prepare failure, `PDOStatement` on success
+* `dbq` returns `false` on prepare failure, `PDOStatement` on success
 * Wrap calls in `try/catch` to handle `PDOException`
 * Full PDO API remains available on returned instances
+* ENV is read from `$_SERVER` first, then `getenv`
