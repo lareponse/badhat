@@ -106,7 +106,7 @@ Framework knowledge expires; language knowledge compounds.
 Code should read like assembly instructions:
 ```php
 // Explicit (good)
-$users = qp(db(), "SELECT * FROM users WHERE active = 1")->fetchAll();
+$users = dbq("SELECT * FROM users WHERE active = 1")->fetchAll();
 
 // Magic (bad) 
 $users = User::where('active', true)->get();
@@ -116,10 +116,10 @@ $users = User::where('active', true)->get();
 Don't test ahead. Expect success, handle failure:
 ```php
 // This (expect success)
-$result = qp(db(), $sql, $params)->fetch();
+$result = dbq($sql, $params)->fetch();
 
 // Not this (test ahead)
-if (db_connection_valid()) { /* then query */ }
+if (pdo_envion_valid()) { /* then query */ }
 ```
 
 ---

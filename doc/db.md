@@ -15,6 +15,10 @@ export DB_PASS_="secret"
 # "read" profile (SQLite):
 export DB_DSN_read="sqlite:/path/to/read.db"
 # (no DB_USER_read/DB_PASS_read needed for SQLite)
+
+Notes:
+- Values are read from `$_SERVER[...]` first, then `getenv(...)`.
+- The default connection uses a trailing underscore keys like `DB_DSN_`.
 ```
 
 ---
@@ -34,12 +38,21 @@ function db($param = null, array $param_options = []): PDO
 
 **Throws**: `LogicException` if no cache and invalid param
 
+Defaults when creating a PDO (unless overridden via `$param_options`):
+- `PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION`
+- `PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC`
+- `PDO::ATTR_EMULATE_PREPARES => false`
+
+Details:
+- A single connection is cached; each setter call replaces it.
+- Falsy `$param` values are treated as the empty suffix `''`.
+
 ---
 
 ## 2. Execution
 
 ```php
-function qp(PDO $pdo, string $query, ?array $params, array $prepareOptions = []): PDOStatement|false
+function qp(PDO $pdo, string $query, ?array $params = null, array $prepareOptions = []): PDOStatement|false
 ```
 
 **With null `$params`**:
@@ -80,15 +93,19 @@ function db_transaction(PDO $pdo, callable $transaction): mixed
 // Connect
 $pdo = db();
 
-// Query without params
-$stmt = qp($pdo, "SELECT * FROM users");
+// Query without params (recommended)
+// For simple statements without bindings, use PDO::query
+$users = $pdo->query("SELECT * FROM users")->fetchAll();
+
+// Or, if you prefer qp, pass an empty array to execute
+$stmt = qp($pdo, "SELECT * FROM users", []);
 $users = $stmt->fetchAll();
 
 // Query with params
 $stmt = qp($pdo, "SELECT * FROM users WHERE id = ?", [$id]);
 $user = $stmt->fetch();
 
-// Prepare only (no execute)
+// Prepare only (no execute yet)
 $stmt = qp($pdo, "INSERT INTO logs (msg) VALUES (?)", null);
 $stmt->execute(['login']);
 $stmt->execute(['logout']);
@@ -111,3 +128,4 @@ $result = db_transaction($pdo, function($pdo) use ($data) {
 * `qp` returns `false` on prepare failure, `PDOStatement` on success
 * Wrap calls in `try/catch` to handle `PDOException`
 * Full PDO API remains available on returned instances
+* ENV is read from `$_SERVER` first, then `getenv`

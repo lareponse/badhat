@@ -3,8 +3,12 @@
 $request_id = bin2hex(random_bytes(4));
 $log_format = "[req=$request_id] %s (%s) %s in %s:%d";
 
-set_error_handler(function (int $errno, string $errstr, string $errfile, int $errline) use ($log_format): bool {
+set_error_handler(function (int $errno, string $errstr, string $errfile, int $errline) use ($log_format, $request_id): bool {
     error_log(sprintf($log_format, 'Error', "errno={$errno}", $errstr, $errfile, $errline));
+
+    if ($errno === E_USER_NOTICE || $errno === E_USER_WARNING)
+        tap($errno, $errstr, ['file' => $errfile, 'line' => $errline]);
+
     return true;
 });
 
@@ -39,4 +43,15 @@ function fatal_error(string $request_id): void
     ob_get_length() && ob_clean();
     http_response_code(500);
     exit(1);
+}
+
+// lad(): mark semantic events of a request.
+// not every step, only what carries meaning (errors, successes, signals).
+// returns the full journal; dies with the request.
+function tap(int $status, string $message = '', $context = null)
+{
+    static $log = [];
+    if($message)
+        $log[] = [$status, $message, $context]; // always return journal
+    return $log;
 }

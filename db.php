@@ -19,23 +19,21 @@ declare(strict_types=1);
  * @throws PDOException             If PDO connection fails
  */
 function db($param = null, array $param_options = [
-    PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
-    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-    PDO::ATTR_EMULATE_PREPARES   => false,
+    PDO::ATTR_ERRMODE               => PDO::ERRMODE_EXCEPTION,
+    PDO::ATTR_DEFAULT_FETCH_MODE    => PDO::FETCH_ASSOC,
+    PDO::ATTR_EMULATE_PREPARES      => false,
 ]): PDO
 {
     static $cache = null;
 
-    if (!$param)
-        $cache ??= db_connect('', $param_options);
+    if ($cache && $param === null)  return $cache;  // db() call after setup, most frequent
 
-    else if ($param instanceof PDO)
-        $cache = $param;
+    !$param && ($param = '');                       // no cache, no param, switch to default
 
-    else if (is_string($param))
-        $cache = db_connect($param, $param_options);
+    if ($param instanceof PDO)      $cache = $param;
+    elseif (is_string($param))      $cache = pdo_env($param, $param_options);
 
-    return $cache ?? throw new LogicException('db() requires a string suffix or PDO instance');
+    return $cache                   ?? throw new LogicException('db() requires a string suffix or PDO instance');
 }
 
 /**
@@ -44,42 +42,47 @@ function db($param = null, array $param_options = [
  * Usage:
  *   qp(PDO, "SELECT * FROM operator WHERE id = :id", [':id' => $id]);
  *   qp(PDO, "SELECT * FROM events WHERE type = ?", ['click'], [PDO::ATTR_CURSOR => PDO::CURSOR_SCROLL]);
- *   qp(PDO, "SELECT * FROM users", []); // works, but use db()->query()
+ *   qp(PDO, "SELECT * FROM users", []); // works, but use dbq()
  *   qp(PDO, "SELECT * FROM users", null); // prepares only, no execution
  */
-function qp(PDO $pdo, string $query, ?array $params = null, array $prepareOptions = []): PDOStatement|false
+function qp(PDO $pdo, string $query, ?array $params = null, array $prepare_options = []): PDOStatement|false
 {
-    $_ = $pdo->prepare($query, $prepareOptions);
+    $_ = $pdo->prepare($query, $prepare_options);
     $_ && $params !== null && $_->execute($params);
     return $_;
 }
 
-/**
- * @requires PDO::ERRMODE_EXCEPTION
- * @throws DomainException        If the PDO isn’t in ERRMODE_EXCEPTION
- * @throws Throwable              Any exception from inside your callable (after rollback)
- */
+// $params: null > query(), [] > prepare only, [non-empty] > prepare + execute
+function dbq(string $query, ?array $params = null, array $prepare_options = []): PDOStatement|false
+{
+    if($params === null)
+        return db()->query($query);
+
+    ($prepared = db()->prepare($query, $prepare_options)) && $params && $prepared->execute($params);
+    return $prepared;
+}
+
 function db_transaction(PDO $pdo, callable $transaction): mixed
 {
-    $pdo->getAttribute(PDO::ATTR_ERRMODE) !== PDO::ERRMODE_EXCEPTION
-        && throw new DomainException('db_transaction requires PDO::ERRMODE_EXCEPTION');
+    $pdo->getAttribute(PDO::ATTR_ERRMODE) !== PDO::ERRMODE_EXCEPTION && throw new DomainException('db_transaction requires PDO::ERRMODE_EXCEPTION');
 
-    $pdo->beginTransaction();
     try {
+        $pdo->beginTransaction();
         $out = $transaction($pdo);
         $pdo->commit();
         return $out;
     } catch (Throwable $e) {
-        $pdo->rollBack();
+        if ($pdo->inTransaction()) $pdo->rollBack();
         throw $e;
     }
 }
 
-function db_connect($getenv_suffix = '', ?array $options = null): PDO
+function pdo_env(string $env_suffix, ?array $options = null): PDO
 {
-    $dsn  = $_SERVER['DB_DSN_'  . $getenv_suffix] ?? (getenv('DB_DSN_'  . $getenv_suffix) ?: throw new DomainException("empty env(DB_DSN_$getenv_suffix)"));
-    $user = $_SERVER['DB_USER_' . $getenv_suffix] ?? (getenv('DB_USER_' . $getenv_suffix) ?: null);
-    $pass = $_SERVER['DB_PASS_' . $getenv_suffix] ?? (getenv('DB_PASS_' . $getenv_suffix) ?: null);
-
-    return new PDO($dsn, $user, $pass, $options);
+    return new PDO(
+        $_SERVER['DB_DSN_'  . $env_suffix] ?? (getenv('DB_DSN_'  . $env_suffix) ?: throw new DomainException("empty env(DB_DSN_$env_suffix)")),
+        $_SERVER['DB_USER_' . $env_suffix] ?? (getenv('DB_USER_' . $env_suffix) ?: null),
+        $_SERVER['DB_PASS_' . $env_suffix] ?? (getenv('DB_PASS_' . $env_suffix) ?: null),
+        $options
+    );
 }
