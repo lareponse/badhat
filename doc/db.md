@@ -19,6 +19,10 @@ export DB_DSN_read="sqlite:/path/to/read.db"
 Notes:
 - Values are read from `$_SERVER[...]` first, then `getenv(...)`.
 - The default connection uses a trailing underscore keys like `DB_DSN_`.
+
+Notes:
+- Values are read from `$_SERVER[...]` first, then `getenv(...)`.
+- The default connection uses a trailing underscore keys like `DB_DSN_`.
 ```
 
 ---
