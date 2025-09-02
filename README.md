@@ -129,7 +129,7 @@ Skip render. In your route (invoked with IO_INVOKE), gather data, `json_encode()
 // app/io/route/api/users.php
 return fn($args) => header('Content-Type: application/json')
     && exit(json_encode(
-        dbq("SELECT id,name FROM users LIMIT 10")->fetchAll()
+        qp("SELECT id,name FROM users LIMIT 10")->fetchAll()
     ));
 ```
 
@@ -140,7 +140,7 @@ return fn($args) => header('Content-Type: application/json')
 return function($args) {
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $name = $_POST['name'] ?: throw new Exception('Name required');
-        dbq("INSERT INTO contacts (name,email) VALUES (?,?)",
+        qp("INSERT INTO contacts (name,email) VALUES (?,?)",
             [$name, $_POST['email']]);
         header('Location:/contact/thanks');
         exit;
@@ -155,7 +155,7 @@ return function($args) {
 // app/io/route/admin/users.php
 return function($args) {
     auth() ?: http_out(401, 'Login required');
-    return ['users' => dbq("SELECT * FROM users")->fetchAll()];
+    return ['users' => qp("SELECT * FROM users")->fetchAll()];
 };
 ```
 
