@@ -56,7 +56,7 @@ Details:
 ## 2. Execution
 
 ```php
-function dbq(string $query, ?array $params = null, array $prepareOptions = []): PDOStatement|false
+function qp(string $query, ?array $params = null, array $prepareOptions = []): PDOStatement|false
 ```
 
 dbq uses the cached `db()` connection internally.
@@ -96,21 +96,21 @@ function db_transaction(PDO $pdo, callable $transaction): mixed
 
 ```php
 // Query without params (immediate execution)
-$users = dbq("SELECT * FROM users")->fetchAll();
+$users = qp("SELECT * FROM users")->fetchAll();
 
 // Query with params
-$user = dbq("SELECT * FROM users WHERE id = ?", [$id])->fetch();
+$user = qp("SELECT * FROM users WHERE id = ?", [$id])->fetch();
 
 // Prepare only (no execute yet)
-$stmt = dbq("INSERT INTO logs (msg) VALUES (?)", []);
+$stmt = qp("INSERT INTO logs (msg) VALUES (?)", []);
 $stmt->execute(['login']);
 $stmt->execute(['logout']);
 
 // Transaction
 $result = db_transaction(db(), function($pdo) use ($data) {
-    dbq("INSERT INTO orders (total) VALUES (?)", [$data['total']]);
+    qp("INSERT INTO orders (total) VALUES (?)", [$data['total']]);
     $order_id = $pdo->lastInsertId();
-    dbq("INSERT INTO order_items (order_id, item) VALUES (?, ?)", 
+    qp("INSERT INTO order_items (order_id, item) VALUES (?, ?)", 
         [$order_id, $data['item']]);
     return $order_id;
 });
