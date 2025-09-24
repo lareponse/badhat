@@ -1,45 +1,59 @@
+-- Insert service categories and capture IDs
 INSERT INTO `service_category` (`name`) VALUES
 ('accommodation'),
 ('day_care'),
 ('service'),
 ('other');
 
+SET @accommodation_id = (SELECT id FROM service_category WHERE name = 'accommodation');
+SET @day_care_id = (SELECT id FROM service_category WHERE name = 'day_care');
+SET @service_id = (SELECT id FROM service_category WHERE name = 'service');
+SET @other_id = (SELECT id FROM service_category WHERE name = 'other');
 
+-- Insert organization types
 INSERT INTO `organization_type` (`name`) VALUES 
 ('partner'),
 ('donor'),
 ('collaborator');
 
+SET @partner_id = (SELECT id FROM organization_type WHERE name = 'partner');
+SET @donor_id = (SELECT id FROM organization_type WHERE name = 'donor');
+SET @collaborator_id = (SELECT id FROM organization_type WHERE name = 'collaborator');
 
+-- Insert services using variables
 INSERT INTO `service` (`name`, `description`, `service_category_id`) VALUES
-('Centre d\'hébergement', NULL, 1),
-('Centre d\'hébergement pour enfant', NULL, 1),
-('Avec déficience auditive (enfant)', NULL, 1),
-('Avec déficience visuelle (enfant)', NULL, 1),
-('Avec troubles autistique (enfant)', NULL, 1),
-('Centre d\'hébergement pour adulte', NULL, 1),
-('Avec déficience visuelle - Aubier (adulte)', NULL, 1),
-('Centre de jour', NULL, 2),
-('Centre de jour pour enfant', NULL, 2),
-('Scolarisé (enfant)', NULL, 2),
-('Avec déficience auditive (scolarisé)', NULL, 2),
-('Avec déficience visuelle (scolarisé)', NULL, 2),
-('Avec troubles autistique (scolarisé)', NULL, 2),
-('Non-scolarisé (enfant)', NULL, 2),
-('Avec déficience auditive (non-scolarisé)', NULL, 2),
-('Avec déficience visuelle (non-scolarisé)', NULL, 2),
-('Avec troubles autistique (non-scolarisé)', NULL, 2),
-('Centre de jour pour adulte', NULL, 2),
-('Avec déficience visuelle (adulte)', NULL, 2),
-('Ludothèque Oasis', NULL, 3),
-('Location du château d\'Orangeraie', NULL, 3),
-('Centre de documentation', NULL, 3),
-('Restaurant d\'application', NULL, 3),
-('Conférences', NULL, 3),
-('Formations', NULL, 3);
+-- Accommodation services
+('Centre d\'hébergement', NULL, @accommodation_id),
+('Centre d\'hébergement pour enfant', NULL, @accommodation_id),
+('Avec déficience auditive (enfant)', NULL, @accommodation_id),
+('Avec déficience visuelle (enfant)', NULL, @accommodation_id),
+('Avec troubles autistique (enfant)', NULL, @accommodation_id),
+('Centre d\'hébergement pour adulte', NULL, @accommodation_id),
+('Avec déficience visuelle - Aubier (adulte)', NULL, @accommodation_id),
 
+-- Day care services
+('Centre de jour', NULL, @day_care_id),
+('Centre de jour pour enfant', NULL, @day_care_id),
+('Scolarisé (enfant)', NULL, @day_care_id),
+('Avec déficience auditive (scolarisé)', NULL, @day_care_id),
+('Avec déficience visuelle (scolarisé)', NULL, @day_care_id),
+('Avec troubles autistique (scolarisé)', NULL, @day_care_id),
+('Non-scolarisé (enfant)', NULL, @day_care_id),
+('Avec déficience auditive (non-scolarisé)', NULL, @day_care_id),
+('Avec déficience visuelle (non-scolarisé)', NULL, @day_care_id),
+('Avec troubles autistique (non-scolarisé)', NULL, @day_care_id),
+('Centre de jour pour adulte', NULL, @day_care_id),
+('Avec déficience visuelle (adulte)', NULL, @day_care_id),
 
+-- General services
+('Ludothèque Oasis', NULL, @service_id),
+('Location du château d\'Orangeraie', NULL, @service_id),
+('Centre de documentation', NULL, @service_id),
+('Restaurant d\'application', NULL, @service_id),
+('Conférences', NULL, @service_id),
+('Formations', NULL, @service_id);
 
+-- Insert statistics
 INSERT INTO `statistics` (`label`, `value`) VALUES
 ('Personnes accompagnées chaque année', '1000+'),
 ('Professionnels engagés', '600+'),
