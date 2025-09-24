@@ -64,3 +64,18 @@ INSERT INTO `statistics` (`label`, `value`) VALUES
 ('Depuis', '1835'),
 ('Moyenne d\'enfants réintégrés dans l\'enseignement traditionnel par an', '15'),
 ('Hectares de parc', '');
+
+
+
+-- Insert allowed MIME types
+INSERT INTO `mime_type` (`type`, `category`, `max_size`) VALUES
+('image/jpeg', 'image', 10000000),
+('image/png', 'image', 10000000),
+('image/webp', 'image', 5000000),
+('image/svg+xml', 'image', 1000000),
+('video/mp4', 'video', 100000000),
+('video/webm', 'video', 100000000),
+('audio/mp3', 'audio', 20000000),
+('audio/wav', 'audio', 50000000),
+('audio/ogg', 'audio', 20000000),
+('application/pdf', 'document', 25000000);
