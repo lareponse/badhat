@@ -1,4 +1,10 @@
 -- --------------------------------------------------------
+-- Define reusable patterns
+-- --------------------------------------------------------
+SET @email_pattern = '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$';
+SET @phone_pattern = '^[\+]?[0-9\s\-\(\)\.]{8,20}$';
+
+-- --------------------------------------------------------
 -- Table `contact_form`
 -- --------------------------------------------------------
 CREATE TABLE `contact_form` (
@@ -6,18 +12,28 @@ CREATE TABLE `contact_form` (
   `firstname` VARCHAR(100) NOT NULL,
   `lastname` VARCHAR(100) NOT NULL,
   `email` VARCHAR(100) NOT NULL,
-  `phone` VARCHAR(50) DEFAULT NULL,     -- Alternative communication method
+  `phone` VARCHAR(50) DEFAULT NULL,
   `subject` VARCHAR(150) DEFAULT NULL,
   `description` TEXT NOT NULL,
-  `started_at` DATETIME DEFAULT NULL,   -- Workflow tracking
+  `started_at` DATETIME DEFAULT NULL,
   `resolved_at` DATETIME DEFAULT NULL,
   `closed_at` DATETIME DEFAULT NULL,
   `priority` ENUM('low', 'normal', 'high', 'urgent') DEFAULT 'normal',
   `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
   `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `revoked_at` DATETIME DEFAULT NULL    -- Soft delete
+  `revoked_at` DATETIME DEFAULT NULL,
+  
+  CONSTRAINT chk_contact_email_format CHECK (email REGEXP @email_pattern),
+  CONSTRAINT chk_contact_phone_format CHECK (phone IS NULL OR phone REGEXP @phone_pattern),
+  CONSTRAINT chk_contact_workflow_logic 
+    CHECK (
+      (started_at IS NULL OR started_at >= created_at) AND
+      (resolved_at IS NULL OR (resolved_at >= started_at AND started_at IS NOT NULL)) AND
+      (closed_at IS NULL OR (closed_at >= resolved_at AND resolved_at IS NOT NULL))
+    ),
+  CONSTRAINT chk_contact_content_length 
+    CHECK (CHAR_LENGTH(TRIM(description)) >= 10)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
 
 -- --------------------------------------------------------
 -- Table `person_contact`
@@ -26,13 +42,17 @@ CREATE TABLE `person_contact` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `firstname` VARCHAR(100) NOT NULL,
   `lastname` VARCHAR(100) NOT NULL,
-  `email` VARCHAR(150) DEFAULT NULL,
+  `mail` VARCHAR(150) DEFAULT NULL,
   `phone` VARCHAR(50) DEFAULT NULL,
   `role` VARCHAR(100) DEFAULT NULL,
   `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
   `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `enabled_at` DATETIME DEFAULT NULL, -- NULL = private
-  `revoked_at` DATETIME DEFAULT NULL -- Soft delete
+  `enabled_at` DATETIME DEFAULT NULL,
+  `revoked_at` DATETIME DEFAULT NULL,
+  
+  CONSTRAINT chk_person_email_format CHECK (mail IS NULL OR mail REGEXP @email_pattern),
+  CONSTRAINT chk_person_phone_format CHECK (phone IS NULL OR phone REGEXP @phone_pattern),
+  CONSTRAINT chk_person_communication CHECK (mail IS NOT NULL OR phone IS NOT NULL)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 
@@ -44,7 +64,9 @@ CREATE TABLE `donation` (
   `amount` DECIMAL(10,2) NOT NULL CHECK (`amount` > 0),
   `description` TEXT NOT NULL,
   `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
-  `revoked_at` DATETIME DEFAULT NULL -- Soft delete
+  `revoked_at` DATETIME DEFAULT NULL, -- Soft delete
+
+  CONSTRAINT chk_donation_amount CHECK (amount > 0)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 
@@ -76,14 +98,17 @@ CREATE TABLE `organization` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `name` VARCHAR(150) NOT NULL,
   `logo` VARCHAR(255) DEFAULT NULL,
-  `web_site` VARCHAR(255) DEFAULT NULL,
+  `url` VARCHAR(255) DEFAULT NULL,
   `description` TEXT DEFAULT NULL,
   `organization_type_id` INT NOT NULL,
   `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
   `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `enabled_at` DATETIME DEFAULT NULL, -- NULL = private
   `revoked_at` DATETIME DEFAULT NULL, -- Soft delete
+
+  CONSTRAINT chk_org_website_format CHECK (`url` IS NULL OR `url` REGEXP '^https?://[A-Za-z0-9.-]+\.[A-Za-z]{2,}'),
   FOREIGN KEY (`organization_type_id`) REFERENCES `organization_type`(`id`)
+
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 
@@ -100,7 +125,9 @@ CREATE TABLE `page` (
   `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
   `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `enabled_at` DATETIME DEFAULT NULL, -- NULL = draft
-  `revoked_at` DATETIME DEFAULT NULL -- Soft delete
+  `revoked_at` DATETIME DEFAULT NULL, -- Soft delete
+   CONSTRAINT chk_page_publication_logic CHECK (revoked_at IS NULL OR enabled_at IS NULL OR enabled_at < revoked_at)
+
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
