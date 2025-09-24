@@ -174,21 +174,40 @@ CREATE TABLE `statistics` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 
+
+-- --------------------------------------------------------
+-- Table `mime_type`
+-- --------------------------------------------------------
+CREATE TABLE `mime_type` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `type` VARCHAR(50) NOT NULL UNIQUE,
+  `category` ENUM('image', 'video', 'audio', 'document') NOT NULL,
+  `max_size` INT DEFAULT 50000000, -- 50MB default
+  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `enabled_at` DATETIME DEFAULT NULL, -- NULL = not allowed
+  `revoked_at` DATETIME DEFAULT NULL -- Soft delete
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+
+
 -- --------------------------------------------------------
 -- Table `media` - Enhanced for WCAG compliance
 -- --------------------------------------------------------
 CREATE TABLE `media` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `title` VARCHAR(150),
-  `alt_text` TEXT NOT NULL,           -- MANDATORY for screen readers (WCAG compliance)
+   `alt_text` TEXT NOT NULL,           -- MANDATORY for screen readers (WCAG compliance)
   `path` VARCHAR(255) NOT NULL,
-  `mime_type` VARCHAR(50) NOT NULL,   -- Content security and proper handling
+  `mime_type_id` INT NOT NULL,
   `file_size` INT DEFAULT NULL,       -- Performance optimization
   `width` INT DEFAULT NULL,           -- Image dimensions for responsive design
   `height` INT DEFAULT NULL,
-  
   `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
   `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `enabled_at` DATETIME DEFAULT NULL, -- NULL = private, DATETIME = public
-  `revoked_at` DATETIME DEFAULT NULL  -- Soft delete
+  `revoked_at` DATETIME DEFAULT NULL,  -- Soft delete
+  
+  FOREIGN KEY (`mime_type_id`) REFERENCES `mime_type`(`id`),
+  CONSTRAINT chk_media_file_size_positive CHECK (file_size > 0)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
