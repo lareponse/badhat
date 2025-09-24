@@ -18,7 +18,7 @@ CREATE TABLE `contact_form` (
   `started_at` DATETIME DEFAULT NULL,
   `resolved_at` DATETIME DEFAULT NULL,
   `closed_at` DATETIME DEFAULT NULL,
-  `priority` ENUM('low', 'normal', 'high', 'urgent') DEFAULT 'normal',
+  `priority` SMALLINT DEFAULT 1 COMMENT '0=low, 1=normal, 2=high, 3=urgent',
   `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
   `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `revoked_at` DATETIME DEFAULT NULL,
@@ -34,6 +34,7 @@ CREATE TABLE `contact_form` (
   CONSTRAINT chk_contact_content_length 
     CHECK (CHAR_LENGTH(TRIM(description)) >= 10)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
 
 -- --------------------------------------------------------
 -- Table `person_contact`
@@ -69,18 +70,6 @@ CREATE TABLE `donation` (
   CONSTRAINT chk_donation_amount CHECK (amount > 0)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-
--- --------------------------------------------------------
--- Table `news`
--- --------------------------------------------------------
-CREATE TABLE `news` (
-  `id` INT AUTO_INCREMENT PRIMARY KEY,
-  `title` VARCHAR(150) NOT NULL,
-  `content` TEXT NOT NULL,
-  `image` VARCHAR(255) DEFAULT NULL,
-  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 -- Table `organization_type`
@@ -181,7 +170,6 @@ CREATE TABLE `statistics` (
 CREATE TABLE `mime_type` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `type` VARCHAR(50) NOT NULL UNIQUE,
-  `category` ENUM('image', 'video', 'audio', 'document') NOT NULL,
   `max_size` INT DEFAULT 50000000, -- 50MB default
   `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
   `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -197,7 +185,7 @@ CREATE TABLE `mime_type` (
 CREATE TABLE `media` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `title` VARCHAR(150),
-   `alt_text` TEXT NOT NULL,           -- MANDATORY for screen readers (WCAG compliance)
+  `alt_text` TEXT NOT NULL,           -- MANDATORY for screen readers (WCAG compliance)
   `path` VARCHAR(255) NOT NULL,
   `mime_type_id` INT NOT NULL,
   `file_size` INT DEFAULT NULL,       -- Performance optimization
