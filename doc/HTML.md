@@ -116,14 +116,6 @@ Objectif : produire un HTML **sémantique, accessible, performant et lisible** �
 
 ---
 
-## 🎯 Usage
-
-* Avant chaque **pull request**, vérifier que le code respecte la checklist.
-* Utiliser l’aide-mémoire ARIA pour les composants interactifs.
-* Tester avec un lecteur d’écran avant livraison.
-
----
-
 ## 📚 Ressources utiles
 
 * [MDN Web Docs – HTML](https://developer.mozilla.org/fr/docs/Web/HTML)
