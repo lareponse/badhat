@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Formulaire de contact - Institut pour sourds et aveugles</title>
+  <meta name="description" content="Contactez l'Institut pour sourds et aveugles via ce formulaire accessible.">
+</head>
+<body>
+    <header>
+        <h1>Formulaire de contact</h1>
+        <nav>
+            <ul>
+                <li><a href="">Accueil</a></li>
+                <li><a href="">L'IRSA</a></li>
+                <li><a href="">Nos services</a></li>
+                <li><a href="">Ecoles</a></li>
+                <li><a href="">Contact</a></li>
+                <li><a href="">Faire un don</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <section aria-labelledby="form-title">
+            <h2 id="form-title">Envoyer un message</h2>
+            <form action="" method="post">
+                <fieldset>
+                    <legend>Vos informations personnelles</legend>
+                    <p>
+                        <label for="firstname">Prénom <abbr title="obligatoire">*</abbr></label>
+                        <input type="text" id="firstname" name="firstname" required>
+                    </p>
+                    <p>
+                        <label for="lastname">Nom <abbr title="obligatoire">*</abbr></label>
+                        <input type="text" id="lastname" name="lastname" required>
+                    </p>
+                    <p>
+                        <label for="email">Adresse e-mail <abbr title="obligatoire">*</abbr></label>
+                        <input type="email" id="email" name="email" required>
+                    </p>
+                    <p>
+                        <label for="subject">Sujet</label>
+                        <input type="text" id="subject" name="subject">
+                    </p>
+                    <p>
+                        <label for="description">Message <abbr title="obligatoire">*</abbr></label>
+                        <textarea id="description" name="description" rows="5" required></textarea>
+                    </p>
+                </fieldset>
+                <p>
+                    <button type="submit">Envoyer</button>
+                </p>
+            </form>
+        </section>
+    </main>
+</body>
+<footer>
+    <section aria-labelledby="infos-footer">
+        <h2 id="infos-footer">Informations</h2>
+        <p>&copy; <time datetime="2025">2025</time> Institut pour sourds et aveugles. Tous droits réservés.</p>
+        <nav aria-label="Useful links">
+            <ul>
+                <li><a href="">Mentions légales</a></li>
+                <li><a href="">Politique de confidentialité (RGPD)</a></li>
+                <li><a href="">Gestion des cookies</a></li>
+                <li><a href="">Déclaration d'accessibilité</a></li>
+                <li><a href="/contact.html">Contact</a></li>
+            </ul>
+        </nav>
+    </section>
+</footer>
