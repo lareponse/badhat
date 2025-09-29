@@ -1,59 +1,59 @@
 <header>
     <h1><span class="tight">Les écoles de l'IRSA</span></h1>
-    <p class="tight">
-        L'IRSA propose un parcours scolaire complet pour les enfants et adolescents atteints de déficience auditive,
-        visuelle ou avec troubles associés.<br>
-        Chaque établissement est adapté à un type de public spécifique, avec un accompagnement pédagogique et
-        thérapeutique individualisé.
-    </p>
+    <div class="tight">
+        <p>L'IRSA propose un parcours scolaire complet pour les enfants et adolescents atteints de déficience auditive, visuelle ou avec troubles associés.</p>
+        <p>Chaque établissement est adapté à un type de public spécifique, avec un accompagnement pédagogique et thérapeutique individualisé.</p>
+    </div>
 </header>
 
-<section class="card-grid tight">
+<section class="card-grid">
     <article>
-        <img src="/images/ecole-visuelle.jpg" alt="Enseignante avec un élève">
+        <img src="/ui/pages/ecoles/enseignante-assise-au-bureau-eleve.jpg" alt="Enseignante avec un élève">
         <h2>École fondamentale déficience visuelle et troubles associés</h2>
-        <a href="#" class="btn">Découvrir l'école</a>
-        <ul>
-            <li>Déficience visuelle (T6)</li>
-            <li>Troubles associés (T8)</li>
-        </ul>
+        <a href="#">Découvrir l'école</a>
+        <dl>
+            <dt>Pour les enfants atteints de :</dt>
+            <dd>Déficience visuelle <span>(T6)</span></dd>
+            <dd>Troubles associés <span>(T8)</span></dd>
+        </dl>
+
     </article>
 
     <article>
-        <img src="/images/ecole-auditive.jpg" alt="Enseignante en langue des signes avec un élève">
+        <img src="/ui/pages/ecoles/ecole-auditive.jpg" alt="Enseignante en langue des signes avec un élève">
         <h2>École fondamentale déficience auditive</h2>
-        <a href="#" class="btn">Découvrir l'école</a>
-        <p>Approche bilingue (LSFB / FR)</p>
+        <a href="#">Découvrir l'école</a>
+        <dl>
+            <dd>Approche bilingue <span>(LSFB / FR)</span></dd>
+        </dl>
     </article>
 
     <article>
-        <img src="/images/ecole-secondaire.jpg" alt="Deux adolescentes en classe">
+        <img src="/ui/pages/ecoles/ecole-secondaire.jpg" alt="Deux adolescentes en classe">
         <h2>École secondaire spécialisée</h2>
-        <a href="#" class="btn">Découvrir le secondaire</a>
-        <p>Adolescents avec :</p>
-        <ul>
-            <li>Déficience auditive (T7)</li>
-            <li>Déficience visuelle (T6)</li>
-            <li>Troubles d'apprentissage (T1)</li>
-        </ul>
+        <a href="#">Découvrir le secondaire</a>
+        <dl>
+            <dt>Adolescents avec :</dt>
+            <dd>Déficience auditive <span>(T7)</span></dd>
+            <dd>Déficience visuelle <span>(T6)</span></dd>
+            <dd>Troubles d'apprentissage <span>(T1)</span></dd>
+        </dl>
     </article>
 </section>
 
-<section class="card-grid tight">
+<section class="card-grid">
     <article>
-        <img src="/images/creche.jpg" alt="Jeune enfant jouant avec des blocs colorés">
+        <img src="/ui/pages/ecoles/creche.jpg" alt="Jeune enfant jouant avec des blocs colorés">
         <h2>Crèche inclusive Le Petit Prince</h2>
-        <a href="#" class="btn">Découvrir la crèche</a>
+        <a href="#">Découvrir la crèche</a>
         <p>Accueille les tout-petits à partir de quelques mois, avec ou sans déficience sensorielle.</p>
     </article>
 
     <article>
-        <img src="/images/pms.jpg" alt="Psychologue en discussion avec une adolescente et sa mère">
+        <img src="/ui/pages/ecoles/pms.jpg" alt="Psychologue en discussion avec une adolescente et sa mère">
         <h2>Centre PMS spécialisé</h2>
-        <a href="#" class="btn">Découvrir le PMS</a>
-        <p>
-            Écoute, soutien, orientation et collaboration avec l'équipe éducative pour favoriser le bien-être et la réussite.
-        </p>
+        <a href="#">Découvrir le PMS</a>
+        <p>Écoute, soutien, orientation et collaboration avec l'équipe éducative pour favoriser le bien-être et la réussite.</p>
     </article>
 </section>
 

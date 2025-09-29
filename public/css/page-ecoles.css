@@ -1,0 +1,36 @@
+#ecoles .card-grid {
+    justify-content: center;
+    gap: 3rem;
+}
+
+#ecoles .card-grid article {
+    height: 37rem;
+}
+
+#ecoles .card-grid article h2 {
+    height: 7rem;
+    display: flex;
+    align-items: center;
+}
+
+#ecoles .card-grid article dl,
+#ecoles .card-grid article p:last-child {
+    margin-top: 2rem;
+    padding: 0.7rem;
+}
+#ecoles .card-grid article dl dt {
+    margin-bottom: 0.7rem;
+    font-weight:600;
+}
+#ecoles .card-grid article dl dd {
+    padding-left: 1.3rem;
+}
+#ecoles .card-grid article dl dd::before {
+    content: "●";
+    font-size:0.5rem;
+    margin-right:0.5rem;
+    vertical-align: middle;
+}
+#ecoles .card-grid article dl dd span{
+    float:right;
+}
