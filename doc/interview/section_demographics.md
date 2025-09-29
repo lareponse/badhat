@@ -1,5 +1,5 @@
 
-## **Questionnaire sur l’Utilisation et l’Accessibilité du Web**
+## **Questionnaire sur l'Utilisation et l'Accessibilité du Web**
 - [ ] Je reponds pour moi même
 - [ ] Je réponds pour un tiers (précisez la relation) : __________
 

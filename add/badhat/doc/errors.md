@@ -1,6 +1,6 @@
 # Error Handling in BADHAT
 
-BADHAT uses PHP’s native error mechanisms to simulate `PSR` log levels, provide meaningful HTTP responses, and maintain full control without abstraction.
+BADHAT uses PHP's native error mechanisms to simulate `PSR` log levels, provide meaningful HTTP responses, and maintain full control without abstraction.
 
 No middleware. No annotations. No wrappers. Just procedural handling, routed through three native layers:
 
