@@ -1,6 +1,6 @@
 /* --- Fonts Import --- */
-@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&family=Poppins:wght@400;600;700&display=swap');
-
+/* @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&family=Poppins:wght@400;600;700&display=swap');
+*/
 :root {
     /* --- Base --- */
     --color-bg: #ffffff;
@@ -88,7 +88,7 @@ h6 {
     font-weight: 600;
     line-height: 1.3;
     margin-bottom: 0.5em;
-    color: var(--color-text-primary);
+    color: black;
 }
 
 h1 {
@@ -97,13 +97,15 @@ h1 {
 }
 
 h2 {
-    font-size: 1.75rem;
+    font-size: 2.3rem;
 }
 
 h3 {
-    font-size: 1.25rem;
+    font-size: 2rem;
 }
-
+h4 {
+    font-size: 1.75rem;
+}
 /* Text */
 p,
 li {
@@ -129,9 +131,12 @@ main>header h1 {
 }
 
 main>header div:has(p) {
-    margin:7prem 0;
+    margin:7rem 0;
 }
 
+main>header div p {
+    font-size:1.3rem;
+}
 main>section {
     margin-bottom: 7rem;
 }
