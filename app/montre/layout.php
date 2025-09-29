@@ -29,15 +29,17 @@
 
     <!-- Stylesheets (ordered: variables/base → components → pages) -->
     <link rel="stylesheet" href="css/irsa.css">
+    <link rel="stylesheet" href="css/header-footer.css">
     <link rel="stylesheet" href="css/button.css">
     <link rel="stylesheet" href="css/card.css">
     <link rel="stylesheet" href="css/blob.css">
     <?php
-    if(isset($css) && is_array($css)){
-        foreach($css as $file);
-        ?><link rel="stylesheet" href="css/<?= $file?>.css"><?php
-    }
+    if (isset($css) && is_array($css)) {
+        foreach ($css as $file);
     ?>
+        <link rel="stylesheet" href="css/<?= $file ?>.css"><?php
+                                                        }
+                                                            ?>
 
     <!-- Accessibility: use modern color scheme detection -->
     <meta name="color-scheme" content="light dark">
@@ -70,7 +72,7 @@
     </header>
 
 
-    <main><?= $main ?? ''?></main>
+    <main id="<?= str_replace('/', '', $_SERVER['REQUEST_URI']) ?>"><?= $main ?? '' ?></main>
 
     <footer role="contentinfo" lang="fr">
         <div class="tight">
@@ -134,4 +136,5 @@
     </footer>
 
 </body>
+
 </html>
