@@ -35,27 +35,103 @@ section[aria-labelledby$="heading"] h2 {
     text-decoration: underline;
 }
 
+
+/* Cartes spécifiques à la section "Autres moyens" */
+section[aria-labelledby="autres-heading"] .card-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(260px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
+}
+
+section[aria-labelledby="autres-heading"] .card-grid article {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+section[aria-labelledby="autres-heading"] .card-grid article:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+}
+
+section[aria-labelledby="autres-heading"] .card-grid h3 {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    margin-bottom: 0.75rem;
+}
+
+section[aria-labelledby="autres-heading"] .card-grid p {
+    margin-bottom: 1rem;
+    color: var(--color-text);
+    line-height: 1.5;
+}
+
+section[aria-labelledby="autres-heading"] .card-grid a {
+    background: var(--btn-secondary-bg);
+    color: var(--btn-secondary-color);
+}
+
+section[aria-labelledby="autres-heading"] .card-grid a:hover {
+    background: var(--color-accent-primary);
+}
+
 /* FAQ */
 section[aria-labelledby="faq-heading"] {
-    max-width: 800px;
-    margin: 4rem auto;
+    margin-top: 3rem;
 }
 
 section[aria-labelledby="faq-heading"] details {
-    border: 1px solid var(--color-border);
-    border-radius: 8px;
-    padding: 1rem;
+    background: var(--color-surface);
+    border-radius: 12px;
+    /* Ombre douce gris/bleu clair */
+    box-shadow: 0 2px 6px var(--color-hover),
+        0 4px 12px rgba(95, 94, 165, 0.12);
+    /* violette légère */
     margin-bottom: 1rem;
-    background: var(--color-surface-alt);
+    padding: 1rem 1.25rem;
+    transition: box-shadow 0.25s ease;
+}
+
+section[aria-labelledby="faq-heading"] details:hover {
+    /* Accentue l'ombre avec plus de saturation violette */
+    box-shadow: 0 3px 8px var(--color-hover),
+        0 6px 16px rgba(34, 64, 153, 0.18);
 }
 
 section[aria-labelledby="faq-heading"] summary {
-    font-weight: 600;
     cursor: pointer;
-    color: var(--color-accent-primary-dark);
+    font-weight: 600;
+    font-size: 1rem;
+    color: var(--color-text);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    list-style: none;
 }
 
-section[aria-labelledby="faq-heading"] p {
-    margin-top: 0.5rem;
-    color: var(--color-text);
+section[aria-labelledby="faq-heading"] summary::after {
+    content: "▾";
+    /* flèche bas */
+    font-size: 1.2rem;
+    color: var(--color-text-secondary);
+    transition: transform 0.2s ease;
+}
+
+section[aria-labelledby="faq-heading"] details[open] summary::after {
+    transform: rotate(-180deg);
+    /* flèche haut */
+}
+
+section[aria-labelledby="faq-heading"] details p {
+    margin-top: 0.75rem;
+    color: var(--color-text-secondary);
+    font-size: 0.95rem;
+    line-height: 1.5;
 }

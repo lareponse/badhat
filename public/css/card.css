@@ -52,3 +52,12 @@
     text-align: center;
     flex-grow: 1;
 }
+
+.card-grid article a {
+    display: block;
+    background: var(--btn-secondary-bg);
+    color:white;
+    text-align:center;
+    padding: 0.5rem 0;
+    font-weight:600;
+}

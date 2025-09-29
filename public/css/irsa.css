@@ -173,6 +173,9 @@ main>header h1 {
     padding: 3rem 0;
 }
 
+main>section{
+    margin-bottom:7rem;
+}
 
 
 /* Footer */
