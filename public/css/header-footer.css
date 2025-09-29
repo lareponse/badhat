@@ -1,0 +1,175 @@
+/* Layout: header */
+body>header nav.tight {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--color-surface);
+    margin: 2rem auto;
+    border-radius: 999px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+    padding: 1rem 2rem;
+}
+
+body>header nav h1 {
+    margin: 0;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 700;
+}
+
+body>header nav h1 a {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    color: var(--color-text-primary);
+}
+
+/* Liste de navigation */
+body>header nav ol {
+    list-style: none;
+    display: flex;
+    gap: 2rem;
+    margin: 0;
+    padding: 0;
+    flex: 1;
+    justify-content: center;
+}
+
+body>header nav ol li {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    font-size: 1rem;
+    color: var(--color-text);
+    cursor: pointer;
+    position: relative;
+    transition: color 0.2s;
+}
+
+body>header nav ol li:hover {
+    color: var(--color-accent-primary);
+}
+
+/* Effet soulignement au hover */
+body>header nav ol li::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: -6px;
+    width: 0%;
+    height: 2px;
+    background: var(--color-accent-primary);
+    transition: width 0.2s ease-in-out;
+}
+
+body>header nav ol li:hover::after {
+    width: 100%;
+}
+
+body>header nav ol li a {
+    text-decoration: none;
+    color: inherit;
+}
+
+/* Bouton dans le header */
+body>header nav .btn {
+    font-family: 'Poppins', sans-serif;
+    background: var(--btn-secondary-bg);
+    color: var(--btn-secondary-color);
+    padding: var(--btn-padding);
+    border-radius: 999px;
+    font-weight: var(--btn-font-weight);
+    text-decoration: none;
+    transition: background 0.2s ease;
+}
+
+body>header nav .btn:hover {
+    background: var(--color-accent-primary-dark);
+}
+
+
+
+
+/* Footer */
+footer {
+    background: var(--color-accent-primary-light);
+    padding: 2rem;
+    margin-top: 3rem;
+    font-size: 0.95rem;
+}
+
+footer .footer-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+footer h3 {
+    font-size: 1rem;
+    margin-bottom: 0.75rem;
+    color: var(--color-text-primary);
+    font-weight: 600;
+    font-family: 'Poppins', sans-serif;
+}
+
+footer address,
+footer ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-family: 'Open Sans', sans-serif;
+}
+
+footer ul li {
+    margin: 0.4rem 0;
+}
+
+footer ul li a {
+    color: var(--color-text);
+    text-decoration: none;
+}
+
+footer ul li a:hover,
+footer ul li a:focus {
+    text-decoration: underline;
+}
+
+/* Réseaux sociaux */
+footer .social-links {
+    display: flex;
+    gap: 0.75rem;
+}
+
+footer .social-links a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--color-text-secondary);
+    color: white;
+    text-decoration: none;
+    font-size: 1.2rem;
+    transition: background 0.2s ease;
+}
+
+footer .social-links a:hover,
+footer .social-links a:focus {
+    background: var(--color-accent-primary);
+}
+
+/* Bas de page */
+footer hr {
+    border: none;
+    border-top: 2px solid var(--color-text-secondary);
+    margin: 2rem 0 1rem;
+}
+
+footer p {
+    text-align: center;
+    margin: 0.3rem 0;
+    color: var(--color-text-secondary);
+    font-size: 0.85rem;
+    font-family: 'Open Sans', sans-serif;
+}
