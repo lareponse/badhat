@@ -123,6 +123,28 @@
 
 </section>
 
+<!-- Organisme d'Administration -->
+<section class="oa" aria-labelledby="oa-heading">
+    <div class="tight">
+
+        <h2 id="oa-heading">Notre Organisme d'Administration</h2>
+        <p>
+            L'IRSA est administré par un Organisme d'Administration (OA), composé de femmes et d'hommes issus du monde associatif,
+            professionnel, social et éducatif.
+        </p>
+        <p>
+            Ces membres bénévoles assurent la gestion stratégique, éthique et financière de l'institution.
+            Ils veillent à la continuité des missions, à la qualité de l'accompagnement et au respect des valeurs fondamentales de l'IRSA.
+        </p>
+
+        <p class="cta">
+            <a href="#" class="btn">Voir la composition complète de l'OA</a>
+        </p>
+    </div>
+
+</section>
+
+<img src="/ui/partners.jpg" alt="">
 
 <?php
 return function ($this_html, $args) {
