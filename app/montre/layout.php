@@ -19,7 +19,7 @@
             <h1><a href="/">IRSA</a></h1>
             <ol>
                 <li><a href="/">Accueil</a></li>
-                <li><a href="/lirsa">L'IRSA</a></li>
+                <li><a href="/irsa">L'IRSA</a></li>
                 <li><a href="/services">Nos services</a></li>
                 <li><a href="/ecoles">Ecoles</a></li>
                 <li><a href="/contact">Contact</a></li>
