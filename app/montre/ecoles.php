@@ -1,7 +1,7 @@
 <header>
-    <h1><span class="tight">Les écoles de l’IRSA</span></h1>
+    <h1><span class="tight">Les écoles de l'IRSA</span></h1>
     <p class="tight">
-        L’IRSA propose un parcours scolaire complet pour les enfants et adolescents atteints de déficience auditive,
+        L'IRSA propose un parcours scolaire complet pour les enfants et adolescents atteints de déficience auditive,
         visuelle ou avec troubles associés.<br>
         Chaque établissement est adapté à un type de public spécifique, avec un accompagnement pédagogique et
         thérapeutique individualisé.
@@ -12,7 +12,7 @@
     <article>
         <img src="/images/ecole-visuelle.jpg" alt="Enseignante avec un élève">
         <h2>École fondamentale déficience visuelle et troubles associés</h2>
-        <a href="#" class="btn">Découvrir l’école</a>
+        <a href="#" class="btn">Découvrir l'école</a>
         <ul>
             <li>Déficience visuelle (T6)</li>
             <li>Troubles associés (T8)</li>
@@ -22,7 +22,7 @@
     <article>
         <img src="/images/ecole-auditive.jpg" alt="Enseignante en langue des signes avec un élève">
         <h2>École fondamentale déficience auditive</h2>
-        <a href="#" class="btn">Découvrir l’école</a>
+        <a href="#" class="btn">Découvrir l'école</a>
         <p>Approche bilingue (LSFB / FR)</p>
     </article>
 
@@ -34,7 +34,7 @@
         <ul>
             <li>Déficience auditive (T7)</li>
             <li>Déficience visuelle (T6)</li>
-            <li>Troubles d’apprentissage (T1)</li>
+            <li>Troubles d'apprentissage (T1)</li>
         </ul>
     </article>
 </section>
@@ -52,7 +52,7 @@
         <h2>Centre PMS spécialisé</h2>
         <a href="#" class="btn">Découvrir le PMS</a>
         <p>
-            Écoute, soutien, orientation et collaboration avec l’équipe éducative pour favoriser le bien-être et la réussite.
+            Écoute, soutien, orientation et collaboration avec l'équipe éducative pour favoriser le bien-être et la réussite.
         </p>
     </article>
 </section>

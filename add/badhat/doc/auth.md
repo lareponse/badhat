@@ -27,7 +27,7 @@ This document outlines practical authentication strategies for use in minimalist
 **Cons**:
 
 * Sends credentials in every request (use HTTPS)
-* Doesn’t support roles or advanced auth
+* Doesn't support roles or advanced auth
 * Tied to Apache/CGI config
 
 ---
@@ -135,6 +135,6 @@ This provides a single entry point for user identity in your app. Customize if y
 
 ## Final Note
 
-Avoid trusting `X-Auth-User` unless you fully control the proxy and strip incoming headers. For maximum safety, lean on Apache's built-in mechanisms: they’re harder to misconfigure than anything PHP-side.
+Avoid trusting `X-Auth-User` unless you fully control the proxy and strip incoming headers. For maximum safety, lean on Apache's built-in mechanisms: they're harder to misconfigure than anything PHP-side.
 
 Stay lean. Stay secure. Stay BADHAT.

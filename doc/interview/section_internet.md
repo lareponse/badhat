@@ -1,7 +1,7 @@
 
-## Partie 1 : Utilisation d’Internet (quanti)
+## Partie 1 : Utilisation d'Internet (quanti)
 
-**Quels navigateurs utilisez-vous et quelles sont leurs fonctionnalités d’accessibilité activées ?** 
+**Quels navigateurs utilisez-vous et quelles sont leurs fonctionnalités d'accessibilité activées ?** 
 - [ ] Google Chrome | Accessibilité : __________  
 - [ ] Mozilla Firefox | Accessibilité : __________  
 - [ ] Safari | Accessibilité : __________  
@@ -67,7 +67,7 @@
 
 ---
 
-## Partie 3 : Difficultés d’Utilisation et Accessibilité
+## Partie 3 : Difficultés d'Utilisation et Accessibilité
 
 **À quelle fréquence rencontrez-vous des sites web difficiles à utiliser ?**  
 - [ ] Plusieurs fois par jour  
@@ -88,11 +88,11 @@
 
 **Comment réagissez-vous lorsque vous rencontrez un site inaccessible ?**  
 - [ ] Je quitte immédiatement le site  
-- [ ] J’essaie de trouver une solution alternative  
+- [ ] J'essaie de trouver une solution alternative  
 - [ ] Je contacte le support du site  
 - [ ] Autre (précisez) :   
 
-**L’accessibilité du web a-t-elle évolué ces dernières années ?**  
+**L'accessibilité du web a-t-elle évolué ces dernières années ?**  
 - [ ] Forte amélioration  
 - [ ] Légère amélioration  
 - [ ] Pas de changement  
@@ -106,10 +106,10 @@
 
 **Quels conseils donneriez-vous aux développeurs web pour améliorer l'accessibilité ?**  
 
-**Comment l’accessibilité du web impacte-t-elle votre quotidien ?**
+**Comment l'accessibilité du web impacte-t-elle votre quotidien ?**
 
 **Quels changements récents en matière d'accessibilité web vous ont particulièrement aidé ?**  
-- [ ] Compatibilité avec les lecteurs d’écran  
+- [ ] Compatibilité avec les lecteurs d'écran  
 - [ ] Meilleur contraste des couleurs  
 - [ ] Accessibilité améliorée des formulaires  
 - [ ] Autre (précisez) : 

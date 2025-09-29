@@ -1,8 +1,8 @@
 <header>
-    <h1><span class="tight">L’IRSA : une histoire qui dure !</span></h1>
+    <h1><span class="tight">L'IRSA : une histoire qui dure !</span></h1>
     <p class="tight">
-        Depuis 1835, l’IRSA accompagne enfants, jeunes et adultes atteints de déficience auditive, visuelle ou multiple.
-        Situé à Uccle, l’institut offre un accompagnement global : scolarité, soins, hébergement, activités éducatives, guidance familiale, etc.
+        Depuis 1835, l'IRSA accompagne enfants, jeunes et adultes atteints de déficience auditive, visuelle ou multiple.
+        Situé à Uccle, l'institut offre un accompagnement global : scolarité, soins, hébergement, activités éducatives, guidance familiale, etc.
         Chaque personne est accueillie avec une attention particulière à ses besoins, son rythme et son projet de vie.
     </p>
 </header>
@@ -12,9 +12,9 @@
     <article>
         <h2>1835</h2>
         <figure>
-            <img src="/ui/timeline/1835.svg" alt="Fondation de l’Institut des Sourds-Muets">
+            <img src="/ui/timeline/1835.svg" alt="Fondation de l'Institut des Sourds-Muets">
         </figure>
-        <p>Fondation de l’Institut des Sourds-Muets</p>
+        <p>Fondation de l'Institut des Sourds-Muets</p>
     </article>
 
     <article>
@@ -42,7 +42,7 @@
     </article>
 
     <article>
-        <h2>1900’</h2>
+        <h2>1900'</h2>
         <figure>
             <img src="/ui/timeline/1900.svg" alt="Premiers ateliers professionnels">
         </figure>
@@ -74,7 +74,7 @@
     </article>
 
     <article>
-        <h2>2000’</h2>
+        <h2>2000'</h2>
         <figure>
             <img src="/ui/timeline/2000.svg" alt="Scolarité, soins, vie quotidienne">
         </figure>
@@ -100,13 +100,13 @@
     <article>
         <h2>2011</h2>
         <figure>
-            <img src="/ui/timeline/2011.svg" alt="Le restaurant d’application">
+            <img src="/ui/timeline/2011.svg" alt="Le restaurant d'application">
         </figure>
-        <p>Le restaurant d’application</p>
+        <p>Le restaurant d'application</p>
     </article>
 
     <article>
-        <h2>2020’</h2>
+        <h2>2020'</h2>
         <figure>
             <img src="/ui/timeline/2020.svg" alt="Ouverture et expertise">
         </figure>
@@ -116,9 +116,9 @@
     <article>
         <h2>2025</h2>
         <figure>
-            <img src="/ui/timeline/2025.svg" alt="Ouverture à l’Autisme">
+            <img src="/ui/timeline/2025.svg" alt="Ouverture à l'Autisme">
         </figure>
-        <p>Ouverture à l’Autisme</p>
+        <p>Ouverture à l'Autisme</p>
     </article>
 
 </section>

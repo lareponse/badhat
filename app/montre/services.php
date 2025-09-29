@@ -5,11 +5,11 @@
 
 <!-- Centres d'hébergement -->
 <section aria-labelledby="hebergement-heading">
-    <h2 id="hebergement-heading">Centres d’hébergement</h2>
+    <h2 id="hebergement-heading">Centres d'hébergement</h2>
 
     <div class="hebergement-grid tight">
         <article>
-            <h3>Centre d’hébergement pour enfant :</h3>
+            <h3>Centre d'hébergement pour enfant :</h3>
             <ul>
                 <li><a href="#">Avec déficience auditive</a></li>
                 <li><a href="#">Avec déficience visuelle</a></li>
@@ -18,7 +18,7 @@
         </article>
 
         <article>
-            <h3>Centre d’hébergement pour adulte :</h3>
+            <h3>Centre d'hébergement pour adulte :</h3>
             <ul>
                 <li><a href="#">Avec déficience visuelle – Aubier</a></li>
             </ul>
@@ -73,8 +73,8 @@
         </article>
 
         <article class="card">
-            <img src="images/chateau.jpg" alt="Location du Château d’Orangerie">
-            <h3>Location du Château d’Orangerie</h3>
+            <img src="images/chateau.jpg" alt="Location du Château d'Orangerie">
+            <h3>Location du Château d'Orangerie</h3>
             <p>Un lieu chaleureux et adapté disponible à la location pour vos formations, événements.</p>
             <a href="#">Découvrir</a>
         </article>
@@ -87,9 +87,9 @@
         </article>
 
         <article class="card">
-            <img src="images/restaurant.jpg" alt="Restaurant d’application">
-            <h3>Restaurant d’application</h3>
-            <p>Un lieu de formation et d’évolution où les jeunes en insertion vous cuisinent pour vous.</p>
+            <img src="images/restaurant.jpg" alt="Restaurant d'application">
+            <h3>Restaurant d'application</h3>
+            <p>Un lieu de formation et d'évolution où les jeunes en insertion vous cuisinent pour vous.</p>
             <a href="#">Horaires et Infos</a>
         </article>
 

@@ -11,7 +11,7 @@ Objectif : produire un HTML **sémantique, accessible, performant et lisible** �
 - Utiliser les balises sémantiques natives : `<header>`, `<main>`, `<nav>`, `<section>`, `<article>`, `<aside>`, `<footer>`.
 - Respecter la hiérarchie des titres (`<h1>` → `<h2>` → `<h3>`…), sans sauter de niveau.
 - Employer les balises adaptées : `<p>`, `<ul>/<ol>/<li>`, `<blockquote>`, `<figure>/<figcaption>`, `<time>`, `<em>`, `<strong>`, etc.
-- N’utiliser `<div>` ou `<span>` qu’en dernier recours.
+- N'utiliser `<div>` ou `<span>` qu'en dernier recours.
 
 ### 2. Accessibilité (native)
 - Chaque image a un `alt` approprié (`alt=""` si décorative).
@@ -19,24 +19,24 @@ Objectif : produire un HTML **sémantique, accessible, performant et lisible** �
 - Groupes de champs : `<fieldset>` + `<legend>`.
 - Boutons et liens : `<button>` pour les actions, `<a href>` pour la navigation.
 - Navigation possible uniquement au clavier (tabulation, focus visible).
-- Ordre logique des titres et du contenu pour les lecteurs d’écran.
+- Ordre logique des titres et du contenu pour les lecteurs d'écran.
 
 ### 3. ARIA (renforcé)
-⚠️ Principe : **N’utiliser ARIA que si le HTML natif ne suffit pas**.
+⚠️ Principe : **N'utiliser ARIA que si le HTML natif ne suffit pas**.
 
-- `role` uniquement quand aucune balise native n’existe (`role="dialog"`, `role="alert"`, `role="tablist"`, etc.).
+- `role` uniquement quand aucune balise native n'existe (`role="dialog"`, `role="alert"`, `role="tablist"`, etc.).
 - Associer correctement les relations :
   - `aria-labelledby` pour désigner un titre existant.
   - `aria-describedby` pour rattacher une description.
 - Gérer la visibilité :
-  - `aria-hidden="true"` pour masquer un élément inutile aux lecteurs d’écran.
+  - `aria-hidden="true"` pour masquer un élément inutile aux lecteurs d'écran.
   - `aria-live="polite"` ou `aria-live="assertive"` pour signaler des changements dynamiques.
 - Pour composants complexes :
   - Accordéon : `aria-expanded`, `aria-controls`.
   - Modale : `role="dialog"`, `aria-modal="true"`.
   - Onglets : `role="tablist"`, `role="tab"`, `role="tabpanel`.
 
-👉 Toujours tester avec un lecteur d’écran (NVDA, VoiceOver).
+👉 Toujours tester avec un lecteur d'écran (NVDA, VoiceOver).
 
 ### 4. Métadonnées et base du document
 - `<!DOCTYPE html>` en début de fichier.
@@ -73,7 +73,7 @@ Objectif : produire un HTML **sémantique, accessible, performant et lisible** �
 ### 📑 Onglets
 
 ```html
-<div role="tablist" aria-label="Exemple d’onglets">
+<div role="tablist" aria-label="Exemple d'onglets">
   <button role="tab" id="tab1" aria-controls="panel1" aria-selected="true">Onglet 1</button>
   <button role="tab" id="tab2" aria-controls="panel2" aria-selected="false">Onglet 2</button>
 </div>

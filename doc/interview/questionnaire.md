@@ -1,4 +1,4 @@
-# Questionnaire sur l’utilisation et l’accessibilité du site IRSA.be
+# Questionnaire sur l'utilisation et l'accessibilité du site IRSA.be
 
 ## **Introduction**
 
@@ -140,7 +140,7 @@ Cette enquête contient **environs 60 questions**, dépendant de votre situation
 
 ### Internet
 
-**Quels navigateurs utilisez-vous et quelles sont leurs fonctionnalités d’accessibilité activées ?**
+**Quels navigateurs utilisez-vous et quelles sont leurs fonctionnalités d'accessibilité activées ?**
 
     [ ] Google Chrome | Accessibilité : 
     [ ] Mozilla Firefox | Accessibilité : 
@@ -220,7 +220,7 @@ Cette enquête contient **environs 60 questions**, dépendant de votre situation
 
 ---
 
-## Partie 3 : Difficultés d’Utilisation et Accessibilité
+## Partie 3 : Difficultés d'Utilisation et Accessibilité
 
 **À quelle fréquence rencontrez-vous des sites web difficiles à utiliser ?**
 
@@ -243,11 +243,11 @@ _(Classez de 1 à 5, 1 étant le plus fréquent)_
 **Comment réagissez-vous lorsque vous rencontrez un site inaccessible ?**
 
     [ ] Je quitte immédiatement le site
-    [ ] J’essaie de trouver une solution alternative
+    [ ] J'essaie de trouver une solution alternative
     [ ] Je contacte le support du site
     [ ] Autre (précisez) :
 
-**L’accessibilité du web a-t-elle évolué ces dernières années ?**
+**L'accessibilité du web a-t-elle évolué ces dernières années ?**
 
     [ ] Forte amélioration
     [ ] Légère amélioration
@@ -265,11 +265,11 @@ _(Classez de 1 à 5, 1 étant le plus fréquent)_
 
 **Quels conseils donneriez-vous aux développeurs web pour améliorer l'accessibilité ?**
 
-**Comment l’accessibilité du web impacte-t-elle votre quotidien ?**
+**Comment l'accessibilité du web impacte-t-elle votre quotidien ?**
 
 **Quels changements récents en matière d'accessibilité web vous ont particulièrement aidé ?**
 
-    [ ] Compatibilité avec les lecteurs d’écran
+    [ ] Compatibilité avec les lecteurs d'écran
     [ ] Meilleur contraste des couleurs
     [ ] Accessibilité améliorée des formulaires
     [ ] Autre (précisez) :
