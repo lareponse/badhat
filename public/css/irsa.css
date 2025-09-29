@@ -55,7 +55,7 @@
 }
 
 html {
-    font-size: 16px;
+    font-size: 1.2rem;
     scroll-behavior: smooth;
 }
 
@@ -126,6 +126,10 @@ li {
 main>header h1 {
     background: var(--color-accent-primary-light);
     padding: 3rem 0;
+}
+
+main>header div:has(p) {
+    margin:7prem 0;
 }
 
 main>section {
