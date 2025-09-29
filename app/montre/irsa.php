@@ -1,10 +1,10 @@
 <header>
     <h1><span class="tight">L'IRSA : une histoire qui dure !</span></h1>
-    <p class="tight">
-        Depuis 1835, l'IRSA accompagne enfants, jeunes et adultes atteints de déficience auditive, visuelle ou multiple.
-        Situé à Uccle, l'institut offre un accompagnement global : scolarité, soins, hébergement, activités éducatives, guidance familiale, etc.
-        Chaque personne est accueillie avec une attention particulière à ses besoins, son rythme et son projet de vie.
-    </p>
+    <div class="tight">
+    <p>Depuis 1835, l'IRSA accompagne enfants, jeunes et adultes atteints de déficience auditive, visuelle ou multiple.</p>
+    <p>Situé à Uccle, l'institut offre un accompagnement global : scolarité, soins, hébergement, activités éducatives, guidance familiale, etc.</p>
+    <p>Chaque personne est accueillie avec une attention particulière à ses besoins, son rythme et son projet de vie.</p>
+</div>
 </header>
 
 <section class="timeline tight">

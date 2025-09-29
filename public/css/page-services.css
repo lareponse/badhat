@@ -15,8 +15,8 @@ main section>h2 {
 
 /* Sous-titres */
 main section h3 {
-    color: var(--color-text-primary);
-    margin-bottom: 1rem;
+    margin: 3rem 0;
+    text-align: center;
 }
 
 /* --- Hébergement et Centres de jour --- */
@@ -24,7 +24,6 @@ main section h3 {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
     gap: 2rem;
-    margin-top: 1rem;
 }
 
 
@@ -51,9 +50,18 @@ main section h3 {
 }
 
 .link-grid a::after {
-    content: ">";
+    content: "\003009";
     position: absolute;
     right: 0.7rem;
+    font-weight:900;
+    vertical-align: middle;
+    background-color:var(--color-text-secondary);
+    color:var(--color-accent-secondary-light);
+    border-radius:50%;
+    display:inline-block;
+    width:2rem;
+    height:2rem;
+    text-align:center;
 }
 
 .link-grid a:hover {
