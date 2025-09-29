@@ -1,0 +1,61 @@
+
+
+section[aria-labelledby$="heading"] h2 {
+    color: var(--color-accent-primary);
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+/* Boutons don */
+.card-grid a.btn {
+    background: var(--btn-primary-bg);
+    color: var(--btn-primary-color);
+    padding: var(--btn-padding);
+    border-radius: var(--btn-radius);
+    font-weight: var(--btn-font-weight);
+    text-decoration: none;
+    margin: 1rem auto;
+    display: inline-block;
+    transition: background 0.2s ease;
+}
+
+.card-grid a.btn:hover {
+    background: var(--color-accent-secondary-dark);
+}
+
+/* Choix libre */
+.don-choice {
+    text-align: center;
+    margin-top: 1.5rem;
+}
+
+.don-choice a {
+    font-weight: 600;
+    color: var(--color-accent-primary);
+    text-decoration: underline;
+}
+
+/* FAQ */
+section[aria-labelledby="faq-heading"] {
+    max-width: 800px;
+    margin: 4rem auto;
+}
+
+section[aria-labelledby="faq-heading"] details {
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    background: var(--color-surface-alt);
+}
+
+section[aria-labelledby="faq-heading"] summary {
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--color-accent-primary-dark);
+}
+
+section[aria-labelledby="faq-heading"] p {
+    margin-top: 0.5rem;
+    color: var(--color-text);
+}
