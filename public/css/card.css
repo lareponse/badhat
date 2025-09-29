@@ -1,0 +1,54 @@
+/* Services */
+.card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
+}
+
+.card-grid article {
+    border: 1px solid var(--color-border);
+    border-radius: 1rem;
+    overflow: hidden;
+    background: var(--color-surface);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    transition: transform 0.2s ease;
+    display: flex;
+    flex-direction: column;
+}
+
+.card-grid article:hover {
+    transform: translateY(-6px);
+}
+
+/* Image */
+.card-grid img {
+    width: 100%;
+    height: 160px;
+    object-fit: cover;
+}
+
+/* Title */
+.card-grid h3 {
+    margin: 1rem 1rem 0.5rem;
+    font-size: 1.25rem;
+    font-weight: 600;
+    text-align: center;
+}
+
+/* CTA band */
+.card-grid .card-cta {
+    background: var(--color-accent-primary);
+    color: #fff;
+    text-align: center;
+    padding: 0.75rem;
+    font-weight: 500;
+    font-size: 1rem;
+}
+
+/* Text */
+.card-grid p {
+    padding: 1rem;
+    text-align: center;
+    flex-grow: 1;
+}

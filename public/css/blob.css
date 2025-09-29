@@ -1,0 +1,17 @@
+/* Base blob */
+.blob {
+    position: absolute;
+    z-index: -1;
+    pointer-events: none;
+    user-select: none;
+    max-width: 100%;
+    height: auto;
+}
+
+/* Exemple : blob en haut à droite */
+#blob_home_top_right {
+    top: 0;
+    right: 0;
+    width: 350px;
+}
+
