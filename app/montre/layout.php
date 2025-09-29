@@ -1,16 +1,48 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+
+    <!-- Document metadata -->
+    <title>IRSA – Institut Royal pour Sourds et Aveugles</title>
+    <meta name="description" content="Depuis 1835, l’IRSA accompagne enfants, jeunes et adultes atteints de déficience auditive, visuelle ou multiple à Uccle.">
+
+    <!-- Favicon -->
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:title" content="IRSA – Institut Royal pour Sourds et Aveugles">
+    <meta property="og:description" content="Depuis 1835, l’IRSA accompagne enfants, jeunes et adultes atteints de déficience auditive, visuelle ou multiple à Uccle.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.irsa.be/">
+    <meta property="og:image" content="https://www.irsa.be/assets/og-image.jpg">
+    <meta property="og:locale" content="fr_BE">
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="IRSA – Institut Royal pour Sourds et Aveugles">
+    <meta name="twitter:description" content="Depuis 1835, l’IRSA accompagne enfants, jeunes et adultes atteints de déficience auditive, visuelle ou multiple à Uccle.">
+    <meta name="twitter:image" content="https://www.irsa.be/assets/og-image.jpg">
+    <meta name="twitter:site" content="@irsa_be">
+
+    <!-- Stylesheets (ordered: variables/base → components → pages) -->
     <link rel="stylesheet" href="css/irsa.css">
     <link rel="stylesheet" href="css/button.css">
     <link rel="stylesheet" href="css/card.css">
     <link rel="stylesheet" href="css/blob.css">
-    <link rel="stylesheet" href="css/home.css">
+    <?php
+    if(isset($css) && is_array($css)){
+        foreach($css as $file);
+        ?><link rel="stylesheet" href="css/<?= $file?>.css"><?php
+    }
+    ?>
+
+    <!-- Accessibility: use modern color scheme detection -->
+    <meta name="color-scheme" content="light dark">
 </head>
+
 
 <body>
     <img src="/ui/blob/blob_home_top_right.svg" alt="decorative blob shape" class="blob" id="blob_home_top_right" aria-hidden="true">
@@ -38,7 +70,7 @@
     </header>
 
 
-    <main></main>
+    <main><?= $main ?? ''?></main>
 
     <footer role="contentinfo" lang="fr">
         <div class="tight">
@@ -99,9 +131,7 @@
                 <small>Site réalisé par <a href="https://zkiss.example">Z.Kiss</a></small>
             </p>
         </div>
-
     </footer>
 
 </body>
-
 </html>

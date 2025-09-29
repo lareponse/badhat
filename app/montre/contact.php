@@ -71,9 +71,6 @@
 
 <?php
 return function ($this_html, $args) {
-    [$ret, $buffer] = ob_ret_get('app/montre/layout.php');
-    $page = str_replace('</main>', $this_html . '</main>', $buffer);
-    $page = str_replace('</head>', '<link rel="stylesheet" href="css/page-contact.css"></head>', $page);
-
+    [$ret, $page] = ob_ret_get('app/montre/layout.php', ['main' => $this_html, 'css' => ['page-contact']], IO_EXTRACT);
     return $page;
 };

@@ -144,9 +144,9 @@
         </p>
     </div>
 </section>
-
 <?php
 return function ($this_html, $args) {
-    [$ret, $buffer] = ob_ret_get('app/montre/layout.php');
-    return str_replace('<main></main>', '<main>' . $this_html . '</main>', $buffer);
+    [$ret, $page] = ob_ret_get('app/montre/layout.php', ['main' => $this_html, 'css' => ['page-home']], IO_EXTRACT);
+    return $page;
 };
+
