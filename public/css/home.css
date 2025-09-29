@@ -25,12 +25,7 @@ section[aria-labelledby="hero-heading"] img {
 /* Questionnaire */
 section[aria-labelledby="questionnaire-heading"] {
     text-align: center;
-    padding: 4rem 2rem;
     background: linear-gradient(90deg, var(--color-accent-secondary-light), var(--color-accent-primary-light));
-    border-radius: 2rem;
-    margin: 3rem auto;
-    max-width: 60ch;
-
     position: relative;
     padding: 4rem 2rem;
     text-align: center;
@@ -72,26 +67,6 @@ section[aria-labelledby="stats-heading"] {
     flex-wrap:wrap;
     justify-content: space-between;
     align-items: center;
-    gap: 1rem
-}
-
-/* Questionnaire */
-section[aria-labelledby="questionnaire-heading"] {
-    text-align: center;
-    padding: 4rem 2rem;
-    background: linear-gradient(90deg, var(--color-accent-secondary-light), var(--color-accent-primary-light));
-    border-radius: 2rem;
-    margin: 3rem auto;
-    max-width: 60ch;
-
-    position: relative;
-    padding: 4rem 2rem;
-    text-align: center;
-    background: url('/ui/blob/blob_home_questionnaire.svg') no-repeat center / contain;
-    min-height: 51rem;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
     gap: 1rem
 }
 

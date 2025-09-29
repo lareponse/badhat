@@ -1,4 +1,4 @@
-<section id="home-hero" aria-labelledby="hero-heading" lang="fr">
+<section class="tight" id="home-hero" aria-labelledby="hero-heading" lang="fr">
     <div>
         <h1 id="hero-heading">Un projet pour chacun&nbsp;!</h1>
 
@@ -20,7 +20,7 @@
 </section>
 
 
-<section id="home-questionnaire" aria-labelledby="questionnaire-heading" lang="fr">
+<section class="tight" id="home-questionnaire" aria-labelledby="questionnaire-heading" lang="fr">
 
     <h2 id="questionnaire-heading">Quels services correspondent à vos besoins ?</h2>
 
@@ -35,7 +35,7 @@
 </section>
 
 
-<section aria-labelledby="services-heading" lang="fr">
+<section class="tight" aria-labelledby="services-heading" lang="fr">
     <h2 id="services-heading">Des services adaptés à chaque étape de la vie</h2>
     <p>
         Un accompagnement global qui prend en compte les besoins éducatifs,
@@ -79,7 +79,7 @@
     </div>
 </section>
 
-<section aria-labelledby="stats-heading" lang="fr">
+<section class="tight" aria-labelledby="stats-heading" lang="fr">
     <h2 id="stats-heading">L'IRSA en quelques chiffres</h2>
 
     <dl class="stats-list">
@@ -125,7 +125,7 @@
     </dl>
 </section>
 
-<section aria-labelledby="don-heading" lang="fr">
+<section class="tight" aria-labelledby="don-heading" lang="fr">
     <figure>
         <img src="/ui/home/home_don_acteur.jpg" alt="Main tenant une tablette avec une icône de don en surimpression">
     </figure>
@@ -146,7 +146,7 @@
 </section>
 
 <?php
-return function($this_html, $args){
+return function ($this_html, $args) {
     [$ret, $buffer] = ob_ret_get('app/montre/layout.php');
-    return str_replace('<main></main>', '<main>'. $this_html.'</main>', $buffer);
+    return str_replace('<main></main>', '<main>' . $this_html . '</main>', $buffer);
 };
