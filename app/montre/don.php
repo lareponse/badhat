@@ -12,94 +12,139 @@
 <section class="tight" aria-labelledby="ponctuels-heading">
     <h2 id="ponctuels-heading">Dons ponctuels</h2>
     <p>
-        Pour un don ponctuel à partir de 40 €, vous bénéficiez d'une déduction fiscale de 45 %.
-        Concrètement, un don de 50 € ne vous coûte réellement que 27,5 €.
+        Pour tout don annuel à partir de 40 €, vous bénéficiez d'une déduction fiscale de 45 %.
+        Concrètement, un don de 100 € ne vous coûte en réalité que 55 €.
+        À vous de choisir le montant qui correspond à votre engagement.
     </p>
 
     <div class="card-grid">
+        <!-- Don 50 € -->
         <article>
-            <img src="/img/don_50.jpg" alt="Enfant avec un appareil auditif">
-            <h3>En donnant 50 €</h3>
-            <p>Vous financez une séance d'orthophonie pour un enfant sourd.</p>
-            <a href="#" class="btn btn-secondary">Faites un don</a>
+            <img src="/img/don_50.jpg" alt="Enfant souriant avec un appareil auditif">
+            <h3><span>En donnant</span> <span>50 €</span></h3>
+            <p>Vous contribuez à l'achat d'un appareil auditif reconditionné</p>
+            <a href="#">Faites un don</a>
+            <p class="don-note">Cela ne vous coûte que 27 € en réalité après déduction fiscale.</p>
         </article>
 
+        <!-- Don 75 € -->
         <article>
-            <img src="/img/don_75.jpg" alt="Bébé accompagné par un adulte">
-            <h3>En donnant 75 €</h3>
-            <p>Vous permettez un accompagnement précoce pour un enfant avec TSA.</p>
-            <a href="#" class="btn btn-secondary">Faites un don</a>
+            <img src="/img/don_75.jpg" alt="Bébé lors d'une séance d'éveil sensoriel">
+            <h3><span>En donnant</span> <span>75 €</span></h3>
+            <p>Vous financez une séance d'éveil sensoriel pour un bébé avec TSA</p>
+            <a href="#">Faites un don</a>
+            <p class="don-note">Cela ne vous coûte que 34 € en réalité après déduction fiscale.</p>
         </article>
 
+        <!-- Don 100 € -->
         <article>
-            <img src="/img/don_100.jpg" alt="Enfant avec son éducateur">
-            <h3>En donnant 100 €</h3>
-            <p>Vous soutenez des activités éducatives et pédagogiques pour un jeune déficient visuel.</p>
-            <a href="#" class="btn btn-secondary">Faites un don</a>
+            <img src="/img/don_100.jpg" alt="Enseignant en langue des signes avec un enfant">
+            <h3><span>En donnant</span> <span>100 €</span></h3>
+            <p>Vous soutenez la formation d'un enseignant spécialisé en langue des signes</p>
+            <a href="#">Faites un don</a>
+            <p class="don-note">Cela ne vous coûte que 55 € en réalité après déduction fiscale.</p>
         </article>
     </div>
-
-    <p class="don-choice"><a href="#">Choisissez le montant de votre don</a></p>
 </section>
+
 
 <!-- Dons mensuels -->
 <section class="tight" aria-labelledby="mensuels-heading">
     <h2 id="mensuels-heading">Dons mensuels</h2>
+
     <div class="card-grid">
+        <!-- Don 7 €/mois -->
         <article>
-            <img src="/img/don_7.jpg" alt="Famille marchant ensemble">
-            <h3>En donnant 7 €/mois</h3>
-            <p>Vous financez l'accompagnement d'un parent pour soutenir son enfant en difficulté.</p>
-            <a href="#" class="btn btn-secondary">Faites un don</a>
+            <img src="/img/don_7.jpg" alt="Personne non-voyante marchant avec une canne blanche">
+            <h3><span>En donnant</span> <span>7 €/mois</span></h3>
+            <p>
+                Vous financez 1 canne blanche tous les 2 mois pour un enfant
+                ou un adulte aveugle en cours d'apprentissage.
+            </p>
+            <a href="#">Faites un don</a>
+            <p class="don-note">Coût réel après déduction&nbsp;: 3,8 €/mois.</p>
         </article>
 
+        <!-- Don 15 €/mois -->
         <article>
-            <img src="/img/don_15.jpg" alt="Adolescente avec casque audio">
-            <h3>En donnant 15 €/mois</h3>
-            <p>Vous permettez un suivi personnalisé pour un jeune présentant des troubles du spectre de l'autisme.</p>
-            <a href="#" class="btn btn-secondary">Faites un don</a>
+            <img src="/img/don_15.jpg" alt="Enfant portant un casque anti-bruit">
+            <h3><span>En donnant</span> <span>15 €/mois</span></h3>
+            <p>
+                Vous permettez l'achat de 2 casques anti-bruit par trimestre
+                pour des enfants présentant des troubles sensoriels ou TSA.
+            </p>
+            <a href="#">Faites un don</a>
+            <p class="don-note">Coût réel après déduction&nbsp;: 8 €/mois.</p>
         </article>
 
+        <!-- Don 30 €/mois -->
         <article>
-            <img src="/img/don_30.jpg" alt="Enfant dans une salle de classe spécialisée">
-            <h3>En donnant 30 €/mois</h3>
-            <p>Vous contribuez à du matériel adapté pour des enfants en situation de handicap visuel ou auditif.</p>
-            <a href="#" class="btn btn-secondary">Faites un don</a>
+            <img src="/img/don_30.jpg" alt="Enfant accompagné en classe spécialisée">
+            <h3><span>En donnant</span> <span>30 €/mois</span></h3>
+            <p>
+                Vous contribuez à l'équipement de nos classes spécialisées
+                avec du matériel de communication pictographique.
+            </p>
+            <a href="#">Faites un don</a>
+            <p class="don-note">Coût réel après déduction&nbsp;: 14 €/mois.</p>
         </article>
     </div>
-
-    <p class="don-choice"><a href="#">Choisissez le montant de votre don mensuel</a></p>
 </section>
 
 <!-- Autres moyens -->
 <section class="tight" aria-labelledby="autres-heading">
     <h2 id="autres-heading">Autres moyens de soutenir l'IRSA</h2>
     <div class="card-grid">
+
+        <!-- Virement -->
         <article>
             <h3>Donner par virement</h3>
             <p>
-                IBAN : BE74 9799 3933 4811<br>
-                BIC : CREGEBBE
+                Vous pouvez effectuer un don ponctuel ou régulier (ordre permanent)&nbsp;:<br><br>
+                <strong>IBAN&nbsp;: BE94 7795 9133 9114</strong><br>
+                <strong>BIC&nbsp;: GKCCBEBB</strong>
             </p>
+            <ul>
+                <li>En communication&nbsp;: Don IRSA + votre nom</li>
+                <li>Déductibilité fiscale dès 40 €/an, atout connu du fisc belge (réduction de 45%)</li>
+            </ul>
             <a href="#">Plus d'infos sur l'attestation fiscale</a>
         </article>
 
+        <!-- Legs -->
         <article>
             <h3>Faire un legs</h3>
-            <p>Incluez l'IRSA dans votre testament pour soutenir durablement nos missions.</p>
-            <a href="#">En savoir plus sur les legs</a>
+            <p>
+                Inclure l'IRSA dans votre testament ou désigner l'IRSA comme bénéficiaire d'une assurance-vie
+                permet de soutenir l'institution sur le long terme.
+            </p>
+            <p>
+                Le dispositif du « duo-legs » peut réduire les droits de succession pour vos héritiers.
+            </p>
+            <a href="#">En savoir plus sur les legs à l'IRSA</a>
         </article>
 
+        <!-- Don en nature -->
         <article>
             <h3>Don en nature ou mécénat de matériel</h3>
-            <p>Ordinateurs, mobilier, etc. Merci de nous contacter pour convenir d'un don.</p>
+            <p>
+                Vous déménagez ou renouvelez vos équipements&nbsp;?<br>
+                Nous récupérons des jeux sensoriels, ordinateurs, mobilier, etc. en bon état.
+                Merci de nous contacter avant don concret.
+            </p>
             <a href="#">Contactez-nous</a>
         </article>
 
+        <!-- Location Château -->
         <article>
-            <h3>Louer le Château de l'Orangerie</h3>
-            <p>Organisez vos événements et soutenez nos projets éducatifs.</p>
-            <a href="#">Réservez le château</a>
+            <h3>Louer le Château de l'Orangeraie</h3>
+            <p>
+                Organisez mariages, événements, garden-parties dans notre magnifique château.
+            </p>
+            <p>
+                Les revenus générés sont intégralement reversés à l'IRSA pour soutenir ses projets éducatifs et sociaux.
+            </p>
+            <a href="#">Réservez le Château</a>
         </article>
     </div>
 </section>
@@ -107,36 +152,38 @@
 <!-- FAQ -->
 <section class="tight" aria-labelledby="faq-heading">
     <h2 id="faq-heading">FAQ</h2>
+
     <details>
-        <summary>Mon don est-il déductible fiscalement ?</summary>
-        <p>Oui, à partir de 40 € par an, vous bénéficiez d'une déduction fiscale de 45 %.</p>
+        <summary>Mon don est-il déductible fiscalement&nbsp;?</summary>
+        <p>Oui, dès 40 € par an, vous bénéficiez d'une déduction fiscale de 45 %.</p>
     </details>
 
     <details>
-        <summary>Comment vais-je recevoir mon attestation fiscale ?</summary>
-        <p>Nous vous l'envoyons automatiquement chaque année au printemps.</p>
+        <summary>Comment vais-je recevoir mon attestation fiscale&nbsp;?</summary>
+        <p>Elle vous est envoyée automatiquement chaque année, au printemps.</p>
     </details>
 
     <details>
-        <summary>Puis-je modifier ou arrêter un don mensuel ?</summary>
-        <p>Oui, à tout moment sur simple demande par email ou téléphone.</p>
+        <summary>Puis-je modifier ou arrêter un don mensuel&nbsp;?</summary>
+        <p>Oui, à tout moment, sur simple demande par email ou téléphone.</p>
     </details>
 
     <details>
-        <summary>Où va mon argent ?</summary>
-        <p>Votre don finance directement nos services éducatifs, pédagogiques et matériels spécialisés.</p>
+        <summary>Où va mon argent&nbsp;?</summary>
+        <p>Votre don soutient directement nos services éducatifs, nos projets pédagogiques et l'achat de matériel spécialisé.</p>
     </details>
 
     <details>
-        <summary>Que fait l'IRSA de mes données personnelles ?</summary>
-        <p>Nous respectons strictement le RGPD. Vos données sont sécurisées et jamais revendues.</p>
+        <summary>Que fait l'IRSA de mes données personnelles&nbsp;?</summary>
+        <p>Nous respectons strictement le RGPD&nbsp;: vos données sont sécurisées et jamais revendues.</p>
     </details>
 
     <details>
-        <summary>Puis-je faire confiance à l'IRSA pour l'utilisation de mon don ?</summary>
-        <p>Oui, nos comptes sont audités chaque année et rendus publics.</p>
+        <summary>Puis-je faire confiance à l'IRSA pour l'utilisation de mon don&nbsp;?</summary>
+        <p>Oui, nos comptes sont audités chaque année et publiés en toute transparence.</p>
     </details>
 </section>
+
 
 <?php
 return function ($this_html, $args) {
