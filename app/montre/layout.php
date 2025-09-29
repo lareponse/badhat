@@ -16,17 +16,27 @@
     <img src="/ui/blob/blob_home_top_right.svg" alt="decorative blob shape" class="blob" id="blob_home_top_right" aria-hidden="true">
     <header>
         <nav class="tight">
-            <h1><a href="/">IRSA</a></h1>
+            <!-- Logo -->
+            <h1>
+                <a href="/">
+                    <img src="/ui/logo_irsa_text.jpg" alt="IRSA – Un projet pour chacun" height="60">
+                </a>
+            </h1>
+
+            <!-- Liens de navigation -->
             <ol>
                 <li><a href="/">Accueil</a></li>
                 <li><a href="/irsa">L'IRSA</a></li>
                 <li><a href="/services">Nos services</a></li>
-                <li><a href="/ecoles">Ecoles</a></li>
+                <li><a href="/ecoles">Écoles</a></li>
                 <li><a href="/contact">Contact</a></li>
-                <li><a href="/don">Faire un don</a></li>
             </ol>
+
+            <!-- Bouton Don -->
+            <a href="/don" class="btn">Faire un don</a>
         </nav>
     </header>
+
 
     <main></main>
 
