@@ -7,7 +7,7 @@
 <section aria-labelledby="hebergement-heading">
     <h2 id="hebergement-heading">Centres d'hébergement</h2>
 
-    <div class="hebergement-grid tight">
+    <div class="link-grid tight">
         <article>
             <h3>Centre d'hébergement pour enfant :</h3>
             <ul>
@@ -32,7 +32,7 @@
 
     <article class="tight">
         <h3>Centre de jour pour enfant :</h3>
-        <div class="jour-grid">
+        <div class="link-grid">
             <div>
                 <h4>Scolarisé :</h4>
                 <ul>
@@ -52,11 +52,14 @@
         </div>
     </article>
 
-    <article>
+    <article class="tight">
         <h3>Centre de jour pour adulte :</h3>
-        <ul>
-            <li><a href="#">Avec déficience visuelle</a></li>
-        </ul>
+        <div class="link-grid">
+
+            <ul>
+                <li><a href="#">Avec déficience visuelle</a></li>
+            </ul>
+        </div>
     </article>
 </section>
 

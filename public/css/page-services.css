@@ -1,3 +1,9 @@
+body {
+    background-image: url('/ui/blob/blob_services_1.svg');
+    background-position: 0 0;
+    background-repeat: no-repeat;
+}
+
 main section>h2 {
     background: var(--color-text-secondary);
     color: white;
@@ -14,29 +20,28 @@ main section h3 {
 }
 
 /* --- Hébergement et Centres de jour --- */
-.hebergement-grid,
-.jour-grid {
+.link-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
     gap: 2rem;
     margin-top: 1rem;
 }
 
-.hebergement-grid ul,
-.jour-grid ul {
+
+.link-grid ul {
     list-style: none;
     padding: 0;
     margin: 0;
+    margin-bottom: 3.1rem;
 }
 
-.hebergement-grid li,
-.jour-grid li {
+.link-grid li {
     margin: 0.5rem 0;
 }
 
-.hebergement-grid a,
-.jour-grid a {
-    display: inline-block;
+.link-grid a {
+    position: relative;
+    display: block;
     background: var(--color-accent-primary-light);
     color: var(--color-text-primary);
     font-weight: 500;
@@ -45,74 +50,22 @@ main section h3 {
     transition: background 0.2s ease;
 }
 
-.hebergement-grid a:hover,
-.jour-grid a:hover {
+.link-grid a::after {
+    content: ">";
+    position: absolute;
+    right: 0.7rem;
+}
+
+.link-grid a:hover {
     background: var(--color-accent-secondary-light);
     text-decoration: none;
 }
 
-/* --- Cartes Services --- */
-.card-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-    gap: 2rem;
-    margin-top: 2rem;
-}
-
-.card {
-    border: 1px solid var(--color-border);
-    border-radius: 1rem;
-    overflow: hidden;
-    background: var(--color-surface);
-    box-shadow: 0 2px 8px var(--color-hover);
-    transition: transform 0.2s ease;
-    display: flex;
-    flex-direction: column;
-}
-
-.card:hover {
-    transform: translateY(-5px);
-}
-
-.card img {
-    width: 100%;
-    height: 180px;
-    object-fit: cover;
-}
-
-.card h3 {
-    font-size: 1.25rem;
-    margin: 1rem;
-}
-
-.card p {
-    flex-grow: 1;
-    margin: 0 1rem 1rem;
-    color: var(--color-text);
-    font-size: 0.95rem;
-}
-
-.card a {
-    display: block;
-    text-align: center;
-    background: var(--btn-primary-bg);
-    color: var(--btn-primary-color);
-    padding: 0.75rem;
-    font-weight: var(--btn-font-weight);
-    border-radius: 0 0 1rem 1rem;
-    transition: background 0.2s ease;
-}
-
-.card a:hover {
-    background: var(--color-accent-secondary-dark);
-    text-decoration: none;
-}
 
 /* --- Responsive --- */
 @media (max-width: 768px) {
 
-    .hebergement-grid,
-    .jour-grid,
+    .link-grid,
     .card-grid {
         grid-template-columns: 1fr;
     }
@@ -120,4 +73,18 @@ main section h3 {
     main section>h2 {
         font-size: 1.25rem;
     }
+}
+
+section[aria-labelledby="jour-heading"] {
+    background-image: url('/ui/blob/blob_services_2.svg');
+    background-position: 100% 100%;
+    background-repeat: no-repeat;
+    background-size: contain;
+}
+
+section[aria-labelledby="services-heading"] {
+    background-image: url('/ui/blob/blob_services_3.svg');
+    background-position: 0 0;
+    background-repeat: no-repeat;
+    background-size: contain;
 }
