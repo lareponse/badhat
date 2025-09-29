@@ -1,0 +1,17 @@
+# Ignore everything
+*
+
+# Whitelist core files
+!README.md
+!auth.php
+!build.php
+!core.php
+!db.php
+!error.php
+
+# Whitelist doc directory and contents
+!doc/
+!doc/**
+
+# Keep this gitignore
+!.gitignore
