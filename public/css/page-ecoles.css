@@ -11,6 +11,8 @@
     height: 7rem;
     display: flex;
     align-items: center;
+    font-size:2rem;
+    padding: 0 1rem;
 }
 
 #ecoles .card-grid article dl,
