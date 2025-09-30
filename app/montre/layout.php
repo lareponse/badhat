@@ -10,7 +10,19 @@
     <meta name="description" content="Depuis 1835, l’IRSA accompagne enfants, jeunes et adultes atteints de déficience auditive, visuelle ou multiple à Uccle.">
 
     <!-- Favicon -->
-    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="manifest" href="/site.webmanifest">
+
+    <!-- Preload critical fonts -->
+    <link rel="preload" href="/ui/font/josefin-sans-v34-latin-regular.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="/ui/font/josefin-sans-v34-latin-700.woff2" as="font" type="font/woff2" crossorigin>
+
+    <link rel="preload" href="/ui/font/atkinson-hyperlegible-v12-latin-regular.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="/ui/font/atkinson-hyperlegible-v12-latin-italic.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="/ui/font/atkinson-hyperlegible-v12-latin-700.woff2" as="font" type="font/woff2" crossorigin>
+
 
     <!-- Open Graph / Facebook -->
     <meta property="og:title" content="IRSA – Institut Royal pour Sourds et Aveugles">
@@ -33,18 +45,19 @@
     <link rel="stylesheet" href="/css/button.css">
     <link rel="stylesheet" href="/css/card.css">
     <link rel="stylesheet" href="/css/blob.css">
+    <link rel="stylesheet" href="/css/triple-infos.css">
     <?php
-    if (isset($css) && is_array($css)) {
-        foreach ($css as $file);
+    if (isset($css) && is_array($css)):
+        foreach ($css as $file):
     ?>
-        <link rel="stylesheet" href="/css/<?= $file ?>.css"><?php
-                                                        }
-                                                            ?>
+            <link rel="stylesheet" href="/css/<?= $file ?>.css">
+        <?php endforeach ?>
+    <?php endif ?>
 
     <!-- Accessibility: use modern color scheme detection -->
     <meta name="color-scheme" content="light dark">
-</head>
 
+</head>
 
 <body>
     <header>
@@ -55,9 +68,12 @@
                     <img src="/ui/logo_irsa_text.jpg" alt="IRSA – Un projet pour chacun" height="60">
                 </a>
             </h1>
-
+            <!-- Toggle button -->
+            <button class="nav-toggle" aria-label="Ouvrir le menu">
+                ☰
+            </button>
             <!-- Liens de navigation -->
-            <ol>
+            <ol class="nav-links">
                 <li><a href="/">Accueil</a></li>
                 <li><a href="/irsa">L'IRSA</a></li>
                 <li><a href="/services">Nos services</a></li>
@@ -67,11 +83,17 @@
 
             <!-- Bouton Don -->
             <a href="/don" class="btn">Faire un don</a>
+
+
         </nav>
     </header>
+    <?php
+    $breadcrumb = explode('/', trim(http_in(), '/'));
+    $page_id = implode('-', $breadcrumb);
+    $page_class = implode(' ', $breadcrumb);
+    ?>
 
-
-    <main id="<?= str_replace('/', '', $_SERVER['REQUEST_URI']) ?>"><?= $main ?? '' ?></main>
+    <main id="<?= $page_id ?>" class="<?= $page_class ?>"><?= $main ?? '' ?></main>
 
     <footer role="contentinfo" lang="fr">
         <div class="tight">
