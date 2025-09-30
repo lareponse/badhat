@@ -39,8 +39,9 @@ main section h3 {
 }
 
 .link-grid a {
-    position: relative;
-    display: block;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     background: var(--color-accent-primary-light);
     color: var(--color-text-primary);
     font-weight: 500;
@@ -51,17 +52,9 @@ main section h3 {
 
 .link-grid a::after {
     content: "\003009";
-    position: absolute;
-    right: 0.7rem;
-    font-weight:900;
-    vertical-align: middle;
-    background-color:var(--color-text-secondary);
-    color:var(--color-accent-secondary-light);
-    border-radius:50%;
-    display:inline-block;
-    width:2rem;
-    height:2rem;
-    text-align:center;
+    font-weight: 900;
+    color: var(--color-text-secondary);
+    display: block;
 }
 
 .link-grid a:hover {

@@ -1,6 +1,5 @@
 <header>
     <h1><span class="tight">Nos structures et services</span></h1>
-
 </header>
 
 <!-- Centres d'hébergement -->
@@ -66,7 +65,6 @@
 <!-- Services -->
 <section aria-labelledby="services-heading">
     <h2 id="services-heading">Nos services</h2>
-
     <div class="card-grid tight">
         <article class="card">
             <img src="images/ludotheque.jpg" alt="Ludothèque Oasis">
