@@ -45,7 +45,6 @@
 
     <!-- Stylesheets (ordered: variables/base → components → pages) -->
     <link rel="stylesheet" href="/css/irsa.css">
-    <link rel="stylesheet" href="/css/a11y.css">
     <link rel="stylesheet" href="/css/header-footer.css">
     <link rel="stylesheet" href="/css/button.css">
     <link rel="stylesheet" href="/css/card.css">
@@ -159,7 +158,6 @@
     </footer>
 
     <script src="/js/onload.js"></script>
-    <script src="/js/a11y.js"></script>
 </body>
 
 </html>
