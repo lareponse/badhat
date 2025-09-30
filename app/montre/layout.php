@@ -45,6 +45,7 @@
 
     <!-- Stylesheets (ordered: variables/base → components → pages) -->
     <link rel="stylesheet" href="/css/irsa.css">
+    <link rel="stylesheet" href="/css/a11y.css">
     <link rel="stylesheet" href="/css/header-footer.css">
     <link rel="stylesheet" href="/css/button.css">
     <link rel="stylesheet" href="/css/card.css">
@@ -65,10 +66,26 @@
 
 <body>
     <a href="#main" class="skip-link">Aller au contenu principal</a>
+    <button id="accessibility-toggle" aria-label="Menu accessibilité">♿</button>
+
+
+    <div id="accessibility-menu" aria-hidden="true">
+        <header>
+            <h2>Menu d’accessibilité</h2>
+            <button id="close-menu">✕</button>
+        </header>
+
+        <div class="options">
+            <button class="action" data-action="increaseText">Agrandir le texte</button>
+            <button class="action" data-action="contrast">Contraster</button>
+            <button class="action" data-action="highlightLinks">Surligner liens</button>
+            <button class="action" data-action="dyslexiaFont">Mode dyslexie</button>
+            <button class="action" data-action="reset">Réinitialiser</button>
+        </div>
+    </div>
 
     <header role="banner">
         <nav role="navigation" class="tight">
-            <!-- Logo -->
             <h1>
                 <a href="/">
                     <img src="/ui/logo_irsa_text.jpg" alt="IRSA – Un projet pour chacun" height="60">
@@ -157,15 +174,8 @@
         </div>
     </footer>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            document.querySelector('nav .nav-toggle').addEventListener('click', (e) => {
-                console.log(document.querySelector('nav .nav-links'));
-                document.querySelector('nav .nav-links').classList.toggle('active');
-            })
-
-        });
-    </script>
+    <script src="/js/onload.js"></script>
+    <script src="/js/a11y.js"></script>
 </body>
 
 </html>
