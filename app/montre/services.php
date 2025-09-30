@@ -66,46 +66,46 @@
 <section aria-labelledby="services-heading">
     <h2 id="services-heading">Nos services</h2>
     <div class="card-grid tight">
-        <article class="card">
+        <article>
             <img src="images/ludotheque.jpg" alt="Ludothèque Oasis">
             <h3>Ludothèque Oasis</h3>
-            <p>Un espace de jeux sensoriels à tous, internes ou externes.</p>
             <a href="#">Horaires et Infos</a>
+            <p>Un espace de jeux sensoriels à tous, internes ou externes.</p>
         </article>
 
-        <article class="card">
+        <article>
             <img src="images/chateau.jpg" alt="Location du Château d'Orangerie">
             <h3>Location du Château d'Orangerie</h3>
-            <p>Un lieu chaleureux et adapté disponible à la location pour vos formations, événements.</p>
             <a href="#">Découvrir</a>
+            <p>Un lieu chaleureux et adapté disponible à la location pour vos formations, événements.</p>
         </article>
 
-        <article class="card">
+        <article>
             <img src="images/documentation.jpg" alt="Centre de documentation">
             <h3>Centre de documentation</h3>
-            <p>Un enseignement sur mesure, du déjà acquis au secondaire.</p>
             <a href="#">Horaires et Infos</a>
+            <p>Un enseignement sur mesure, du déjà acquis au secondaire.</p>
         </article>
 
-        <article class="card">
+        <article>
             <img src="images/restaurant.jpg" alt="Restaurant d'application">
             <h3>Restaurant d'application</h3>
-            <p>Un lieu de formation et d'évolution où les jeunes en insertion vous cuisinent pour vous.</p>
             <a href="#">Horaires et Infos</a>
+            <p>Un lieu de formation et d'évolution où les jeunes en insertion vous cuisinent pour vous.</p>
         </article>
 
-        <article class="card">
+        <article>
             <img src="images/conference.jpg" alt="Conférences">
             <h3>Conférences</h3>
-            <p>Événements pour sensibiliser et partager son expertise.</p>
             <a href="#">Découvrir</a>
+            <p>Événements pour sensibiliser et partager son expertise.</p>
         </article>
 
-        <article class="card">
+        <article>
             <img src="images/formations.jpg" alt="Formations">
             <h3>Formations</h3>
-            <p>Sessions animées par nos professionnels de terrain, adaptées aux besoins actuels.</p>
             <a href="#">Découvrir</a>
+            <p>Sessions animées par nos professionnels de terrain, adaptées aux besoins actuels.</p>
         </article>
     </div>
 </section>

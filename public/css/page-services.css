@@ -62,19 +62,6 @@ main section h3 {
 }
 
 
-/* --- Responsive --- */
-@media (max-width: 768px) {
-
-    .link-grid,
-    .card-grid {
-        grid-template-columns: 1fr;
-    }
-
-    main section>h2 {
-        font-size: 1.25rem;
-    }
-}
-
 section[aria-labelledby="jour-heading"] {
     background-image: url('/ui/blob/blob_services_2.svg');
     background-position: 100% 100%;
@@ -87,4 +74,11 @@ section[aria-labelledby="services-heading"] {
     background-position: 0 0;
     background-repeat: no-repeat;
     background-size: contain;
+}
+
+@media screen and (min-width:64rem) {
+
+    .services .card-grid {
+        grid-template-columns: repeat(3, minmax(16rem, 1fr));
+    }
 }
