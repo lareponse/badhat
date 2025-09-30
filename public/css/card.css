@@ -1,14 +1,8 @@
-/* Services */
-.card-grid {
-    padding-left: 0.7rem;
-    padding-right: 0.7rem;
-}
-
 .card-grid {
     margin-top: 2rem;
     display: grid;
     gap: 2rem;
-    justify-content: center;
+    justify-content: stretch;
 
     /* center the grid when extra space */
     align-items: stretch;
@@ -16,6 +10,7 @@
 
     /* Intrinsic sizing */
     grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+    overflow:scroll;
 }
 
 .card-grid article {
