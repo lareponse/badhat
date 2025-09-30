@@ -144,7 +144,7 @@
             <p>
                 Les revenus générés sont intégralement reversés à l'IRSA pour soutenir ses projets éducatifs et sociaux.
             </p>
-            <a href="#">Réservez le Château</a>
+            <a href="contribuer/chateau">Réservez le Château</a>
         </article>
     </div>
 </section>
