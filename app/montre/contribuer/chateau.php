@@ -15,30 +15,26 @@
     <p>Organisez votre événement (mariage, baptême, anniversaire, fête du personnel, etc.) dans le Château de l'Orangeraie, situé dans le magnifique parc de l'IRSA. Le prix de location est intégralement versé à l'IRSA.</p>
 </section>
 
-<section>
-    <h2>Contact</h2>
-    <div class="tight">
+<section class="card-grid tight">
+    <article>
+        <h2>Contact</h2>
         <ul>
             <li><strong>Téléphone :</strong> <a href="tel:+32479886335">0479/88.63.35</a></li>
             <li><strong>Email :</strong> <a href="mailto:locations@irsa.be">locations@irsa.be</a></li>
         </ul>
         <p>Pour toute utilisation de nos salles, nous demandons une participation financière dont une partie couvre les frais divers occasionnés et dont le solde contribue au développement de nos activités pour les personnes handicapées.</p>
-    </div>
-</section>
+    </article>
 
-<section>
-    <h2>Capacité</h2>
-    <div class="tight">
+    <article>
+        <h2>Capacité</h2>
         <ul>
             <li>100 personnes assises maximum (salles de 100, 60 et 40 personnes)</li>
             <li>200 personnes en réception</li>
         </ul>
-    </div>
-</section>
+    </article>
 
-<section>
-    <h2>Tarification</h2>
-    <div class="tight">
+    <article>
+        <h2>Tarification</h2>
         <dl>
             <dt>Participation financière</dt>
             <dd>1.650 € + 150 € de nettoyage</dd>
@@ -53,12 +49,10 @@
             <dd>500 € (semaine précédant l'événement)</dd>
         </dl>
         <p><strong>Annulation :</strong> En cas d'annulation, l'acompte ne sera pas remboursé.</p>
-    </div>
-</section>
+    </article>
 
-<section>
-    <h2>Prestations incluses</h2>
-    <div class="tight">
+    <article>
+        <h2>Prestations incluses</h2>
         <ul>
             <li>Utilisation de la salle selon horaire défini</li>
             <li>Tables et chaises pour 100 personnes</li>
@@ -71,12 +65,10 @@
             <li>Libre choix de traiteur et de sono</li>
             <li>Pas de droit de bouchon</li>
         </ul>
-    </div>
-</section>
+    </article>
 
-<section>
-    <h2>Informations pratiques</h2>
-    <div class="tight">
+    <article>
+        <h2>Informations pratiques</h2>
         <ul>
             <li><strong>Location en semaine :</strong> Possibilité uniquement en soirée pour réunions, cours, etc.</li>
             <li><strong>Location week-end :</strong> Samedi ou dimanche</li>
@@ -84,15 +76,17 @@
             <li><strong>Parking :</strong> 6 voitures maximum derrière le château (responsables, sono, traiteur)</li>
             <li><strong>Parking invités :</strong> Stationnement aisé sur l'avenue Van Bever</li>
         </ul>
-    </div>
-</section>
+    </article>
 
-<section class="tight">
-    <h2>Documents à télécharger</h2>
-    <div class="downloads">
-        <a href="/documents/chateau/formulaire-demande-visite.pdf" class="btn" download>Formulaire de demande de visite</a>
-        <a href="/documents/chateau/convention-location.pdf" class="btn" download>Convention de location</a>
-    </div>
+
+    <article>
+        <h2>Documents à télécharger</h2>
+        <div class="downloads">
+            <a href="/documents/chateau/formulaire-demande-visite.pdf" class="btn" download>Formulaire de demande de visite</a>
+            <a href="/documents/chateau/convention-location.pdf" class="btn" download>Convention de location</a>
+        </div>
+    </article>
+
 </section>
 
 <section class="tight">
