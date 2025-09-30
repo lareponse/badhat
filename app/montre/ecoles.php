@@ -47,7 +47,7 @@
     <article>
         <img src="/ui/pages/ecoles/creche.jpg" alt="Jeune enfant jouant avec des blocs colorés">
         <h2>Crèche inclusive Le Petit Prince</h2>
-        <a href="#">Découvrir la crèche</a>
+        <a href="/ecoles/creche">Découvrir la crèche</a>
         <p>Accueille les tout-petits à partir de quelques mois, avec ou sans déficience sensorielle.</p>
     </article>
 
