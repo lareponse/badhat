@@ -1,13 +1,17 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr-BE">
 
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <!-- Document metadata -->
     <title>IRSA – Institut Royal pour Sourds et Aveugles</title>
     <meta name="description" content="Depuis 1835, l’IRSA accompagne enfants, jeunes et adultes atteints de déficience auditive, visuelle ou multiple à Uccle.">
+
+    <link rel="canonical" href="https://www.irsa.be/">
+    <meta name="robots" content="index, follow">
 
     <!-- Favicon -->
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
@@ -60,18 +64,16 @@
 </head>
 
 <body>
-    <header>
-        <nav class="tight">
+    <a href="#main" class="skip-link">Aller au contenu principal</a>
+
+    <header role="banner">
+        <nav role="navigation" class="tight">
             <!-- Logo -->
             <h1>
                 <a href="/">
                     <img src="/ui/logo_irsa_text.jpg" alt="IRSA – Un projet pour chacun" height="60">
                 </a>
             </h1>
-            <!-- Toggle button -->
-            <button class="nav-toggle" aria-label="Ouvrir le menu">
-                ☰
-            </button>
             <!-- Liens de navigation -->
             <ol class="nav-links">
                 <li><a href="/">Accueil</a></li>
@@ -82,9 +84,8 @@
             </ol>
 
             <!-- Bouton Don -->
-            <a href="/don" class="btn">Faire un don</a>
-
-
+            <a href="/don" class="btn btn-primary">Faire un don</a>
+            <button class="nav-toggle" aria-label="Ouvrir le menu">☰</button>
         </nav>
     </header>
     <?php
@@ -151,11 +152,20 @@
 
             <p>
                 <small>&copy; <?= date('Y') ?> IRSA – Institut Royal pour Sourds et Aveugles – Tous droits réservés</small><br>
-                <small>Site réalisé par <a href="https://zkiss.example">Z.Kiss</a></small>
+                <small>Experience concue par <a href="https://zkiss.example">Z.Kiss</a></small>
             </p>
         </div>
     </footer>
 
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelector('nav .nav-toggle').addEventListener('click', (e) => {
+                console.log(document.querySelector('nav .nav-links'));
+                document.querySelector('nav .nav-links').classList.toggle('active');
+            })
+
+        });
+    </script>
 </body>
 
 </html>
