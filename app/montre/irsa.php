@@ -148,6 +148,6 @@
 
 <?php
 return function ($this_html, $args) {
-    [$ret, $page] = ob_ret_get('app/montre/layout.php', ['main' => $this_html, 'css' => ['page-irsa']], IO_EXTRACT);
+    [$ret, $page] = ob_ret_get('app/layout.php', ['main' => $this_html, 'css' => ['page-irsa']], IO_EXTRACT);
     return $page;
 };
