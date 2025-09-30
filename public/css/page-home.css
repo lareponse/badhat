@@ -75,15 +75,17 @@ section[aria-labelledby="stats-heading"] {
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
     gap: 2rem;
     margin-top: 2rem;
+    list-style-type:none;
 }
 
-.stats-list dt {
+.stats-list strong {
     font-size: 1.5rem;
     font-weight: 700;
     color: var(--color-text-primary);
+    display:block;
 }
 
-.stats-list dd {
+.stats-list span {
     margin-left: 0;
     font-size: 0.9rem;
     color: var(--color-text-secondary);

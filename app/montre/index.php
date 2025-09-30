@@ -20,6 +20,7 @@
             alt="Un jeune garçon portant un implant auditif caresse un lapin avec tendresse">
     </figure>
 </section>
+
 <iframe width="100%" height="600px" src="https://www.youtube.com/embed/-Y0r8Sve0Sc" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen=""></iframe>
 
 <section class="tight" id="home-questionnaire" aria-labelledby="questionnaire-heading" lang="fr">
@@ -35,7 +36,6 @@
         <a href="/questionnaire" class="btn btn-primary">Commencer le questionnaire</a>
     </p>
 </section>
-
 
 <section class="tight" aria-labelledby="services-heading" lang="fr">
     <h2 id="services-heading">Des services adaptés à chaque étape de la vie</h2>
@@ -85,47 +85,47 @@
 <section class="tight" aria-labelledby="stats-heading" lang="fr">
     <h2 id="stats-heading">L'IRSA en quelques chiffres</h2>
 
-    <dl class="stats-list">
-        <div>
-            <dt>600+</dt>
-            <dd>Personnes accompagnées chaque année</dd>
-        </div>
+    <ul class="stats-list">
+        <li>
+            <strong>600+</strong>
+            <span>Personnes accompagnées chaque année</span>
+        </li>
 
-        <div>
-            <dt>300+</dt>
-            <dd>Professionnels engagés</dd>
-        </div>
+        <li>
+            <strong>300+</strong>
+            <span>Professionnels engagés</span>
+        </li>
 
-        <div>
-            <dt>4</dt>
-            <dd>Établissements scolaires spécialisés</dd>
-        </div>
+        <li>
+            <strong>4</strong>
+            <span>Établissements scolaires spécialisés</span>
+        </li>
 
-        <div>
-            <dt>10</dt>
-            <dd>Services et asbl annexes</dd>
-        </div>
+        <li>
+            <strong>10</strong>
+            <span>Services et asbl annexes</span>
+        </li>
 
-        <div>
-            <dt>2</dt>
-            <dd>Lieux de vie pour enfants et jeunes</dd>
-        </div>
+        <li>
+            <strong>2</strong>
+            <span>Lieux de vie pour enfants et jeunes</span>
+        </li>
 
-        <div>
-            <dt>1835</dt>
-            <dd>Depuis</dd>
-        </div>
+        <li>
+            <strong>1835</strong>
+            <span>Depuis</span>
+        </li>
 
-        <div>
-            <dt>15</dt>
-            <dd>Moyenne d'enfants réintégrés dans l'enseignement traditionnel par an</dd>
-        </div>
+        <li>
+            <strong>15</strong>
+            <span>Moyenne d'enfants réintégrés dans l'enseignement traditionnel par an</span>
+        </li>
 
-        <div>
-            <dt>5</dt>
-            <dd>Hectares de parc</dd>
-        </div>
-    </dl>
+        <li>
+            <strong>5</strong>
+            <span>Hectares de parc</span>
+        </li>
+    </ul>
 </section>
 
 <section class="tight" aria-labelledby="don-heading" lang="fr">
