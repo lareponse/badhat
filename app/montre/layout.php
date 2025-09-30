@@ -28,16 +28,16 @@
     <meta name="twitter:site" content="@irsa_be">
 
     <!-- Stylesheets (ordered: variables/base → components → pages) -->
-    <link rel="stylesheet" href="css/irsa.css">
-    <link rel="stylesheet" href="css/header-footer.css">
-    <link rel="stylesheet" href="css/button.css">
-    <link rel="stylesheet" href="css/card.css">
-    <link rel="stylesheet" href="css/blob.css">
+    <link rel="stylesheet" href="/css/irsa.css">
+    <link rel="stylesheet" href="/css/header-footer.css">
+    <link rel="stylesheet" href="/css/button.css">
+    <link rel="stylesheet" href="/css/card.css">
+    <link rel="stylesheet" href="/css/blob.css">
     <?php
     if (isset($css) && is_array($css)) {
         foreach ($css as $file);
     ?>
-        <link rel="stylesheet" href="css/<?= $file ?>.css"><?php
+        <link rel="stylesheet" href="/css/<?= $file ?>.css"><?php
                                                         }
                                                             ?>
 
