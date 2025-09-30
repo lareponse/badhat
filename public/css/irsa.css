@@ -232,7 +232,6 @@ img {
 
 @media screen and (min-width:64rem) {
     .tight {
-        padding: 0;
         display: block;
         max-width: 73rem;
         margin-left: auto;
