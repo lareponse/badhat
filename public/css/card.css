@@ -3,6 +3,9 @@
     margin-top: 2rem;
     display: grid;
     justify-content: center;
+    align-items: stretch;
+    padding-left:0.7rem;
+    padding-right:0.7rem;
 }
 
 @media screen and (min-width:31rem) {
@@ -29,12 +32,12 @@
 
 .card-grid article h2,
 .card-grid article h3 {
-    height: 7rem;
+    min-height: 7rem;
     display: flex;
     align-items: center;
     justify-content: center;
     text-align: center;
-    padding: 0 1rem;
+    padding: 0.5rem 1rem;
     font-size: 2rem;
 }
 

@@ -1,14 +1,10 @@
 .ecoles .card-grid {
-    justify-content: center;
     gap: 3rem;
 }
 
-.ecoles .card-grid article {
-    height: 37rem;
-}
 
 .ecoles .card-grid article h2 {
-    height: 13rem;
+    min-height: 11rem;
 }
 
 .ecoles .card-grid article dl,
@@ -52,16 +48,7 @@ main>section:last-of-type {
     margin: 3rem 0;
 }
 
-main>section:last-of-type a {
-    display: inline-block;
-    background: var(--color-accent-secondary-dark);
-    color: var(--btn-primary-color);
-    padding: var(--btn-padding);
-    border-radius: 999px;
-    font-weight: 700;
-    text-decoration: none;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
+
 
 main>section:last-of-type a:hover {
     transform: translateY(-2px);
