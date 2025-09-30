@@ -1,21 +1,26 @@
 /* Services */
 .card-grid {
-    margin-top: 2rem;
-    display: grid;
-    justify-content: center;
-    align-items: stretch;
-    padding-left:0.7rem;
-    padding-right:0.7rem;
+    padding-left: 0.7rem;
+    padding-right: 0.7rem;
 }
 
-@media screen and (min-width:31rem) {
-    .card-grid {
-        grid-template-columns: repeat(auto-fit, 23rem);
-        gap: 2rem;
-    }
+.card-grid {
+    margin-top: 2rem;
+    display: grid;
+    gap: 2rem;
+    justify-content: center;
+
+    /* center the grid when extra space */
+    align-items: stretch;
+    padding-inline: 0.7rem;
+
+    /* Intrinsic sizing */
+    grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
 }
 
 .card-grid article {
+    max-width: 23rem;
+    margin-inline: auto; /* ensures centering if fewer items in row */
     border: 1px solid var(--color-border);
     border-radius: 1rem;
     overflow: hidden;
@@ -32,7 +37,7 @@
 
 .card-grid article h2,
 .card-grid article h3 {
-    min-height: 7rem;
+    min-height: 9rem;
     display: flex;
     align-items: center;
     justify-content: center;
