@@ -132,7 +132,7 @@
     --color-accent-secondary-soft: rgba(255, 229, 0, 0.5);
 
     /* --- Buttons --- */
-    --btn-primary-bg: var(--color-accent-secondary);
+    --btn-primary-bg: var(--color-accent-secondary-dark);
     --btn-primary-color: var(--color-text);
 
     --btn-secondary-bg: var(--color-accent-primary-dark);

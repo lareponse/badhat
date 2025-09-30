@@ -32,7 +32,7 @@
     </p>
 
     <p>
-        <a href="/questionnaire" class="btn">Commencer le questionnaire</a>
+        <a href="/questionnaire" class="btn btn-primary">Commencer le questionnaire</a>
     </p>
 </section>
 
@@ -143,7 +143,7 @@
         </p>
 
         <p>
-            <a href="/don" class="btn">Faire un don</a>
+            <a href="/don" class="btn btn-primary">Faire un don</a>
         </p>
     </div>
 </section>
