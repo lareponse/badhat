@@ -8,7 +8,7 @@
 }
 
 .ecoles .card-grid article h2 {
-    height:13rem;
+    height: 13rem;
 }
 
 .ecoles .card-grid article dl,
@@ -16,31 +16,34 @@
     margin-top: 2rem;
     padding: 0.7rem;
 }
+
 .ecoles .card-grid article dl dt {
     margin-bottom: 0.7rem;
-    font-weight:600;
+    font-weight: 600;
 }
+
 .ecoles .card-grid article dl dd {
     padding-left: 1.3rem;
 }
+
 .ecoles .card-grid article dl dd::before {
     content: "●";
-    font-size:0.5rem;
-    margin-right:0.5rem;
+    font-size: 0.5rem;
+    margin-right: 0.5rem;
     vertical-align: middle;
 }
-.ecoles .card-grid article dl dd span{
-    float:right;
+
+.ecoles .card-grid article dl dd span {
+    float: right;
 }
 
-.ecoles section h2{
-    background:none;
-    color:black;
-    text-align: center;
+.ecoles section h2 {
+    background: none;
+    color: black;
 }
 
-.ecoles section ul{
-    margin-left:1.7rem;
+.ecoles section ul {
+    margin-left: 1.7rem;
 }
 
 /* Download section */
@@ -63,4 +66,16 @@ main>section:last-of-type a {
 main>section:last-of-type a:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+
+#ecoles-t1-t7-t6 header h1,
+#ecoles-t6-t8 header h1 {
+    background-color: #2c5033;
+    color: white;
+}
+
+#ecoles-t7 header h1 {
+    background-color: var(--color-accent-secondary-dark);
+    color: black;
 }

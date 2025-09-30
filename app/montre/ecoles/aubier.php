@@ -84,7 +84,7 @@
         </article>
 
         <article>
-            <a href="#formulaire">Vers le formulaire de contact</a>
+            <a href="/contact">Vers le formulaire de contact</a>
         </article>
 
     </div>

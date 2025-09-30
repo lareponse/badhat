@@ -1,147 +1,117 @@
-<?php
-$director = [
-    'name' => 'Caroline Tyteca',
-    'role' => 'Directrice',
-    'phone' => '02/375 47 85',
-    'mobile' => '0476/90 34 30',
-    'email' => 'c.tyteca@irsa.be'
-];
-
-$coordinator = [
-    'name' => 'Charlotte Verhamme',
-    'role' => 'Coordination pôle siège T8',
-    'mobile' => '0476/61 32 45',
-    'email' => 'c.verhamme@irsa.be'
-];
-
-$t6_projects = [
-    [
-        'name' => 'Projet A',
-        'target' => 'Pour les enfants susceptibles de suivre une scolarité comme dans l\'enseignement ordinaire',
-        'desc' => 'Programme identique à celui de l\'enseignement ordinaire (possibilité de l\'obtention du CEB). Relations de partenariat avec des écoles d\'enseignement ordinaire.'
-    ],
-    [
-        'name' => 'Projet B',
-        'target' => 'Pour les enfants avec problèmes associés',
-        'desc' => 'Handicap moteur, handicap mental léger, retard de langage, troubles instrumentaux : classes à rythme lent, apprentissage de l\'autonomie et programme scolaire adapté.'
-    ],
-    [
-        'name' => 'Projet C',
-        'target' => 'Pour les enfants porteurs de déficiences multiples',
-        'desc' => 'Déficiences visuelle, neurologique, motrice, mentale, syndrome, problème médical et/ou déficience auditive (surdi-cécité). Programme de pédagogie conductive avec 4 objectifs principaux : autonomie, communication multimodale, découverte multi-sensorielle par le corps vécu, apprentissage de base.'
-    ]
-];
-
-$t8_workshops = [
-    'Atelier mathématique',
-    'Atelier dyspraxie',
-    'Atelier CSC phono',
-    'Atelier son',
-    'Atelier éducation'
-];
-?>
-<img src="/ui/blob/blob_ecoles_detail.svg" alt="" class="blob" id="blob_detail" aria-hidden="true">
+<img src="/ui/blob/blob_ecoles_top_right.svg" alt="decorative blob shape" class="blob" id="blob_ecoles_top_right" aria-hidden="true">
+<img src="/ui/blob/blob_ecoles_middle_left.svg" alt="decorative blob shape" class="blob" id="blob_ecoles_middle_left" aria-hidden="true">
 
 <header>
-    <h1><span class="tight">École fondamentale déficience visuelle et troubles associés</span></h1>
-    <nav aria-label="Fil d'Ariane" class="breadcrumb tight">
-        <ol class="tight">
-            <li><a href="/">Accueil</a></li>
-            <li><a href="/ecoles">Les écoles</a></li>
-            <li aria-current="page">École Fondamentale Type 6 et Type 8</li>
-        </ol>
-    </nav>
+    <h1><span class="tight">École fondamentale – déficience visuelle et troubles associés</span></h1>
 </header>
 
-<section aria-labelledby="contact-heading">
-    <h2 id="contact-heading"><span class="tight">Contacts</span></h2>
-    <div class="contact-grid tight">
+<section class="tight" aria-labelledby="fondamentale-presentation-heading">
+    <h2 id="fondamentale-presentation-heading" class="visually-hidden">
+        Présentation de l'école
+    </h2>
+
+    <div class="triple-infos">
         <article>
-            <h3><?= $director['role'] ?></h3>
-            <p><strong><?= $director['name'] ?></strong></p>
-            <p>Tél. <?= $director['phone'] ?> – <?= $director['mobile'] ?></p>
-            <p><a href="mailto:<?= $director['email'] ?>"><?= $director['email'] ?></a></p>
+            <h3>Handicap concerné</h3>
+            <p>Déficience visuelle (T6), troubles du spectre de l'autisme (T8), déficiences multiples (T2)</p>
         </article>
+
         <article>
-            <h3><?= $coordinator['role'] ?></h3>
-            <p><strong><?= $coordinator['name'] ?></strong></p>
-            <p>Tél. <?= $coordinator['mobile'] ?></p>
-            <p><a href="mailto:<?= $coordinator['email'] ?>"><?= $coordinator['email'] ?></a></p>
+            <h3>Tranche d'âge</h3>
+            <p>3 à 12 ans</p>
+        </article>
+
+        <article>
+            <h3>Type de structure</h3>
+            <p>École fondamentale spécialisée</p>
+        </article>
+    </div>
+
+    <p>
+        L'école fondamentale T2–T6–T8 de l'IRSA accueille des enfants présentant une déficience visuelle, un trouble du spectre de l'autisme ou une déficience multiple. Notre mission est de leur offrir un enseignement adapté, de développer leur autonomie et de favoriser leur inclusion, en collaboration étroite avec les familles.
+    </p>
+</section>
+
+<section class="tight" aria-labelledby="environnement-heading">
+    <h2 id="environnement-heading" class="visually-hidden">Notre environnement</h2>
+    <figure>
+        <img src="" alt="Élèves travaillant sur ordinateurs en classe">
+        <img src="" alt="Activité en classe avec enseignante et élèves">
+        <img src="" alt="Bus scolaire jaune devant l'établissement">
+    </figure>
+</section>
+
+<section class="tight" aria-labelledby="accompagnement-heading">
+    <h2 id="accompagnement-heading">Accompagnement et pédagogie</h2>
+    <ul>
+        <li>Classes à effectif réduit permettant un suivi individualisé</li>
+        <li>Adaptations pédagogiques selon le type :
+            <ul>
+                <li>T6 : compensations liées à la basse vision ou à la cécité</li>
+                <li>T8 : stratégies spécifiques pour les enfants avec TSA</li>
+                <li>T2 : accompagnement global pour enfants avec déficiences multiples</li>
+            </ul>
+        </li>
+        <li>Travail pluridisciplinaire avec éducateurs et paramédicaux (logo, kiné, psychomotricité, etc.)</li>
+        <li>Objectif central : soutenir les apprentissages fondamentaux et préparer l'entrée au secondaire</li>
+    </ul>
+</section>
+
+<section class="tight" aria-labelledby="services-heading">
+    <h2 id="services-heading">Services associés</h2>
+    <ul>
+        <li>Interventions paramédicales intégrées dans le temps scolaire</li>
+        <li>Collaboration avec le centre de services IRSA pour renforcer les suivis spécialisés</li>
+        <li>Activités éducatives et sorties favorisant l'autonomie et la socialisation</li>
+    </ul>
+</section>
+
+<section class="tight" aria-labelledby="admission-heading">
+    <h2 id="admission-heading">Modalités d'admission</h2>
+    <p><strong>Public :</strong> enfants de 3 à 12 ans avec une déficience visuelle, un TSA ou une déficience multiple (diagnostic requis)</p>
+    <p><strong>Procédure :</strong></p>
+    <ol>
+        <li>Orientation par un PMS ou dossier médical adapté</li>
+        <li>Premier contact avec la direction de l'école</li>
+        <li>Rencontre et visite de l'établissement</li>
+        <li>Décision d'admission validée par l'équipe pluridisciplinaire</li>
+    </ol>
+    <p>Certains profils médicaux trop lourds peuvent nécessiter une orientation vers une structure plus adaptée !</p>
+</section>
+
+<section class="tight" aria-labelledby="contact-heading">
+    <h2 id="contact-heading">Contact</h2>
+    <div class="triple-infos">
+        <article>
+            <h3>Numéro de téléphone</h3>
+            <span>02 *** *** ***</span>
+        </article>
+
+        <article>
+            <h3>Adresse mail</h3>
+            <a href="mailto:fondat288@irsa.be">fondat288@irsa.be</a>
+        </article>
+
+        <article>
+            <a href="/contact">Vers le formulaire de contact</a>
         </article>
     </div>
 </section>
 
-<section aria-labelledby="t6-heading">
-    <h2 id="t6-heading"><span class="tight">Type 6 : Déficience visuelle</span></h2>
-
-    <div class="section-intro">
-        <div class="tight">
-            <p>Enseignement maternel et primaire (dès 2 ans et demi) pour enfants aveugles et malvoyants.</p>
-        </div>
-    </div>
-
-    <div class="tight">
-        <h3>Moyens adaptés</h3>
-        <ul>
-            <li>Choix des agrandissements, supports, couleurs, éclairage</li>
-            <li>Techniques braille, TV loupe, thermoforme</li>
-            <li>PC, PC braille</li>
-            <li>Découverte des matières grâce au braille et représentations graphiques en relief</li>
-            <li>Suivi thérapeutique et services spécialisés en basse vision</li>
-            <li>Orientation et mobilité organisés avec le Centre de Services et le CHS</li>
-        </ul>
-
-        <h3>Projets proposés</h3>
-        <?php foreach ($t6_projects as $project): ?>
-            <article class="project-card">
-                <h4><?= $project['name'] ?></h4>
-                <p class="project-target"><strong><?= $project['target'] ?></strong></p>
-                <p><?= $project['desc'] ?></p>
-            </article>
-        <?php endforeach; ?>
-    </div>
-
-</section>
-
-<section aria-labelledby="t8-heading">
-    <h2 id="t8-heading"><span class="tight">Type 8 : Troubles instrumentaux</span></h2>
-
-    <div class="section-intro">
-        <div class="tight">
-
-            <p>Enseignement primaire (dès 6 ans) pour enfants présentant des troubles instrumentaux (dyslexie, dyscalculie, dyspraxie), troubles de l'attention, troubles mnésiques, troubles du langage (dysphasie).</p>
-            <p><strong>Objectif :</strong> Le bien-être, la confiance et l'estime de l'enfant sont nos priorités.</p>
-        </div>
-    </div>
-
-    <div class="tight">
-
-
-        <h3>Organisation</h3>
-        <ul>
-            <li><strong>5 classes :</strong> 2 classes T8 + 3 classes de langage</li>
-            <li>Travail en plateaux pour mathématiques et français (niveaux homogènes)</li>
-            <li>Classes à effectifs réduits pour aide individualisée</li>
-            <li>4 niveaux de maturité (non 6 années scolaires)</li>
-            <li>Prises en charge logopédiques</li>
-        </ul>
-
-        <h3>Ateliers collaboratifs</h3>
-        <p>Travail en ateliers en collaboration avec les logopèdes :</p>
-        <ul>
-            <?php foreach ($t8_workshops as $workshop): ?>
-                <li><?= $workshop ?></li>
-            <?php endforeach; ?>
-        </ul>
-
-        <h3>Public concerné</h3>
-        <p>Ces troubles engendrent des difficultés d'apprentissage dans le domaine du développement du langage, de la parole, de l'écriture ou du calcul, dont la gravité est telle qu'une intervention particulière dans le cadre de l'enseignement ordinaire ne peut suffire.</p>
-        <p>On peut y entrer à tout moment d'une scolarité primaire justifiant une telle orientation.</p>
+<section class="tight" aria-labelledby="liens-heading">
+    <h2 id="liens-heading">Liens utiles</h2>
+    <div class="liens-grid">
+        <a href="projet-pedagogique.pdf">Projet pédagogique</a>
+        <a href="reglement-etudes.pdf">Règlement des études</a>
+        <a href="brochure-metiers.pdf">Brochure métiers</a>
     </div>
 </section>
 
+<section>
+    <a href="brochure-presentation-fondamentale.pdf" download>Télécharger Brochure de présentation</a>
+</section>
 <?php
 return function ($this_html, $args) {
-    [$ret, $page] = ob_ret_get('app/montre/layout.php', ['main' => $this_html, 'css' => ['page-school-detail']], IO_EXTRACT);
+    [$ret, $page] = ob_ret_get('app/montre/layout.php', ['main' => $this_html, 'css' => ['page-ecoles']], IO_EXTRACT);
     return $page;
 };
