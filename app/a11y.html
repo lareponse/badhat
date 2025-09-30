@@ -1,0 +1,470 @@
+<button id="accessibility-toggle" aria-label="Menu accessibilité">♿</button>
+
+<div id="accessibility-menu" aria-hidden="true">
+    <header>
+        <h2 id="accessibility-title">Menu d’accessibilité</h2>
+        <button id="close-menu" aria-label="Fermer le menu">✕</button>
+    </header>
+
+    <div class="options" role="group" aria-labelledby="accessibility-title">
+
+        <!-- Lire la page -->
+        <button class="action" data-action="readPage" role="slider" aria-label="Lire la page" aria-valuemin="1"
+            aria-valuemax="3" aria-valuenow="1">
+            <span class="icon icon-reading"></span>
+            <span class="label">Lire la page</span>
+            <span class="steps">
+                <span class="step active"></span><span class="step"></span><span class="step"></span>
+            </span>
+        </button>
+
+        <!-- Contraste -->
+        <button class="action" data-action="contrast" role="slider" aria-label="Contraste" aria-valuemin="1"
+            aria-valuemax="3" aria-valuenow="2">
+            <span class="icon icon-contrast"></span>
+            <span class="label">Contraste</span>
+            <span class="steps">
+                <span class="step"></span><span class="step active"></span><span class="step"></span>
+            </span>
+        </button>
+
+        <!-- Contraste intelligent -->
+        <button class="action" data-action="smartContrast" role="slider" aria-label="Contraste intelligent"
+            aria-valuemin="1" aria-valuemax="3" aria-valuenow="1">
+            <span class="icon icon-smart-contrast"></span>
+            <span class="label">Contraste intelligent</span>
+            <span class="steps">
+                <span class="step active"></span><span class="step"></span><span class="step"></span>
+            </span>
+        </button>
+
+        <!-- Surligner les liens -->
+        <button class="action" data-action="highlightLinks" role="slider" aria-label="Surligner les liens"
+            aria-valuemin="1" aria-valuemax="3" aria-valuenow="1">
+            <span class="icon icon-highlight-links"></span>
+            <span class="label">Surligner les liens</span>
+            <span class="steps">
+                <span class="step active"></span><span class="step"></span><span class="step"></span>
+            </span>
+        </button>
+
+        <!-- Agrandir le texte -->
+        <button class="action" data-action="increaseText" role="slider" aria-label="Taille du texte" aria-valuemin="1"
+            aria-valuemax="3" aria-valuenow="2">
+            <span class="icon icon-bigger-text"></span>
+            <span class="label">Agrandir le texte</span>
+            <span class="steps">
+                <span class="step"></span><span class="step active"></span><span class="step"></span>
+            </span>
+        </button>
+
+        <!-- Espacer le texte -->
+        <button class="action" data-action="textSpacing" role="slider" aria-label="Espacement du texte"
+            aria-valuemin="1" aria-valuemax="3" aria-valuenow="1">
+            <span class="icon icon-spacing"></span>
+            <span class="label">Espacer le texte</span>
+            <span class="steps">
+                <span class="step active"></span><span class="step"></span><span class="step"></span>
+            </span>
+        </button>
+
+        <!-- Activer animations -->
+        <button class="action" data-action="toggleAnimations" role="slider" aria-label="Animations" aria-valuemin="1"
+            aria-valuemax="3" aria-valuenow="3">
+            <span class="icon icon-animations"></span>
+            <span class="label">Animations</span>
+            <span class="steps">
+                <span class="step"></span><span class="step"></span><span class="step active"></span>
+            </span>
+        </button>
+
+        <!-- Masquer images -->
+        <button class="action" data-action="hideImages" role="slider" aria-label="Images" aria-valuemin="1"
+            aria-valuemax="3" aria-valuenow="1">
+            <span class="icon icon-hide-images"></span>
+            <span class="label">Masquer images</span>
+            <span class="steps">
+                <span class="step active"></span><span class="step"></span><span class="step"></span>
+            </span>
+        </button>
+
+        <!-- Mode dyslexie -->
+        <button class="action" data-action="dyslexiaFont" role="slider" aria-label="Mode dyslexie" aria-valuemin="1"
+            aria-valuemax="3" aria-valuenow="1">
+            <span class="icon icon-dyslexia"></span>
+            <span class="label">Mode dyslexie</span>
+            <span class="steps">
+                <span class="step active"></span><span class="step"></span><span class="step"></span>
+            </span>
+        </button>
+
+        <!-- Agrandir curseur -->
+        <button class="action" data-action="bigCursor" role="slider" aria-label="Curseur" aria-valuemin="1"
+            aria-valuemax="3" aria-valuenow="2">
+            <span class="icon icon-cursor"></span>
+            <span class="label">Agrandir curseur</span>
+            <span class="steps">
+                <span class="step"></span><span class="step active"></span><span class="step"></span>
+            </span>
+        </button>
+
+        <!-- Info-bulles -->
+        <button class="action" data-action="tooltips" role="slider" aria-label="Info-bulles" aria-valuemin="1"
+            aria-valuemax="3" aria-valuenow="1">
+            <span class="icon icon-tooltips"></span>
+            <span class="label">Info-bulles</span>
+            <span class="steps">
+                <span class="step active"></span><span class="step"></span><span class="step"></span>
+            </span>
+        </button>
+
+        <!-- Plan de page -->
+        <button class="action" data-action="pageOutline" role="slider" aria-label="Plan de page" aria-valuemin="1"
+            aria-valuemax="3" aria-valuenow="1">
+            <span class="icon icon-outline"></span>
+            <span class="label">Plan de page</span>
+            <span class="steps">
+                <span class="step active"></span><span class="step"></span><span class="step"></span>
+            </span>
+        </button>
+
+        <!-- Hauteur de ligne -->
+        <button class="action" data-action="lineHeight" role="slider" aria-label="Hauteur de ligne" aria-valuemin="1"
+            aria-valuemax="3" aria-valuenow="2">
+            <span class="icon icon-line-height"></span>
+            <span class="label">Hauteur de ligne</span>
+            <span class="steps">
+                <span class="step"></span><span class="step active"></span><span class="step"></span>
+            </span>
+        </button>
+
+        <!-- Aligner le texte -->
+        <button class="action" data-action="textAlign" role="slider" aria-label="Alignement du texte" aria-valuemin="1"
+            aria-valuemax="3" aria-valuenow="1">
+            <span class="icon icon-text-align"></span>
+            <span class="label">Aligner le texte</span>
+            <span class="steps">
+                <span class="step active"></span><span class="step"></span><span class="step"></span>
+            </span>
+        </button>
+
+        <!-- Saturation -->
+        <button class="action" data-action="saturation" role="slider" aria-label="Saturation" aria-valuemin="1"
+            aria-valuemax="3" aria-valuenow="3">
+            <span class="icon icon-saturation"></span>
+            <span class="label">Saturation</span>
+            <span class="steps">
+                <span class="step"></span><span class="step"></span><span class="step active"></span>
+            </span>
+        </button>
+
+        <!-- Réinitialiser -->
+        <button class="action reset" data-action="reset" aria-label="Réinitialiser">
+            <span class="icon icon-reset"></span>
+            <span class="label">Réinitialiser</span>
+        </button>
+
+    </div>
+</div>
+
+<style>
+    @media (prefers-reduced-motion: reduce) {
+        * {
+            animation: none !important;
+            transition: none !important;
+        }
+    }
+
+    #accessibility-toggle {
+        position: fixed;
+        bottom: 1rem;
+        right: 1rem;
+        background: var(--primary);
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 3rem;
+        height: 3rem;
+        font-size: 1.5rem;
+        cursor: pointer;
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        /* Pulsating effect */
+        animation: pulse 5s infinite;
+    }
+
+    @keyframes pulse {
+        0% {
+            transform: scale(1);
+            box-shadow: 0 0 0 0 rgba(34, 64, 153, 0.7);
+        }
+
+        70% {
+            transform: scale(1.08);
+            box-shadow: 0 0 0 15px rgba(34, 64, 153, 0);
+        }
+
+        100% {
+            transform: scale(1);
+            box-shadow: 0 0 0 0 rgba(34, 64, 153, 0);
+        }
+    }
+
+    /* Menu container */
+    #accessibility-menu {
+        position: fixed;
+        top: 0;
+        right: 0;
+        max-width: 26rem;
+        z-index: 1000;
+        height: 100%;
+        background: white;
+        border-left: 2px solid var(--border);
+        box-shadow: -2px 0 8px rgba(0, 0, 0, 0.2);
+        padding: 1rem;
+        transform: translateX(100%);
+        transition: transform 0.3s ease;
+    }
+
+    #accessibility-menu #close-menu {
+        background: none;
+        border: none;
+        font-size: 1.25rem;
+        cursor: pointer;
+        line-height: 1;
+    }
+
+    #accessibility-menu .options {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(16rem, 1fr));
+        gap: 0.75rem;
+    }
+
+    /* Bouton */
+    #accessibility-menu .action {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem;
+        background: var(--color-surface-alt, #f8f8fa);
+        border: 1px solid var(--color-border, #ddd);
+        border-radius: 0.75rem;
+        padding: 0.75rem;
+        text-align: center;
+        cursor: pointer;
+        transition: background 0.2s, transform 0.2s;
+        min-height: 7rem;
+    }
+
+    #accessibility-menu .action:hover {
+        background: var(--color-accent-primary-light, #e3dbff);
+        transform: translateY(-2px);
+    }
+
+    #accessibility-menu .action:focus {
+        outline: 2px solid var(--color-accent-primary, #224099);
+        outline-offset: 2px;
+    }
+
+    /* Icône */
+    #accessibility-menu .icon {
+        font-size: 1.5rem;
+        /* ou width/height si tu mets des SVG inline */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    #accessibility-menu .label {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--color-text-primary, #222);
+        text-align: center;
+    }
+
+    /* Steps (3 points) */
+    #accessibility-menu .steps {
+        display: flex;
+        gap: 0.25rem;
+        justify-content: center;
+    }
+
+    #accessibility-menu .step {
+        width: 0.5rem;
+        height: 0.5rem;
+        border-radius: 50%;
+        background: var(--color-text-muted, #d5daed);
+        transition: background 0.2s;
+    }
+
+    #accessibility-menu .step.active {
+        background: var(--color-accent-primary, #224099);
+    }
+
+    /* Bouton Reset spécial */
+    #accessibility-menu .action.reset {
+        grid-column: 1 / -1;
+        /* prend toute la largeur */
+        background: var(--color-accent-secondary, #ffe500);
+        color: #000;
+        font-weight: bold;
+    }
+
+    #accessibility-menu.active {
+        transform: translateX(0);
+    }
+
+    #accessibility-menu header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+    #accessibility-menu h2 {
+        font-size: 1.1rem;
+        margin: 0;
+    }
+
+    #accessibility-menu .options {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 0.75rem;
+        flex: 1;
+        overflow-y: auto;
+    }
+
+    #accessibility-menu button.action {
+        border-radius: 0.5rem;
+        padding: 1rem 0.5rem;
+        text-align: center;
+        cursor: pointer;
+        font-size: 0.8rem;
+        transition: background 0.2s;
+    }
+
+    #accessibility-menu button.action:hover {
+        background: #e3dbff;
+    }
+
+    /* Example accessibility modes */
+    .high-contrast {
+        filter: contrast(2);
+    }
+
+    .dyslexia {
+        font-family: "OpenDyslexic", "Comic Sans MS", Arial, sans-serif;
+    }
+
+    .highlight-links a {
+        background: yellow;
+        padding: 0.2em;
+    }
+</style>
+<script>
+    const menu = document.getElementById('accessibility-menu');
+    const toggleBtn = document.getElementById('accessibility-toggle');
+    const closeBtn = document.getElementById('close-menu');
+
+    // Open/Close menu
+    toggleBtn.addEventListener('click', () => {
+        menu.classList.toggle('active');
+        menu.setAttribute('aria-hidden', !menu.classList.contains('active'));
+    });
+    closeBtn.addEventListener('click', () => {
+        menu.classList.remove('active');
+        menu.setAttribute('aria-hidden', 'true');
+    });
+
+    // Accessibility actions
+    const actions = {
+        increaseText: () =>
+        (document.body.style.fontSize =
+            document.body.style.fontSize === '120%' ? '100%' : '120%'),
+        contrast: () => document.body.classList.toggle('high-contrast'),
+        highlightLinks: () => document.body.classList.toggle('highlight-links'),
+        dyslexiaFont: () => document.body.classList.toggle('dyslexia'),
+        reset: () => {
+            document.body.style.fontSize = '100%';
+            document.body.classList.remove(
+                'high-contrast',
+                'highlight-links',
+                'dyslexia'
+            );
+        },
+    };
+
+    document
+        .querySelectorAll('#accessibility-menu [data-action]')
+        .forEach((btn) => {
+            btn.addEventListener('click', () => {
+                const act = btn.dataset.action;
+                if (actions[act]) actions[act]();
+                localStorage.setItem(
+                    'accessibilitySettings',
+                    document.body.className + '|' + document.body.style.fontSize
+                );
+            });
+        });
+
+    // Restore settings on load
+    window.addEventListener('load', () => {
+        const saved = localStorage.getItem('accessibilitySettings');
+        if (saved) {
+            const [classes, size] = saved.split('|');
+            document.body.className = classes;
+            document.body.style.fontSize = size;
+        }
+    });
+
+    document.addEventListener("DOMContentLoaded", () => {
+        const actions = document.querySelectorAll("#accessibility-menu .action");
+
+        actions.forEach(btn => {
+            // Écoute du clic
+            btn.addEventListener("click", () => {
+                // Skip reset (pas de cycle)
+                if (btn.classList.contains("reset")) {
+                    resetAccessibility();
+                    return;
+                }
+
+                const min = parseInt(btn.getAttribute("aria-valuemin")) || 1;
+                const max = parseInt(btn.getAttribute("aria-valuemax")) || 3;
+                let val = parseInt(btn.getAttribute("aria-valuenow")) || 1;
+
+                // Incrémente et boucle
+                val = val >= max ? min : val + 1;
+                btn.setAttribute("aria-valuenow", val);
+
+                // Met à jour les steps visuels
+                const steps = btn.querySelectorAll(".step");
+                steps.forEach((s, i) => {
+                    s.classList.toggle("active", i + 1 === val);
+                });
+
+                // Tu peux déclencher ton action ici :
+                console.log(`Action: ${btn.dataset.action}, Mode: ${val}`);
+            });
+        });
+
+        // Exemple fonction Reset
+        function resetAccessibility() {
+            actions.forEach(btn => {
+                if (!btn.classList.contains("reset")) {
+                    btn.setAttribute("aria-valuenow", "1");
+                    btn.querySelectorAll(".step").forEach((s, i) => {
+                        s.classList.toggle("active", i === 0);
+                    });
+                }
+            });
+            console.log("Réinitialisation du menu d’accessibilité");
+        }
+    });
+
+
+</script>
