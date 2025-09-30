@@ -91,7 +91,7 @@
 </section>
 
 <section>
-    <a href="/documents/brochure-aubier.pdf" download>Télécharger brochure de présentation</a>
+    <a class="btn btn-primary" href="/documents/brochure-aubier.pdf" download>Télécharger brochure de présentation</a>
 </section>
 <?php
 return function ($this_html, $args) {

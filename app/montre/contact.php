@@ -34,7 +34,7 @@
         <label for="message">Message</label>
         <textarea id="message" name="message" placeholder="Votre message..." required></textarea>
 
-        <button type="submit">Envoyer</button>
+        <button class="btn btn-primary" type="submit">Envoyer</button>
     </form>
 
     <!-- Infos de contact -->

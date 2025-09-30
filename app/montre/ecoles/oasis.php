@@ -89,7 +89,7 @@
 </section>
 
 <section>
-    <a href="/documents/brochure-ludotheque-oasis.pdf" download>Télécharger Brochure de présentation</a>
+    <a class="btn btn-primary" href="/documents/brochure-ludotheque-oasis.pdf" download>Télécharger Brochure de présentation</a>
 </section>
 
 <?php
