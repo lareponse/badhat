@@ -1,12 +1,15 @@
 /* Section timeline */
 .timeline {
     display: grid;
-    grid-template-columns: repeat(3, minmax(220px, 1fr));
     gap: 2rem;
-    padding: 2rem 1rem;
-    max-width: 1200px;
-    margin: auto;
 }
+
+@media screen and (min-width:64rem) {
+    .timeline {
+        grid-template-columns: repeat(3, minmax(220px, 1fr));
+    }
+}
+
 
 /* Cartes */
 .timeline article {
@@ -63,25 +66,24 @@
 
 .timeline article:nth-child(1),
 .timeline article:nth-child(7),
-.timeline article:nth-child(13){
+.timeline article:nth-child(13) {
     margin-right: 1rem;
 }
 
 .timeline article:nth-child(3)::after,
 .timeline article:nth-child(4)::after,
 .timeline article:nth-child(9)::after,
-.timeline article:nth-child(10)::after
- {
+.timeline article:nth-child(10)::after {
     content: "\003009";
     transform: rotate(90deg);
     right: 50%;
     bottom: -3rem;
 }
+
 .timeline article:nth-child(3),
 .timeline article:nth-child(4),
 .timeline article:nth-child(9),
-.timeline article:nth-child(10)
- {
+.timeline article:nth-child(10) {
     margin-bottom: 1rem;
 }
 
@@ -94,7 +96,7 @@
 }
 
 .timeline article:nth-child(6),
-.timeline article:nth-child(12){
+.timeline article:nth-child(12) {
     margin-left: 1rem;
 }
 
