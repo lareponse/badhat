@@ -1,34 +1,40 @@
-#ecoles .card-grid {
+.ecoles .card-grid {
     justify-content: center;
     gap: 3rem;
 }
 
-#ecoles .card-grid article {
+.ecoles .card-grid article {
     height: 37rem;
 }
 
-#ecoles .card-grid article h2 {
+.ecoles .card-grid article h2 {
     height:13rem;
 }
 
-#ecoles .card-grid article dl,
-#ecoles .card-grid article p:last-child {
+.ecoles .card-grid article dl,
+.ecoles .card-grid article p:last-child {
     margin-top: 2rem;
     padding: 0.7rem;
 }
-#ecoles .card-grid article dl dt {
+.ecoles .card-grid article dl dt {
     margin-bottom: 0.7rem;
     font-weight:600;
 }
-#ecoles .card-grid article dl dd {
+.ecoles .card-grid article dl dd {
     padding-left: 1.3rem;
 }
-#ecoles .card-grid article dl dd::before {
+.ecoles .card-grid article dl dd::before {
     content: "●";
     font-size:0.5rem;
     margin-right:0.5rem;
     vertical-align: middle;
 }
-#ecoles .card-grid article dl dd span{
+.ecoles .card-grid article dl dd span{
     float:right;
+}
+
+.ecoles section h2{
+    background:none;
+    color:black;
+    text-align: center;
 }

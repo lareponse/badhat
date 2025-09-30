@@ -30,7 +30,7 @@ section[aria-labelledby$="heading"] h2 {
 }
 
 .don-choice a {
-    font-weight: 600;
+    font-weight: 700;
     color: var(--color-accent-primary);
     text-decoration: underline;
 }
@@ -107,7 +107,7 @@ section[aria-labelledby="faq-heading"] details:hover {
 
 section[aria-labelledby="faq-heading"] summary {
     cursor: pointer;
-    font-weight: 600;
+    font-weight: 700;
     font-size: 1rem;
     color: var(--color-text);
     display: flex;
