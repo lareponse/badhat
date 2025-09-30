@@ -47,13 +47,11 @@
 }
 
 
-/* Reset / Base */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
     word-break: break-word;
-    /* or 'anywhere' */
 }
 
 html {
@@ -166,10 +164,6 @@ main>section {
 /* Responsive */
 @media (max-width: 768px) {
 
-    section[aria-labelledby="hero-heading"],
-    section[aria-labelledby="don-heading"] {
-        grid-template-columns: 1fr;
-    }
 
     body>header nav {
         flex-direction: column;
