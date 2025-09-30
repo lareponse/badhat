@@ -20,7 +20,7 @@
             alt="Un jeune garçon portant un implant auditif caresse un lapin avec tendresse">
     </figure>
 </section>
-
+<iframe width="100%" height="600px" src="https://www.youtube.com/embed/-Y0r8Sve0Sc" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen=""></iframe>
 
 <section class="tight" id="home-questionnaire" aria-labelledby="questionnaire-heading" lang="fr">
 
