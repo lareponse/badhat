@@ -47,7 +47,6 @@
 
 
 <body>
-    <img src="/ui/blob/blob_home_top_right.svg" alt="decorative blob shape" class="blob" id="blob_home_top_right" aria-hidden="true">
     <header>
         <nav class="tight">
             <!-- Logo -->

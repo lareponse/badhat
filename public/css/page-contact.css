@@ -1,26 +1,35 @@
-/* Contact page layout */
+/* --------------------------
+   Page Contact
+--------------------------- */
+
+/* Grille principale */
 .contact-grid {
     display: grid;
-    grid-template-columns: 2fr 1fr;
+    grid-template-columns: 3fr 2fr;
     /* Formulaire + Infos */
-    gap: 3rem;
-    margin-top: 2rem;
-    max-width: 1200px;
-    margin-left: auto;
-    margin-right: auto;
-    padding: 1rem;
+    gap: 5rem;
 }
-
-/* Formulaire */
-.contact-form {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
+.contact-grid dl{
+    display:grid;
+    grid-template-columns: 1fr 7fr;
+    gap:2rem 0;
 }
+.contact-grid dl dt{
+    color: var(--color-accent-secondary-dark);
+    text-align:center;
+}
+.contact-grid dl dd {
+    min-height:3rem;
+}
+/* --------------------------
+   Formulaire
+--------------------------- */
 
 .contact-form label {
+    display:block;
     font-weight: 600;
     color: var(--color-text-primary);
+    margin-bottom:0.8rem;
 }
 
 .contact-form input,
@@ -29,9 +38,16 @@
     width: 100%;
     padding: 0.75rem;
     border: 1px solid var(--color-border);
+    background-color: var(--color-border);
     border-radius: 8px;
     font-size: 1rem;
     background: var(--color-surface);
+    margin-bottom:2rem;
+}
+
+.contact-form input::placeholder,
+.contact-form textarea::placeholder {
+    color: var(--color-text-muted);
 }
 
 .contact-form input:focus,
@@ -42,36 +58,65 @@
     box-shadow: 0 0 0 2px var(--color-accent-primary-light);
 }
 
-/* Bouton */
+.contact-form textarea {
+    min-height: 20rem;
+    resize: vertical;
+}
+
+/* Bouton Envoyer */
 .contact-form button {
+    display: inline;
     margin-top: 1rem;
+    background: var(--color-accent-primary-dark);
+    /* violet foncé */
+    color: #fff;
+    border: none;
+    border-radius: 25px;
+    padding: 0.75rem 2rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.2s ease;
 }
 
-/* Coordonnées */
-section[aria-labelledby="contact-info-heading"],
-section[aria-labelledby="social-heading"] {
-    background: var(--color-surface-alt);
-    padding: 1.5rem;
-    border-radius: 12px;
-    border: 1px solid var(--color-border);
+.contact-form button:hover,
+.contact-form button:focus {
+    background: var(--color-accent-primary);
+    transform: translateY(-2px);
 }
 
-section[aria-labelledby="contact-info-heading"] p,
-section[aria-labelledby="contact-info-heading"] address {
+/* --------------------------
+   Coordonnées
+--------------------------- */
+.contact-grid aside {
+    color: var(--color-accent-primary-dark); 
+}
+
+
+section[aria-labelledby="contact-info-heading"] h3,
+section[aria-labelledby="social-heading"] h3 {
+    font-size: 1.4rem;
+    font-weight: 700;
     margin-bottom: 1rem;
-    font-size: 0.95rem;
-    line-height: 1.4;
 }
 
 section[aria-labelledby="contact-info-heading"] strong {
-    color: var(--color-text-primary);
 }
 
-/* Réseaux sociaux */
+/* Icônes inline */
+.icon {
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    fill: var(--color-accent-primary-dark);
+}
+
+/* --------------------------
+   Réseaux sociaux
+--------------------------- */
 .social-links {
     list-style: none;
     display: flex;
-    gap: 0.75rem;
+    gap: 1rem;
     margin-top: 1rem;
     padding: 0;
 }
@@ -80,25 +125,51 @@ section[aria-labelledby="contact-info-heading"] strong {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 42px;
-    height: 42px;
-    border-radius: 50%;
-    background: var(--color-accent-primary-dark);
     color: #fff;
-    font-size: 1.1rem;
-    transition: background 0.2s ease, transform 0.2s ease;
+    font-size: 1.2rem;
+    transition: transform 0.2s ease;
+
+    background-color: var(--color-accent-secondary-dark);
+    border-radius: 50%;
+    width: 3rem;
+    height: 3rem;
+}
+
+/* Couleurs spécifiques */
+.social-links li a.facebook {
+    background: #1877F2;
+}
+
+.social-links li a.instagram {
+    background: radial-gradient(circle at 30% 107%, #fdf497 0%, #fdf497 5%,
+            #fd5949 45%, #d6249f 60%, #285AEB 90%);
+}
+
+.social-links li a.linkedin {
+    background: #0A66C2;
+}
+
+.social-links li a.youtube {
+    background: #FF0000;
 }
 
 .social-links li a:hover,
 .social-links li a:focus {
-    background: var(--color-accent-primary);
-    transform: translateY(-2px);
+    transform: translateY(-3px);
 }
 
-/* Responsive */
+/* --------------------------
+   Responsive
+--------------------------- */
 @media (max-width: 900px) {
     .contact-grid {
         grid-template-columns: 1fr;
-        /* empile form + infos */
+        /* empile formulaire + infos */
     }
 }
+
+
+aside>*{
+    margin-bottom:3rem;
+}
+

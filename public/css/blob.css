@@ -14,3 +14,20 @@
     right: 0;
 }
 
+
+#blob_contact_top_left {
+    top: 0;
+    left: 0;
+}
+#blob_contact_bottom_right {
+    bottom: 0;
+    right: 0;
+}
+#blob_ecoles_top_right {
+    top: 0;
+    right: 0;
+}
+#blob_ecoles_middle_left {
+    top: 50%;
+    left: 0;
+}

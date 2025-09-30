@@ -1,3 +1,5 @@
+<img src="/ui/blob/blob_home_top_right.svg" alt="decorative blob shape" class="blob" id="blob_home_top_right" aria-hidden="true">
+
 <section class="tight" id="home-hero" aria-labelledby="hero-heading" lang="fr">
     <div>
         <h1 id="hero-heading">Un projet pour chacun&nbsp;!</h1>
@@ -37,6 +39,7 @@
 
 <section class="tight" aria-labelledby="services-heading" lang="fr">
     <h2 id="services-heading">Des services adaptés à chaque étape de la vie</h2>
+    <img src="/ui/blob/blob_home_top_right.svg" alt="decorative blob shape" class="blob" id="blob_home_top_right" aria-hidden="true">
     <p>
         Un accompagnement global qui prend en compte les besoins éducatifs,
         thérapeutiques et sociaux de chaque personne.
@@ -149,4 +152,3 @@ return function ($this_html, $args) {
     [$ret, $page] = ob_ret_get('app/montre/layout.php', ['main' => $this_html, 'css' => ['page-home']], IO_EXTRACT);
     return $page;
 };
-
