@@ -16,9 +16,20 @@
 
         <label for="email">Adresse e-mail</label>
         <input type="email" id="email" name="email" placeholder="exemple@mail.com" required>
+        <label for="category">Catégorie principale</label>
+        <select id="category" name="category" required>
+            <option value="">-- Sélectionnez une catégorie --</option>
+            <option value="general">Informations générales</option>
+            <option value="services">Nos services</option>
+            <option value="ecoles">Écoles</option>
+            <option value="don">Faire un don</option>
+            <option value="autre">Autre</option>
+        </select>
 
-        <label for="subject">Sujet</label>
-        <input type="text" id="subject" name="subject" placeholder="Sujet du message" required>
+        <label for="subcategory">Sous-catégorie</label>
+        <select id="subcategory" name="subcategory" disabled>
+            <option value="">-- Choisissez d'abord une catégorie --</option>
+        </select>
 
         <label for="message">Message</label>
         <textarea id="message" name="message" placeholder="Votre message..." required></textarea>
