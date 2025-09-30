@@ -9,7 +9,7 @@
     </div>
 </header>
 
-<section class="card-grid">
+<section class="card-grid tight">
     <article>
         <img src="/ui/pages/ecoles/enseignante-assise-au-bureau-eleve.jpg" alt="Enseignante avec un élève">
         <h2>École fondamentale déficience visuelle et troubles associés</h2>
@@ -44,7 +44,7 @@
     </article>
 </section>
 
-<section class="card-grid">
+<section class="card-grid tight">
     <article>
         <img src="/ui/pages/ecoles/creche.jpg" alt="Jeune enfant jouant avec des blocs colorés">
         <h2>Crèche inclusive Le Petit Prince</h2>
