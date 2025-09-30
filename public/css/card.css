@@ -27,10 +27,15 @@
     transform: translateY(-6px);
 }
 
-.card-grid article h2 {
+.card-grid article h2,
+.card-grid article h3 {
+    height: 7rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     text-align: center;
-    margin-top: 1.7rem;
-    margin-bottom: 1.7rem;
+    padding: 0 1rem;
+    font-size: 2rem;
 }
 
 /* Image */
@@ -43,9 +48,7 @@
 /* Title */
 .card-grid h3 {
     margin: 1rem 1rem 0.5rem;
-    font-size: 1.25rem;
     font-weight: 600;
-    text-align: center;
 }
 
 /* CTA band */
