@@ -12,7 +12,7 @@
     <article>
         <img src="/ui/pages/ecoles/enseignante-assise-au-bureau-eleve.jpg" alt="Enseignante avec un élève">
         <h2>École fondamentale déficience visuelle et troubles associés</h2>
-        <a href="#">Découvrir l'école</a>
+        <a href="/ecoles/t6-t8">Découvrir l'école</a>
         <dl>
             <dt>Pour les enfants atteints de :</dt>
             <dd>Déficience visuelle <span>(T6)</span></dd>
