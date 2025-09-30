@@ -14,8 +14,9 @@
             <li><a href="">À propos de l'IRSA</a></li>
             <li><a href="">Nos services</a></li>
             <li><a href="">Faire un don</a></li>
+            <li><a href="/publication">Publications</a></li>
             <li><a href="">Rejoindre nos équipes</a></li>
-            <li><a href="contact_form.html">Contact</a></li>
+            <li><a href="/contact">Contact</a></li>
             <li><a href="">Plan du site</a></li>
         </ul>
     </section>
