@@ -24,7 +24,7 @@
     <article>
         <img src="/ui/pages/ecoles/ecole-auditive.jpg" alt="Enseignante en langue des signes avec un élève">
         <h2>École fondamentale déficience auditive</h2>
-        <a href="#">Découvrir l'école</a>
+        <a href="/ecoles/t7">Découvrir l'école</a>
         <dl>
             <dd>Approche bilingue <span>(LSFB / FR)</span></dd>
         </dl>
@@ -33,7 +33,7 @@
     <article>
         <img src="/ui/pages/ecoles/ecole-secondaire.jpg" alt="Deux adolescentes en classe">
         <h2>École secondaire spécialisée</h2>
-        <a href="#">Découvrir le secondaire</a>
+        <a href="/ecoles/t1-t7-t6">Découvrir le secondaire</a>
         <dl>
             <dt>Adolescents avec :</dt>
             <dd>Déficience auditive <span>(T7)</span></dd>

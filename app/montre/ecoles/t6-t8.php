@@ -43,7 +43,14 @@ $t8_workshops = [
 <img src="/ui/blob/blob_ecoles_detail.svg" alt="" class="blob" id="blob_detail" aria-hidden="true">
 
 <header>
-    <h1><span class="tight">École Fondamentale Type 6 et Type 8</span></h1>
+    <h1><span class="tight">École fondamentale déficience visuelle et troubles associés</span></h1>
+    <nav aria-label="Fil d'Ariane" class="breadcrumb tight">
+        <ol class="tight">
+            <li><a href="/">Accueil</a></li>
+            <li><a href="/ecoles">Les écoles</a></li>
+            <li aria-current="page">École Fondamentale Type 6 et Type 8</li>
+        </ol>
+    </nav>
 </header>
 
 <section aria-labelledby="contact-heading">

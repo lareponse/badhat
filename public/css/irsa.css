@@ -175,3 +175,44 @@ address {
     font-style: normal;
 
 }
+
+/* Breadcrumb */
+.breadcrumb {
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+}
+
+.breadcrumb ol {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    font-size: 0.9rem;
+}
+
+.breadcrumb li {
+    display: flex;
+    align-items: center;
+}
+
+.breadcrumb li:not(:last-child)::after {
+    content: "/";
+    margin-left: 0.5rem;
+    color: var(--color-text-secondary);
+}
+
+.breadcrumb a {
+    color: var(--color-accent-primary-dark);
+    text-decoration: none;
+}
+
+.breadcrumb a:hover {
+    text-decoration: underline;
+}
+
+.breadcrumb li[aria-current="page"] {
+    color: var(--color-text-secondary);
+    font-weight: 600;
+}
