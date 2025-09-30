@@ -108,20 +108,16 @@
                 <li>En communication&nbsp;: Don IRSA + votre nom</li>
                 <li>Déductibilité fiscale dès 40 €/an, atout connu du fisc belge (réduction de 45%)</li>
             </ul>
-            <a href="#">Plus d'infos sur l'attestation fiscale</a>
+            <a href="/documents/irsa-don-virement.pdf">Téléchargez le bulletin de virement</a>
         </article>
 
         <!-- Legs -->
         <article>
             <h3>Faire un legs</h3>
-            <p>
-                Inclure l'IRSA dans votre testament ou désigner l'IRSA comme bénéficiaire d'une assurance-vie
-                permet de soutenir l'institution sur le long terme.
-            </p>
-            <p>
-                Le dispositif du « duo-legs » peut réduire les droits de succession pour vos héritiers.
-            </p>
-            <a href="#">En savoir plus sur les legs à l'IRSA</a>
+            <p>Les legs garantissent la durabilité de nos projets et la pérennité de l’IRSA.</p>
+            <p>En choisissant la formule du duo legs (ou legs en duo), vous permettez à vos héritiers de payer moins de droits de succession tout en aidant l’IRSA à poursuivre sa mission d’aide aux personnes déficientes sensorielles.</p>
+            <p>Pour plus d’infos sur les legs, nous vous invitons à consulter votre notaire.</p>
+            <a href="https://notaire.be" target="_blank">En savoir plus sur les legs à l'IRSA</a>
         </article>
 
         <!-- Don en nature -->
@@ -132,7 +128,7 @@
                 Nous récupérons des jeux sensoriels, ordinateurs, mobilier, etc. en bon état.
                 Merci de nous contacter avant don concret.
             </p>
-            <a href="#">Contactez-nous</a>
+            <a href="/contact">Contactez-nous</a>
         </article>
 
         <!-- Location Château -->
@@ -189,4 +185,3 @@ return function ($this_html, $args) {
     [$ret, $page] = ob_ret_get('app/montre/layout.php', ['main' => $this_html, 'css' => ['page-don']], IO_EXTRACT);
     return $page;
 };
-
