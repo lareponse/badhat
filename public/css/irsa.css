@@ -103,9 +103,11 @@ h2 {
 h3 {
     font-size: 2rem;
 }
+
 h4 {
     font-size: 1.75rem;
 }
+
 /* Text */
 p,
 li {
@@ -114,19 +116,30 @@ li {
     margin-bottom: 1rem;
 }
 
+img {
+    width: 100%;
+    height: auto;
+}
 
 /* Container */
 .tight {
     display: block;
-    max-width: 73rem;
-    margin-left: auto;
-    margin-right: auto;
+    padding: 0.7rem;
 }
 
+@media screen and (min-width:64rem) {
+    .tight {
+        padding:0;
+        display: block;
+        max-width: 73rem;
+        margin-left: auto;
+        margin-right: auto;
+    }
+}
 
 /* Main headers */
-main>header{
-    margin-bottom:3rem;
+main>header {
+    margin-bottom: 3rem;
 }
 
 main>header h1 {
@@ -135,12 +148,13 @@ main>header h1 {
 }
 
 main>header div:has(p) {
-    margin:7rem 0;
+    margin: 7rem 0;
 }
 
 main>header div p {
-    font-size:1.3rem;
+    font-size: 1.3rem;
 }
+
 main>section {
     margin-bottom: 7rem;
 }
@@ -161,7 +175,7 @@ main>section {
     }
 }
 
-address{
+address {
     font-style: normal;
 
 }
