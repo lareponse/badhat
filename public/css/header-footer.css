@@ -1,7 +1,6 @@
-/* Layout: header */
 body>header nav.tight {
     display: flex;
-    flex-wrap: wrap;
+
     align-items: center;
     justify-content: space-between;
     background: var(--color-surface);
@@ -29,15 +28,19 @@ body>header nav h1 a {
 }
 
 .nav-toggle {
-    font-size: 2rem;
-    background: none;
-    border: none;
-    cursor: pointer;
+    color: black;
 }
 
 .nav-links {
     display: none;
-    flex-direction: column;
+    gap: 2rem;
+    flex-direction: row;
+    background: none;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: none;
+
     position: absolute;
     top: 60px;
     left: 0;
@@ -46,40 +49,18 @@ body>header nav h1 a {
     padding: 1rem;
 }
 
+.nav-toggle {
+    font-size: 2rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
 .nav-links.active {
-    display: flex;
+    display: block;
 }
 
-/* Liste de navigation */
-@media screen and (min-width: 64rem) {
-    body>header nav ol {
-        list-style: none;
-        display: flex;
-        gap: 2rem;
-        justify-content: center;
-    }
-
-    .nav-toggle {
-        display: none;
-    }
-
-    .nav-links {
-        display: flex !important;
-        flex-direction: row;
-        position: static;
-        background: none;
-        gap: 1rem;
-    }
-}
-
-body>header nav ol {
-    list-style: none;
-    gap: 2rem;
-    margin: 0;
-    padding: 0;
-}
-
-body>header nav ol li {
+.nav-links li {
     font-family: 'Josefin Sans', sans-serif;
     font-weight: 700;
     font-size: 1rem;
@@ -89,12 +70,12 @@ body>header nav ol li {
     transition: color 0.2s;
 }
 
-body>header nav ol li:hover {
+.nav-links li:hover {
     color: var(--color-accent-primary);
 }
 
 /* Effet soulignement au hover */
-body>header nav ol li::after {
+.nav-links li::after {
     content: "";
     position: absolute;
     left: 0;
@@ -105,11 +86,11 @@ body>header nav ol li::after {
     transition: width 0.2s ease-in-out;
 }
 
-body>header nav ol li:hover::after {
+.nav-links li:hover::after {
     width: 100%;
 }
 
-body>header nav ol li a {
+.nav-links li a {
     text-decoration: none;
     color: inherit;
 }
@@ -130,7 +111,22 @@ body>header nav .btn:hover {
     background: var(--color-accent-primary-dark);
 }
 
+/* Liste de navigation */
+@media screen and (min-width: 64rem) {
+    .nav-toggle {
+        display: none;
+    }
 
+    .nav-links {
+        list-style: none;
+        gap: 2rem;
+        display: flex;
+        position:static;
+        justify-content: center;
+        align-items:center;
+    }
+
+}
 
 
 /* Footer */
