@@ -1,11 +1,5 @@
 /* Hero section */
-@media screen and (min-width:64rem) {
-    section[aria-labelledby="hero-heading"] {
-        display: flex;
-        gap: 2rem;
-        align-items: center;
-    }
-}
+
 
 section[aria-labelledby="hero-heading"] {
     gap: 2rem;
@@ -44,11 +38,6 @@ section[aria-labelledby="questionnaire-heading"] {
     gap: 1rem
 }
 
-@media screen and (min-width:64rem) {
-    section[aria-labelledby="questionnaire-heading"] {
-        background-size: contain;
-    }
-}
 
 section[aria-labelledby="questionnaire-heading"] p {
     margin-bottom: 2rem;
@@ -73,7 +62,7 @@ section[aria-labelledby="stats-heading"] {
     position: relative;
     padding: 4rem 2rem;
     text-align: center;
-    background: url('/ui/blob/blob_home_stats.svg') no-repeat right / contain;
+    background: url('/ui/blob/blob_home_stats.svg') no-repeat right / cover;
     min-height: 51rem;
     display: flex;
     flex-wrap: wrap;
@@ -104,10 +93,6 @@ section[aria-labelledby="stats-heading"] {
 
 /* Don section */
 section[aria-labelledby="don-heading"] {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 2rem;
-    align-items: center;
     padding: 4rem 2rem;
 }
 
@@ -115,4 +100,28 @@ section[aria-labelledby="don-heading"] img {
     width: 100%;
     border-radius: 0.5rem;
     object-fit: cover;
+}
+
+@media screen and (min-width:64rem) {
+    section[aria-labelledby="hero-heading"] {
+        display: flex;
+        gap: 2rem;
+        align-items: center;
+    }
+
+    section[aria-labelledby="questionnaire-heading"] {
+        background-size: contain;
+    }
+
+    section[aria-labelledby="stats-heading"] {
+        background-size: contain;
+    }
+
+    section[aria-labelledby="don-heading"] {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+        align-items: center;
+        padding: 4rem 2rem;
+    }
 }
