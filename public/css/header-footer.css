@@ -147,6 +147,7 @@ footer ul li a:focus {
 /* Réseaux sociaux */
 footer .social-links {
     display: flex;
+    flex-wrap: wrap;
     gap: 0.75rem;
 }
 
