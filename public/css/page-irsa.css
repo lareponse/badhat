@@ -1,18 +1,13 @@
-/* Section timeline */
 .timeline {
     display: grid;
-    gap: 2rem;
+    gap: 3rem;
+    justify-content: center;
+
+    grid-template-columns: 13rem;
 }
 
-@media screen and (min-width:64rem) {
-    .timeline {
-        grid-template-columns: repeat(3, minmax(220px, 1fr));
-    }
-}
-
-
-/* Cartes */
 .timeline article {
+    height: 17rem;
     position: relative;
     background: #fff;
     border: 1px solid black;
@@ -29,78 +24,108 @@
 }
 
 .timeline article img {
-    max-width: 8rem;
-}
-
-.timeline article>*:not(:last-child) {
-    margin-bottom: 1rem;
+    width: calc(100% / 1.678);
 }
 
 /* Titre (année) */
-.timeline h2 {
+.timeline h3 {
     font-size: 1.4rem;
     color: var(--color-accent-secondary-dark);
     font-weight: bold;
 }
 
 /* Texte (événement) */
-.timeline p {
+.timeline figcaption {
     font-size: 0.95rem;
     line-height: 1.4;
     font-weight: 700;
 }
 
-.timeline article::after {
-    font-weight: 700;
-    font-size: 1.2rem;
-    position: absolute;
+@media screen and (min-width:64rem) {
+    .timeline {
+        grid-template-columns: repeat(3, 13rem);
+    }
+
+    .timeline article::after {
+        position: absolute;
+        font-size: 1.7rem;
+    }
+
+    .timeline .move-lr::after {
+        content: "\003009";
+        right: -3rem;
+        top: 50%;
+        animation: move-lr 1.2s infinite ease-in-out;
+    }
+
+
+    .timeline .move-lr {
+        margin-right: 0.7rem;
+    }
+
+    .timeline .move-ud::after {
+        content: "\003009";
+        transform: rotate(90deg);
+        right: 50%;
+        bottom: -3rem;
+        animation: move-ud 1.2s infinite ease-in-out;
+    }
+
+    .timeline .move-ud {
+        margin-bottom: 1rem;
+    }
+
+    .timeline .move-rl::after {
+        content: "\003009";
+        transform: rotate(180deg);
+        top: 50%;
+        left: -3rem;
+        animation: move-rl 1.2s infinite ease-in-out;
+    }
+
+    .timeline .move-rl {
+        margin-left: 1rem;
+    }
+
+    @keyframes move-lr {
+
+        0%,
+        100% {
+            transform: translateX(0);
+        }
+
+        50% {
+            transform: translateX(6px);
+        }
+    }
+
+    @keyframes move-ud {
+
+        0%,
+        100% {
+            transform: translateY(0) rotate(90deg);
+        }
+
+        50% {
+            transform: translateY(6px) rotate(90deg);
+        }
+    }
+
+    @keyframes move-rl {
+
+        0%,
+        100% {
+            transform: translateX(0) rotate(180deg);
+        }
+
+        50% {
+            transform: translateX(-6px) rotate(180deg);
+        }
+    }
+
+
+
 }
-
-.timeline article:nth-child(1)::after,
-.timeline article:nth-child(7)::after,
-.timeline article:nth-child(13)::after {
-    content: "\003009";
-    right: -2rem;
-    top: 50%;
-}
-
-.timeline article:nth-child(1),
-.timeline article:nth-child(7),
-.timeline article:nth-child(13) {
-    margin-right: 1rem;
-}
-
-.timeline article:nth-child(3)::after,
-.timeline article:nth-child(4)::after,
-.timeline article:nth-child(9)::after,
-.timeline article:nth-child(10)::after {
-    content: "\003009";
-    transform: rotate(90deg);
-    right: 50%;
-    bottom: -3rem;
-}
-
-.timeline article:nth-child(3),
-.timeline article:nth-child(4),
-.timeline article:nth-child(9),
-.timeline article:nth-child(10) {
-    margin-bottom: 1rem;
-}
-
-.timeline article:nth-child(6)::after,
-.timeline article:nth-child(12)::after {
-    content: "\003009";
-    transform: rotate(180deg);
-    top: 50%;
-    left: -3rem;
-}
-
-.timeline article:nth-child(6),
-.timeline article:nth-child(12) {
-    margin-left: 1rem;
-}
-
-
 
 /* OA Section */
 .oa {
