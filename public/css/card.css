@@ -10,7 +10,6 @@
 
     /* Intrinsic sizing */
     grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
-    overflow:scroll;
 }
 
 .card-grid article {
@@ -18,7 +17,6 @@
     margin-inline: auto; /* ensures centering if fewer items in row */
     border: 1px solid var(--color-border);
     border-radius: 1rem;
-    overflow: hidden;
     background: var(--color-surface);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     transition: transform 0.2s ease;
