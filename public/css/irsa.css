@@ -1,7 +1,6 @@
 /* josefin-sans-regular - latin */
 @font-face {
     font-display: swap;
-    /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
     font-family: 'Josefin Sans';
     font-style: normal;
     font-weight: 400;
@@ -22,7 +21,6 @@
 /* josefin-sans-700 - latin */
 @font-face {
     font-display: swap;
-    /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
     font-family: 'Josefin Sans';
     font-style: normal;
     font-weight: 700;
@@ -43,7 +41,6 @@
 /* atkinson-hyperlegible-regular - latin */
 @font-face {
     font-display: swap;
-    /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
     font-family: 'Atkinson Hyperlegible';
     font-style: normal;
     font-weight: 400;
@@ -64,7 +61,6 @@
 /* atkinson-hyperlegible-italic - latin */
 @font-face {
     font-display: swap;
-    /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
     font-family: 'Atkinson Hyperlegible';
     font-style: italic;
     font-weight: 400;
@@ -85,7 +81,6 @@
 /* atkinson-hyperlegible-700 - latin */
 @font-face {
     font-display: swap;
-    /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
     font-family: 'Atkinson Hyperlegible';
     font-style: normal;
     font-weight: 700;
@@ -147,7 +142,6 @@
     --color-hover: rgba(0, 0, 0, 0.05);
     --color-focus: var(--color-accent-primary);
 }
-
 
 * {
     margin: 0;
@@ -224,7 +218,6 @@ img {
     height: auto;
 }
 
-/* Container */
 .tight {
     display: block;
     padding: 0.7rem;

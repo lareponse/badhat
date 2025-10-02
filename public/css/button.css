@@ -1,4 +1,3 @@
-/* Generic button */
 .btn {
     display: inline-block;
     padding: var(--btn-padding);
@@ -11,19 +10,16 @@
     transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-/* Primary (yellow) */
 .btn-primary {
     background-color: var(--btn-primary-bg);
     color: var(--btn-primary-color);
 }
 
-/* Secondary (purple) */
 .btn-secondary {
     background-color: var(--btn-secondary-bg);
     color: var(--btn-secondary-color);
 }
 
-/* Hover + focus */
 .btn:hover,
 .btn:focus {
     transform: translateY(-2px);
