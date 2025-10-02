@@ -6,122 +6,126 @@
         <p>Chaque personne est accueillie avec une attention particulière à ses besoins, son rythme et son projet de vie.</p>
     </div>
 </header>
-
-<section class="timeline tight" aria-labelledby="timeline-heading">
+<section class="tight" aria-labelledby="timeline-heading">
     <h2 id="timeline-heading" class="visually-hidden">Frise chronologique de l’IRSA</h2>
 
-    <article class="move-lr">
-        <h3><time>1835</time></h3>
+    <div class="timeline">
+        <article class="move-lr">
+        <h3><time datetime="1835">1835</time></h3>
         <figure>
-            <img src=" /ui/timeline/1835.svg" alt="">
-            <figcaption>Fondation de l'Institut des Sourds-Muets</figcaption>
+            <img src="/ui/timeline/1835.svg" alt="">
+            <figcaption>Fondation de l’Institut des Sourds-Muets</figcaption>
         </figure>
-    </article>
+        </article>
 
-    <article>
-        <h3><time>1837</time></h3>
-        <figure>
-            <img src="/ui/timeline/1837.svg" alt="">
-            <figcaption>Arrivée des Sœurs de la Charité</figcaption>
-        </figure>
-    </article>
+        <article>
+            <h3><time datetime="1837">1837</time></h3>
+            <figure>
+                <img src="/ui/timeline/1837.svg" alt="">
+                <figcaption>Arrivée des Sœurs de la Charité</figcaption>
+            </figure>
+        </article>
 
-    <article class="move-ud">
-        <h3><time>1858</time></h3>
-        <figure>
-            <img src="/ui/timeline/1858.svg" alt="">
-            <figcaption>Installation à Uccle</figcaption>
-        </figure>
-    </article>
+        <article class="move-ud">
+            <h3><time datetime="1858">1858</time></h3>
+            <figure>
+                <img src="/ui/timeline/1858.svg" alt="">
+                <figcaption>Installation à Uccle</figcaption>
+            </figure>
+        </article>
 
-    <article class="move-ud">
-        <h3><time>1948</time></h3>
-        <figure>
-            <img src="/ui/timeline/1948.svg" alt="">
-            <figcaption>Reconnaissance officielle</figcaption>
-        </figure>
-    </article>
+        <article class="move-rl">
+            <h3><time datetime="1870">1870</time></h3>
+            <figure>
+                <img src="/ui/timeline/1870.svg" alt="">
+                <figcaption>Accueil des enfants aveugles</figcaption>
+            </figure>
+        </article>
 
-    <article>
-        <h3><time>1900'</time></h3>
-        <figure>
-            <img src="/ui/timeline/1900.svg" alt="">
-            <figcaption>Premiers ateliers professionnels</figcaption>
-        </figure>
-    </article>
+        <article>
+            <h3><time datetime="1900">1900</time></h3>
+            <figure>
+                <img src="/ui/timeline/1900.svg" alt="">
+                <figcaption>Premiers ateliers professionnels</figcaption>
+            </figure>
+        </article>
 
-    <article class="move-rl">
-        <h3><time>1870</time></h3>
-        <figure>
-            <img src="/ui/timeline/1870.svg" alt="">
-            <figcaption>Accueil des enfants aveugles</figcaption>
-        </figure>
-    </article>
+        <article class="move-ud">
+            <h3><time datetime="1948">1948</time></h3>
+            <figure>
+                <img src="/ui/timeline/1948.svg" alt="">
+                <figcaption>Reconnaissance officielle</figcaption>
+            </figure>
+        </article>
 
-    <article class="move-lr">
-        <h3><time>1970</time></h3>
-        <figure>
-            <img src="/ui/timeline/1970.svg" alt="">
-            <figcaption>Expansion</figcaption>
-        </figure>
-    </article>
+        <article class="move-lr">
+            <h3><time datetime="1970">1970</time></h3>
+            <figure>
+                <img src="/ui/timeline/1970.svg" alt="">
+                <figcaption>Expansion</figcaption>
+            </figure>
+        </article>
 
-    <article>
-        <h3><time>1987</time></h3>
-        <figure>
-            <img src="/ui/timeline/1987.svg" alt="">
-            <figcaption>Les centres de jour</figcaption>
-        </figure>
-    </article>
+        <article>
+            <h3><time datetime="1987">1987</time></h3>
+            <figure>
+                <img src="/ui/timeline/1987.svg" alt="">
+                <figcaption>Les centres de jour</figcaption>
+            </figure>
+        </article>
 
-    <article class="move-ud">
-        <h3><time>2000'</time></h3>
-        <figure>
-            <img src="/ui/timeline/2000.svg" alt="">
-            <figcaption>Scolarité, soins, vie quotidienne</figcaption>
-        </figure>
-    </article>
+        <article class="move-ud">
+            <h3><time datetime="2000">2000</time></h3>
+            <figure>
+                <img src="/ui/timeline/2000.svg" alt="">
+                <figcaption>Scolarité, soins, vie quotidienne</figcaption>
+            </figure>
+        </article>
 
-    <article class="move-ud">
-        <h3><time>2018</time></h3>
-        <figure>
-            <img src="/ui/timeline/2018.svg" alt="">
-            <figcaption>La ludothèque Oasis</figcaption>
-        </figure>
-    </article>
+        <article class="move-rl">
+            <h3><time datetime="2011">2011</time></h3>
+            <figure>
+                <img src="/ui/timeline/2011.svg" alt="">
+                <figcaption>Le restaurant d'application</figcaption>
+            </figure>
+        </article>
 
-    <article>
-        <h3><time>2014</time></h3>
-        <figure>
-            <img src="/ui/timeline/2014.svg" alt="">
-            <figcaption>Appui administratif AVIQ</figcaption>
-        </figure>
-    </article>
+        <article>
+            <h3><time datetime="2014">2014</time></h3>
+            <figure>
+                <img src="/ui/timeline/2014.svg" alt="">
+                <figcaption>Appui administratif AVIQ</figcaption>
+            </figure>
+        </article>
 
-    <article class="move-rl">
-        <h3><time>2011</time></h3>
-        <figure>
-            <img src="/ui/timeline/2011.svg" alt="">
-            <figcaption>Le restaurant d'application</figcaption>
-        </figure>
-    </article>
+        <article class="move-ud">
+            <h3><time datetime="2018">2018</time></h3>
+            <figure>
+                <img src="/ui/timeline/2018.svg" alt="">
+                <figcaption>La ludothèque Oasis</figcaption>
+            </figure>
+        </article>
 
-    <article class="move-lr">
-        <h3><time>2020'</time></h3>
-        <figure>
-            <img src="/ui/timeline/2020.svg" alt="">
-            <figcaption>Ouverture et expertise</figcaption>
-        </figure>
-    </article>
+        <article class="move-lr">
+            <h3><time datetime="2020">2020</time></h3>
+            <figure>
+                <img src="/ui/timeline/2020.svg" alt="">
+                <figcaption>Ouverture et expertise</figcaption>
+            </figure>
+        </article>
 
-    <article>
-        <h3><time>2025</time></h3>
-        <figure>
-            <img src="/ui/timeline/2025.svg" alt="">
-            <figcaption>Ouverture à l'Autisme</figcaption>
-        </figure>
-    </article>
+        <article>
+            <h3><time datetime="2025">2025</time></h3>
+            <figure>
+                <img src="/ui/timeline/2025.svg" alt="">
+                <figcaption>Ouverture à l'Autisme</figcaption>
+            </figure>
+        </article>
+    </div>
+
 </section>
+
+
 
 
 <!-- Organisme d'Administration -->

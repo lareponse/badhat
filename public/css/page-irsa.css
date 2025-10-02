@@ -2,13 +2,11 @@
     display: grid;
     gap: 3rem;
     justify-content: center;
-
     grid-template-columns: 13rem;
 }
 
-.timeline article {
+.timeline>article {
     height: 17rem;
-    position: relative;
     background: #fff;
     border: 1px solid black;
     border-radius: 1rem;
@@ -16,9 +14,13 @@
     text-align: center;
     box-shadow: 0 3px 8px rgba(0, 0, 0, 0.05);
     transition: transform 0.2s, box-shadow 0.2s;
+
+    display:flex;
+    flex-direction: column;
+    gap:0.7rem;
 }
 
-.timeline article:hover {
+.timeline>article:hover {
     transform: translateY(-6px);
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
 }
@@ -34,96 +36,112 @@
     font-weight: bold;
 }
 
+.timeline figure{
+    display:flex;
+    flex: 1;
+    flex-direction: column;
+    justify-content: space-around;
+    align-items:center;
+}
 /* Texte (événement) */
 .timeline figcaption {
     font-size: 0.95rem;
     line-height: 1.4;
     font-weight: 700;
+    margin-top:0.7rem;
 }
 
 @media screen and (min-width:64rem) {
     .timeline {
         grid-template-columns: repeat(3, 13rem);
+        grid-auto-flow: dense;
+        justify-content: center;
     }
 
-    .timeline article::after {
+    .timeline>article {
+        position: relative;
+    }
+
+    /* Even rows (reverse order: 4 → 6, 10 → 12, …) */
+    .timeline>:nth-child(6n+4) {
+        grid-column: 3;
+        justify-self: right;
+    }
+
+    /* 4, 10, 16, 22… */
+    .timeline>:nth-child(6n+5) {
+        grid-column: 2;
+    }
+
+    /* 5, 11, 17, 23… */
+    .timeline>:nth-child(6n+6) {
+        grid-column: 1;
+    }
+
+    .timeline>::after {
         position: absolute;
         font-size: 1.7rem;
+        animation-duration: 3s;
+        animation-timing-function: ease-in-out;
+        animation-iteration-count: infinite;
     }
 
-    .timeline .move-lr::after {
-        content: "\003009";
-        right: -3rem;
-        top: 50%;
-        animation: move-lr 1.2s infinite ease-in-out;
-    }
-
-
-    .timeline .move-lr {
-        margin-right: 0.7rem;
-    }
-
-    .timeline .move-ud::after {
-        content: "\003009";
-        transform: rotate(90deg);
-        right: 50%;
-        bottom: -3rem;
-        animation: move-ud 1.2s infinite ease-in-out;
+    .timeline .move-lr,
+    .timeline .move-rl {
+        width: calc(0.93*13rem);
     }
 
     .timeline .move-ud {
-        margin-bottom: 1rem;
+        height: calc(0.93*17rem);
+    }
+
+    .timeline .move-lr::after {
+        --shift: 0.5rem;
+        content: "→";
+        right: -2.4rem;
+        top: 50%;
+        animation-name: wiggle-x;
+    }
+
+    .timeline .move-ud::after {
+        --shift: 0.5rem;
+        content: "↓";
+        right: 50%;
+        bottom: -3rem;
+        animation-name: wiggle-y;
     }
 
     .timeline .move-rl::after {
-        content: "\003009";
-        transform: rotate(180deg);
+        --shift: -0.5rem;
+        content: "←";
         top: 50%;
-        left: -3rem;
-        animation: move-rl 1.2s infinite ease-in-out;
+        left: -2.4rem;
+        animation-name: wiggle-x;
     }
 
-    .timeline .move-rl {
-        margin-left: 1rem;
+@keyframes wiggle-x {
+
+    0%,
+    100% {
+        transform: translateX(0);
     }
 
-    @keyframes move-lr {
+    50% {
+        transform: translateX(var(--shift, .5rem));
+    }
+}
 
-        0%,
-        100% {
-            transform: translateX(0);
-        }
+@keyframes wiggle-y {
 
-        50% {
-            transform: translateX(6px);
-        }
+    0%,
+    100% {
+        transform: translateY(0);
     }
 
-    @keyframes move-ud {
-
-        0%,
-        100% {
-            transform: translateY(0) rotate(90deg);
-        }
-
-        50% {
-            transform: translateY(6px) rotate(90deg);
-        }
+    50% {
+        transform: translateY(var(--shift, .5rem));
     }
-
-    @keyframes move-rl {
-
-        0%,
-        100% {
-            transform: translateX(0) rotate(180deg);
-        }
-
-        50% {
-            transform: translateX(-6px) rotate(180deg);
-        }
-    }
-
-
+}
 
 }
 
