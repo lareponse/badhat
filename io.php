@@ -1,7 +1,7 @@
 <?php
-const IO_DEEP = 1;      // Deep-first seek
-const IO_ROOT = 2;      // Root-first seek
-const IO_NEST = 4;      // Flexible routing: try file + file/file patterns
+const IO_NEST = 1;      // Flexible routing: try file + file/file patterns
+const IO_DEEP = 2;      // Deep-first seek
+const IO_ROOT = 4;      // Root-first seek
 
 const IO_RETURN = 16;   // Value of the included file return statement
 const IO_BUFFER = 32;   // Value of the included file output buffer
@@ -10,41 +10,20 @@ const IO_ABSORB = 128;  // Call fn(buffer, args) and store return value
 
 const IO_EXTRACT = 256; // Extract args to local scope for included file
 
-// return: clean URI path string
-function http_in(int $max_decode = 9): string
-{
-    // CSRF check
-    !empty($_POST) && function_exists('csrf_validate') && !csrf_validate() && http_out(403, 'Invalid CSRF token.', ['Content-Type' => 'text/plain; charset=utf-8']);
-
-    $coded = $_SERVER['REQUEST_URI'] ?? '';
-    do {
-        $path = rawurldecode($coded);
-    } while ($max_decode-- > 0 && $path !== $coded && ($coded = $path));
-
-    $max_decode                    ?: throw new BadMethodCallException('Path decoding loop detected', 400);
-
-    return parse_url(preg_replace('#\/\/+#', '/', $path ?: ''), PHP_URL_PATH) ?? '';
-}
-
-// http response, side effect: exits
-function http_out(int $status, string $body, array $headers = []): void
-{
-    http_response_code($status);
-    foreach ($headers as $h => $v) header("$h: $v");
-    echo $body;
-    exit;
-}
 
 // return: array with filepath or filepath+args or empty
 function io_map(string $base_dir, string $uri_path, string $file_ext = 'php', int $behave = 0): ?array
 {
-    $uri_path = trim($uri_path, '/');
+    if ($path = io_look($base_dir, $uri_path, $file_ext, $behave))
+        return [$path];
 
     if ($behave & (IO_DEEP | IO_ROOT))
-        return io_seek($base_dir, $uri_path, $file_ext, $behave);
+        if ($path_and_args = io_seek($base_dir, $uri_path, $file_ext, $behave))
+            return $path_and_args;
 
-    return ($path = io_look($base_dir, $uri_path, $file_ext, $behave)) ? [$path] : null;
+    return null;
 }
+
 
 // return: loot array with IO_RETURN and IO_BUFFER/IO_INVOKE/IO_ABSORB keys
 function io_run(string $file_path, array $io_args, int $behave = 0): array
@@ -64,14 +43,18 @@ function io_run(string $file_path, array $io_args, int $behave = 0): array
 // return: ? full path to an -existing- file
 function io_look(string $base_dir, string $candidate, string $file_ext, int $behave = 0): ?string
 {
+    // Construct the base path (without extension)
     $path = $base_dir . DIRECTORY_SEPARATOR . $candidate;
 
-    return is_file($base_path = $path . '.' . $file_ext)
-        ? $base_path
-        : ($behave & IO_NEST && is_file($base_path = $path . DIRECTORY_SEPARATOR . basename($candidate) . '.' . $file_ext)
-            ? $base_path
-            : null);
+    if (is_file($base_path = $path . '.' . $file_ext))
+        return $base_path;
+
+    if ($behave & IO_NEST && is_file($nested_path = $path . DIRECTORY_SEPARATOR . basename($candidate) . '.' . $file_ext))
+        return $nested_path;
+
+    return null;
 }
+
 
 // return: array with filepath+args or null
 function io_seek(string $base_dir, string $uri_path, string $file_ext, int $behave = 0): ?array

@@ -5,7 +5,8 @@
 !README.md
 !auth.php
 !build.php
-!core.php
+!http.php
+!io.php
 !db.php
 !error.php
 
