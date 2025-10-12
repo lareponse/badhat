@@ -39,7 +39,8 @@ mkdir -p app/io/{route,render}
 
 ```php
 <?php
-require 'add/badhat/core.php';
+require 'add/badhat/http.php';
+require 'add/badhat/io.php';
 
 $io      = __DIR__ . '/../io';
 $request = http_in();
