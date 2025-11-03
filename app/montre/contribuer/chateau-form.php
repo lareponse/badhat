@@ -46,12 +46,15 @@
             <input type="email" name="email" value="locations@irsa.be">
 
             <label>Texte sous contact :</label>
-            <textarea name="contact_texte" rows="4">Pour toute utilisation de nos salles, nous demandons une participation financière...</textarea>
+            <textarea name="contact_texte" rows="4">Pour toute utilisation de nos salles, nous demandons une participation financière dont une partie couvre les frais divers occasionnés et dont le solde contribue au développement de nos activités pour les personnes handicapées.</textarea>
         </article>
 
         <article>
             <h2>Capacité</h2>
-            <textarea name="capacite" rows="4">100 personnes assises maximum (salles de 100, 60 et 40 personnes) 200 personnes en réception</textarea>
+            <textarea name="capacite" rows="4">
+                100 personnes assises maximum (salles de 100, 60 et 40 personnes)
+                200 personnes en réception
+            </textarea>
         </article>
 
         <article>
@@ -69,17 +72,36 @@
             <input type="text" name="garantie" value="500 € (semaine précédant l'événement)">
 
             <label>Texte annulation :</label>
-            <textarea name="annulation" rows="3">En cas d'annulation, l'acompte ne sera pas remboursé.</textarea>
+            <textarea name="annulation" rows="3">
+                En cas d'annulation, l'acompte ne sera pas remboursé.
+            </textarea>
         </article>
 
         <article>
             <h2>Prestations incluses</h2>
-            <textarea name="prestations" rows="8">Utilisation de la salle. Libre choix de traiteur et de sono. Pas de droit de bouchon</textarea>
+            <textarea name="prestations" rows="8">
+                Utilisation de la salle selon horaire défini
+                Tables et chaises pour 100 personnes
+                Chauffage, électricité, eau
+                Équipements des salles et petite cuisine
+                Vestiaire et sanitaires équipés
+                Produits de vaisselle
+                Personne de permanence
+                Nettoyage
+                Libre choix de traiteur et de sono
+                Pas de droit de bouchon
+            </textarea>
         </article>
 
         <article>
             <h2>Informations pratiques</h2>
-            <textarea name="infos_pratiques" rows="8">Location en semaine : Parking invités : Stationnement aisé sur l'avenue Van Bever</textarea>
+            <textarea name="infos_pratiques" rows="8">
+                Location en semaine : Possibilité uniquement en soirée pour réunions, cours, etc.
+                Location week-end : Samedi ou dimanche
+                Terrasse : Disponible
+                Parking : 6 voitures maximum derrière le château (responsables, sono, traiteur)
+                Parking invités : Stationnement aisé sur l'avenue Van Bever
+            </textarea>
         </article>
 
         <article>
@@ -118,5 +140,5 @@
         </div>
     </section>
 
-    <button type="submit" class="btn-save">💾 Sauvegarder</button>
+    <button type="submit" class="btn-save">Sauvegarder</button>
 </form>
