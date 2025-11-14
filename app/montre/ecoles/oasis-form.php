@@ -36,7 +36,7 @@
     </section>
 
     <section class="tight">
-        <h3>Galerie d’images</h3>
+        <h3>Galerie d'images</h3>
         <figure>
             <div>
                 <label>Image 1 :</label>
