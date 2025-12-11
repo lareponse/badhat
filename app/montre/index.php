@@ -208,7 +208,7 @@
                 console.log("Resolved URL:", url);
                 if (url) {
                     console.log("Navigating to:", url);
-                    // window.location.href = url;
+                    window.location.href = url;
                 } else {
                     showStep(currentStep + 1);
                 }
