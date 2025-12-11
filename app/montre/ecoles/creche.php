@@ -1,40 +1,100 @@
 <img src="/ui/blob/blob_ecoles_top_right.svg" alt="decorative blob shape" class="blob" id="blob_ecoles_top_right" aria-hidden="true">
-
+<img src="/ui/blob/blob_ecoles_middle_left.svg" alt="decorative blob shape" class="blob" id="blob_ecoles_middle_left" aria-hidden="true">
 <header>
-    <h1><span class="tight">Crèche Le Petit Prince</span></h1>
-    <div class="section-intro tight">
-        <p><strong>Directrice :</strong> Claire Dirick</p>
-        <p><strong>Email :</strong> <a href="mailto:creche_le_petit_prince@irsa.be">creche_le_petit_prince@irsa.be</a></p>
-        <p><strong>Téléphone :</strong> <a href="tel:+3228826912">02/882 69 12</a></p>
-    </div>
+    <h1><span class="tight">Crèche inclusive « Le Petit Prince »</span></h1>
 </header>
 
-<section>
-    <h2>Présentation</h2>
-    <div class="tight">
-        <p>Notre crèche a été créée en 1989 et est agréée par l'O.N.E. pour accueillir 18 enfants âgés de 3 mois à 3 ans. Un tiers de ces enfants peut être atteint d'une déficience sensorielle.</p>
-        <p><a href="/documents/brochure-creche.pdf" class="btn">Télécharger la brochure</a></p>
+<section class="tight" aria-labelledby="presentation-creche-heading">
+    <h2 id="presentation-creche-heading" class="visually-hidden">Présentation de la crèche</h2>
+
+    <div class="triple-infos">
+        <article>
+            <h3>Handicap concerné</h3>
+            <p>Tous types de déficiences sensorielles<br>et certains troubles associés</p>
+        </article>
+
+        <article>
+            <h3>Tranche d’âge</h3>
+            <p>3 mois à 3 ans</p>
+        </article>
+
+        <article>
+            <h3>Type de structure</h3>
+            <p>Crèche inclusive</p>
+        </article>
     </div>
+
+    <p>
+        La crèche Le Petit Prince accueille les enfants dès 3 mois jusqu’à leur entrée à l’école maternelle.
+        C’est un milieu inclusif qui favorise le développement, l’autonomie et l’intégration sociale,
+        en respectant le rythme de chaque enfant. Elle est ouverte aux enfants de l’IRSA, aux enfants du personnel
+        et aux familles extérieures.
+    </p>
 </section>
 
-<section>
-    <h2>Objectifs</h2>
-    <div class="tight">
-        <p>Développement psychomoteur, acquisition de la communication et du langage, développement de l'autonomie en vue de l'entrée en maternelle.</p>
-        <p>Pour les enfants déficients sensoriels : élaboration d'un projet éducatif personnalisé.</p>
-    </div>
+<section class="tight" aria-labelledby="environnement-heading">
+    <h2 id="environnement-heading" class="visually-hidden">Notre environnement</h2>
+    <figure>
+        <img src="" alt="Bébé jouant avec des cubes en bois">
+        <img src="" alt="Jeune enfant manipulant des blocs d’éveil">
+        <img src="" alt="Bébé montant un module de jeu sensoriel">
+    </figure>
 </section>
 
-<section>
-    <h2>L'équipe</h2>
-    <ul class="tight">
-        <li>Deux infirmières sociales</li>
-        <li>Plusieurs puéricultrices</li>
-        <li>Un médecin</li>
-        <li>Du personnel spécialisé en matière de surdité (logopède, audiologue, kinésithérapeute)</li>
-        <li>Du personnel formé en langue des signes et en moyens de communication visualisés</li>
+<section class="tight" aria-labelledby="details-heading">
+    <h2 id="details-heading">Détails de l'accompagnement</h2>
+    <ul>
+        <li>Respect des rythmes individuels des bébés</li>
+        <li>Développement de l’autonomie chez les moyens et grands pour faciliter l’entrée à l’école</li>
+        <li>Activités quotidiennes favorisant l’éveil, le jeu et la socialisation</li>
+        <li>Sorties régulières : plaine de jeux, bois, Snoezelen (stimulation multisensorielle)</li>
+        <li>Prise en compte des besoins alimentaires (allergies, préparations adaptées, fruits frais préparés sur place)</li>
+        <li>Encadrement paramédical en lien avec le CHS (kinés, logopèdes, audiologues, psychomotricité)</li>
     </ul>
 </section>
+
+<section class="tight" aria-labelledby="services-heading">
+    <h2 id="services-heading">Services associés</h2>
+    <ul>
+        <li>Collaboration étroite avec les services de l’IRSA pour les suivis spécifiques</li>
+        <li>Partenariats réguliers avec des équipes médicales extérieures pour les enfants ayant des besoins particuliers</li>
+    </ul>
+</section>
+
+<section class="tight" aria-labelledby="modalites-heading">
+    <h2 id="modalites-heading">Modalités pratiques et admission</h2>
+    <ul>
+        <li>Priorité aux enfants présentant une déficience, suivis par les services de l’IRSA</li>
+        <li>Ensuite, accueil des enfants du personnel</li>
+        <li>Enfin, ouverture aux familles extérieures selon les places disponibles</li>
+        <li>Inscription uniquement par téléphone, confirmation à la naissance (nom et date de naissance)</li>
+    </ul>
+</section>
+
+<section class="tight" aria-labelledby="contact-heading">
+    <h2 id="contact-heading">Contact</h2>
+
+    <div class="triple-infos">
+        <article>
+            <h3>Numéro de téléphone</h3>
+            <p>02 373 52 42</p>
+        </article>
+
+        <article>
+            <h3>Adresse mail</h3>
+            <p>creche@irsa.be</p>
+        </article>
+
+        <article class="button-cta">
+            <a href="/contact" class="btn btn-secondary">Vers le formulaire de contact</a>
+        </article>
+    </div>
+
+    <p class="centered">
+        <a href="/docs/creche-brochure.pdf" class="btn btn-primary">Télécharger brochure de présentation</a>
+    </p>
+</section>
+
 
 <?php
 return function ($this_html) {

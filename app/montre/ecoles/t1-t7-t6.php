@@ -2,136 +2,175 @@
 <img src="/ui/blob/blob_ecoles_middle_left.svg" alt="decorative blob shape" class="blob" id="blob_ecoles_middle_left" aria-hidden="true">
 
 <header>
-    <h1><span class="tight">École fondamentale spécialisée</span></h1>
+    <h1><span class="tight">École secondaire spécialisée</span></h1>
 </header>
 
-<section class="tight" aria-labelledby="fondamentale-presentation-heading">
-    <h2 id="fondamentale-presentation-heading" class="visually-hidden">
-        Présentation de l'école
-    </h2>
+<section class="tight" aria-labelledby="presentation-heading">
+    <h2 id="presentation-heading" class="visually-hidden">Présentation de l’école secondaire spécialisée</h2>
 
     <div class="triple-infos">
         <article>
             <h3>Handicap concerné</h3>
-            <p>Déficience visuelle (type 6 et type 7) avec ou sans troubles associés</p>
+            <p>
+                Déficience auditive (type 7) et déficience visuelle (type 6).<br>
+                Accueil possible de jeunes avec type 1 selon dossier et projet individuel.
+            </p>
         </article>
 
         <article>
-            <h3>Types proposés</h3>
-            <p>Type 6, Type 7, Type 8 (parcours et objectifs différenciés)</p>
+            <h3>Formes proposées</h3>
+            <p>
+                Forme 2, Forme 3, Forme 4<br>
+                (parcours et objectifs différenciés)
+            </p>
         </article>
 
         <article>
             <h3>Type de structure</h3>
-            <p>Enseignement fondamental spécialisé</p>
+            <p>Enseignement secondaire spécialisé</p>
         </article>
     </div>
 
     <p>
-        À l'IRSA, une école inclusive où chaque enfant trouve sa place : apprentissages adaptés, autonomie développée et ouverture au monde grâce à une équipe pédagogique spécialisée.
+        À l’IRSA, un projet pour chacun : des parcours différenciés, une offre large de secteurs et métiers,
+        et des soutiens paramédicaux intégrés, pour que chaque jeune trouve sa place, développe son autonomie
+        et s’ouvre au monde.
     </p>
 </section>
 
-<section class="tight" aria-labelledby="environnement-heading">
-    <h2 id="environnement-heading" class="visually-hidden">Notre environnement</h2>
+<section class="tight" aria-labelledby="galerie-heading">
+    <h2 id="galerie-heading" class="visually-hidden">Galerie visuelle de l’école secondaire</h2>
     <figure>
-        <img src="" alt="Salle de classe avec élèves et enseignante">
-        <img src="" alt="Élèves participant à une activité pédagogique">
-        <img src="" alt="Groupe d'élèves dans le couloir de l'école">
+        <img src="" alt="Élève écrivant dans un cahier durant un cours">
+        <img src="" alt="Deux jeunes travaillant ensemble sur un projet scolaire">
+        <img src="" alt="Groupe d’adolescents souriants devant un établissement scolaire">
     </figure>
 </section>
 
 <section class="tight" aria-labelledby="objectifs-heading">
-    <h2 id="objectifs-heading">Objectifs pédagogiques</h2>
+    <h2 id="objectifs-heading">Objectifs selon la forme</h2>
     <ul>
-        <li>Développement de l'autonomie et des compétences sociales</li>
-        <li>Apprentissages adaptés selon le type et les besoins individuels</li>
-        <li>Acquisition des savoirs de base (lecture, écriture, mathématiques)</li>
-        <li>Initiation aux outils numériques et technologies adaptées</li>
-        <li>Projets de vie personnalisés en lien avec chaque élève et sa famille</li>
+        <li>Forme 2 : insertion socio-professionnelle, autonomie et compétences de vie active.</li>
+        <li>Forme 3 : qualification professionnelle et insertion en entreprise.</li>
+        <li>Forme 4 : diplôme avec possibilité d'études supérieures ou entrée directe dans l’emploi.</li>
     </ul>
 </section>
 
 <section class="tight" aria-labelledby="approches-heading">
     <h2 id="approches-heading">Approches & dispositifs</h2>
     <ul>
-        <li>Pédagogies adaptées : supports tactiles, braille, gros caractères, audio</li>
-        <li>Classes à effectifs réduits pour un accompagnement individualisé</li>
-        <li>Outils numériques et méthodes digitales adaptés aux besoins visuels</li>
-        <li>Soutien paramédical intégré (logo, kiné, psychomotricité, etc.)</li>
-        <li>Collaboration étroite avec les familles et les services IRSA</li>
+        <li>Pédagogies adaptées : dysphasie/aphasie et autisme au sein des groupes et ateliers.</li>
+        <li>SSAS : dispositif temporaire d’aide à la socialisation/accrochage pour construire un projet scolaire adapté.</li>
+        <li>Classes numériques : outils et méthodes digitaux au service des apprentissages.</li>
+        <li>Soutien paramédical à l’école (logo, kiné, audio-pro, etc.) en lien avec les services IRSA.</li>
     </ul>
 </section>
 
-<section class="tight" aria-labelledby="types-heading">
-    <h2 id="types-heading">Types d'enseignement</h2>
+<section class="tight" aria-labelledby="metiers-heading">
+    <h2 id="metiers-heading">Secteurs & métiers</h2>
 
-    <div class="types-grid">
+    <div class="metiers-grid">
+
         <article>
-            <h3>Type 6</h3>
-            <p>Pour élèves avec déficience visuelle nécessitant un enseignement adapté avec objectifs du tronc commun</p>
+            <h3>Forme 3 – Type 7 :</h3>
+            <ul>
+                <li>Agronomie</li>
+                <li>Construction (bois, électricité)</li>
+                <li>Hôtellerie/Alimentation</li>
+                <li>Économie</li>
+                <li>Service aux personnes</li>
+                <li>Arts appliqués</li>
+            </ul>
         </article>
 
         <article>
-            <h3>Type 7</h3>
-            <p>Pour élèves avec déficience visuelle nécessitant un enseignement adapté avec objectifs différenciés</p>
+            <h3>Forme 3 – Type 6 :</h3>
+            <ul>
+                <li>Construction (électricité)</li>
+                <li>Hôtellerie/Alimentation</li>
+                <li>Économie</li>
+                <li>Service aux personnes</li>
+                <li>Arts appliqués</li>
+                <li>Agronomie</li>
+            </ul>
         </article>
 
         <article>
-            <h3>Type 8</h3>
-            <p>Pour élèves avec troubles des apprentissages associés nécessitant des aménagements spécifiques</p>
+            <h3>Forme 4 – Type 6 :</h3>
+            <ul>
+                <li>Construction (électricité)</li>
+                <li>Hôtellerie/Alimentation</li>
+                <li>Économie</li>
+                <li>Service aux personnes</li>
+                <li>Arts appliqués</li>
+            </ul>
         </article>
+
     </div>
+
+    <p class="centered">
+        <a href="#" class="btn btn-secondary">Découvrir tous les métiers</a>
+    </p>
 </section>
 
 <section class="tight" aria-labelledby="services-heading">
     <h2 id="services-heading">Services associés IRSA</h2>
+
     <ul>
-        <li>Accès au centre de services (soins spécialisés, accompagnement social)</li>
-        <li>Possibilités d'internat / semi-internat (Centre pur) / externe selon la situation familiale</li>
-        <li>Transport scolaire : possible via la COCOF (service externe, information/liaison fournie par l'école)</li>
+        <li>Accès au centre de services (soins spécialisés, accompagnement social).</li>
+        <li>Possibilités internat / semi-internat (centre de jour) / externe selon la situation familiale.</li>
+        <li>Transport scolaire : possible via la COCOF (service externe ; information/liaison fournie par l’école).</li>
     </ul>
 </section>
 
 <section class="tight" aria-labelledby="admission-heading">
-    <h2 id="admission-heading">Modalités d'admission</h2>
+    <h2 id="admission-heading">Modalités d’admission</h2>
     <ul>
-        <li>Orientation : attestation vers type 6/7/8 (médecin spécialiste ou PMS, selon le type) + dossier scolaire</li>
-        <li>Demande d'inscription : via formulaire en ligne (renseignements famille, âge/classe, type, besoins) → commission interne d'admission → réponse et visite</li>
+        <li>Orientation : attestation vers type 1/6/7 (médecin spécialiste ou PMS, selon le type) + dossier scolaire.</li>
+        <li>Demande d’inscription : via formulaire en ligne (renseignements famille, âge/classe, type, besoins)
+            → commission interne d’admission → réponse et visite.
+        </li>
     </ul>
-</section>
 
-<section>
-    <a href="#formulaire-inscription">Vers formulaire d'inscription</a>
+    <p class="centered">
+        <a href="#" class="btn btn-secondary">Vers formulaire d’inscription</a>
+    </p>
 </section>
 
 <section class="tight" aria-labelledby="contact-heading">
     <h2 id="contact-heading">Contact</h2>
+
     <div class="triple-infos">
         <article>
             <h3>Numéro de téléphone</h3>
-            <span>02 374 03 68</span>
+            <p>02 374 03 68</p>
         </article>
 
         <article>
             <h3>Adresse mail</h3>
-            <a href="mailto:dirsec@irsa.be">dirsec@irsa.be</a>
+            <p>dirsec@irsa.be</p>
         </article>
 
-        <article>
-            <a href="/contact">Vers le formulaire de contact</a>
+        <article class="button-cta">
+            <a href="/contact" class="btn btn-secondary">Vers le formulaire de contact</a>
         </article>
     </div>
 </section>
 
 <section class="tight" aria-labelledby="liens-heading">
     <h2 id="liens-heading">Liens utiles</h2>
-    <div class="liens-grid">
-        <a href="projet-pedagogique.pdf">Projet pédagogique</a>
-        <a href="reglement-etudes.pdf">Règlement des études</a>
-        <a href="brochure-fondamentale.pdf" download>Télécharger Brochure de présentation</a>
+
+    <div class="links-grid">
+        <a class="btn btn-tag" href="#">Projet pédagogique</a>
+        <a class="btn btn-tag" href="#">Règlement des études</a>
+        <a class="btn btn-tag" href="#">Brochure métiers</a>
     </div>
+
+    <p class="centered">
+        <a href="/docs/brochure-secondaire.pdf" class="btn btn-primary">Télécharger Brochure de présentation</a>
+    </p>
 </section>
+
 
 <?php
 return function ($this_html, $args) {

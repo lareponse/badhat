@@ -11,52 +11,64 @@
 
 <section class="card-grid tight">
     <article>
-        <img src="/ui/pages/ecoles/enseignante-assise-au-bureau-eleve.jpg" alt="Enseignante avec un élève">
-        <h2>École fondamentale déficience visuelle et troubles associés</h2>
-        <a href="/ecoles/t6-t8">Découvrir l'école</a>
-        <dl>
-            <dt>Pour les enfants atteints de :</dt>
-            <dd>Déficience visuelle <span>(T6)</span></dd>
-            <dd>Troubles associés <span>(T8)</span></dd>
-        </dl>
+        <a href="/ecoles/t6-t8">
 
+            <img src="/ui/pages/ecoles/enseignante-assise-au-bureau-eleve.jpg" alt="Enseignante avec un élève">
+            <h2>École fondamentale déficience visuelle et troubles associés</h2>
+            <span class="cta">Découvrir l'école</span>
+            <dl>
+                <dt>Pour les enfants atteints de :</dt>
+                <dd>Déficience visuelle <span>(T6)</span></dd>
+                <dd>Troubles associés <span>(T8)</span></dd>
+            </dl>
+        </a>
     </article>
 
     <article>
-        <img src="/ui/pages/ecoles/ecole-auditive.jpg" alt="Enseignante en langue des signes avec un élève">
-        <h2>École fondamentale déficience auditive</h2>
-        <a href="/ecoles/t7">Découvrir l'école</a>
-        <dl>
-            <dd>Approche bilingue <span>(LSFB / FR)</span></dd>
-        </dl>
+        <a href="/ecoles/t7">
+
+            <img src="/ui/pages/ecoles/ecole-auditive.jpg" alt="Enseignante en langue des signes avec un élève">
+            <h2>École fondamentale déficience auditive</h2>
+            <span class="cta">Découvrir l'école</span>
+
+            <dl>
+                <dd>Approche bilingue <span>(LSFB / FR)</span></dd>
+            </dl>
+        </a>
     </article>
 
     <article>
-        <img src="/ui/pages/ecoles/ecole-secondaire.jpg" alt="Deux adolescentes en classe">
-        <h2>École secondaire spécialisée</h2>
-        <a href="/ecoles/t1-t7-t6">Découvrir le secondaire</a>
-        <dl>
-            <dt>Adolescents avec :</dt>
-            <dd>Déficience auditive <span>(T7)</span></dd>
-            <dd>Déficience visuelle <span>(T6)</span></dd>
-            <dd>Troubles d'apprentissage <span>(T1)</span></dd>
-        </dl>
+        <a href="/ecoles/t1-t7-t6">
+            <img src="/ui/pages/ecoles/ecole-secondaire.jpg" alt="Deux adolescentes en classe">
+            <h2>École secondaire spécialisée</h2>
+            <span class="cta">Découvrir le secondaire</span>
+            <dl>
+                <dt>Adolescents avec :</dt>
+                <dd>Déficience auditive <span>(T7)</span></dd>
+                <dd>Déficience visuelle <span>(T6)</span></dd>
+                <dd>Troubles d'apprentissage <span>(T1)</span></dd>
+            </dl>
+        </a>
     </article>
 </section>
 
 <section class="card-grid tight">
     <article>
-        <img src="/ui/pages/ecoles/creche.jpg" alt="Jeune enfant jouant avec des blocs colorés">
-        <h2>Crèche inclusive Le Petit Prince</h2>
-        <a href="/ecoles/creche">Découvrir la crèche</a>
-        <p>Accueille les tout-petits à partir de quelques mois, avec ou sans déficience sensorielle.</p>
+        <a href="/ecoles/creche">
+            <img src="/ui/pages/ecoles/creche.jpg" alt="Jeune enfant jouant avec des blocs colorés">
+            <h2>Crèche inclusive Le Petit Prince</h2>
+            <span class="cta">Découvrir la crèche</span>
+            <p>Accueille les tout-petits à partir de quelques mois, avec ou sans déficience sensorielle.</p>
+        </a>
     </article>
 
     <article>
-        <img src="/ui/pages/ecoles/pms.jpg" alt="Psychologue en discussion avec une adolescente et sa mère">
-        <h2>Centre PMS spécialisé</h2>
-        <a href="#">Découvrir le PMS</a>
-        <p>Écoute, soutien, orientation et collaboration avec l'équipe éducative pour favoriser le bien-être et la réussite.</p>
+        <a href="#">
+            <img src="/ui/pages/ecoles/pms.jpg" alt="Psychologue en discussion avec une adolescente et sa mère">
+            <h2>Centre PMS spécialisé</h2>
+            <span class="cta">Découvrir le PMS</span>
+            <p>Écoute, soutien, orientation et collaboration avec l'équipe éducative pour favoriser le bien-être et la réussite.</p>
+        </a>
     </article>
 </section>
 

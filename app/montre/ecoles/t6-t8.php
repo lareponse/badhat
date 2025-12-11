@@ -5,19 +5,21 @@
     <h1><span class="tight">École fondamentale – déficience visuelle et troubles associés</span></h1>
 </header>
 
-<section class="tight" aria-labelledby="fondamentale-presentation-heading">
-    <h2 id="fondamentale-presentation-heading" class="visually-hidden">
-        Présentation de l'école
-    </h2>
+<section class="tight" aria-labelledby="presentation-heading">
+    <h2 id="presentation-heading" class="visually-hidden">Présentation de l'école fondamentale</h2>
 
     <div class="triple-infos">
         <article>
             <h3>Handicap concerné</h3>
-            <p>Déficience visuelle (T6), troubles du spectre de l'autisme (T8), déficiences multiples (T2)</p>
+            <p>
+                Déficience visuelle ou cécité (T6),<br>
+                troubles du spectre de l’autisme (T8),<br>
+                déficiences multiples (T2)
+            </p>
         </article>
 
         <article>
-            <h3>Tranche d'âge</h3>
+            <h3>Tranche d’âge</h3>
             <p>3 à 12 ans</p>
         </article>
 
@@ -28,32 +30,35 @@
     </div>
 
     <p>
-        L'école fondamentale T2–T6–T8 de l'IRSA accueille des enfants présentant une déficience visuelle, un trouble du spectre de l'autisme ou une déficience multiple. Notre mission est de leur offrir un enseignement adapté, de développer leur autonomie et de favoriser leur inclusion, en collaboration étroite avec les familles.
+        L’école fondamentale T2–T6–T8 de l’IRSA accueille des enfants présentant une déficience visuelle,
+        un trouble du spectre de l’autisme ou une déficience multiple. Notre mission est de leur offrir
+        un enseignement adapté, de développer leur autonomie et de favoriser leur inclusion, en collaboration
+        étroite avec les familles.
     </p>
 </section>
 
-<section class="tight" aria-labelledby="environnement-heading">
-    <h2 id="environnement-heading" class="visually-hidden">Notre environnement</h2>
+<section class="tight" aria-labelledby="galerie-heading">
+    <h2 id="galerie-heading" class="visually-hidden">Galerie visuelle de l'école</h2>
     <figure>
-        <img src="" alt="Élèves travaillant sur ordinateurs en classe">
-        <img src="" alt="Activité en classe avec enseignante et élèves">
-        <img src="" alt="Bus scolaire jaune devant l'établissement">
+        <img src="" alt="Enseignante aidant une élève dans une classe spécialisée">
+        <img src="" alt="Élèves levant la main dans une classe adaptée">
+        <img src="" alt="Bus scolaire adapté de l'IRSA">
     </figure>
 </section>
 
-<section class="tight" aria-labelledby="accompagnement-heading">
-    <h2 id="accompagnement-heading">Accompagnement et pédagogie</h2>
+<section class="tight" aria-labelledby="pedagogie-heading">
+    <h2 id="pedagogie-heading">Accompagnement et pédagogie</h2>
     <ul>
         <li>Classes à effectif réduit permettant un suivi individualisé</li>
         <li>Adaptations pédagogiques selon le type :
             <ul>
-                <li>T6 : compensations liées à la basse vision ou à la cécité</li>
-                <li>T8 : stratégies spécifiques pour les enfants avec TSA</li>
-                <li>T2 : accompagnement global pour enfants avec déficiences multiples</li>
+                <li><strong>T6</strong> : compensations liées à la basse vision ou à la cécité</li>
+                <li><strong>T8</strong> : stratégies spécifiques pour les enfants avec TSA</li>
+                <li><strong>T2</strong> : accompagnement global pour enfants avec déficiences multiples</li>
             </ul>
         </li>
         <li>Travail pluridisciplinaire avec éducateurs et paramédicaux (logo, kiné, psychomotricité, etc.)</li>
-        <li>Objectif central : soutenir les apprentissages fondamentaux et préparer l'entrée au secondaire</li>
+        <li>Objectif central : soutenir les apprentissages fondamentaux et préparer l’entrée au secondaire</li>
     </ul>
 </section>
 
@@ -62,54 +67,62 @@
     <ul>
         <li>Interventions paramédicales intégrées dans le temps scolaire</li>
         <li>Collaboration avec le centre de services IRSA pour renforcer les suivis spécialisés</li>
-        <li>Activités éducatives et sorties favorisant l'autonomie et la socialisation</li>
+        <li>Activités éducatives et sorties favorisant l’autonomie et la socialisation</li>
     </ul>
 </section>
 
 <section class="tight" aria-labelledby="admission-heading">
-    <h2 id="admission-heading">Modalités d'admission</h2>
-    <p><strong>Public :</strong> enfants de 3 à 12 ans avec une déficience visuelle, un TSA ou une déficience multiple (diagnostic requis)</p>
-    <p><strong>Procédure :</strong></p>
-    <ol>
-        <li>Orientation par un PMS ou dossier médical adapté</li>
-        <li>Premier contact avec la direction de l'école</li>
-        <li>Rencontre et visite de l'établissement</li>
-        <li>Décision d'admission validée par l'équipe pluridisciplinaire</li>
-    </ol>
-    <p>Certains profils médicaux trop lourds peuvent nécessiter une orientation vers une structure plus adaptée !</p>
+    <h2 id="admission-heading">Modalités d’admission</h2>
+    <ul>
+        <li>Public : enfants de 3 à 12 ans avec une déficience visuelle, un TSA ou une déficience multiple (diagnostic requis)</li>
+        <li>Procédure :
+            <ol>
+                <li>Orientation par un PMS et dossier médical adapté</li>
+                <li>Premier contact avec la direction de l’école</li>
+                <li>Rencontre et visite de l’établissement</li>
+                <li>Décision d’admission validée par l’équipe pluridisciplinaire</li>
+            </ol>
+        </li>
+    </ul>
+
+    <p><strong>Certains profils médicaux trop lourds peuvent nécessiter une orientation vers une structure plus adaptée.</strong></p>
 </section>
 
 <section class="tight" aria-labelledby="contact-heading">
     <h2 id="contact-heading">Contact</h2>
+
     <div class="triple-infos">
         <article>
             <h3>Numéro de téléphone</h3>
-            <span>02 *** *** ***</span>
+            <p>02 *** ** ** *</p>
         </article>
 
         <article>
             <h3>Adresse mail</h3>
-            <a href="mailto:fondat288@irsa.be">fondat288@irsa.be</a>
+            <p>fondat.t26t8@irsa.be</p>
         </article>
 
-        <article>
-            <a href="/contact">Vers le formulaire de contact</a>
+        <article class="button-cta">
+            <a href="/contact" class="btn btn-secondary">Vers le formulaire de contact</a>
         </article>
     </div>
 </section>
 
 <section class="tight" aria-labelledby="liens-heading">
     <h2 id="liens-heading">Liens utiles</h2>
-    <div class="liens-grid">
-        <a href="projet-pedagogique.pdf">Projet pédagogique</a>
-        <a href="reglement-etudes.pdf">Règlement des études</a>
-        <a href="brochure-metiers.pdf">Brochure métiers</a>
+
+    <div class="links-grid">
+        <a class="btn btn-tag" href="#">Projet pédagogique</a>
+        <a class="btn btn-tag" href="#">Règlement des études</a>
+        <a class="btn btn-tag" href="#">Brochure métiers</a>
     </div>
+
+    <p class="centered">
+        <a href="/docs/brochure-fondamentale.pdf" class="btn btn-primary">Télécharger Brochure de présentation</a>
+    </p>
 </section>
 
-<section>
-    <a href="brochure-presentation-fondamentale.pdf" download>Télécharger Brochure de présentation</a>
-</section>
+
 <?php
 return function ($this_html, $args) {
     [$ret, $page] = ob_ret_get('app/layout.php', ['main' => $this_html, 'css' => ['page-ecoles']], IO_EXTRACT);
