@@ -10,7 +10,7 @@
         </p>
 
         <p>
-            <a href="/commencer" class="btn btn-primary">Commencer</a>
+            <a href="#home-questionnaire" class="btn btn-primary">Commencer</a>
             <a href="/services" class="btn btn-secondary">Découvrir nos services</a>
         </p>
     </div>
@@ -23,76 +23,207 @@
 
 <iframe width="100%" height="600px" src="https://www.youtube.com/embed/-Y0r8Sve0Sc" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen=""></iframe>
 
+
 <section class="tight" id="home-questionnaire" aria-labelledby="questionnaire-heading" lang="fr">
-    <form id="questionnaire-form" method="get" action="/questionnaire/resultat">
 
-        <!-- Intro -->
+    <form id="questionnaire-form">
+
+        <!-- STEP 0 — AGE -->
         <fieldset class="questionnaire-step active" data-step="0">
-
             <h2 id="questionnaire-heading">Quels services correspondent à vos besoins ?</h2>
-            <p>Répondez à 3 questions simples pour accéder aux services adaptés à votre situation ou celle de votre proche.</p>
+            <p>Répondez à quelques questions simples pour accéder aux services adaptés.</p>
+
+            <legend>Quel est l'âge de la personne concernée ?</legend>
+
+            <div class="multi-choice">
+                <label><input type="radio" name="age" value="moins-3" required> Moins de 3 ans</label>
+                <label><input type="radio" name="age" value="3-18"> De 3 à 18 ans</label>
+                <label><input type="radio" name="age" value="18-21"> De 18 à 21 ans</label>
+                <label><input type="radio" name="age" value="21plus"> Plus de 21 ans</label>
+            </div>
+
             <nav>
-                <button type="button" class="btn btn-primary" data-action="next">Commencer</button>
+                <button type="button" class="btn btn-primary" data-action="next">Suivant</button>
             </nav>
         </fieldset>
 
-        <!-- Question 1 -->
+
+        <!-- STEP 1 — ASD -->
         <fieldset class="questionnaire-step" data-step="1">
-            <legend>Question 1 : Quel est l'âge de la personne concernée ?</legend>
+            <legend>La personne est-elle concernée par un TSA (Autisme) ?</legend>
+
             <div class="multi-choice">
-
-                <label><input type="radio" name="age" value="moins-3" required> Moins de 3 ans</label>
-                <label><input type="radio" name="age" value="3-6"> De 3 à 6 ans</label>
-                <label><input type="radio" name="age" value="6-12"> De 6 à 12 ans</label>
-                <label><input type="radio" name="age" value="12-18"> De 12 à 18 ans</label>
-                <label><input type="radio" name="age" value="plus-18"> Plus de 18 ans</label>
-
-                <nav>
-                    <button type="button" class="btn" data-action="cancel">Annuler</button>
-                    <button type="button" class="btn btn-primary" data-action="next">Suivant</button>
-                </nav>
+                <label><input type="radio" name="ASD" value="oui" required> Oui</label>
+                <label><input type="radio" name="ASD" value="non"> Non</label>
+                <label><input type="radio" name="ASD" value="inconnu"> Je ne sais pas</label>
             </div>
-        </fieldset>
 
-        <!-- Question 2 -->
-        <fieldset class="questionnaire-step" data-step="2">
-            <legend>Question 2 : Quelle est la situation de la personne ?</legend>
-            <p><em>Si plusieurs déficiences sont concernées, sélectionnez la principale.</em></p>
-            <div class="multi-choice">
-
-                <label><input type="radio" name="situation" value="visuelle" required> Déficience visuelle</label>
-                <label><input type="radio" name="situation" value="auditive"> Déficience auditive</label>
-                <label><input type="radio" name="situation" value="surdicecite"> Surdicécité</label>
-                <label><input type="radio" name="situation" value="polyhandicap"> Troubles associés ou polyhandicap</label>
-                <label><input type="radio" name="situation" value="inconnu"> Je ne sais pas encore</label>
-
-                <nav>
-                    <button type="button" class="btn" data-action="prev">Retour</button>
-                    <button type="button" class="btn btn-primary" data-action="next">Suivant</button>
-                </nav>
-            </div>
-        </fieldset>
-
-        <!-- Question 3 -->
-        <fieldset class="questionnaire-step" data-step="3">
-            <legend>Question 3 : Quel est le besoin principal aujourd'hui ?</legend>
-            <p><em>Vous pouvez cocher plusieurs cases si besoin.</em></p>
-            <div class="multi-choice">
-                <label><input type="checkbox" name="besoins[]" value="scolarite"> Scolarité ou crèche</label>
-                <label><input type="checkbox" name="besoins[]" value="soins"> Soins et rééducation</label>
-                <label><input type="checkbox" name="besoins[]" value="hebergement"> Hébergement ou accueil</label>
-                <label><input type="checkbox" name="besoins[]" value="autonomie"> Autonomie au quotidien</label>
-                <label><input type="checkbox" name="besoins[]" value="insertion"> Insertion professionnelle</label>
-                <label><input type="checkbox" name="besoins[]" value="orientation"> Orientation ou conseil</label>
-
-            </div>
             <nav>
                 <button type="button" class="btn" data-action="prev">Retour</button>
-                <button type="submit" class="btn btn-primary">Afficher les résultats</button>
+                <button type="button" class="btn btn-primary" data-action="next">Suivant</button>
             </nav>
         </fieldset>
+
+
+        <!-- STEP 2 — POLY -->
+        <fieldset class="questionnaire-step" data-step="2">
+            <legend>La personne présente-t-elle un polyhandicap ou des troubles associés ?</legend>
+
+            <div class="multi-choice">
+                <label><input type="radio" name="poly" value="oui" required> Oui</label>
+                <label><input type="radio" name="poly" value="non"> Non</label>
+                <label><input type="radio" name="poly" value="inconnu"> Je ne sais pas</label>
+            </div>
+
+            <nav>
+                <button type="button" class="btn" data-action="prev">Retour</button>
+                <button type="button" class="btn btn-primary" data-action="next">Suivant</button>
+            </nav>
+        </fieldset>
+
+
+        <!-- STEP 3 — SCHOOL -->
+        <fieldset class="questionnaire-step" data-step="3">
+            <legend>A-t-elle besoin d'une scolarité ou d'un cadre scolaire ?</legend>
+
+            <div class="multi-choice">
+                <label><input type="radio" name="school" value="oui" required> Oui</label>
+                <label><input type="radio" name="school" value="non"> Non</label>
+                <label><input type="radio" name="school" value="na"> Pas concerné</label>
+            </div>
+
+            <nav>
+                <button type="button" class="btn" data-action="prev">Retour</button>
+                <button type="button" class="btn btn-primary" data-action="next">Suivant</button>
+            </nav>
+        </fieldset>
+
+
+        <!-- STEP 4 — HOSTING -->
+        <fieldset class="questionnaire-step" data-step="4">
+            <legend>A-t-elle besoin d'un hébergement ?</legend>
+
+            <div class="multi-choice">
+                <label><input type="radio" name="hosting" value="oui" required> Oui</label>
+                <label><input type="radio" name="hosting" value="non"> Non</label>
+                <label><input type="radio" name="hosting" value="na"> Pas concerné</label>
+            </div>
+
+            <nav>
+                <button type="button" class="btn" data-action="prev">Retour</button>
+                <button type="button" class="btn btn-primary" data-action="finish">Afficher les résultats</button>
+            </nav>
+        </fieldset>
+
     </form>
+
 </section>
+
+
+
+<script>
+    (function() {
+
+        const SERVICES = {
+            creche: "/ecoles/creche",
+            che: "/services/che",
+            cjes: "/services/cjes",
+            cjens: "/services/cjens",
+            aubier: "/services/aubier",
+        };
+
+        const form = document.getElementById("questionnaire-form");
+        const steps = Array.from(form.querySelectorAll(".questionnaire-step"));
+        let currentStep = 0;
+
+        // Show step
+        function showStep(index) {
+            steps.forEach((step, i) => step.classList.toggle("active", i === index));
+            currentStep = index;
+        }
+
+        // Evaluate strict IRSA routing
+        function resolveService() {
+            const fd = new FormData(form);
+
+            const age = fd.get("age");
+            const ASD = fd.get("ASD");
+            const poly = fd.get("poly");
+            const school = fd.get("school");
+            const hosting = fd.get("hosting");
+
+            // AGE RULES ----------------------------------------------------
+            console.log("Evaluating service for:", {
+                age,
+                ASD,
+                poly,
+                school,
+                hosting
+            });
+
+            if (age === "moins-3") {
+                return SERVICES.creche;
+            }
+
+            if (age === "21plus") {
+                return SERVICES.aubier;
+            }
+
+            // STRICT CHILDREN SERVICES -------------------------------------
+
+            // CHE: ASD=no + hosting=yes + school=yes
+            if (ASD === "non" && hosting === "oui" && school === "oui") {
+                return SERVICES.che;
+            }
+
+            // CJENS: ASD=yes + poly=yes + hosting=no + school=no
+            if (ASD === "oui" && poly === "oui" && hosting === "non" && school === "non") {
+                return SERVICES.cjens;
+            }
+
+            // CJES: ASD=yes (remaining cases)
+            if (ASD === "oui") {
+                return SERVICES.cjes;
+            }
+
+            // No valid service
+            return null;
+        }
+
+        // Navigation handling
+        form.addEventListener("click", (e) => {
+            const btn = e.target.closest("[data-action]");
+            let url;
+
+            if (!btn) return;
+
+            const action = btn.dataset.action;
+
+            if (action === "next") {
+                const radios = steps[currentStep].querySelectorAll("input");
+                const hasAnswer = Array.from(radios).some(r => r.checked);
+                console.log("Has answer:", radios, hasAnswer);
+                if (!hasAnswer) return;
+                url = resolveService();
+                console.log("Resolved URL:", url);
+                if (url) {
+                    console.log("Navigating to:", url);
+                    // window.location.href = url;
+                } else {
+                    showStep(currentStep + 1);
+                }
+            } else if (action === "prev") {
+                if (currentStep > 0) showStep(currentStep - 1);
+            } else if (action === "finish") {
+                const url = resolveService();
+                window.location.href = url || "/services";
+            }
+
+        });
+
+    })();
+</script>
+
 
 <section class="tight" aria-labelledby="services-heading">
     <h2 id="services-heading">Des services adaptés à chaque étape de la vie</h2>
@@ -204,44 +335,7 @@
         </p>
     </div>
 </section>
-<script>
-    (function() {
-        const form = document.getElementById('questionnaire-form');
-        if (!form) return;
 
-        const steps = Array.from(form.querySelectorAll('[data-step]'));
-        let currentStep = steps.findIndex(step => step.classList.contains('active')) || 0;
-
-        function showStep(index) {
-            steps.forEach((s, i) => {
-                s.classList.toggle('active', i === index);
-            });
-            currentStep = index;
-        }
-
-        form.addEventListener('click', function(e) {
-            const actionEl = e.target.closest('[data-action]');
-            if (!actionEl) return;
-
-            const action = actionEl.dataset.action;
-
-            if (action === 'next') {
-                const answered = steps[currentStep].querySelector('input[type="radio"]:checked');
-                if (currentStep > 0 && !answered) return;
-
-                if (currentStep < steps.length - 1) {
-                    showStep(currentStep + 1);
-                }
-            } else if (action === 'prev') {
-                if (currentStep > 0) {
-                    showStep(currentStep - 1);
-                }
-            } else if (action === 'cancel') {
-                showStep(0);
-            }
-        });
-    })();
-</script>
 
 <?php
 return function ($this_html, $args) {
