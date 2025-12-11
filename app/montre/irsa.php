@@ -13,7 +13,7 @@
         <article class="move-lr">
             <h3><time datetime="1835">1835</time></h3>
             <figure>
-                <img src="/ui/timeline/1835.svg" alt="">
+                <img src="/ui/timeline/1835.png" alt="">
                 <figcaption>Fondation de l’Institut des Sourds-Muets</figcaption>
             </figure>
         </article>
@@ -21,7 +21,7 @@
         <article>
             <h3><time datetime="1837">1837</time></h3>
             <figure>
-                <img src="/ui/timeline/1837.svg" alt="">
+                <img src="/ui/timeline/1837.png" alt="">
                 <figcaption>Arrivée des Sœurs de la Charité</figcaption>
             </figure>
         </article>
@@ -29,7 +29,7 @@
         <article class="move-ud">
             <h3><time datetime="1858">1858</time></h3>
             <figure>
-                <img src="/ui/timeline/1858.svg" alt="">
+                <img src="/ui/timeline/1858.png" alt="">
                 <figcaption>Installation à Uccle</figcaption>
             </figure>
         </article>
@@ -37,7 +37,7 @@
         <article class="move-rl">
             <h3><time datetime="1870">1870</time></h3>
             <figure>
-                <img src="/ui/timeline/1870.svg" alt="">
+                <img src="/ui/timeline/1870.png" alt="">
                 <figcaption>Accueil des enfants aveugles</figcaption>
             </figure>
         </article>
@@ -45,7 +45,7 @@
         <article>
             <h3><time datetime="1900">1900</time></h3>
             <figure>
-                <img src="/ui/timeline/1900.svg" alt="">
+                <img src="/ui/timeline/1900.png" alt="">
                 <figcaption>Premiers ateliers professionnels</figcaption>
             </figure>
         </article>
@@ -93,7 +93,7 @@
         <article>
             <h3><time datetime="2014">2014</time></h3>
             <figure>
-                <img src="/ui/timeline/2014.svg" alt="">
+                <img src="/ui/timeline/2014.png" alt="">
                 <figcaption>Appui administratif AVIQ</figcaption>
             </figure>
         </article>
