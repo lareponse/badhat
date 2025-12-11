@@ -44,17 +44,17 @@
     <meta name="twitter:site" content="@irsa_be">
 
     <!-- Stylesheets (ordered: variables/base → components → pages) -->
-    <link rel="stylesheet" href="/css/irsa.css">
-    <link rel="stylesheet" href="/css/header-footer.css">
-    <link rel="stylesheet" href="/css/button.css">
-    <link rel="stylesheet" href="/css/card.css">
-    <link rel="stylesheet" href="/css/blob.css">
-    <link rel="stylesheet" href="/css/triple-infos.css">
+    <link rel="stylesheet" href="/css/irsa.css?v=20251211">
+    <link rel="stylesheet" href="/css/header-footer.css?v=20251211">
+    <link rel="stylesheet" href="/css/button.css?v=20251211">
+    <link rel="stylesheet" href="/css/card.css?v=20251211">
+    <link rel="stylesheet" href="/css/blob.css?v=20251211">
+    <link rel="stylesheet" href="/css/triple-infos.css?v=20251211">
     <?php
     if (isset($css) && is_array($css)):
         foreach ($css as $file):
     ?>
-            <link rel="stylesheet" href="/css/<?= $file ?>.css">
+            <link rel="stylesheet" href="/css/<?= $file ?>.css?v=20251211">
         <?php endforeach ?>
     <?php endif ?>
 
@@ -175,7 +175,7 @@
         </section>
     </footer>
 
-    <script src="/js/onload.js"></script>
+    <script src="/js/onload.js?v=20251211"></script>
 </body>
 
 </html>
