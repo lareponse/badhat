@@ -16,7 +16,7 @@
     </div>
 
     <figure>
-        <img src="/ui/home_hero.jpg"
+        <img src="/ui/pages/home/garcon_lapin.png"
             alt="Un jeune garçon portant un implant auditif caresse un lapin avec tendresse">
     </figure>
 </section>
