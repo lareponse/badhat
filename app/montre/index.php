@@ -47,9 +47,34 @@
             </nav>
         </fieldset>
 
+        <!-- STEP 1 — SENSORIAL -->
+        <fieldset class="questionnaire-step" data-step="1">
+            <legend>Quel est le type de déficience sensorielle concernée ?</legend>
+
+            <div class="multi-choice">
+                <label>
+                    <input type="radio" name="sensory" value="surdite" required>
+                    Déficience auditive (surdité)
+                </label>
+                <label>
+                    <input type="radio" name="sensory" value="cecite">
+                    Déficience visuelle (cécité ou malvoyance sévère)
+                </label>
+                <label>
+                    <input type="radio" name="sensory" value="autre">
+                    Autre situation / je ne sais pas
+                </label>
+            </div>
+
+            <nav>
+                <button type="button" class="btn" data-action="prev">Retour</button>
+                <button type="button" class="btn btn-primary" data-action="next">Suivant</button>
+            </nav>
+        </fieldset>
+
 
         <!-- STEP 1 — ASD -->
-        <fieldset class="questionnaire-step" data-step="1">
+        <fieldset class="questionnaire-step" data-step="2">
             <legend>La personne est-elle concernée par un TSA (Autisme) ?</legend>
 
             <div class="multi-choice">
@@ -66,7 +91,7 @@
 
 
         <!-- STEP 2 — POLY -->
-        <fieldset class="questionnaire-step" data-step="2">
+        <fieldset class="questionnaire-step" data-step="3">
             <legend>La personne présente-t-elle un polyhandicap ou des troubles associés ?</legend>
 
             <div class="multi-choice">
@@ -83,7 +108,7 @@
 
 
         <!-- STEP 3 — SCHOOL -->
-        <fieldset class="questionnaire-step" data-step="3">
+        <fieldset class="questionnaire-step" data-step="4">
             <legend>A-t-elle besoin d'une scolarité ou d'un cadre scolaire ?</legend>
 
             <div class="multi-choice">
@@ -100,7 +125,7 @@
 
 
         <!-- STEP 4 — HOSTING -->
-        <fieldset class="questionnaire-step" data-step="4">
+        <fieldset class="questionnaire-step" data-step="5">
             <legend>A-t-elle besoin d'un hébergement ?</legend>
 
             <div class="multi-choice">
@@ -125,10 +150,19 @@
     (function() {
 
         const SERVICES = {
+            che: {
+                surdite: "/services/che-surdite",
+                cecite: "/services/che-cecite",
+            },
+            cjes: {
+                surdite: "/services/cjes-surdite",
+                cecite: "/services/cjes-cecite",
+            },
+            cjens: {
+                surdite: "/services/cjens-surdite",
+                cecite: "/services/cjens-cecite",
+            },
             creche: "/ecoles/creche",
-            che: "/services/che",
-            cjes: "/services/cjes",
-            cjens: "/services/cjens",
             aubier: "/services/aubier",
         };
 
@@ -147,19 +181,16 @@
             const fd = new FormData(form);
 
             const age = fd.get("age");
+            const sensory = fd.get("sensory");
             const ASD = fd.get("ASD");
             const poly = fd.get("poly");
             const school = fd.get("school");
             const hosting = fd.get("hosting");
 
-            // AGE RULES ----------------------------------------------------
-            console.log("Evaluating service for:", {
-                age,
-                ASD,
-                poly,
-                school,
-                hosting
+            console.log("Form data:", {
+                age, sensory, ASD, poly, school, hosting
             });
+            // --- SORTIES IMMÉDIATES ------------------------------------
 
             if (age === "moins-3") {
                 return SERVICES.creche;
@@ -169,26 +200,37 @@
                 return SERVICES.aubier;
             }
 
-            // STRICT CHILDREN SERVICES -------------------------------------
+            // Sécurité : si on ne connaît pas la déficience sensorielle
+            if (!SERVICES.che[sensory]) {
+                return null;
+            }
 
-            // CHE: ASD=no + hosting=yes + school=yes
+            // --- SERVICES ENFANTS / JEUNES -----------------------------
+
+            // CHE : pas de TSA + hébergement + cadre scolaire
             if (ASD === "non" && hosting === "oui" && school === "oui") {
-                return SERVICES.che;
+                return SERVICES.che[sensory];
             }
 
-            // CJENS: ASD=yes + poly=yes + hosting=no + school=no
-            if (ASD === "oui" && poly === "oui" && hosting === "non" && school === "non") {
-                return SERVICES.cjens;
+            // CJENS : TSA + polyhandicap + pas d’hébergement + pas de scolarité
+            if (
+                ASD === "oui" &&
+                poly === "oui" &&
+                hosting === "non" &&
+                school === "non"
+            ) {
+                return SERVICES.cjens[sensory];
             }
 
-            // CJES: ASD=yes (remaining cases)
+            // CJES : TSA (autres situations)
             if (ASD === "oui") {
-                return SERVICES.cjes;
+                return SERVICES.cjes[sensory];
             }
 
-            // No valid service
+            // --- AUCUN PARCOURS STRICT ---------------------------------
             return null;
         }
+
 
         // Navigation handling
         form.addEventListener("click", (e) => {
@@ -202,7 +244,6 @@
             if (action === "next") {
                 const radios = steps[currentStep].querySelectorAll("input");
                 const hasAnswer = Array.from(radios).some(r => r.checked);
-                console.log("Has answer:", radios, hasAnswer);
                 if (!hasAnswer) return;
                 url = resolveService();
                 console.log("Resolved URL:", url);

@@ -75,12 +75,12 @@
     <div class="triple-infos">
         <article>
             <h3>Numéro de téléphone</h3>
-            <span>02 *** *** ***</span>
+            <span>02 882 69 04</span>
         </article>
 
         <article>
             <h3>Adresse mail</h3>
-            <a href="mailto:aubier@irsa.be">aubier@irsa.be</a>
+            <a href="mailto:v.derwa@irsa.be">v.derwa@irsa.be</a>
         </article>
 
         <article>
