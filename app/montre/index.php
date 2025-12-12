@@ -25,16 +25,23 @@
 
 
 <section class="tight" id="home-questionnaire" aria-labelledby="questionnaire-heading" lang="fr">
+    <h2 id="questionnaire-heading" class="visually-hidden">
+        Questionnaire d’orientation vers les services IRSA
+    </h2>
 
     <form id="questionnaire-form">
 
-        <!-- STEP 0 — AGE -->
-        <fieldset class="questionnaire-step active" data-step="0">
-            <h2 id="questionnaire-heading">Quels services correspondent à vos besoins ?</h2>
+        <fieldset class="questionnaire-step active">
+            <legend>Quels services correspondent à vos besoins ?</legend>
             <p>Répondez à quelques questions simples pour accéder aux services adaptés.</p>
+            <nav>
+                <button type="button" class="btn btn-primary" data-action="start">Commencer</button>
+            </nav>
+        </fieldset>
 
+        <!-- STEP AGE -->
+        <fieldset class="questionnaire-step">
             <legend>Quel est l'âge de la personne concernée ?</legend>
-
             <div class="multi-choice">
                 <label><input type="radio" name="age" value="moins-3" required> Moins de 3 ans</label>
                 <label><input type="radio" name="age" value="3-18"> De 3 à 18 ans</label>
@@ -47,22 +54,22 @@
             </nav>
         </fieldset>
 
-        <!-- STEP 1 — SENSORIAL -->
-        <fieldset class="questionnaire-step" data-step="1">
-            <legend>Quel est le type de déficience sensorielle concernée ?</legend>
+        <!-- STEP SENSORIAL -->
+        <fieldset class="questionnaire-step">
+            <legend>Quelle situation de handicap concerne la personne ?</legend>
 
             <div class="multi-choice">
                 <label>
-                    <input type="radio" name="sensory" value="surdite" required>
-                    Déficience auditive (surdité)
+                    <input type="checkbox" name="situation[]" value="surdite">
+                    Surdité ou malentendance sévère
                 </label>
                 <label>
-                    <input type="radio" name="sensory" value="cecite">
-                    Déficience visuelle (cécité ou malvoyance sévère)
+                    <input type="checkbox" name="situation[]" value="cecite">
+                    Cécité ou malvoyance sévère
                 </label>
                 <label>
-                    <input type="radio" name="sensory" value="autre">
-                    Autre situation / je ne sais pas
+                    <input type="checkbox" name="situation[]" value="ASD">
+                    Trouble du spectre de l’autisme (TSA)
                 </label>
             </div>
 
@@ -72,32 +79,14 @@
             </nav>
         </fieldset>
 
-
-        <!-- STEP 1 — ASD -->
-        <fieldset class="questionnaire-step" data-step="2">
-            <legend>La personne est-elle concernée par un TSA (Autisme) ?</legend>
-
-            <div class="multi-choice">
-                <label><input type="radio" name="ASD" value="oui" required> Oui</label>
-                <label><input type="radio" name="ASD" value="non"> Non</label>
-                <label><input type="radio" name="ASD" value="inconnu"> Je ne sais pas</label>
-            </div>
-
-            <nav>
-                <button type="button" class="btn" data-action="prev">Retour</button>
-                <button type="button" class="btn btn-primary" data-action="next">Suivant</button>
-            </nav>
-        </fieldset>
-
-
-        <!-- STEP 2 — POLY -->
-        <fieldset class="questionnaire-step" data-step="3">
+        <!-- STEP POLY -->
+        <fieldset class="questionnaire-step">
             <legend>La personne présente-t-elle un polyhandicap ou des troubles associés ?</legend>
 
             <div class="multi-choice">
                 <label><input type="radio" name="poly" value="oui" required> Oui</label>
                 <label><input type="radio" name="poly" value="non"> Non</label>
-                <label><input type="radio" name="poly" value="inconnu"> Je ne sais pas</label>
+                <label><input type="radio" name="poly" value=""> Je ne sais pas</label>
             </div>
 
             <nav>
@@ -106,15 +95,14 @@
             </nav>
         </fieldset>
 
-
-        <!-- STEP 3 — SCHOOL -->
-        <fieldset class="questionnaire-step" data-step="4">
+        <!-- STEP SCHOOL -->
+        <fieldset class="questionnaire-step">
             <legend>A-t-elle besoin d'une scolarité ou d'un cadre scolaire ?</legend>
 
             <div class="multi-choice">
                 <label><input type="radio" name="school" value="oui" required> Oui</label>
                 <label><input type="radio" name="school" value="non"> Non</label>
-                <label><input type="radio" name="school" value="na"> Pas concerné</label>
+                <label><input type="radio" name="school" value=""> Pas concerné</label>
             </div>
 
             <nav>
@@ -123,15 +111,14 @@
             </nav>
         </fieldset>
 
-
-        <!-- STEP 4 — HOSTING -->
-        <fieldset class="questionnaire-step" data-step="5">
+        <!-- STEP HOSTING -->
+        <fieldset class="questionnaire-step">
             <legend>A-t-elle besoin d'un hébergement ?</legend>
 
             <div class="multi-choice">
                 <label><input type="radio" name="hosting" value="oui" required> Oui</label>
                 <label><input type="radio" name="hosting" value="non"> Non</label>
-                <label><input type="radio" name="hosting" value="na"> Pas concerné</label>
+                <label><input type="radio" name="hosting" value=""> Pas concerné</label>
             </div>
 
             <nav>
@@ -139,125 +126,193 @@
                 <button type="button" class="btn btn-primary" data-action="finish">Afficher les résultats</button>
             </nav>
         </fieldset>
-
     </form>
-
 </section>
-
-
 
 <script>
     (function() {
 
-        const SERVICES = {
-            che: {
-                surdite: "/services/che-surdite",
-                cecite: "/services/che-cecite",
-            },
-            cjes: {
-                surdite: "/services/cjes-surdite",
-                cecite: "/services/cjes-cecite",
-            },
-            cjens: {
-                surdite: "/services/cjens-surdite",
-                cecite: "/services/cjens-cecite",
-            },
-            creche: "/ecoles/creche",
-            aubier: "/services/aubier",
-        };
+        const ROUTING_RULES = [
 
-        const form = document.getElementById("questionnaire-form");
-        const steps = Array.from(form.querySelectorAll(".questionnaire-step"));
-        let currentStep = 0;
+            // --- SORTIES IMMÉDIATES ------------------------------------
+            {
+                when: {
+                    age: "moins-3"
+                },
+                terminal: true,
+                redirect: "/ecoles/creche",
+            },
 
-        // Show step
+            {
+                when: {
+                    age: "21plus"
+                },
+                terminal: true,
+                redirect: "/services/aubier",
+            },
+
+            // --- CHE ---------------------------------------------------
+
+            {
+                when: {
+                    age: ["3-18", "18-21"],
+                    situation: ["surdite"],
+                    hosting: "oui",
+                    school: "oui",
+                },
+                redirect: "/services/che-surdite",
+            },
+
+            {
+                when: {
+                    age: ["3-18", "18-21"],
+                    situation: ["cecite"],
+                    hosting: "oui",
+                    school: "oui",
+                },
+                redirect: "/services/che-cecite",
+            },
+
+            // --- CJENS -------------------------------------------------
+
+            {
+                when: {
+                    situation: ["surdite", "ASD"],
+                    poly: "oui",
+                    hosting: "non",
+                    school: "non",
+                },
+                redirect: "/services/cjens-surdite",
+            },
+
+            {
+                when: {
+                    situation: ["cecite", "ASD"],
+                    poly: "oui",
+                    hosting: "non",
+                    school: "non",
+                },
+                redirect: "/services/cjens-cecite",
+            },
+
+            // --- CJES --------------------------------------------------
+
+            {
+                when: {
+                    situation: ["surdite", "ASD"],
+                    school: "oui",
+                    hosting: "non",
+
+                },
+                redirect: "/services/cjes-surdite",
+            },
+
+            {
+                when: {
+                    situation: ["cecite", "ASD"],
+                    school: "oui",
+                    hosting: "non",
+                },
+                redirect: "/services/cjes-cecite",
+            },
+
+        ];
+
+        function ruleIsCompatible(rule, data) {
+            return Object.entries(rule.when).every(([key, expected]) => {
+                const actual = data[key];
+                console.log(`Checking rule key="${key}": expected=`, expected, " actual=", actual);
+                if (actual == null) return true;
+                if (Array.isArray(expected) && Array.isArray(actual)) {
+                    return actual.some(a => expected.includes(a));
+                }
+                return Array.isArray(expected) ?
+                    expected.includes(actual) :
+                    actual === expected;
+            });
+        }
+
+        function resolveCandidates(data) {
+            return ROUTING_RULES.filter(rule =>
+                ruleIsCompatible(rule, data)
+            );
+        }
+
+        function resolveService(data) {
+            const candidates = ROUTING_RULES.filter(r =>
+                ruleIsCompatible(r, data)
+            );
+
+            console.log("Candidates:", candidates);
+
+            // 1. terminal rule wins immediately
+            const terminal = candidates.find(r => r.terminal);
+            if (terminal) return terminal.redirect;
+
+            // 2. unique remaining candidate
+            if (candidates.length === 1) {
+                return candidates[0].redirect;
+            }
+
+            // 3. still ambiguous
+            return null;
+        }
+
         function showStep(index) {
             steps.forEach((step, i) => step.classList.toggle("active", i === index));
             currentStep = index;
         }
 
-        // Evaluate strict IRSA routing
-        function resolveService() {
-            const fd = new FormData(form);
-
-            const age = fd.get("age");
-            const sensory = fd.get("sensory");
-            const ASD = fd.get("ASD");
-            const poly = fd.get("poly");
-            const school = fd.get("school");
-            const hosting = fd.get("hosting");
-
-            console.log("Form data:", {
-                age, sensory, ASD, poly, school, hosting
-            });
-            // --- SORTIES IMMÉDIATES ------------------------------------
-
-            if (age === "moins-3") {
-                return SERVICES.creche;
-            }
-
-            if (age === "21plus") {
-                return SERVICES.aubier;
-            }
-
-            // Sécurité : si on ne connaît pas la déficience sensorielle
-            if (!SERVICES.che[sensory]) {
-                return null;
-            }
-
-            // --- SERVICES ENFANTS / JEUNES -----------------------------
-
-            // CHE : pas de TSA + hébergement + cadre scolaire
-            if (ASD === "non" && hosting === "oui" && school === "oui") {
-                return SERVICES.che[sensory];
-            }
-
-            // CJENS : TSA + polyhandicap + pas d’hébergement + pas de scolarité
-            if (
-                ASD === "oui" &&
-                poly === "oui" &&
-                hosting === "non" &&
-                school === "non"
-            ) {
-                return SERVICES.cjens[sensory];
-            }
-
-            // CJES : TSA (autres situations)
-            if (ASD === "oui") {
-                return SERVICES.cjes[sensory];
-            }
-
-            // --- AUCUN PARCOURS STRICT ---------------------------------
-            return null;
-        }
-
+        const form = document.getElementById("questionnaire-form");
+        const steps = Array.from(form.querySelectorAll('fieldset'));
+        let currentStep = 0;
 
         // Navigation handling
         form.addEventListener("click", (e) => {
+
             const btn = e.target.closest("[data-action]");
-            let url;
 
             if (!btn) return;
 
+            const fd = new FormData(form);
+            const data = {};
+            for (const pair of fd.entries()) {
+                console.log(`FormData entries ${pair[0]}: ${pair[1]}`);
+                if (pair[0].endsWith("[]")) {
+                    const key = pair[0].slice(0, -2);
+                    if (!data[key]) data[key] = [];
+                    data[key].push(pair[1]);
+                } else {
+                    data[pair[0]] = pair[1] || null;
+                }
+            }
+
+            console.log("Form data:", data);
             const action = btn.dataset.action;
 
-            if (action === "next") {
+            let url;
+
+            if (action === "start") {
+                showStep(1);
+            } else if (action === "next") {
                 const radios = steps[currentStep].querySelectorAll("input");
                 const hasAnswer = Array.from(radios).some(r => r.checked);
                 if (!hasAnswer) return;
-                url = resolveService();
+                url = resolveService(data);
                 console.log("Resolved URL:", url);
                 if (url) {
                     console.log("Navigating to:", url);
-                    window.location.href = url;
+                    // window.location.href = url;
                 } else {
                     showStep(currentStep + 1);
                 }
             } else if (action === "prev") {
                 if (currentStep > 0) showStep(currentStep - 1);
             } else if (action === "finish") {
-                const url = resolveService();
-                window.location.href = url || "/services";
+                url = resolveService(data);
+                console.log("Finished, navigating to:", url);
+
+                // window.location.href = url || "/services";
             }
 
         });
