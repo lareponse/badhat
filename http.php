@@ -3,26 +3,50 @@
 const CSRF_KEY = '_csrf_token';
 
 
-// return: clean URI path string
-function http_in(int $max_decode = 9): string
+// Sanitize the inbound HTTP request URI
+function http_no(int $max_decode = 9, ?callable $csrf = null, array $forbidden = ['..']): ?string
 {
-    // CSRF check
-    !empty($_POST) && function_exists('csrf_validate') && !csrf_validate() && http_out(403, 'Invalid CSRF token.', ['Content-Type' => 'text/plain; charset=utf-8']);
+  if ($csrf && !empty($_POST) && $csrf($_POST) === false) {
+    http_out(403, 'Invalid CSRF token.', ['Content-Type' => 'text/plain; charset=utf-8']);
+  }
 
-    $coded = $_SERVER['REQUEST_URI'] ?? '';
-    do {
-        $uri_path = rawurldecode($coded);
-    } while ($max_decode-- > 0 && $uri_path !== $coded && ($coded = $uri_path));
+  $coded = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) ?: '';
 
-    $max_decode ?: throw new BadMethodCallException('Path decoding loop reached suspicious limit', 400);
+  // Safe repeated URL decoding
+  do {
+    $uri_path = rawurldecode($coded);
+  } while ($max_decode-- > 0 && $uri_path !== $coded && ($coded = $uri_path));
 
-    while (strpos($uri_path, '//') !== false)
-        $uri_path = str_replace('//', '/', $uri_path);
+  if ($max_decode <= 0)
+    return null;
 
-    $uri_path = trim($uri_path, '/');
+  foreach($forbidden as $s)
+    if (strpos($uri_path, $s) !== false)
+      return null;
 
-    return $uri_path ?: basename($_SERVER['SCRIPT_NAME'], '.php');
+  return $uri_path;
 }
+
+// Normalize an inbound HTTP path and extract its representation suffix.
+function http_in(string $safe_path, string $accept = 'html', string $default = 'index'): array
+{
+  while (strpos($safe_path, '//') !== false)
+    $safe_path = str_replace('//', '/', $safe_path);
+
+  $uri_path = trim($safe_path, '/');
+
+  $last_slash = strrpos($uri_path, '/');
+  $last_dot = strrpos($uri_path, '.');
+  if ($last_dot !== false && $last_dot > ($last_slash === false ? 0 : $last_slash + 1)) {
+    return [
+      substr($uri_path, 0, $last_dot),
+      substr($uri_path, $last_dot + 1)
+    ];
+  }
+
+  return [$uri_path ?: $default, $accept];
+}
+
 
 // http response, side effect: exits
 function http_out(int $status, string $body, array $headers = []): void
