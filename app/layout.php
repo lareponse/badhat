@@ -64,7 +64,7 @@
 </head>
 
 <body>
-    <a href="#main" class="skip-link">Aller au contenu principal</a>
+    <a href="#main" class="skip-link visually-hidden">Aller au contenu principal</a>
     <?php include('app/a11y.html'); ?>
 
     <header role="banner">
