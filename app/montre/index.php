@@ -1,3 +1,7 @@
+<?php
+$statistics = qp('SELECT label, value FROM `statistics`')->fetchAll(PDO::FETCH_KEY_PAIR);
+?>
+
 <img src="/ui/blob/blob_home_top_right.svg" alt="decorative blob shape" class="blob" id="blob_home_top_right" aria-hidden="true">
 
 <section class="tight" id="home-hero" aria-labelledby="hero-heading" lang="fr">
@@ -376,47 +380,14 @@
 
 <section class="tight" aria-labelledby="stats-heading" lang="fr">
     <h2 id="stats-heading">L'IRSA en quelques chiffres</h2>
-
     <ul class="stats-list">
-        <li>
-            <strong>600+</strong>
-            <span>Personnes accompagnées chaque année</span>
-        </li>
 
-        <li>
-            <strong>300+</strong>
-            <span>Professionnels engagés</span>
-        </li>
-
-        <li>
-            <strong>4</strong>
-            <span>Établissements scolaires spécialisés</span>
-        </li>
-
-        <li>
-            <strong>10</strong>
-            <span>Services et asbl annexes</span>
-        </li>
-
-        <li>
-            <strong>2</strong>
-            <span>Lieux de vie pour enfants et jeunes</span>
-        </li>
-
-        <li>
-            <strong>1835</strong>
-            <span>Depuis</span>
-        </li>
-
-        <li>
-            <strong>15</strong>
-            <span>Moyenne d'enfants réintégrés dans l'enseignement traditionnel par an</span>
-        </li>
-
-        <li>
-            <strong>5</strong>
-            <span>Hectares de parc</span>
-        </li>
+        <?php foreach ($statistics as $label => $value): ?>
+            <li>
+                <strong><?= $value ?></strong>
+                <span><?= $label ?></span>
+            </li>
+        <?php endforeach; ?>
     </ul>
 </section>
 

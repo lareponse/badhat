@@ -92,31 +92,11 @@ CREATE TABLE `page` (
 -- --------------------------------------------------------
 -- Table `statistics`
 -- --------------------------------------------------------
-CREATE TABLE `statistics` (
-  `id` INT AUTO_INCREMENT PRIMARY KEY,
-  `label` VARCHAR(150) NOT NULL,
-  `value` VARCHAR(50) NOT NULL,
-  `sort_order` INT DEFAULT 0,                 -- Manual display order
-  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `enabled_at` DATETIME DEFAULT NULL,         -- NULL = not featured
-  `revoked_at` DATETIME DEFAULT NULL          -- Soft-delete timestamp
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 
 -- --------------------------------------------------------
 -- Table `mime_type`
 -- --------------------------------------------------------
-CREATE TABLE `mime_type` (
-  `id` INT AUTO_INCREMENT PRIMARY KEY,
-  `type` VARCHAR(50) NOT NULL UNIQUE,         -- e.g., image/png
-  `max_size` INT DEFAULT 50000000,            -- Max size in bytes (default 50 MB)
-  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `enabled_at` DATETIME DEFAULT NULL,         -- NULL = not allowed
-  `revoked_at` DATETIME DEFAULT NULL          -- Soft-delete timestamp
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
 
 -- --------------------------------------------------------
 -- Table `media` (WCAG-aware)
@@ -162,24 +142,6 @@ CREATE TABLE `tag` (
 INSERT INTO `tag` (`name`, `parent_id`) VALUES ('organization', NULL), ('service', NULL);
 
 -- --------------------------------------------------------
--- organization (references tag)
--- --------------------------------------------------------
-CREATE TABLE `organization` (
-  `id` INT AUTO_INCREMENT PRIMARY KEY,
-  `name` VARCHAR(150) NOT NULL,
-  `logo` VARCHAR(255) DEFAULT NULL,
-  `url` VARCHAR(255) DEFAULT NULL,
-  `description` TEXT DEFAULT NULL,
-  `tag_id` INT NOT NULL,                        -- child of 'organization' root
-  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `enabled_at` DATETIME DEFAULT NULL,           -- NULL = private
-  `revoked_at` DATETIME DEFAULT NULL,           -- Soft-delete timestamp
-  CONSTRAINT `fk_organization_tag`
-    FOREIGN KEY (`tag_id`) REFERENCES `tag`(`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
 -- service (references tag)
 -- --------------------------------------------------------
 CREATE TABLE `service` (
@@ -198,5 +160,4 @@ CREATE TABLE `service` (
 
 -- Helpful indexes
 CREATE INDEX `ix_tag_parent`     ON `tag`(`parent_id`);
-CREATE INDEX `ix_org_tag`        ON `organization`(`tag_id`);
 CREATE INDEX `ix_service_tag`    ON `service`(`tag_id`);

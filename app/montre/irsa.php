@@ -1,10 +1,13 @@
+<?php
+
+$events = qp('SELECT * FROM `timeline` ORDER BY `event_year` ASC')->fetchAll(PDO::FETCH_ASSOC);
+$intro = qp('SELECT * FROM `page` WHERE `slug` = ?', ['irsa-intro'])->fetch(PDO::FETCH_ASSOC);
+$oa = qp('SELECT * FROM `page` WHERE `slug` = ?', ['irsa-oa'])->fetch(PDO::FETCH_ASSOC);
+
+?>
 <header>
-    <h1><span class="tight">L'IRSA : une histoire qui dure !</span></h1>
-    <div class="tight">
-        <p>Depuis 1835, l'IRSA accompagne enfants, jeunes et adultes atteints de déficience auditive, visuelle ou multiple.</p>
-        <p>Situé à Uccle, l'institut offre un accompagnement global : scolarité, soins, hébergement, activités éducatives, guidance familiale, etc.</p>
-        <p>Chaque personne est accueillie avec une attention particulière à ses besoins, son rythme et son projet de vie.</p>
-    </div>
+    <h1><span class="tight"><?= $intro['label']; ?></span></h1>
+    <div class="tight"><?= $intro['content']; ?></div>
 </header>
 <section class="tight" aria-labelledby="timeline-heading">
     <h2 id="timeline-heading" class="visually-hidden">Frise chronologique de l’IRSA</h2>
@@ -19,26 +22,16 @@
                 </figure>
             </article>
         <?php endforeach; ?>
-        
+
     </div>
 
 </section>
 
-
 <!-- Organisme d'Administration -->
 <section class="oa" aria-labelledby="oa-heading">
     <div class="tight">
-
-        <h2 id="oa-heading">Notre Organisme d'Administration</h2>
-        <p>
-            L'IRSA est administré par un Organisme d'Administration (OA), composé de femmes et d'hommes issus du monde associatif,
-            professionnel, social et éducatif.
-        </p>
-        <p>
-            Ces membres bénévoles assurent la gestion stratégique, éthique et financière de l'institution.
-            Ils veillent à la continuité des missions, à la qualité de l'accompagnement et au respect des valeurs fondamentales de l'IRSA.
-        </p>
-
+        <h2 id="oa-heading"><?= $oa['label']; ?></h2>
+        <?= $oa['content']; ?>
         <p class="cta">
             <a href="#" class="btn">Voir la composition complète de l'OA</a>
         </p>
