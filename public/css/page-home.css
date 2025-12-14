@@ -37,21 +37,21 @@ section[aria-labelledby="questionnaire-heading"] {
 }
 
 section[aria-labelledby="questionnaire-heading"] h2,
-section[aria-labelledby="questionnaire-heading"] legend {
+{
     font-size: 2.3rem;
 }
 
 section[aria-labelledby="questionnaire-heading"] fieldset {
-    display:none;
-    border:0;
-    
+    display: none;
+    border: 0;
+
 }
 
 section[aria-labelledby="questionnaire-heading"] fieldset.active {
     display: block;
     display: flex;
-        flex-direction: column;
-        gap: 2rem;
+    flex-direction: column;
+    gap: 2rem;
 }
 
 section[aria-labelledby="questionnaire-heading"] p {
@@ -90,14 +90,14 @@ section[aria-labelledby="stats-heading"] {
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
     gap: 2rem;
     margin-top: 2rem;
-    list-style-type:none;
+    list-style-type: none;
 }
 
 .stats-list strong {
     font-size: 1.5rem;
     font-weight: 700;
     color: var(--color-text-primary);
-    display:block;
+    display: block;
 }
 
 .stats-list span {
@@ -140,5 +140,3 @@ section[aria-labelledby="don-heading"] img {
         padding: 4rem 2rem;
     }
 }
-
-

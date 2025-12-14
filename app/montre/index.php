@@ -332,36 +332,44 @@
     <div class="card-grid">
         <!-- Éducation spécialisée -->
         <article>
-            <figure>
-                <img src="/ui/home/service_education.jpg" alt="Salle de classe avec des élèves attentifs et un enseignant">
-            </figure>
+            <a href="/ecoles">
+                <figure>
+                    <img src="/ui/home/service_education.jpg" alt="Salle de classe avec des élèves attentifs et un enseignant">
+                </figure>
 
-            <h3>Éducation spécialisée</h3>
-            <a href="/ecoles">Vers Écoles</a>
+                <h3>Éducation spécialisée</h3>
+                <span class="cta">Vers Écoles</span>
 
-            <p>Un enseignement sur mesure, de la crèche au secondaire.</p>
+                <p>Un enseignement sur mesure, de la crèche au secondaire.</p>
+            </a>
+
         </article>
 
         <!-- Hébergements -->
         <article>
-            <figure>
-                <img src="/ui/home/service_hebergement.jpg" alt="Chambre aménagée dans un centre d'hébergement">
-            </figure>
+            <a href="/hebergements">
+                <figure>
+                    <img src="/ui/home/service_hebergement.jpg" alt="Chambre aménagée dans un centre d'hébergement">
+                </figure>
 
-            <h3>Hébergements</h3>
-            <a href="/hebergements">Vers centres d'hébergement</a>
+                <h3>Hébergements</h3>
+                <span class="cta">Vers centres d'hébergement</span>
 
-            <p>Des lieux de vie pour accompagner l'autonomie et soulager les familles.</p>
+
+                <p>Des lieux de vie pour accompagner l'autonomie et soulager les familles.</p>
+            </a>
         </article>
 
         <!-- Centres de jour -->
         <article>
-            <figure>
-                <img src="/ui/home/service_centres_jour.jpg" alt="Atelier artistique avec plusieurs personnes en activité">
-            </figure>
-            <h3>Centres de jour</h3>
-            <a href="/centres-jour">Vers centres de jour</a>
-            <p>Un cadre structuré et bienveillant où chaque personne bénéficie d'activités et de soins répondant à ses besoins.</p>
+            <a href="/centres-jour">
+                <figure>
+                    <img src="/ui/home/service_centres_jour.jpg" alt="Atelier artistique avec plusieurs personnes en activité">
+                </figure>
+                <h3>Centres de jour</h3>
+                <span class="cta">Vers centres de jour</span>
+                <p>Un cadre structuré et bienveillant où chaque personne bénéficie d'activités et de soins répondant à ses besoins.</p>
+            </a>
         </article>
     </div>
 </section>
