@@ -105,7 +105,7 @@
                     <h3 id="coords-heading">Coordonnées</h3>
                     <address>
                         <p><strong>IRSA – Institut Royal pour Sourds et Aveugles</strong></p>
-                        <p>Chaussée de Waterloo 150<br>1180 Uccle – Belgique</p>
+                        <p>Chaussée de Waterloo 1502-1508<br>1180 Uccle – Belgique</p>
                     </address>
                 </article>
 

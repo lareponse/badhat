@@ -369,11 +369,7 @@ address {
     width: 100%;
     max-width: 300px;
     aspect-ratio: 1 / 1;
-    /* 300x300 square */
     object-fit: cover;
     display: block;
     margin-inline: auto;
-    /* centers smaller images */
-    border-radius: 0.5rem;
-    /* optional */
 }
