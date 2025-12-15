@@ -306,7 +306,7 @@ $statistics = qp('SELECT label, value FROM `statistics`')->fetchAll(PDO::FETCH_K
                 console.log("Resolved URL:", url);
                 if (url) {
                     console.log("Navigating to:", url);
-                    // window.location.href = url;
+                    window.location.href = url;
                 } else {
                     showStep(currentStep + 1);
                 }
@@ -316,7 +316,7 @@ $statistics = qp('SELECT label, value FROM `statistics`')->fetchAll(PDO::FETCH_K
                 url = resolveService(data);
                 console.log("Finished, navigating to:", url);
 
-                // window.location.href = url || "/services";
+                window.location.href = url || "/services";
             }
 
         });
