@@ -1,9 +1,5 @@
-
-
 section[aria-labelledby$="heading"] h2 {
-    color: var(--color-accent-primary);
-    margin-bottom: 1rem;
-    text-align: center;
+    font-weight: 400;
 }
 
 /* Boutons don */
@@ -35,13 +31,21 @@ section[aria-labelledby$="heading"] h2 {
     text-decoration: underline;
 }
 
+section[aria-labelledby="autres-heading"] h2 {
+    text-align: center;
+}
 
-/* Cartes spécifiques à la section "Autres moyens" */
-section[aria-labelledby="autres-heading"] .card-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(260px, 1fr));
-    gap: 2rem;
-    margin-top: 2rem;
+
+@media screen and (min-width:64rem) {
+    section[aria-labelledby="autres-heading"] .card-grid {
+        display: grid;
+        grid-template-columns: repeat(2,
+                minmax(min(380px, 100%), 1fr));
+        gap: 2rem 2.5rem;
+        margin-top: 2rem;
+        max-width: 800px;
+        margin:0 auto;
+    }
 }
 
 section[aria-labelledby="autres-heading"] .card-grid article {
@@ -55,16 +59,28 @@ section[aria-labelledby="autres-heading"] .card-grid article {
     justify-content: space-between;
 }
 
+section[aria-labelledby="autres-heading"] .card-grid article a {
+    padding:0.5rem
+}
+
 section[aria-labelledby="autres-heading"] .card-grid article:hover {
     transform: translateY(-4px);
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
 }
 
-section[aria-labelledby="autres-heading"] .card-grid h3 {
-    font-size: 1.2rem;
+section .card-grid h3 {
     font-weight: 700;
     color: var(--color-text-primary);
     margin-bottom: 0.75rem;
+    justify-content: space-between;
+    color: var(--color-text);
+    min-height: initial;
+}
+
+section .card-grid h3 span:first-child {
+    font-size: 1rem;
+    color: grey;
+    font-weight: normal;
 }
 
 section[aria-labelledby="autres-heading"] .card-grid p {
@@ -74,12 +90,11 @@ section[aria-labelledby="autres-heading"] .card-grid p {
 }
 
 section[aria-labelledby="autres-heading"] .card-grid a {
-    background: var(--btn-secondary-bg);
-    color: var(--btn-secondary-color);
-}
-
-section[aria-labelledby="autres-heading"] .card-grid a:hover {
-    background: var(--color-accent-primary);
+    background: var(--color-accent-primary-light);
+    color: var(--color-text-primary);
+    margin-bottom: 1rem;
+    text-align: center;
+    font-size: 1.2rem;
 }
 
 /* FAQ */
@@ -134,4 +149,37 @@ section[aria-labelledby="faq-heading"] details p {
     color: var(--color-text-secondary);
     font-size: 0.95rem;
     line-height: 1.5;
+}
+
+section[aria-labelledby] {
+    min-height: 88vh;
+    background-repeat: no-repeat;
+    background-size: contain;
+}
+
+section[aria-labelledby="mensuels-heading"] {
+    background-image: url('/ui/blob/blob_ecoles_middle_left.svg');
+    background-position: 0 0;
+    background-repeat: no-repeat;
+    background-size: contain;
+}
+
+section[aria-labelledby="faq-heading"] {
+    background-image: url('/ui/blob/blob_don_bottom_left.svg');
+    background-position: 0 100%;
+
+}
+
+section[aria-labelledby] footer {
+    background-color: var(--color-accent-primary-light);
+}
+
+section[aria-labelledby] footer a {
+    text-align: center;
+    color: var(--color-text-primary);
+    font-size: 1.4rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.7rem;
 }
