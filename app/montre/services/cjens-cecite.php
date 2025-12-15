@@ -145,7 +145,7 @@
         </article>
 
         <article>
-            <a href="/contact">Vers le formulaire de contact</a>
+            <a href="/contact" class="btn btn-primary">Vers le formulaire de contact</a>
         </article>
 
     </div>
@@ -156,7 +156,7 @@
 </section>
 <?php
 return function ($this_html, $args) {
-    [$ret, $page] = ob_ret_get('app/layout.php', ['main' => $this_html, 'css' => ['page-ecoles']], IO_EXTRACT);
+    [$ret, $page] = ob_ret_get('app/layout.php', ['main' => $this_html, 'css' => ['page-ecole', 'page-services']], IO_EXTRACT);
 
     return $page;
 };

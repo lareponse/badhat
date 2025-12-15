@@ -108,7 +108,7 @@
         </article>
 
         <article>
-            <a href="/contact">Vers le formulaire de contact</a>
+            <a href="/contact" class="btn btn-primary">Vers le formulaire de contact</a>
         </article>
     </div>
 </section>
