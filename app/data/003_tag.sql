@@ -1,4 +1,3 @@
--- =========================================================
 -- TAG (generic, semantic, i18n-safe)
 -- =========================================================
 
@@ -11,8 +10,10 @@ CREATE TABLE tag (
   slug VARCHAR(64) NOT NULL UNIQUE,
   sort_order SMALLINT DEFAULT NULL,
 
-  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  updated_at DATETIME NULL ON UPDATE CURRENT_TIMESTAMP
+  `enabled_at` DATETIME DEFAULT NULL,
+  `revoked_at` DATETIME DEFAULT NULL,
+  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB
   DEFAULT CHARSET=utf8mb4
   COLLATE=utf8mb4_general_ci;

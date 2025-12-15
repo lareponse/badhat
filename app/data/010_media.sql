@@ -2,10 +2,11 @@ CREATE TABLE `mime_type` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `type` VARCHAR(50) NOT NULL UNIQUE,         -- e.g., image/png
   `max_size` INT DEFAULT 5,            -- Max size in mbyte (default 5 MB)
+  
+  `enabled_at` DATETIME DEFAULT NULL,
+  `revoked_at` DATETIME DEFAULT NULL,
   `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
   `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `enabled_at` DATETIME DEFAULT NULL,         -- NULL = not allowed
-  `revoked_at` DATETIME DEFAULT NULL          -- Soft-delete timestamp
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 
