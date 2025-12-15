@@ -141,6 +141,9 @@
     --color-border: #D5DAED;
     --color-hover: rgba(0, 0, 0, 0.05);
     --color-focus: var(--color-accent-primary);
+
+    --size-header: 9rem;
+    --size-card-radius: 1rem;
 }
 
 * {
@@ -266,18 +269,18 @@ img {
         margin-right: auto;
     }
 }
-
+#menu_filler {
+    height: calc(var(--size-header) + 4rem);
+}
 /* Main headers */
 body>header {
     position: fixed;
-    top: 5px;
+    height: var(--size-header);
+    top: 0px;
     width: 100%;
     z-index:1;
 }
 
-main>header {
-    margin: 10rem 0 3rem 0;
-}
 
 main>header h1 {
     background: var(--color-accent-primary-light);
@@ -373,3 +376,4 @@ address {
     display: block;
     margin-inline: auto;
 }
+
