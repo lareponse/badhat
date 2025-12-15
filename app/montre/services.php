@@ -10,8 +10,8 @@
         <article>
             <h3>Centre d'hébergement pour enfant :</h3>
             <ul>
-                <li><a href="#">Avec déficience auditive</a></li>
-                <li><a href="#">Avec déficience visuelle</a></li>
+                <li><a href="/services/che-surdite">Avec déficience auditive</a></li>
+                <li><a href="/services/che-cecite">Avec déficience visuelle</a></li>
                 <li><a href="#">Avec troubles autistiques</a></li>
             </ul>
         </article>
@@ -35,16 +35,16 @@
             <div>
                 <h4>Scolarisé :</h4>
                 <ul>
-                    <li><a href="#">Avec déficience auditive</a></li>
-                    <li><a href="#">Avec déficience visuelle</a></li>
+                    <li><a href="/services/cjes-surdite">Avec déficience auditive</a></li>
+                    <li><a href="/services/cjes-cecite">Avec déficience visuelle</a></li>
                     <li><a href="#">Avec troubles autistiques</a></li>
                 </ul>
             </div>
             <div>
                 <h4>Non-scolarisé :</h4>
                 <ul>
-                    <li><a href="#">Avec déficience auditive</a></li>
-                    <li><a href="#">Avec déficience visuelle</a></li>
+                    <li><a href="/services/cjens-surdite">Avec déficience auditive</a></li>
+                    <li><a href="/services/cjens-cecite">Avec déficience visuelle</a></li>
                     <li><a href="#">Avec troubles autistiques</a></li>
                 </ul>
             </div>
@@ -56,7 +56,7 @@
         <div class="link-grid">
 
             <ul>
-                <li><a href="#">Avec déficience visuelle</a></li>
+                <li><a href="/services/aubier">Avec déficience visuelle</a></li>
             </ul>
         </div>
     </article>
