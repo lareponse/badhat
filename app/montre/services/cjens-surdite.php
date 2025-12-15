@@ -24,14 +24,22 @@
             <p>Centre de jour pour enfants non scolarisés</p>
         </article>
     </div>
+</section>
 
-    <article aria-labelledby="cjens-public-heading">
-        <h3 id="cjens-public-heading">Public</h3>
-        <p>
-            Jeunes atteints de surdité ou de troubles auditifs sévères, parfois associés à d’autres
-            difficultés (troubles du langage, retard global, troubles moteurs ou cognitifs).
-        </p>
-    </article>
+
+<section class="tight" aria-labelledby="environnement-heading">
+    <h2 id="environnement-heading" class="visually-hidden">Notre environnement</h2>
+    <figure class="banner-gallery">
+        <img src="/ui/banners/accueil_1.webp" alt="">
+        <img src="/ui/banners/accueil_2.webp" alt="Enfant accompagné dans une activité de communication : gestes, supports visuels ou langue des signes">
+        <img src="/ui/banners/accueil_3.webp" alt="">
+        <img src="/ui/banners/accueil_4.webp" alt="">
+    </figure>
+</section>
+
+
+<section class="tight" aria-labelledby="che-cecite-introduction-heading">
+    <h2 id="che-cecite-introduction-heading" class="visually-hidden">Introduction</h2>
 
     <p>
         Le CJENS Surdité accueille des jeunes sourds ou malentendants qui nécessitent un accompagnement
@@ -48,6 +56,14 @@
         Chaque journée est pensée pour stimuler la compréhension, l’expression et les interactions,
         à travers une approche bienveillante et adaptée au rythme de chaque enfant.
     </p>
+
+    <article aria-labelledby="cjens-public-heading">
+        <h3 id="cjens-public-heading">Public</h3>
+        <p>
+            Jeunes atteints de surdité ou de troubles auditifs sévères, parfois associés à d’autres
+            difficultés (troubles du langage, retard global, troubles moteurs ou cognitifs).
+        </p>
+    </article>
 </section>
 
 <section class="tight" aria-labelledby="environnement-heading">

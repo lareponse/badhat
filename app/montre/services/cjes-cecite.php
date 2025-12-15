@@ -35,13 +35,13 @@
 
 <section class="tight" aria-labelledby="environnement-heading">
     <h2 id="environnement-heading" class="visually-hidden">Notre environnement</h2>
-    <figure>
-        <img src="" alt="Espace d’accueil lumineux et structuré, pensé pour les repères de la journée">
-        <img src="" alt="Atelier de groupe favorisant la communication : jeux, échanges, gestes et pictogrammes">
-        <img src="" alt="Activité motrice ou sensorielle encadrée par des professionnels">
+    <figure class="banner-gallery">
+        <img src="/ui/banners/accueil_1.webp" alt="">
+        <img src="/ui/banners/accueil_2.webp" alt="Enfant accompagné dans une activité de communication : gestes, supports visuels ou langue des signes">
+        <img src="/ui/banners/accueil_3.webp" alt="">
+        <img src="/ui/banners/accueil_4.webp" alt="">
     </figure>
 </section>
-
 <section class="tight" aria-labelledby="cjes-dv-public-heading">
     <h2 id="cjes-dv-public-heading">Public accueilli</h2>
     <ul>

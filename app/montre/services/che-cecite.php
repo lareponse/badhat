@@ -24,6 +24,22 @@
             <p>Centre d’Hébergement pour Enfants</p>
         </article>
     </div>
+</section>
+
+
+<section class="tight" aria-labelledby="environnement-heading">
+    <h2 id="environnement-heading" class="visually-hidden">Notre environnement</h2>
+    <figure class="banner-gallery">
+        <img src="/ui/banners/accueil_1.webp" alt="">
+        <img src="/ui/banners/accueil_2.webp" alt="Enfant accompagné dans une activité de communication : gestes, supports visuels ou langue des signes">
+        <img src="/ui/banners/accueil_3.webp" alt="">
+        <img src="/ui/banners/accueil_4.webp" alt="">
+    </figure>
+</section>
+
+
+<section class="tight" aria-labelledby="che-cecite-introduction-heading">
+    <h2 id="che-cecite-introduction-heading" class="visually-hidden">Introduction</h2>
 
     <p>
         Le CHE – Cécité accueille des enfants et jeunes présentant une déficience visuelle,

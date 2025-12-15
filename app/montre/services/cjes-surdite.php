@@ -47,10 +47,11 @@
 
 <section class="tight" aria-labelledby="environnement-heading">
     <h2 id="environnement-heading" class="visually-hidden">Notre environnement</h2>
-    <figure>
-        <img src="" alt="Espace d’accueil CJES avec supports visuels et repères du quotidien">
-        <img src="" alt="Moment d’accompagnement et de co-intervention en contexte scolaire, communication visuelle">
-        <img src="" alt="Atelier en petit groupe : jeux, échanges et supports adaptés (pictogrammes, outils visuels)">
+    <figure class="banner-gallery">
+        <img src="/ui/banners/accueil_1.webp" alt="">
+        <img src="/ui/banners/accueil_2.webp" alt="Enfant accompagné dans une activité de communication : gestes, supports visuels ou langue des signes">
+        <img src="/ui/banners/accueil_3.webp" alt="">
+        <img src="/ui/banners/accueil_4.webp" alt="">
     </figure>
 </section>
 
