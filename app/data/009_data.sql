@@ -1,76 +1,101 @@
--- IRSA — PAGES and SECTIONS
+START TRANSACTION;
+
+-- IRSA — PAGES
 -- =========================================================
 INSERT INTO `page` (`id`, `slug`, `label`, `template`, `enabled_at`)
-VALUES
-(1, 'irsa',        'IRSA',        'default', CURRENT_TIMESTAMP),
-(2, 'irsa-ecoles', 'Les écoles',  'default', CURRENT_TIMESTAMP),
-(3, 'irsa-oa',     'Gouvernance', 'default', CURRENT_TIMESTAMP);
+SELECT v.id, v.slug, v.label, v.template, v.enabled_at
+FROM (
+  SELECT 1 AS id, 'irsa'        AS slug, 'IRSA'        AS label, 'default' AS template, CURRENT_TIMESTAMP AS enabled_at
+  UNION ALL
+  SELECT 2,        'irsa-ecoles',        'Les écoles',          'default',           CURRENT_TIMESTAMP
+  UNION ALL
+  SELECT 3,        'irsa-oa',             'Gouvernance',        'default',           CURRENT_TIMESTAMP
+) v
+WHERE NOT EXISTS (
+  SELECT 1 FROM page p WHERE p.slug = v.slug
+);
 
 
-INSERT INTO `section`
-(`id`, `slug`, `label`, `content`, `created_at`, `updated_at`)
-VALUES
-(
-  1,
-  'irsa-intro',
-  'L\'IRSA : une histoire qui dure !',
-  '<p>Depuis 1835, l\'IRSA accompagne enfants, jeunes et adultes atteints de déficience auditive, visuelle ou multiple.</p>
-   <p>Situé à Uccle, l\'institut offre un accompagnement global : scolarité, soins, hébergement, activités éducatives, guidance familiale, etc.</p>
-   <p>Chaque personne est accueillie avec une attention particulière à ses besoins, son rythme et son projet de vie.</p>',
-  '2025-12-14 21:01:05',
-  '2025-12-14 21:04:31'
-),
-(
-  2,
-  'page-irsa-ecole',
-  'Les écoles de l\'IRSA',
-  '<p>L\'IRSA propose un parcours scolaire complet pour les enfants et adolescents atteints de déficience auditive, visuelle ou avec troubles associés.</p>
-   <p>Chaque établissement est adapté à un type de public spécifique, avec un accompagnement pédagogique et thérapeutique individualisé.</p>',
-  '2025-12-14 21:01:05',
-  '2025-12-14 21:01:05'
-),
-(
-  3,
-  'irsa-oa',
-  'Notre Organisme d\'Administration',
-  '<p>L\'IRSA est administré par un Organisme d\'Administration (OA), composé de femmes et d\'hommes issus du monde associatif, professionnel, social et éducatif.</p>
-   <p>Ces membres bénévoles assurent la gestion stratégique, éthique et financière de l\'institution.</p>',
-  '2025-12-14 21:05:11',
-  '2025-12-14 22:07:07'
+-- IRSA — SECTIONS
+-- =========================================================
+INSERT INTO `school` (`slug`, `label`, `enabled_at`)
+SELECT v.slug, v.label, v.enabled_at
+FROM (
+  SELECT
+    'secondaire-t1-t6-t7' AS slug,
+    'École secondaire spécialisée (T1–T6–T7)' AS label,
+    NOW() AS enabled_at
+  UNION ALL
+  SELECT
+    'fondamentale-t2-t6-t8',
+    'École fondamentale spécialisée (T2–T6–T8)',
+    NOW()
+  UNION ALL
+  SELECT
+    'fondamentale-t7',
+    'École fondamentale spécialisée – déficience auditive',
+    NOW()
+) v
+WHERE NOT EXISTS (
+  SELECT 1
+  FROM school s
+  WHERE s.slug = v.slug
 );
 
 
 
-INSERT INTO `organization_type` (`slug`) VALUES ('partner'),('donor'),('collaborator');
+
+-- Insert parent (if not already inserted)
+INSERT INTO `tag` (`slug`)
+VALUES ('organization_type');
+
+INSERT INTO `tag` (`parent_id`, `slug`)
+SELECT t.id, v.slug
+FROM `tag` t
+JOIN (
+  SELECT 'partner' AS slug
+  UNION ALL SELECT 'donor'
+  UNION ALL SELECT 'collaborator'
+) v
+WHERE t.slug = 'organization_type';
+
+
 
 -- IRSA — PARTNERS
 -- =========================================================
+-- Insert organizations (optional: make idempotent by slug)
+INSERT INTO organization (label, slug, url, logo, content, enabled_at)
+SELECT v.label, v.slug, v.url, v.logo, v.content, v.enabled_at
+FROM (
+  SELECT 'AVIQ' AS label, 'aviq' AS slug, 'https://www.aviq.be' AS url, 'aviq.png' AS logo, NULL AS content, NOW() AS enabled_at
+  UNION ALL SELECT 'CHS','chs','https://c-h-s.be/','chs.be.webp',NULL,NOW()
+  UNION ALL SELECT 'CETH','ceth','https://www.ceth.be','c_eth.png',NULL,NOW()
+  UNION ALL SELECT 'Fondation Roi Baudouin','fondation-roi-baudouin','https://www.kbs-frb.be/fr','fondation_roi_baudouin.png',NULL,NOW()
+  UNION ALL SELECT 'Fédération Wallonie-Bruxelles','federation-wallonie-bruxelles','https://www.federation-wallonie-bruxelles.be','federation_wallonie_bruxelles.png',NULL,NOW()
+  UNION ALL SELECT 'Fondation IRSA','fondation-irsa','https://www.irsa.be','fondation_irsa.png',NULL,NOW()
+  UNION ALL SELECT 'Fondation ISEE','fondation-isee','https://fondationisee.be','fondation_isee.svg',NULL,NOW()
+  UNION ALL SELECT 'Centres PMS','centres-pms','https://www.enseignement.be/index.php?page=28001','centres_pms.jpg',NULL,NOW()
+  UNION ALL SELECT 'ONE','one','https://www.one.be','one.png',NULL,NOW()
+  UNION ALL SELECT 'SHC','shc','https://shc.health.belgium.be','shc.png',NULL,NOW()
+  UNION ALL SELECT 'COCOF','cocof','https://ccf.brussels/','francophones_bruxelles.png',NULL,NOW()
+  UNION ALL SELECT 'Réseau Francophone','reseau-francophone','https://www.reseaudefrance.be','reseau_francophone.png',NULL,NOW()
+  UNION ALL SELECT 'Commune d’Uccle','commune-uccle','https://www.uccle.be','uccle.png',NULL,NOW()
+  UNION ALL SELECT 'UCLouvain','uclouvain','https://uclouvain.be','uc_louvain.png',NULL,NOW()
+) v
+WHERE NOT EXISTS (
+  SELECT 1 FROM organization o WHERE o.slug = v.slug
+);
 
-INSERT INTO `organization`
-(`label`, `slug`, `url`, `logo`, `content`, `enabled_at`)
-VALUES
-('AVIQ', 'aviq', 'https://www.aviq.be', 'aviq.png', NULL, NOW()),
-('CHS', 'chs', 'https://c-h-s.be/', 'chs.be.webp', NULL, NOW()),
-('CETH', 'ceth', 'https://www.ceth.be', 'c_eth.png', NULL, NOW()),
-('Fondation Roi Baudouin', 'fondation-roi-baudouin', 'https://www.kbs-frb.be/fr', 'fondation_roi_baudouin.png', NULL, NOW()),
-('Fédération Wallonie-Bruxelles', 'federation-wallonie-bruxelles', 'https://www.federation-wallonie-bruxelles.be', 'federation_wallonie_bruxelles.png', NULL, NOW()),
-('Fondation IRSA', 'fondation-irsa', 'https://www.irsa.be', 'fondation_irsa.png', NULL, NOW()),
-('Fondation ISEE', 'fondation-isee', 'https://fondationisee.be', 'fondation_isee.svg', NULL, NOW()),
-('Centres PMS', 'centres-pms', 'https://www.enseignement.be/index.php?page=28001', 'centres_pms.jpg', NULL, NOW()),
-('ONE', 'one', 'https://www.one.be', 'one.png', NULL, NOW()),
-('SHC', 'shc', 'https://shc.health.belgium.be', 'shc.png', NULL, NOW()),
-('COCOF', 'cocof', 'https://ccf.brussels/', 'francophones_bruxelles.png', NULL, NOW()),
-('Réseau Francophone', 'reseau-francophone', 'https://www.reseaudefrance.be', 'reseau_francophone.png', NULL, NOW()),
-('Commune d’Uccle', 'commune-uccle', 'https://www.uccle.be', 'uccle.png', NULL, NOW()),
-('UCLouvain', 'uclouvain', 'https://uclouvain.be', 'uc_louvain.png', NULL, NOW());
 
-INSERT INTO organization_organization_type
-(organization_id, organization_type_id)
+
+INSERT INTO tag_organization
+(organization_id, tag_id)
 SELECT
   o.id,
-  ot.id
+  t.id
 FROM organization o
-JOIN organization_type ot ON ot.name = 'partner'
+JOIN tag t
+  ON t.slug = 'partner'
 WHERE o.slug IN (
   'aviq',
   'chs',
@@ -89,17 +114,27 @@ WHERE o.slug IN (
 )
 AND NOT EXISTS (
   SELECT 1
-  FROM organization_organization_type oot
-  WHERE oot.organization_id = o.id
-    AND oot.organization_type_id = ot.id
+  FROM tag_organization to2
+  WHERE to2.organization_id = o.id
+    AND to2.tag_id = t.id
 );
+
 
 -- IRSA — ORGANIZATION
 -- =========================================================
 
 
 INSERT INTO `organization` (`label`, `slug`, `enabled_at`)
-VALUES('IRSA – Institut Royal pour Sourds et Aveugles', 'irsa', NOW());
+SELECT
+  'IRSA – Institut Royal pour Sourds et Aveugles',
+  'irsa',
+  NOW()
+WHERE NOT EXISTS (
+  SELECT 1
+  FROM organization o
+  WHERE o.slug = 'irsa'
+);
+
 
 
 -- =========================================================
@@ -210,8 +245,27 @@ WHERE cp.label = 'Accueil IRSA'
 -- =========================================================
 
 
-INSERT INTO school (id, slug, label, enabled_at)
-VALUES
-(1, 'secondaire-t1-t6-t7', 'École secondaire spécialisée (T1–T6–T7)', NOW()),
-(2, 'fondamentale-t2-t6-t8', 'École fondamentale spécialisée (T2–T6–T8)', NOW()),
-(3, 'fondamentale-t7', 'École fondamentale spécialisée – déficience auditive', NOW());
+INSERT INTO school (slug, label, enabled_at)
+SELECT v.slug, v.label, v.enabled_at
+FROM (
+  SELECT
+    'secondaire-t1-t6-t7' AS slug,
+    'École secondaire spécialisée (T1–T6–T7)' AS label,
+    NOW() AS enabled_at
+  UNION ALL SELECT
+    'fondamentale-t2-t6-t8',
+    'École fondamentale spécialisée (T2–T6–T8)',
+    NOW()
+  UNION ALL SELECT
+    'fondamentale-t7',
+    'École fondamentale spécialisée – déficience auditive',
+    NOW()
+) v
+WHERE NOT EXISTS (
+  SELECT 1
+  FROM school s
+  WHERE s.slug = v.slug
+);
+
+
+COMMIT;
