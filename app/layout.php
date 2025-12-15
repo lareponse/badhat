@@ -66,7 +66,7 @@
 <body>
     <a href="#main" class="skip-link visually-hidden">Aller au contenu principal</a>
     <?php include('app/a11y.html'); ?>
-
+    <div id="menu_filler"></div>
     <header role="banner">
         <nav role="navigation" class="tight">
             <h1>
