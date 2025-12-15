@@ -347,3 +347,24 @@ address {
     /* prevent text wrapping */
     border: 0;
 }
+
+.banner-gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+    max-width: 100%;
+    margin: 0;
+}
+
+.banner-gallery img {
+    width: 100%;
+    max-width: 300px;
+    aspect-ratio: 1 / 1;
+    /* 300x300 square */
+    object-fit: cover;
+    display: block;
+    margin-inline: auto;
+    /* centers smaller images */
+    border-radius: 0.5rem;
+    /* optional */
+}

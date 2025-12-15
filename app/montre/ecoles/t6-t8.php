@@ -39,10 +39,11 @@
 
 <section class="tight" aria-labelledby="galerie-heading">
     <h2 id="galerie-heading" class="visually-hidden">Galerie visuelle de l'école</h2>
-    <figure>
-        <img src="" alt="Enseignante aidant une élève dans une classe spécialisée">
-        <img src="" alt="Élèves levant la main dans une classe adaptée">
-        <img src="" alt="Bus scolaire adapté de l'IRSA">
+    <figure class="banner-gallery">
+        <img src="/ui/banners/accueil_1.webp" alt="">
+        <img src="/ui/banners/accueil_2.webp" alt="Enfant accompagné dans une activité de communication : gestes, supports visuels ou langue des signes">
+        <img src="/ui/banners/accueil_3.webp" alt="">
+        <img src="/ui/banners/accueil_4.webp" alt="">
     </figure>
 </section>
 

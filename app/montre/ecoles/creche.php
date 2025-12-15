@@ -34,10 +34,11 @@
 
 <section class="tight" aria-labelledby="environnement-heading">
     <h2 id="environnement-heading" class="visually-hidden">Notre environnement</h2>
-    <figure>
-        <img src="" alt="Bébé jouant avec des cubes en bois">
-        <img src="" alt="Jeune enfant manipulant des blocs d’éveil">
-        <img src="" alt="Bébé montant un module de jeu sensoriel">
+    <figure class="banner-gallery">
+        <img src="/ui/banners/accueil_1.webp" alt="">
+        <img src="/ui/banners/accueil_2.webp" alt="Enfant accompagné dans une activité de communication : gestes, supports visuels ou langue des signes">
+        <img src="/ui/banners/accueil_3.webp" alt="">
+        <img src="/ui/banners/accueil_4.webp" alt="">
     </figure>
 </section>
 

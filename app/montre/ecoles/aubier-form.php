@@ -35,24 +35,11 @@
 
     <section class="tight">
         <h3>Galerie d'images</h3>
-        <figure>
-            <div>
-                <label>Image 1 :</label>
-                <input type="file" name="image1">
-                <input type="text" name="image1_alt" value="Vue extérieure du bâtiment">
-            </div>
-
-            <div>
-                <label>Image 2 :</label>
-                <input type="file" name="image2">
-                <input type="text" name="image2_alt" value="Activité créative dans un espace commun">
-            </div>
-
-            <div>
-                <label>Image 3 :</label>
-                <input type="file" name="image3">
-                <input type="text" name="image3_alt" value="Groupe de résidents avec l'équipe éducative">
-            </div>
+        <figure class="banner-gallery">
+            <img src="/ui/banners/accueil_1.webp" alt="">
+            <img src="/ui/banners/accueil_2.webp" alt="Enfant accompagné dans une activité de communication : gestes, supports visuels ou langue des signes">
+            <img src="/ui/banners/accueil_3.webp" alt="">
+            <img src="/ui/banners/accueil_4.webp" alt="">
         </figure>
     </section>
 
