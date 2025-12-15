@@ -35,13 +35,13 @@
     </p>
 </section>
 
-
 <section class="tight" aria-labelledby="environnement-heading">
     <h2 id="environnement-heading" class="visually-hidden">Notre environnement</h2>
-    <figure>
-        <img src="" alt="Vue extérieure du bâtiment de L'Aubier, architecture moderne avec espaces verts">
-        <img src="" alt="Deux résidents participant à une activité créative dans un espace commun">
-        <img src="" alt="Groupe de résidents et membres de l'équipe posant ensemble lors d'un événement">
+    <figure class="banner-gallery">
+        <img src="/ui/banners/accueil_1.webp" alt="">
+        <img src="/ui/banners/accueil_2.webp" alt="Enfant accompagné dans une activité de communication : gestes, supports visuels ou langue des signes">
+        <img src="/ui/banners/accueil_3.webp" alt="">
+        <img src="/ui/banners/accueil_4.webp" alt="">
     </figure>
 </section>
 
@@ -84,7 +84,7 @@
         </article>
 
         <article>
-            <a href="/contact">Vers le formulaire de contact</a>
+            <a href="/contact" class="btn btn-primary">Vers le formulaire de contact</a>
         </article>
 
     </div>
@@ -95,7 +95,7 @@
 </section>
 <?php
 return function ($this_html, $args) {
-    [$ret, $page] = ob_ret_get('app/layout.php', ['main' => $this_html, 'css' => ['page-ecoles']], IO_EXTRACT);
+    [$ret, $page] = ob_ret_get('app/layout.php', ['main' => $this_html, 'css' => ['page-ecole', 'page-services']], IO_EXTRACT);
 
     return $page;
 };
