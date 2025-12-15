@@ -67,51 +67,63 @@
     <h2 id="services-heading">Nos services</h2>
     <div class="card-grid tight">
         <article>
-            <img src="images/ludotheque.jpg" alt="Ludothèque Oasis">
-            <h3>Ludothèque Oasis</h3>
-            <a href="#">Horaires et Infos</a>
-            <p>Un espace de jeux sensoriels à tous, internes ou externes.</p>
+            <a href="/services/ludotheque">
+                <img src="/ui/pages/service/ludotheque.jpg" alt="Ludothèque Oasis">
+                <h3>Ludothèque Oasis</h3>
+                <span class="cta">Horaires et Infos</span>
+                <p>Un espace de jeux sensoriels à tous, internes ou externes.</p>
+            </a>
         </article>
 
         <article>
-            <img src="images/chateau.jpg" alt="Location du Château d'Orangerie">
-            <h3>Location du Château d'Orangerie</h3>
-            <a href="#">Découvrir</a>
-            <p>Un lieu chaleureux et adapté disponible à la location pour vos formations, événements.</p>
+            <a href="/services/chateau-orangerie">
+                <img src="/ui/pages/service/chateau.jpg" alt="Location du Château d'Orangerie">
+                <h3>Location du Château d'Orangerie</h3>
+                <span class="cta">Découvrir</span>
+                <p>Un lieu chaleureux et adapté disponible à la location pour vos formations, événements.</p>
+            </a>
         </article>
 
         <article>
-            <img src="images/documentation.jpg" alt="Centre de documentation">
-            <h3>Centre de documentation</h3>
-            <a href="#">Horaires et Infos</a>
-            <p>Un enseignement sur mesure, du déjà acquis au secondaire.</p>
+            <a href="/services/documentation">
+                <img src="/ui/pages/service/documentation.jpg" alt="Centre de documentation">
+                <h3>Centre de documentation</h3>
+                <span class="cta">Horaires et Infos</span>
+                <p>Un enseignement sur mesure, du déjà acquis au secondaire.</p>
+            </a>
         </article>
 
         <article>
-            <img src="images/restaurant.jpg" alt="Restaurant d'application">
-            <h3>Restaurant d'application</h3>
-            <a href="#">Horaires et Infos</a>
-            <p>Un lieu de formation et d'évolution où les jeunes en insertion vous cuisinent pour vous.</p>
+            <a href="/services/restaurant-application">
+                <img src="/ui/pages/service/restaurant.jpg" alt="Restaurant d'application">
+                <h3>Restaurant d'application</h3>
+                <span class="cta">Horaires et Infos</span>
+                <p>Un lieu de formation et d'évolution où les jeunes en insertion vous cuisinent pour vous.</p>
+            </a>
         </article>
 
         <article>
-            <img src="images/conference.jpg" alt="Conférences">
-            <h3>Conférences</h3>
-            <a href="#">Découvrir</a>
-            <p>Événements pour sensibiliser et partager son expertise.</p>
+            <a href="/services/conference">
+                <img src="/ui/pages/service/conference.jpg" alt="Conférences">
+                <h3>Conférences</h3>
+                <span class="cta">Découvrir</span>
+                <p>Événements pour sensibiliser et partager son expertise.</p>
+            </a>
         </article>
 
         <article>
-            <img src="images/formations.jpg" alt="Formations">
-            <h3>Formations</h3>
-            <a href="#">Découvrir</a>
-            <p>Sessions animées par nos professionnels de terrain, adaptées aux besoins actuels.</p>
+            <a href="/services/formations">
+                <img src="/ui/pages/service/formations.jpg" alt="Formations">
+                <h3>Formations</h3>
+                <span class="cta">Découvrir</span>
+                <p>Sessions animées par nos professionnels de terrain, adaptées aux besoins actuels.</p>
+            </a>
         </article>
     </div>
 </section>
 
 <?php
 return function ($this_html, $args) {
-    [$ret, $page] = ob_ret_get('app/layout.php', ['main' => $this_html, 'css' => ['page-services']], IO_EXTRACT);
+    [$ret, $page] = ob_ret_get('app/layout.php', ['main' => $this_html, 'css' => ['page-services-dash']], IO_EXTRACT);
     return $page;
 };
