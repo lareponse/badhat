@@ -10,7 +10,7 @@ $oa = qp('SELECT * FROM `page` WHERE `slug` = ?', ['irsa-oa'])->fetch(PDO::FETCH
     <div class="tight"><?= $intro['content']; ?></div>
 </header>
 <section class="tight" aria-labelledby="timeline-heading">
-    <h2 id="timeline-heading" class="visually-hidden">Frise chronologique de l’IRSA</h2>
+    <h2 id="timeline-heading">L’IRSA : une histoire qui dure !</h2>
 
     <div class="timeline">
         <?php foreach ($args['events'] as $event) : ?>

@@ -270,12 +270,13 @@ img {
 /* Main headers */
 body>header {
     position: fixed;
+    top: 5px;
     width: 100%;
     z-index:1;
 }
 
 main>header {
-    margin-bottom: 3rem;
+    margin: 10rem 0 3rem 0;
 }
 
 main>header h1 {
