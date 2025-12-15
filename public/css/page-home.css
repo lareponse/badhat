@@ -14,12 +14,6 @@ section[aria-labelledby="hero-heading"] h2 {
     margin-bottom: 1rem;
 }
 
-section[aria-labelledby="hero-heading"] img {
-    width: 100%;
-    border-radius: 0.5rem;
-    object-fit: cover;
-    max-width: 700px;
-}
 
 
 /* Questionnaire */
@@ -38,7 +32,7 @@ section[aria-labelledby="questionnaire-heading"] {
 
 section[aria-labelledby="questionnaire-heading"] h2,
 {
-    font-size: 2.3rem;
+font-size: 2.3rem;
 }
 
 section[aria-labelledby="questionnaire-heading"] fieldset {
@@ -117,11 +111,22 @@ section[aria-labelledby="don-heading"] img {
     object-fit: cover;
 }
 
+section[aria-labelledby="hero-heading"] img {
+    width: 100%;
+    border-radius: 0.5rem;
+    object-fit: cover;
+    max-width: 700px;
+}
+
 @media screen and (min-width:64rem) {
     section[aria-labelledby="hero-heading"] {
         display: flex;
         gap: 2rem;
         align-items: center;
+    }
+
+    section[aria-labelledby="hero-heading"] img {
+        width: 600px;
     }
 
     section[aria-labelledby="questionnaire-heading"] {
