@@ -19,7 +19,7 @@
         <article>
             <h3>Centre d'hébergement pour adulte :</h3>
             <ul>
-                <li><a href="#">Avec déficience visuelle – Aubier</a></li>
+                <li><a href="/services/aubier">Avec déficience visuelle – Aubier</a></li>
             </ul>
         </article>
     </div>
