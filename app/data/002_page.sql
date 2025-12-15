@@ -1,5 +1,5 @@
 CREATE TABLE `page` (
-      `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
   `slug` varchar(150) NOT NULL UNIQUE,
   `label` varchar(150) NOT NULL,
   `content` longtext DEFAULT NULL,
