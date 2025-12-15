@@ -1,6 +1,3 @@
-
--- ORGANIZATION
--- =========================================================
 CREATE TABLE `organization` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
 
@@ -19,27 +16,24 @@ CREATE TABLE `organization` (
   DEFAULT CHARSET=utf8mb4
   COLLATE=utf8mb4_general_ci;
 
+
 CREATE TABLE `organization_type` (
-  `id` INT AUTO_INCREMENT PRIMARY KEY,
-  `slug` VARCHAR(20) NOT NULL
-) ENGINE=InnoDB
-  DEFAULT CHARSET=utf8mb4
-  COLLATE=utf8mb4_general_ci;
-
-CREATE TABLE `organization_organization_type` (
   `organization_id` INT NOT NULL,
-  `organization_type_id` INT NOT NULL,
+  `organization_type_tag_id` INT NOT NULL,
+  PRIMARY KEY (`organization_id`, `organization_type_tag_id`),
 
-  PRIMARY KEY (`organization_id`, `organization_type_id`),
-  KEY `idx_oot_type` (`organization_type_id`)
 ) ENGINE=InnoDB
   DEFAULT CHARSET=utf8mb4
   COLLATE=utf8mb4_general_ci;
 
+ALTER TABLE `organization_type`
+  ADD CONSTRAINT `fk_oot_organization`
+    FOREIGN KEY (`organization_id`)
+    REFERENCES `organization` (`id`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE;
 
 
--- ORGANIZATION ↔ CONTACT POINT (N–N)
--- =========================================================
 CREATE TABLE `organization_contact_point` (
   `organization_id` INT NOT NULL,
   `contact_point_id` INT NOT NULL,
@@ -51,69 +45,101 @@ CREATE TABLE `organization_contact_point` (
   DEFAULT CHARSET=utf8mb4
   COLLATE=utf8mb4_general_ci;
 
+ALTER TABLE `organization_organization_type`
+  ADD CONSTRAINT `fk_oot_organization_type`
+    FOREIGN KEY (`organization_type_id`)
+    REFERENCES `organization_type` (`id`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE;
 
+ALTER TABLE `organization_contact_point`
+  ADD CONSTRAINT `fk_ocp_organization`
+    FOREIGN KEY (`organization_id`)
+    REFERENCES `organization` (`id`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE;
 
-
-CREATE TABLE school (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-
-    slug VARCHAR(255) NOT NULL UNIQUE,
-    label VARCHAR(255) NOT NULL,
-
-    enabled_at DATETIME NULL,
-    revoked_at DATETIME NULL,
-
-    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME NULL ON UPDATE CURRENT_TIMESTAMP
-);
-
-
-CREATE TABLE school_profile (
-    school_id INT PRIMARY KEY,
-
-    /* Page header */
-    title VARCHAR(255) NOT NULL,
-    intro TEXT,
-
-    /* Target & scope */
-    public_label VARCHAR(255),
-    age_range VARCHAR(64),
-
-    /* Core narrative */
-    description TEXT,
-
-    /* Structured informational sections */
-    accompaniment TEXT,
-    admission_criteria TEXT,
-    modalities TEXT,
-
-    /* Enumerations (one item per line) */
-    team_overview TEXT,
-    supports_overview TEXT,
-
-    enabled_at DATETIME NULL,
-    revoked_at DATETIME NULL,
-
-    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME NULL ON UPDATE CURRENT_TIMESTAMP,
-
-    FOREIGN KEY (school_id)
-        REFERENCES school(id)
-        ON DELETE CASCADE
-);
-
-CREATE TABLE school_contact_point (
-    `school_id` INT NOT NULL,
-    `contact_point_id` INT NOT NULL,
-    `sort_order` SMALLINT DEFAULT NULL,
-
-    PRIMARY KEY (`school_id`, `contact_point_id`),
-
-    FOREIGN KEY (`school_id`)
-        REFERENCES `school`(`id`)
-        ON DELETE CASCADE,
-
+ALTER TABLE `organization_contact_point`
+  ADD CONSTRAINT `fk_ocp_contact_point`
     FOREIGN KEY (`contact_point_id`)
-        REFERENCES `contact_point`(`id`)
-        ON DELETE CASCADE
-);
+    REFERENCES `contact_point` (`id`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE;
+
+
+CREATE TABLE `school` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+
+  `slug` VARCHAR(255) NOT NULL UNIQUE,
+  `label` VARCHAR(255) NOT NULL,
+
+  `enabled_at` DATETIME NULL,
+  `revoked_at` DATETIME NULL,
+
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME NULL ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB
+  DEFAULT CHARSET=utf8mb4
+  COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE `school_profile` (
+  `school_id` INT PRIMARY KEY,
+
+  `title` VARCHAR(255) NOT NULL,
+  `intro` TEXT,
+
+  `public_label` VARCHAR(255),
+  `age_range` VARCHAR(64),
+
+  `description` TEXT,
+
+  `accompaniment` TEXT,
+  `admission_criteria` TEXT,
+  `modalities` TEXT,
+
+  `team_overview` TEXT,
+  `supports_overview` TEXT,
+
+  `enabled_at` DATETIME NULL,
+  `revoked_at` DATETIME NULL,
+
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME NULL ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB
+  DEFAULT CHARSET=utf8mb4
+  COLLATE=utf8mb4_general_ci;
+
+
+ALTER TABLE `school_profile`
+  ADD CONSTRAINT `fk_school_profile_school`
+    FOREIGN KEY (`school_id`)
+    REFERENCES `school` (`id`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE;
+
+
+CREATE TABLE `school_contact_point` (
+  `school_id` INT NOT NULL,
+  `contact_point_id` INT NOT NULL,
+  `sort_order` SMALLINT DEFAULT NULL,
+
+  PRIMARY KEY (`school_id`, `contact_point_id`)
+) ENGINE=InnoDB
+  DEFAULT CHARSET=utf8mb4
+  COLLATE=utf8mb4_general_ci;
+
+ALTER TABLE `school_contact_point`
+  ADD CONSTRAINT `fk_scp_school`
+    FOREIGN KEY (`school_id`)
+    REFERENCES `school` (`id`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE;
+
+ALTER TABLE `school_contact_point`
+  ADD CONSTRAINT `fk_scp_contact_point`
+    FOREIGN KEY (`contact_point_id`)
+    REFERENCES `contact_point` (`id`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE;
+
+    

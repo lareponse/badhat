@@ -1,7 +1,48 @@
+-- IRSA — PAGES and SECTIONS
+-- =========================================================
+INSERT INTO `page` (`id`, `slug`, `label`, `template`, `enabled_at`)
+VALUES
+(1, 'irsa',        'IRSA',        'default', CURRENT_TIMESTAMP),
+(2, 'irsa-ecoles', 'Les écoles',  'default', CURRENT_TIMESTAMP),
+(3, 'irsa-oa',     'Gouvernance', 'default', CURRENT_TIMESTAMP);
+
+
+INSERT INTO `section`
+(`id`, `slug`, `label`, `content`, `created_at`, `updated_at`)
+VALUES
+(
+  1,
+  'irsa-intro',
+  'L\'IRSA : une histoire qui dure !',
+  '<p>Depuis 1835, l\'IRSA accompagne enfants, jeunes et adultes atteints de déficience auditive, visuelle ou multiple.</p>
+   <p>Situé à Uccle, l\'institut offre un accompagnement global : scolarité, soins, hébergement, activités éducatives, guidance familiale, etc.</p>
+   <p>Chaque personne est accueillie avec une attention particulière à ses besoins, son rythme et son projet de vie.</p>',
+  '2025-12-14 21:01:05',
+  '2025-12-14 21:04:31'
+),
+(
+  2,
+  'page-irsa-ecole',
+  'Les écoles de l\'IRSA',
+  '<p>L\'IRSA propose un parcours scolaire complet pour les enfants et adolescents atteints de déficience auditive, visuelle ou avec troubles associés.</p>
+   <p>Chaque établissement est adapté à un type de public spécifique, avec un accompagnement pédagogique et thérapeutique individualisé.</p>',
+  '2025-12-14 21:01:05',
+  '2025-12-14 21:01:05'
+),
+(
+  3,
+  'irsa-oa',
+  'Notre Organisme d\'Administration',
+  '<p>L\'IRSA est administré par un Organisme d\'Administration (OA), composé de femmes et d\'hommes issus du monde associatif, professionnel, social et éducatif.</p>
+   <p>Ces membres bénévoles assurent la gestion stratégique, éthique et financière de l\'institution.</p>',
+  '2025-12-14 21:05:11',
+  '2025-12-14 22:07:07'
+);
+
+
 
 INSERT INTO `organization_type` (`slug`) VALUES ('partner'),('donor'),('collaborator');
 
--- =========================================================
 -- IRSA — PARTNERS
 -- =========================================================
 
@@ -53,7 +94,6 @@ AND NOT EXISTS (
     AND oot.organization_type_id = ot.id
 );
 
--- =========================================================
 -- IRSA — ORGANIZATION
 -- =========================================================
 
@@ -92,8 +132,7 @@ WHERE NOT EXISTS (
 );
 
 
--- =========================================================
--- LINK ORGANIZATION ↔ CONTACT POINT
+-- LINK ORGANIZATION and CONTACT POINT
 -- =========================================================
 INSERT INTO `organization_contact_point`
 (`organization_id`, `contact_point_id`, `sort_order`)
@@ -113,7 +152,6 @@ WHERE o.slug = 'irsa'
   );
 
 
--- =========================================================
 -- OPENING HOURS — MORNING (MON–FRI)
 -- =========================================================
 INSERT INTO `opening_hour`
@@ -138,10 +176,9 @@ WHERE cp.label = 'Accueil IRSA'
       AND oh.day_of_week = d.day
       AND oh.opens_at = '08:30:00'
       AND oh.closes_at = '12:00:00'
-  );
+);
 
 
--- =========================================================
 -- OPENING HOURS — AFTERNOON (MON–FRI)
 -- =========================================================
 INSERT INTO `opening_hour`
@@ -167,3 +204,14 @@ WHERE cp.label = 'Accueil IRSA'
       AND oh.opens_at = '13:00:00'
       AND oh.closes_at = '16:30:00'
   );
+
+
+-- SCHOOLS
+-- =========================================================
+
+
+INSERT INTO school (id, slug, label, enabled_at)
+VALUES
+(1, 'secondaire-t1-t6-t7', 'École secondaire spécialisée (T1–T6–T7)', NOW()),
+(2, 'fondamentale-t2-t6-t8', 'École fondamentale spécialisée (T2–T6–T8)', NOW()),
+(3, 'fondamentale-t7', 'École fondamentale spécialisée – déficience auditive', NOW());
