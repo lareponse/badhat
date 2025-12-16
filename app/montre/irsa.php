@@ -10,22 +10,66 @@ $oa = qp('SELECT * FROM `page` WHERE `slug` = ?', ['irsa-oa'])->fetch(PDO::FETCH
     <div class="tight"><?= $intro['content']; ?></div>
 </header>
 <section class="tight" aria-labelledby="timeline-heading">
-    <h2 id="timeline-heading" class="visually-hidden">Frise chronologique de l'IRSA</h2>
+    <h2 id="timeline-heading" class="visually-hidden">
+        Frise chronologique de l'IRSA
+    </h2>
 
     <div class="timeline">
         <?php foreach ($args['events'] as $event) : ?>
-            <article class="<?= $event['position_hint'] ?>">
-                <h3><time datetime="<?= $event['event_year'] ?>"><?= $event['event_year'] ?></time></h3>
-                <figure>
-                    <img src="/ui/timeline/<?= $event['photo_filename'] ?>" alt="">
-                    <figcaption><?= $event['label'] ?></figcaption>
-                </figure>
+            <article class="timeline-item <?= $event['position_hint'] ?>"
+                tabindex="0"
+                aria-expanded="false"
+                data-flip>
+
+                <div class="flip-inner">
+
+                    <div class="flip-front">
+                        <h3>
+                            <time datetime="<?= $event['event_year'] ?>">
+                                <?= $event['event_year'] ?>
+                            </time>
+                        </h3>
+
+                        <figure>
+                            <img src="/ui/pages/irsa/timeline/<?= $event['photo_filename'] ?>" alt="">
+                            <figcaption><?= $event['label'] ?></figcaption>
+                        </figure>
+                    </div>
+
+                    <div class="flip-back">
+                        <?= $event['content'] ?? '<p><strong>Sed sed ex metus</strong>. Ut sollicitudin ipsum leo, ultricies eleifend ligula commodo et.</p><p> Cras vel velit sed lectus ultricies lobortis vel eget diam.</p>' ?>
+                    </div>
+
+                </div>
             </article>
+
         <?php endforeach; ?>
-
     </div>
-
 </section>
+<script>
+    document.addEventListener('click', e => {
+        const card = e.target.closest('[data-flip]');
+        if (!card) return;
+
+        toggle(card);
+    });
+
+    document.addEventListener('keydown', e => {
+        if (!['Enter', ' '].includes(e.key)) return;
+        const card = e.target.closest('[data-flip]');
+        if (!card) return;
+
+        e.preventDefault();
+        toggle(card);
+    });
+
+    function toggle(card) {
+        const flipped = card.classList.toggle('is-flipped');
+        card.setAttribute('aria-expanded', flipped);
+    }
+</script>
+
+
 
 <!-- Organisme d'Administration -->
 <section class="oa" aria-labelledby="oa-heading">

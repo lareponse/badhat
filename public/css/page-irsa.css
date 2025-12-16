@@ -15,15 +15,11 @@
     box-shadow: 0 3px 8px rgba(0, 0, 0, 0.05);
     transition: transform 0.2s, box-shadow 0.2s;
 
-    display:flex;
+    display: flex;
     flex-direction: column;
-    gap:0.7rem;
+    gap: 0.7rem;
 }
 
-.timeline>article:hover {
-    transform: translateY(-6px);
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
-}
 
 .timeline article img {
     width: calc(100% / 1.678);
@@ -36,19 +32,21 @@
     font-weight: bold;
 }
 
-.timeline figure{
-    display:flex;
+.timeline figure {
+    display: flex;
     flex: 1;
     flex-direction: column;
     justify-content: space-around;
-    align-items:center;
+    align-items: center;
+    height: 11rem;
 }
+
 /* Texte (événement) */
 .timeline figcaption {
     font-size: 0.95rem;
     line-height: 1.4;
     font-weight: 700;
-    margin-top:0.7rem;
+    margin-top: 0.7rem;
 }
 
 @media screen and (min-width:64rem) {
@@ -101,6 +99,7 @@
         right: -2.4rem;
         top: 50%;
         animation-name: wiggle-x;
+        color:var(--black);
     }
 
     .timeline .move-ud::after {
@@ -119,29 +118,29 @@
         animation-name: wiggle-x;
     }
 
-@keyframes wiggle-x {
+    @keyframes wiggle-x {
 
-    0%,
-    100% {
-        transform: translateX(0);
+        0%,
+        100% {
+            transform: translateX(0);
+        }
+
+        50% {
+            transform: translateX(var(--shift, .5rem));
+        }
     }
 
-    50% {
-        transform: translateX(var(--shift, .5rem));
-    }
-}
+    @keyframes wiggle-y {
 
-@keyframes wiggle-y {
+        0%,
+        100% {
+            transform: translateY(0);
+        }
 
-    0%,
-    100% {
-        transform: translateY(0);
+        50% {
+            transform: translateY(var(--shift, .5rem));
+        }
     }
-
-    50% {
-        transform: translateY(var(--shift, .5rem));
-    }
-}
 
 }
 
@@ -184,4 +183,48 @@
 
 .oa .btn:hover {
     background: var(--color-accent-primary);
+}
+
+
+
+.flip-inner {
+    position: relative;
+}
+
+.flip-front {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+
+    background: white;
+    transition:
+        transform .45s ease,
+        opacity .35s ease;
+}
+
+/* ÉTAT OUVERT */
+.timeline-item.is-flipped .flip-front {
+    transform: translateX(-105%);
+    opacity: 0;
+    pointer-events: none;
+}
+.flip-back {
+    position: relative;
+    z-index: 1;
+}
+
+
+
+/* Focus clavier (toujours nécessaire sans button) */
+.timeline-item:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 4px;
+}
+
+/* Motion safety */
+@media (prefers-reduced-motion: reduce) {
+    .flip-front {
+        transition: none;
+        transform: none;
+    }
 }
