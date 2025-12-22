@@ -3,16 +3,47 @@ const IO_NEST = 1;                              // Flexible routing: try file + 
 const IO_DEEP = 2;                              // Deep-first seek
 const IO_ROOT = 4;                              // Root-first seek
 
-const IO_CHAIN  = 16;                           // Chain loot results as args for next included file
+const IO_CHAIN  = 8;                           // Chain loot results as args for next included file
 
-const IO_RETURN = 64;                           // Value of the included file return statement
-const IO_BUFFER = 128;                          // Value of the included file output buffer
-const IO_INVOKE = 256;                          // Call fn(args) and store return in IO_RETURN (if callable)
-const IO_ABSORB = 512 | IO_BUFFER | IO_INVOKE;  // Call fn(args + output buffer) and store return value IO_RETURN
+const IO_RETURN = 16;                           // Value of the included file return statement
+const IO_BUFFER = 32;                          // Value of the included file output buffer
+const IO_INVOKE = 64;                          // Call fn(args) and store return in IO_RETURN (if callable)
+const IO_ABSORB = 128 | IO_BUFFER | IO_INVOKE;  // Call fn(args + output buffer) and store return value IO_RETURN
+
+function io_in(string $raw, string $accept = 'html', string $default = 'index'): array
+{
+    $path = parse_url($raw, PHP_URL_PATH) ?: '';
+    $path = rawurldecode($path);
+    
+    strpos($path, "\0") === false || throw new RuntimeException('Bad Request', 400);    // Reject null byte explicitly
+
+    while (strpos($path, '//') !== false)
+        $path = str_replace('//', '/', $path);                                          // Normalize slashes
+
+    $path = trim($path, '/');
+
+    if(($last_dot = strrpos($path, '.')) !== false)
+        if ($last_dot > ((strrpos($path, '/') ?: -1) + 1))
+            return [substr($path, 0, $last_dot), substr($path, $last_dot + 1)];
+
+    return [$path ?: $default, $accept];
+}
+
+// IO resolution happens in three stages: direct lookup, nested lookup, then path-aware seeking
+// resolves an execution path (and remaining segments), or null
+function io_map(string $base_dir, string $uri_path, string $file_ext = 'php', int $behave = 0): ?array
+{
+    $path = io_look($base_dir, $uri_path, $file_ext, $behave);
+
+    if(!$path && ((IO_DEEP | IO_ROOT) & $behave))
+        return io_seek($base_dir, $uri_path, $file_ext, $behave);
+    
+    return $path ? [$path] : $path;
+}
 
 // executes one or more resolved execution paths and returns last execution result
 // propagates arguments, captures output, and optionally invokes returned callables
-function io_send(array $file_paths, array $io_args, int $behave = 0): array
+function io_run(array $file_paths, array $io_args, int $behave = 0): array
 {
     $loot = $io_args;
 
@@ -24,7 +55,7 @@ function io_send(array $file_paths, array $io_args, int $behave = 0): array
         (IO_BUFFER & $behave) && ($loot[IO_BUFFER] = ob_get_clean());
 
         if ((IO_INVOKE & $behave) && is_callable($loot[IO_RETURN])) {
-            (IO_ABSORB & $behave) && ($args[IO_BUFFER] = $loot[IO_BUFFER]);
+            (IO_ABSORB & $behave) && ($args[] = $loot[IO_BUFFER]);
             $loot[IO_RETURN] = $loot[IO_RETURN]($args);
         }
     }
@@ -32,19 +63,17 @@ function io_send(array $file_paths, array $io_args, int $behave = 0): array
     return $loot;
 }
 
-// IO resolution happens in three stages: direct lookup, nested lookup, then path-aware seeking
-// resolves an execution path (and remaining segments), or null
-function io_bind(string $base_dir, string $uri_path, string $file_ext = 'php', int $behave = 0): ?array
+function io_die(int $status, string $body, array $headers = []): void
 {
-    if ($path = io_look($base_dir, $uri_path, $file_ext, $behave))
-        return [$path];                 // direct lookup succeeded  
-
-    if ((IO_DEEP | IO_ROOT) & $behave)
-        if ($path_and_args = io_seek($base_dir, $uri_path, $file_ext, $behave))
-            return $path_and_args;          // seeking succeeded     
-
-    return null;                            // resolution failed
+    http_response_code($status);
+    foreach ($headers as $h => $v){
+        strpbrk($h, "\r\n") === false && strpbrk($v, "\r\n") === false || throw new RuntimeException('Invalid Header', 500);
+        header("$h: $v");
+    } 
+    echo $body;
+    exit;
 }
+
 
 // no trailing / for $base or $candidate
 // no . for $extension
