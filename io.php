@@ -1,14 +1,15 @@
 <?php
-const IO_NEST = 1;                              // Flexible routing: try file + file/file
-const IO_DEEP = 2;                              // Deep-first seek
-const IO_ROOT = 4;                              // Root-first seek
+const IO_RETURN = 0;
+const IO_BUFFER = 1;
 
-const IO_CHAIN  = 8;                           // Chain loot results as args for next included file
+const IO_INVOKE = 2;                           // Call fn(args) and store return in IO_RETURN (if callable)
+const IO_ABSORB = 4 | IO_BUFFER | IO_INVOKE;   // Call fn(args + output buffer) and store return value IO_RETURN
 
-const IO_RETURN = 16;                           // Value of the included file return statement
-const IO_BUFFER = 32;                          // Value of the included file output buffer
-const IO_INVOKE = 64;                          // Call fn(args) and store return in IO_RETURN (if callable)
-const IO_ABSORB = 128 | IO_BUFFER | IO_INVOKE;  // Call fn(args + output buffer) and store return value IO_RETURN
+const IO_NEST   = 8;                            // Flexible routing: try file + file/file
+const IO_DEEP   = 16;                            // Deep-first seek
+const IO_ROOT   = 32;                            // Root-first seek
+
+const IO_CHAIN  = 64;                           // Chain loot results as args for next included file
 
 function io_in(string $raw, string $accept = 'html', string $default = 'index'): array
 {
@@ -55,7 +56,7 @@ function io_run(array $file_paths, array $io_args, int $behave = 0): array
         (IO_BUFFER & $behave) && ($loot[IO_BUFFER] = ob_get_clean());
 
         if ((IO_INVOKE & $behave) && is_callable($loot[IO_RETURN])) {
-            (IO_ABSORB & $behave) && ($args[] = $loot[IO_BUFFER]);
+            if ((IO_ABSORB & $behave) === IO_ABSORB) $args[] = $loot[IO_BUFFER];
             $loot[IO_RETURN] = $loot[IO_RETURN]($args);
         }
     }
@@ -74,22 +75,19 @@ function io_die(int $status, string $body, array $headers = []): void
     exit;
 }
 
-
-// no trailing / for $base or $candidate
-// no . for $extension
-// resolves an execution path directly, or null
+// returns a direct execution path, or null
 function io_look(string $base_dir, string $candidate, string $file_ext, int $behave = 0): ?string
 {
     // Construct the base path (without extension)
-    $path = $base_dir . DIRECTORY_SEPARATOR . $candidate;
-
-    if (is_file($base_path = $path . '.' . $file_ext))
-        return $base_path;
-
-    if ((IO_NEST & $behave) && is_file($nested_path = $path . DIRECTORY_SEPARATOR . basename($candidate) . '.' . $file_ext))
-        return $nested_path;
-
-    return null;
+    $base = rtrim($base_dir, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
+    $base_path = $base . $candidate;
+    $file = $base_path . '.' . $file_ext;
+    $file = is_file($file) ? $file : null;
+    if(!$file && (IO_NEST & $behave)){
+        $file = $base_path . DIRECTORY_SEPARATOR . basename($candidate) . '.' . $file_ext;
+        $file = is_file($file) ? $file : null;
+    }
+    return $file && ($real = realpath($file)) && strpos($real, $base) === 0 ? $real : null;
 }
 
 // resolves an execution path by segment walk (and remaining segments), or null
