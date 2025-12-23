@@ -15,17 +15,17 @@ function io_in(string $raw, string $accept = 'html', string $default = 'index'):
 {
     $path = parse_url($raw, PHP_URL_PATH) ?: '';
     $path = rawurldecode($path);
-    
-    strpos($path, "\0") === false || throw new RuntimeException('Bad Request', 400);    // Reject null byte explicitly
+
+    strpos($path, "\0") === false || throw new InvalidArgumentException('Bad Request', 400);    // Reject null byte explicitly
 
     while (strpos($path, '//') !== false)
-        $path = str_replace('//', '/', $path);                                          // Normalize slashes
+        $path = str_replace('//', '/', $path);  // Normalize slashes
 
     $path = trim($path, '/');
 
-    if(($last_dot = strrpos($path, '.')) !== false)
-        if ($last_dot > ((strrpos($path, '/') ?: -1) + 1))
-            return [substr($path, 0, $last_dot), substr($path, $last_dot + 1)];
+    if (($last_dot = strrpos($path, '.')) !== false
+    && ($last_dot > ((strrpos($path, '/') ?: -1) + 1)))
+        return [substr($path, 0, $last_dot), substr($path, $last_dot + 1)];
 
     return [$path ?: $default, $accept];
 }
@@ -36,9 +36,9 @@ function io_map(string $base_dir, string $uri_path, string $file_ext = 'php', in
 {
     $path = io_look($base_dir, $uri_path, $file_ext, $behave);
 
-    if(!$path && ((IO_DEEP | IO_ROOT) & $behave))
+    if (!$path && ((IO_DEEP | IO_ROOT) & $behave))
         return io_seek($base_dir, $uri_path, $file_ext, $behave);
-    
+
     return $path ? [$path] : $path;
 }
 
@@ -52,12 +52,23 @@ function io_run(array $file_paths, array $io_args, int $behave = 0): array
         $args = (IO_CHAIN & $behave) ? $loot : $io_args;
 
         (IO_BUFFER & $behave) && ob_start();
-        $loot = [IO_RETURN => @include $file_path];
+        try {
+            $loot[IO_RETURN] = @include $file_path;
+        } catch (Throwable $e) {
+            throw new RuntimeException("include:$file_path", 0xBAD, $e);
+        }
+
         (IO_BUFFER & $behave) && ($loot[IO_BUFFER] = ob_get_clean());
 
         if ((IO_INVOKE & $behave) && is_callable($loot[IO_RETURN])) {
-            if ((IO_ABSORB & $behave) === IO_ABSORB) $args[] = $loot[IO_BUFFER];
-            $loot[IO_RETURN] = $loot[IO_RETURN]($args);
+            if ((IO_ABSORB & $behave) === IO_ABSORB)
+                $args[] = $loot[IO_BUFFER];
+
+            try {
+                $loot[IO_RETURN] = $loot[IO_RETURN]($args);
+            } catch (Throwable $e) {
+                throw new RuntimeException("invoke:$file_path", 0xBAD, $e);
+            }
         }
     }
 
@@ -70,7 +81,7 @@ function io_die(int $status, string $body, array $headers = []): void
     foreach ($headers as $h => $v){
         strpbrk($h, "\r\n") === false && strpbrk($v, "\r\n") === false || throw new RuntimeException('Invalid Header', 500);
         header("$h: $v");
-    } 
+    }
     echo $body;
     exit;
 }
