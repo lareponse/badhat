@@ -7,7 +7,7 @@ const EH_INTERCEPT = 8;    // register_shutdown_function
 
 const EH_HANDLE_ALL = EH_ERROR | EH_EXCEPTION | EH_SHUTDOWN;
 
-function badhat_install_error_handlers(int $behave = EH_ALL, ?string $request_id = null): string
+function badhat_install_error_handlers(int $behave = EH_HANDLE_ALL, ?string $request_id = null): string
 {
     $request_id ??= bin2hex(random_bytes(4));
     $prefix = "[req=$request_id] ";
@@ -29,7 +29,7 @@ function badhat_install_error_handlers(int $behave = EH_ALL, ?string $request_id
             . ' FILES:' . count($_FILES)
         );
         ob_get_length() && ob_clean();
-        http_response_code(500)
+        http_response_code(500);
         exit(1);
     };
 
