@@ -1,37 +1,28 @@
 # Core IO Functions
 
-This document describes the **core IO primitives** of BADHAT.
+Minimal execution lattice: URI → filesystem → execution → response.
 
-They form a **minimal execution lattice** that maps an HTTP request to one or more filesystem execution points, executes them deterministically, and optionally terminates the request.
-
-BADHAT does **not** impose MVC, controllers, or response objects.
-It provides **tools**, not decisions.
-
-
+No MVC. No controllers. Just tools.
 
 ---
 
 ## Constants
 
 ```php
-const IO_NEST = 1;    // Flexible routing: try file + file/file
-const IO_DEEP = 2;    // Deep-first seek (N → 1 segments)
-const IO_ROOT = 4;    // Root-first seek (1 → N segments)
+const IO_RETURN = 0;    // Loot slot: included file return value
+const IO_BUFFER = 1;    // Loot slot: output buffer content
 
-const IO_CHAIN  = 8;  // Chain previous loot as args for next execution
+const IO_INVOKE = 2;    // Call fn(args), store in IO_RETURN
+const IO_ABSORB = 4 | IO_BUFFER | IO_INVOKE;  // Call fn(args + buffer)
 
-const IO_RETURN = 16; // Loot slot: included file return value
-const IO_BUFFER = 32; // Loot slot: output buffer content
-const IO_INVOKE = 64; // Behavior: call return value with args
-const IO_ABSORB = 128 | IO_BUFFER | IO_INVOKE;
-// Behavior: call return value with args + output buffer
+const IO_NEST   = 8;    // Try file + file/file patterns
+const IO_DEEP   = 16;   // Deep-first seek (N → 1 segments)
+const IO_ROOT   = 32;   // Root-first seek (1 → N segments)
+
+const IO_CHAIN  = 64;   // Propagate loot as args to next file
 ```
 
-### Notes
-
-* Flags are **orthogonal** and **composable**
-* `IO_ABSORB` is a *semantic modifier*, not a shortcut
-* No flag implies output, HTTP, or rendering decisions
+**Flags are orthogonal and composable.**
 
 ---
 
@@ -39,142 +30,122 @@ const IO_ABSORB = 128 | IO_BUFFER | IO_INVOKE;
 
 ### `io_in(string $raw, string $accept = 'html', string $default = 'index'): array`
 
-Normalizes and parses an inbound URI.
-
-* Extracts the path component
-* Rejects null bytes explicitly
-* Normalizes duplicate slashes
-* Extracts a trailing extension if present
-* Applies a default route name if empty
-
-**Returns:**
+Normalize inbound URI.
 
 ```php
-[$path, $accept]
+[$path, $ext] = io_in($_SERVER['REQUEST_URI']);
 ```
 
-This function is **pure**: it does not read globals and does not emit output.
+- Extracts path component
+- Rejects null bytes (400)
+- Normalizes `//` → `/`
+- Extracts trailing extension if present
+- Falls back to `$default` if empty
+
+**Returns:** `[$path, $accept_or_extension]`
+
+**Pure function:** no globals read, no output.
 
 ---
 
 ### `io_map(string $base_dir, string $uri_path, string $file_ext = 'php', int $behave = 0): ?array`
 
-Resolves a URI path to one or more executable filesystem paths.
+Resolve URI to executable path.
 
-Resolution happens in **two stages**:
+**Resolution stages:**
+1. Direct lookup via `io_look()`
+2. Segment-based seek via `io_seek()` (if `IO_DEEP|IO_ROOT`)
 
-1. **Direct lookup** via `io_look()`
-2. **Segment-based seek** via `io_seek()` (if enabled)
+**Returns:**
+- `[string $filepath]` — exact match
+- `[string $filepath, array $remaining_segments]` — seek match
+- `null` — no match
 
-**Behavior flags:**
+```php
+// Direct match
+$route = io_map('/app/route', 'users/edit', 'php');
+// → ['/app/route/users/edit.php']
 
-* `IO_NEST` – enables `file/file.ext` fallback
-* `IO_DEEP` – deep-first segment walk
-* `IO_ROOT` – root-first segment walk
-
-**Returns one of:**
-
-* `[string $filepath]`
-* `[string $filepath, array $remaining_segments]`
-* `null`
-
-No normalization is performed on the return shape.
-Consumers **must branch consciously**.
+// Deep-first with args
+$route = io_map('/app/route', 'api/users/42', 'php', IO_DEEP);
+// → ['/app/route/api/users.php', ['42']]
+```
 
 ---
 
 ### `io_run(array $file_paths, array $io_args, int $behave = 0): array`
 
-Executes one or more resolved filesystem paths.
+Execute resolved paths.
 
-For each file:
+**For each file:**
+1. Optionally capture output buffer (`IO_BUFFER`)
+2. Include file
+3. Optionally invoke returned callable (`IO_INVOKE`)
+4. Optionally pass buffer to callable (`IO_ABSORB`)
+5. Optionally chain result to next file (`IO_CHAIN`)
 
-* Includes it
-* Optionally captures output
-* Optionally invokes the returned value
-* Optionally chains the result into the next execution
+**Invocation signatures:**
+- `IO_INVOKE` → `fn(array $args)`
+- `IO_ABSORB` → `fn(array $args_with_buffer_appended)`
 
-**Behavior flags:**
-
-* `IO_BUFFER` – capture output buffer
-* `IO_INVOKE` – call return value as callable
-* `IO_ABSORB` – pass buffer into callable
-* `IO_CHAIN` – propagate previous loot as args
-
-**Invocation semantics:**
-
-* `IO_INVOKE` → `fn(array $args)`
-* `IO_ABSORB` → `fn(array $args_with_buffer)`
-
-**Returns:**
-
-The **last execution loot only**, containing at least:
-
+**Returns:** Last execution loot:
 ```php
 [
-  IO_RETURN => mixed,
-  IO_BUFFER => string (if enabled)
+    IO_RETURN => mixed,  // return value or callable result
+    IO_BUFFER => string  // if IO_BUFFER enabled
 ]
 ```
 
-Earlier executions are intentionally discarded unless chained.
+```php
+$loot = io_run(['/app/route/users.php'], ['id' => 42], IO_INVOKE);
+$data = $loot[IO_RETURN];
+
+$loot = io_run(['/app/render/users.php'], $data, IO_ABSORB);
+$html = $loot[IO_RETURN];  // callable result
+```
 
 ---
 
 ### `io_die(int $status, string $body, array $headers = []): void`
 
-Terminates execution and emits an HTTP response.
+Terminate with HTTP response.
 
-* Sets HTTP status code
-* Emits headers (CRLF-safe)
-* Outputs body
-* Calls `exit`
+```php
+io_die(404, 'Not Found');
+io_die(200, $json, ['Content-Type' => 'application/json']);
+```
 
-This function is **terminal**.
-
-If `io_die()` is called anywhere — route, render, index —
-**no further BADHAT logic should run**.
+- Sets status code
+- Emits headers (validates no CRLF injection)
+- Outputs body
+- **Calls `exit`**
 
 ---
 
 ### `io_look(string $base_dir, string $candidate, string $file_ext, int $behave = 0): ?string`
 
-Resolves a single candidate path to a filesystem file.
+Direct file resolution.
 
-Tries, in order:
-
+Tries in order:
 1. `$base_dir/$candidate.$file_ext`
 2. `$base_dir/$candidate/basename($candidate).$file_ext` (if `IO_NEST`)
 
-**Returns:**
+**Security:** validates `realpath()` stays within `$base_dir`.
 
-* Full filepath if found
-* `null` otherwise
-
-No segment logic occurs here.
+**Returns:** full filepath or `null`
 
 ---
 
 ### `io_seek(string $base_dir, string $uri_path, string $file_ext, int $behave = 0): ?array`
 
-Performs **segment-based path resolution**.
+Segment-based resolution.
 
-* Splits URI into segments
-* Walks segments either:
+- `IO_DEEP`: N → 1 segments (deepest first)
+- `IO_ROOT`: 1 → N segments (shallowest first)
 
-  * deep → shallow (`IO_DEEP`)
-  * shallow → deep (`IO_ROOT`)
-* Uses `io_look()` at each step
+Uses `io_look()` at each depth.
 
-**Returns:**
-
-```php
-[$filepath, $remaining_segments]
-```
-
-or `null` if no match is found.
-
-The remaining segments are **positional arguments**, not parameters.
+**Returns:** `[$filepath, $remaining_segments]` or `null`
 
 ---
 
@@ -184,59 +155,67 @@ The remaining segments are **positional arguments**, not parameters.
 
 ```php
 [$path, $accept] = io_in($_SERVER['REQUEST_URI']);
+$route = io_map('/app/route', $path);
 
-$route = io_map('/app/route', $path, 'php');
-
-$loot = $route
+$route 
     ? io_run($route, [])
     : io_die(404, 'Not Found');
 ```
 
----
-
-### Deep-first routing (API style)
+### Deep-first API routing
 
 ```php
-$route = io_map(
-    '/app/api',
-    'users/42/profile',
-    'php',
-    IO_DEEP
-);
+// /api/users/42/profile
+$route = io_map('/app/api', 'users/42/profile', 'php', IO_DEEP);
 
-// Possible resolution:
-// users/42/profile.php
-// users/42.php
-// users.php
-// index.php
+// Tries: users/42/profile.php → users/42.php → users.php → index.php
+// Returns: ['/app/api/users.php', ['42', 'profile']]
 ```
 
-Returned arguments are positional and untyped.
+### Two-phase execution
+
+```php
+// Phase 1: Route (data)
+$route = io_map('/app/route', $path, 'php', IO_DEEP);
+$loot = io_run($route, [], IO_INVOKE);
+
+// Phase 2: Render (output)
+$render = io_map('/app/render', $path, 'php', IO_DEEP | IO_NEST);
+$loot = io_run($render, $loot, IO_ABSORB);
+
+io_die(200, $loot[IO_RETURN], ['Content-Type' => 'text/html']);
+```
+
+### Chained execution
+
+```php
+$files = ['/app/middleware/auth.php', '/app/route/dashboard.php'];
+$loot = io_run($files, [], IO_INVOKE | IO_CHAIN);
+// Each file receives previous file's return as args
+```
 
 ---
 
-### Output-driven rendering
+## Resolution Examples
 
-```php
-$loot = io_run(
-    [$route],
-    [],
-    IO_BUFFER | IO_INVOKE
-);
-
-echo $loot[IO_BUFFER];
 ```
-
-No implicit rendering occurs.
-If output exists, it is because a file produced it.
+URI                     Flag        Result
+────────────────────────────────────────────────────
+/users                  default     route/users.php
+/users/edit             default     route/users/edit.php
+/users/edit             IO_NEST     route/users/edit/edit.php (fallback)
+/api/users/42           IO_DEEP     route/api/users.php + ['42']
+/api/users/42           IO_ROOT     route/api.php + ['users','42']
+/deep/missing/path      IO_DEEP     tries: deep/missing/path.php
+                                         → deep/missing.php + ['path']
+                                         → deep.php + ['missing','path']
+```
 
 ---
 
 ## Design Notes
 
-* BADHAT does **not** normalize return shapes
-* BADHAT does **not** enforce architectural roles
-* BADHAT does **not** hide execution order
-* BADHAT exposes sharp tools deliberately
-
-If something hurts, it is because **control is explicit**.
+- No normalized return shapes
+- No architectural role enforcement
+- No hidden execution order
+- Sharp tools, explicit control

@@ -1,103 +1,306 @@
 # BADHAT
 
 ```
-Bits 
-As 
-Decision
-HTTP 
-As 
+Bits
+Are
+Decisive
+HTTP
+As
 Terminal
 ```
 
-A minimalist, PHP phase engine that treats HTTP like a terminal: route files decide, render files display. No magic, no ORM, no framework lock-in. 
+> **A request is just a path that becomes a file that becomes execution.**
 
-Just ~200 lines of PHP that covers 80% of web app needs
+**BADHAT** is a minimalist PHP **execution engine** that treats HTTP like a terminal:
+files decide, files execute, files emit output.
 
----
+No controllers.
+No routers.
+No middleware stacks.
+No framework lock-in.
 
-## Philosophy
-
-* **Separation of Concerns:** Data prep (route) vs. presentation (render).
-* **Minimalism:** Direct file execution, zero dependencies.
-* **Flexibility:** Swap renderers (HTML, JSON, PDF) without touching logic.
-* **Explicitness:** Every file is a PHP script—no hidden layers.
-* **Performance:** Millisecond routes, minimal overhead.
+Just ~200 lines of PHP that add **almost no overhead beyond PHP itself**, suitable for a large class of **direct, file-driven web applications**.
 
 ---
 
-## Installation (30s)
+## What BADHAT Is (and Is Not)
+
+BADHAT is **not** a framework.
+
+It does not abstract HTTP away — it **embraces it**.
+
+BADHAT provides:
+
+* deterministic mapping from request → file
+* explicit execution and exit points
+* optional output capture and callable invocation
+* zero dependencies
+
+BADHAT deliberately avoids:
+
+* routing tables
+* dependency injection containers
+* ORMs
+* lifecycle hooks
+* hidden control flow
+
+There is no DSL.
+There are no annotations.
+PHP *is* the abstraction.
+
+---
+
+## Request Lifecycle (12 lines)
+
+1. **Apache receives the request**
+   Unsafe methods, dot-files, traversal, null bytes are rejected *before PHP*.
+
+2. **`index.php` is the single entry point**
+   Every request becomes code, or it dies here.
+
+3. **The raw URI is read**
+   No routing table. No controller resolution. Just a string.
+
+4. **The path is normalized**
+   Decoded, cleaned, null-byte–free.
+
+5. **The suffix / accept is resolved**
+   `html`, `json`, or fallback. No content-negotiation theatre.
+
+6. **Candidate file paths are generated**
+   Nesting, depth, and root rules decide where to look.
+
+7. **Files are tried in order**
+   First existing file wins. Deterministic and inspectable.
+
+8. **The file is included**
+   Output may be buffered. A return value may exist.
+
+9. **Optional invocation happens**
+   If the file returns a callable, it may be executed.
+
+10. **Results are captured**
+    Return value, output buffer, invocation result.
+
+11. **Headers are emitted explicitly**
+    One place. No late mutation. No CRLF tolerated.
+
+12. **The response ends**
+    Execution stops. Nothing else runs.
+
+---
+
+## Core Principle (Truthful)
+
+BADHAT does **not** define layers, phases, or architecture.
+
+It defines **execution mechanics**.
+
+From those mechanics, you may choose to structure your application however you want:
+
+* logic and rendering separated
+* logic and rendering combined
+* early exits
+* callable pipelines
+* single-file pages
+* multi-step flows
+
+If you want phases, BADHAT supports them.
+If you don’t, BADHAT stays out of the way.
+
+> **BADHAT doesn’t tell you how to structure your app.
+> It only makes execution predictable.**
+
+---
+
+## Installation (30 seconds)
 
 ```bash
-git clone https://github.com/lareponse/BADHAT.git
-cd BADHAT
+git clone https://github.com/lareponse/BADHAT.git add/badhat
 mkdir -p app/io/{route,render}
 ```
 
----
+## File Structure
 
-## Entry Point (`public/index.php`)
-
-```php
-<?php
-require 'add/badhat/http.php';
-require 'add/badhat/io.php';
-
-$io      = __DIR__ . '/../io';
-$request = http_in();
-
-// Phase 1: Logic
-$route   = io_map("$io/route", $request, 'index');
-$data    = io_run($route, [], IO_INVOKE);
-
-// Phase 2: Presentation
-$render  = io_map("$io/render", $request, 'index');
-$html    = io_run($render, $data[IO_INVOKE], IO_ABSORB);
-
-http_out(200, $html[IO_ABSORB]);
+```
+project/
+├── add/              # BADHAT core
+├── app/
+│   └── io/
+│       ├── route/    # Optional logic grouping
+│       └── render/   # Optional rendering grouping
+└── public/
+    └── index.php     # Entry point
 ```
 
 ---
 
-## Core Functions
+## Entry Point (`public/index.php`) — correct
 
-* **`http_in()`**
-  Parse & validate URI, query params, POST data, headers.
+```php
+<?php
+require 'add/badhat/io.php';
 
-* **`http_out($status, $body, $headers = [])`**
-  Send HTTP response and exit.
+[$path, $accept] = io_in($_SERVER['REQUEST_URI']);
 
-* **`io_map($dir, $request, $default)`**
-  Map URI to a PHP file (supports dynamic args & fallbacks).
+$base = 'app/io';
 
-* **`io_run($file, $vars, $flag)`**
-  Invoke or absorb a script:
+// --- one possible wiring (not required) ---
 
-  * **`IO_INVOKE`**: call returned closure with args → returns data array.
-  * **`IO_ABSORB`**: buffer output, include file, execute returned closure (if any), collect HTML.
+// Resolve route
+$route = io_map("$base/route", $path, 'php', IO_DEEP | IO_NEST);
+
+// Execute route (may invoke callable)
+$data = $route
+    ? io_run([$route[0]], $route[1] ?? [], IO_INVOKE)
+    : [];
+
+// Resolve render
+$render = io_map("$base/render", $path, $accept, IO_DEEP | IO_NEST);
+
+// Execute render, capture output
+$html = $render
+    ? io_run([$render[0]], $data[IO_RETURN] ?? [], IO_ABSORB)
+    : [];
+
+// Final output
+io_die(200, $html[IO_RETURN] ?? '');
+```
+
+> This wiring is **an example**, not a model.
 
 ---
 
-## Execution Modes
+## Core Functions (Actual Contracts)
 
-### 1. Default View-Only
+### `io_in(string $raw, string $accept = 'html', string $default = 'index'): array`
 
-No flags → include render template directly; echo output is sent immediately. Ideal for static pages.
+Parses and normalizes the request URI.
 
-### 2. Two-Act Play
+Returns:
 
-* **Act I (IO_INVOKE):** route returns an array of data.
-* **Act II (IO_ABSORB):** render buffers output, invokes closures, collects HTML, then sends it.
-
-### 3. API-Only Performance
-
-Skip render. In your route (invoked with IO_INVOKE), gather data, `json_encode()` it, call `http_out()`, and exit.
+```php
+[$path, $accept]
+```
 
 ---
 
-## Optional Phasing
+### `io_map(string $base_dir, string $uri_path, string $file_ext, int $behave = 0): ?array`
 
-* **Static pages or pages with mostly rendering logic:** skip the route phase—just drop in a render template.
-* **SSR Partials for AJAX:** route can return pre-rendered HTML or closures; render integrates or you can `http_out()` directly in the route.
+Resolves execution paths.
+
+Returns:
+
+* `null` if nothing matches
+* `[path]`
+* `[path, args]`
+
+---
+
+### `io_run(array $file_paths, array $args, int $behave = 0): array`
+
+Executes one or more files.
+
+Depending on flags:
+
+* includes files
+* captures output
+* invokes returned callables
+* chains results
+
+Return shape:
+
+```php
+[
+  IO_RETURN => mixed,
+  IO_BUFFER => string (if buffered)
+]
+```
+
+---
+
+### `io_die(int $status, string $body, array $headers = []): void`
+
+Emits headers, outputs body, terminates execution.
+
+This is the **only hard exit primitive**.
+
+---
+
+## Common Execution Patterns (Not Required)
+
+### 1. View-Only
+
+```php
+// app/io/render/about.php
+<h1>About</h1>
+```
+
+Included directly. Output is sent as-is.
+
+---
+
+### 2. Logic → Render (Common, Optional)
+
+```php
+// app/io/route/users.php
+return function (array $args) {
+    return [
+        'users' => qp("SELECT id, name FROM users")->fetchAll()
+    ];
+};
+```
+
+```php
+// app/io/render/users.php
+return function (array $args) {
+    extract($args, EXTR_SKIP);
+    ?>
+    <ul>
+        <?php foreach ($users as $u): ?>
+            <li><?= htmlspecialchars($u['name']) ?></li>
+        <?php endforeach ?>
+    </ul>
+    <?php
+};
+```
+
+---
+
+### 3. API Fast-Path
+
+```php
+// app/io/route/api/users.php
+return function (array $args) {
+    io_die(
+        200,
+        json_encode(
+            qp("SELECT id, name FROM users")->fetchAll()
+        ),
+        ['Content-Type' => 'application/json']
+    );
+};
+```
+
+No render phase. Explicit exit.
+
+---
+
+## Access Guards (Explicit)
+
+```php
+// app/io/route/admin/users.php
+return function (array $args) {
+    auth() || io_die(401, 'Unauthorized');
+
+    return [
+        'users' => qp("SELECT * FROM users")->fetchAll()
+    ];
+};
+```
+
+This is **not middleware**.
+It is just a file that decides whether execution continues.
 
 ---
 
@@ -107,97 +310,66 @@ Skip render. In your route (invoked with IO_INVOKE), gather data, `json_encode()
 /                  → app/io/route/index.php
 /about             → app/io/route/about.php
 
-/users/edit/42     → app/io/route/users/edit.php (args: ['42'])
-/api/posts/123/tag → app/io/route/api/posts.php (args: ['123','tag'])
+/users/edit/42     → app/io/route/users/edit.php   (args: ['42'])
+/api/posts/123/tag → app/io/route/api/posts.php    (args: ['123','tag'])
 
 /deep/missing/path → tries:
-  • app/io/route/deep/missing/path.php
-  • app/io/route/deep/missing/path/path.php
-  • app/io/route/deep/missing.php           (args: ['path'])
-  • app/io/route/deep/missing/missing.php   (args: ['path'])
-  • app/io/route/deep.php                   (args: ['missing','path'])
-  • app/io/route/deep/deep.php              (args: ['missing','path'])
-  • app/io/route/index.php                  (args: ['deep','missing','path'])
+  • deep/missing/path.php
+  • deep/missing/path/path.php
+  • deep/missing.php        (args: ['path'])
+  • deep.php                (args: ['missing','path'])
+  • index.php               (args: ['deep','missing','path'])
 ```
+
+Filesystem-native.
+Deterministic.
+Debuggable.
 
 ---
 
-## Real-World Patterns
+## Philosophy
 
-### API Endpoint
+* **Explicitness** — nothing happens implicitly
+* **Minimalism** — fewer concepts, fewer bugs
+* **Control** — headers, exit, and flow are yours
+* **Honesty** — PHP is the abstraction
 
-```php
-// app/io/route/api/users.php
-return fn($args) => header('Content-Type: application/json')
-    && exit(json_encode(
-        qp("SELECT id,name FROM users LIMIT 10")->fetchAll()
-    ));
-```
-
-### Form Processing
-
-```php
-// app/io/route/contact.php
-return function($args) {
-    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        $name = $_POST['name'] ?: throw new Exception('Name required');
-        qp("INSERT INTO contacts (name,email) VALUES (?,?)",
-            [$name, $_POST['email']]);
-        header('Location:/contact/thanks');
-        exit;
-    }
-    return ['csrf_token' => csrf_token()];
-};
-```
-
-### Admin Middleware
-
-```php
-// app/io/route/admin/users.php
-return function($args) {
-    auth() ?: http_out(401, 'Login required');
-    return ['users' => qp("SELECT * FROM users")->fetchAll()];
-};
-```
+BADHAT assumes discipline.
+It does not protect you from yourself.
 
 ---
 
-## Why BADHAT?
+## When BADHAT Fits Naturally
 
-* **Simplicity:** \~200 lines of core, zero bloat.
-* **Performance:** Direct file execution, minimal overhead.
-* **Flexibility:** Swap or reuse renderers.
-* **Control:** Full-stack ownership, no hidden magic.
-* **No Dependencies:** Pure PHP.
-* **No Learning Curve:** If you know PHP, you know BADHAT.
+This is **not a recommendation matrix** — it describes alignment.
 
----
+**Fits well**
 
-## When to Use
+* APIs
+* admin tools
+* internal apps
+* prototypes
+* small to mid teams
+* direct SQL
 
-* **Go:** High-performance APIs, admin UIs, prototypes, small teams (1–10 devs), direct SQL.
-* **Maybe:** Apps up to 50k LOC, read-heavy, simple domains.
-* **Avoid:** Enterprise compliance, massive teams (100+), heavy third-party integrations, static marketing sites.
+**May fit**
 
-[Sample projects](readme-sample-projects.md)
+* apps up to ~50k LOC
+* read-heavy systems
+* simple domains
 
----
+**Probably not**
 
-## File Structure
+* large compliance-driven orgs
+* massive teams (100+)
+* heavy vendor ecosystems
+* static marketing sites
 
-```
-project/
-├── add/                    # BADHAT core
-├── app/
-│   └── io/
-│       ├── route/         # Logic handlers
-│       └── render/        # Presentation templates
-└── public/
-    └── index.php          # Entry point
-```
 
 ---
 
 ## License
 
-MIT. No warranty. Use at your own risk.
+MIT.
+No warranty.
+Use at your own risk.
