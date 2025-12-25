@@ -9,7 +9,6 @@ const AUTH_BOUNCE = 16;
 const AUTH_GUARD  = AUTH_CHECK | AUTH_BOUNCE;
 
 const AUTH_REQUIRE_SESSION = AUTH_ENTER | AUTH_CHECK | AUTH_LEAVE;
-const AUTH_CONSUME_PARAM   = AUTH_SETUP | AUTH_ENTER | AUTH_BOUNCE;
 
 const AUTH_DUMMY_HASH = '$2y$12$8NidQXAmttzUc23lTnUDAuC.JoxuJtdG0NQTjhh3Y7C442uVQ4FTy';
 
@@ -18,13 +17,7 @@ function checkin(int $behave = 0, ?string $u = null, $p = null): ?string
     static $username_field = null;
     static $password_query = null;
 
-    $consumers = $behave & AUTH_CONSUME_PARAM;
-    ($consumers & ($consumers - 1))
-        && throw new BadFunctionCallException('Multiple param-consuming flags not allowed', 400);
-
     if (AUTH_SETUP & $behave) {
-        (!is_string($u) || $u === '')
-            && throw new InvalidArgumentException('Username field must be non-empty string', 400);
         $username_field = $u;
         $password_query = $p;
         return null;
@@ -34,35 +27,21 @@ function checkin(int $behave = 0, ?string $u = null, $p = null): ?string
         && (session_start() || throw new RuntimeException('session_start failed', 500));
 
     try {
-        if (AUTH_ENTER & $behave) {
-            auth_login($username_field, $password_query, $u, $p);
-        }
-
-        if (AUTH_CHECK & $behave) {
-            if (auth_check($username_field) === null) {
-                if (AUTH_BOUNCE & $behave) {
-                    auth_bounce($u);
-                }
-                throw new RuntimeException('Authentication required', 401);
-            }
-            $behave &= ~AUTH_BOUNCE;
-        }
-
-        if (AUTH_LEAVE & $behave) {
-            auth_leave();
-            return null;
-        }
-
+        if (AUTH_ENTER & $behave)
+            return auth_login($username_field, $password_query, $u, $p);
+        
+        (AUTH_GUARD & $behave) && auth_check($username_field) !== null && ($behave &= ~AUTH_BOUNCE);
+        (AUTH_LEAVE & $behave) && auth_leave();
         (AUTH_BOUNCE & $behave) && auth_bounce($u);
+        
+        return auth_check($username_field);
 
     } catch (Error $e) {
         throw new BadFunctionCallException('Invalid parameters for AUTH action', 400, $e);
     }
-
-    return $_SESSION[$username_field] ?? null;
 }
 
-function auth_bounce(string $url): never
+function auth_bounce(string $url)
 {
     header('Location: ' . $url);
     exit;
@@ -79,10 +58,10 @@ function auth_leave(): void
 
     if (ini_get('session.use_cookies')) {
         $p = session_get_cookie_params();
-        setcookie(session_name(),'',time() - 3600,$p['path'],$p['domain'],$p['secure'],$p['httponly']);
+        setcookie(session_name(), '', time() - 3600, $p['path'], $p['domain'], $p['secure'], $p['httponly'])  || trigger_error('session cookie destruction failed', E_USER_WARNING);
     }
 
-    session_destroy() || throw new RuntimeException('session destruction error', 500);
+    session_destroy() || trigger_error('session_destroy failed', E_USER_WARNING);
 }
 
 function auth_login(string $username_field, PDOStatement $password_query, string $u, string $p): ?string
@@ -92,7 +71,7 @@ function auth_login(string $username_field, PDOStatement $password_query, string
         : null;
 
     if ($user !== null) {
-        session_regenerate_id(true) || throw new RuntimeException('Session ID regeneration failed', 500);
+        session_regenerate_id(true) || trigger_error('Session ID regeneration failed - fixation risk', E_USER_WARNING);
         $_SESSION[$username_field] = $user;
     }
 
