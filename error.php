@@ -3,7 +3,7 @@
 const EH_ERROR     = 1;    // set_error_handler
 const EH_EXCEPTION = 2;    // set_exception_handler
 const EH_SHUTDOWN  = 4;    // register_shutdown_function
-const EH_INTERCEPT = 8;    // register_shutdown_function
+const EH_SUPPRESS  = 8;    // register_shutdown_function
 
 const EH_HANDLE_ALL = EH_ERROR | EH_EXCEPTION | EH_SHUTDOWN;
 
@@ -35,7 +35,7 @@ function badhat_install_error_handlers(int $behave = EH_HANDLE_ALL, ?string $req
 
     (EH_ERROR & $behave)       && set_error_handler(function (int $errno, string $errstr, string $errfile, int $errline) use ($format, $behave): bool {
             error_log(sprintf($format, 'Error', "errno={$errno}", $errstr, $errfile, $errline));
-            return (bool)(EH_INTERCEPT & $behave);
+            return (bool)(EH_SUPPRESS & $behave);
         }
     );
 
