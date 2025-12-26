@@ -22,349 +22,108 @@ No framework lock-in.
 Just ~200 lines of PHP that add **almost no overhead beyond PHP itself**, suitable for a large class of **direct, file-driven web applications**.
 
 ---
+# PHP structure without the theology
 
-## What BADHAT Is (and Is Not)
+PHP had a simple premise: URL maps to file, file runs, output goes to browser. Done. A contact form was one file. A blog was five.
 
-BADHAT is **not** a framework.
+Then PHP got ambitious. Or rather, PHP developers got insecure.
 
-It does not abstract HTTP away — it **embraces it**.
+## The legitimacy problem
 
-BADHAT provides:
+For years, PHP was "not a real language." Java had enterprise credibility. So PHP borrowed Java's patterns: MVC, front controllers, dependency injection containers, service providers, interface segregation, repository abstractions. Symfony explicitly modeled itself on Spring.
 
-* deterministic mapping from request → file
-* explicit execution and exit points
-* optional output capture and callable invocation
-* zero dependencies
+The patterns worked. PHP got respect. And somewhere along the way, the patterns became mandatory.
 
-BADHAT deliberately avoids:
+A junior developer today learns Laravel before learning PHP. They inherit a universe where a page request boots 400 files, passes through 14 middleware layers, resolves dependencies from a container, dispatches to a controller that calls a service that calls a repository that runs one query — and finally returns an "immutable response object" that says hello.
 
-* routing tables
-* dependency injection containers
-* ORMs
-* lifecycle hooks
-* hidden control flow
+Nobody questions this. Questioning it would be unprofessional.
 
-There is no DSL.
-There are no annotations.
-PHP *is* the abstraction.
+## The theology
 
----
+Every religion has doctrines. PHP framework culture has these:
 
-## Request Lifecycle (12 lines)
+**Separation of Concerns.** Models, Views, Controllers — each in sacred directories. Even when your model is one query. Even when your view is ten lines. The separation is the virtue, not the outcome.
 
-1. **Apache receives the request**
-   Unsafe methods, dot-files, traversal, null bytes are rejected *before PHP*.
+**Dependency Injection.** Never instantiate directly. Everything through containers. Your app has one database connection, used everywhere, unchanged for years. Doesn't matter. Inject it. What if you need to swap it? You won't. But what if?
 
-2. **`index.php` is the single entry point**
-   Every request becomes code, or it dies here.
+**Don't Repeat Yourself.** Three lines appear twice? Extract a helper. Now a trait. Now a service class. Now you're reading four files to follow one action. But at least you didn't repeat yourself.
 
-3. **The raw URI is read**
-   No routing table. No controller resolution. Just a string.
+**Testability.** Entire architectures warped around unit tests that never get written. Interfaces for classes with one implementation. Mocks for things that will never change. The tests are theoretical. The indirection is permanent.
 
-4. **The path is normalized**
-   Decoded, cleaned, null-byte–free.
+These aren't wrong. They solve real problems — at scale, with large teams, over long maintenance windows. The theology is applying them unconditionally. The belief that ceremony is correctness. That structure is virtue, independent of context.
 
-5. **The suffix / accept is resolved**
-   `html`, `json`, or fallback. No content-negotiation theatre.
+A 5-page marketing site doesn't have the problems these patterns solve. It has the problems these patterns create.
 
-6. **Candidate file paths are generated**
-   Nesting, depth, and root rules decide where to look.
+## What PHP actually was
 
-7. **Files are tried in order**
-   First existing file wins. Deterministic and inspectable.
+Early PHP had no opinions. A URL was a file path. The file executed top to bottom. `include` was your composition mechanism — pull in a header, pull in a database connection, pull in a footer. Global state everywhere because scope wasn't the problem. Shipping was the problem.
 
-8. **The file is included**
-   Output may be buffered. A return value may exist.
+No "business logic" as a concept. A script would authenticate, query, loop, and echo HTML in fifty lines. It worked. It shipped. It was unmaintainable past a certain size — and most projects never hit that size.
 
-9. **Optional invocation happens**
-   If the file returns a callable, it may be executed.
+The modern stack solves maintainability at scale. The cost is maintainability at small scale. A solo developer on a simple project now needs framework knowledge, directory conventions, configuration files, and a mental model of the request lifecycle before writing line one.
 
-10. **Results are captured**
-    Return value, output buffer, invocation result.
+The old model was chaotic. The new model is bureaucratic. Both fail, differently.
 
-11. **Headers are emitted explicitly**
-    One place. No late mutation. No CRLF tolerated.
+## badhat
 
-12. **The response ends**
-    Execution stops. Nothing else runs.
+badhat is a bet that there's space between chaos and bureaucracy.
 
----
+The filesystem is the router. You request `/admin/users`, badhat looks for `admin/users.php` or `admin/users/users.php` or walks back to `admin.php` with `['users']` as arguments. No routing table. No YAML. No annotations. Files are files.
 
-## Core Principle (Truthful)
+Scripts are scripts. They run. They can return a callable — badhat will invoke it. They can echo output — badhat can buffer it. They can do both. badhat doesn't care.
 
-BADHAT does **not** define layers, phases, or architecture.
+Pipelines are explicit. You want a boot script, a handler, and a renderer? Build the array, pass it to `io_run`. You want one file that does everything? Pass one file. Your architecture is your decision.
 
-It defines **execution mechanics**.
+DRY is applied once, at the infrastructure level. Path resolution, include logic, output capture — written once in badhat, used everywhere in your app. Your app code repeats whatever it wants.
 
-From those mechanics, you may choose to structure your application however you want:
+Separation of Concerns exists where it matters. Mapping is separate from execution. Execution is separate from output. Beyond that, organize however you think.
 
-* logic and rendering separated
-* logic and rendering combined
-* early exits
-* callable pipelines
-* single-file pages
-* multi-step flows
+No base controllers. No service providers. No config cascades. No interface contracts. No middleware stacks. No opinions on directory names.
 
-If you want phases, BADHAT supports them.
-If you don’t, BADHAT stays out of the way.
-
-> **BADHAT doesn’t tell you how to structure your app.
-> It only makes execution predictable.**
-
----
-
-## Installation (30 seconds)
-
-```bash
-git clone https://github.com/lareponse/BADHAT.git add/badhat
-mkdir -p app/io/{route,render}
-```
-
-## File Structure
-
-```
-project/
-├── add/              # BADHAT core
-├── app/
-│   └── io/
-│       ├── route/    # Optional logic grouping
-│       └── render/   # Optional rendering grouping
-└── public/
-    └── index.php     # Entry point
-```
-
----
-
-## Entry Point (`public/index.php`) — correct
+## The actual code
 
 ```php
-<?php
-require 'add/badhat/io.php';
+[$handler, $segments] = io_map($scripts, $uri, 'php', IO_DEEP) 
+    ?? io_die(404, 'Not Found');
 
-[$path, $accept] = io_in($_SERVER['REQUEST_URI']);
+$loot = io_run([$handler], $segments, IO_BUFFER | IO_INVOKE);
 
-$base = 'app/io';
-
-// --- one possible wiring (not required) ---
-
-// Resolve route
-$route = io_map("$base/route", $path, 'php', IO_DEEP | IO_NEST);
-
-// Execute route (may invoke callable)
-$data = $route
-    ? io_run([$route[0]], $route[1] ?? [], IO_INVOKE)
-    : [];
-
-// Resolve render
-$render = io_map("$base/render", $path, $accept, IO_DEEP | IO_NEST);
-
-// Execute render, capture output
-$html = $render
-    ? io_run([$render[0]], $data[IO_RETURN] ?? [], IO_ABSORB)
-    : [];
-
-// Final output
-io_die(200, $html[IO_RETURN] ?? '');
+echo $loot[IO_OUTPUT];
 ```
 
-> This wiring is **an example**, not a model.
+Three lines. Request to response. Add a boot script and a renderer if you want. Or don't.
 
----
+## Who this is for
 
-## Core Functions (Actual Contracts)
+Developers who remember what PHP was for.
 
-### `io_in(string $raw, string $accept = 'html', string $default = 'index'): array`
+Developers tired of fighting frameworks to do simple things.
 
-Parses and normalizes the request URI.
+Developers who can organize their own directories.
 
-Returns:
+Developers shipping alone or in small teams, without the governance problems that enterprise patterns solve.
 
-```php
-[$path, $accept]
-```
+Developers who understand that professionalism is solving the problem, not performing the ceremony.
 
----
+## Who this is not for
 
-### `io_map(string $base_dir, string $uri_path, string $file_ext, int $behave = 0): ?array`
+Teams that need enforced conventions because they can't agree otherwise.
 
-Resolves execution paths.
+Projects that genuinely operate at scale, with long maintenance horizons and rotating staff.
 
-Returns:
+Developers who find comfort in structure they didn't choose.
 
-* `null` if nothing matches
-* `[path]`
-* `[path, args]`
+Anyone who thinks this essay is an attack on Laravel. It isn't. Laravel is good at what it is. What it is isn't what everyone needs.
 
----
+## The point
 
-### `io_run(array $file_paths, array $args, int $behave = 0): array`
+PHP got complicated because PHP developers wanted respect. The respect came. The complexity stayed.
 
-Executes one or more files.
+badhat is simple because simple is enough for most things. It provides structure — file resolution, execution pipelines, output handling — without doctrine about how you use it.
 
-Depending on flags:
+Your app. Your files. Your problem.
 
-* includes files
-* captures output
-* invokes returned callables
-* chains results
-
-Return shape:
-
-```php
-[
-  IO_RETURN => mixed,
-  IO_BUFFER => string (if buffered)
-]
-```
-
----
-
-### `io_die(int $status, string $body, array $headers = []): void`
-
-Emits headers, outputs body, terminates execution.
-
-This is the **only hard exit primitive**.
-
----
-
-## Common Execution Patterns (Not Required)
-
-### 1. View-Only
-
-```php
-// app/io/render/about.php
-<h1>About</h1>
-```
-
-Included directly. Output is sent as-is.
-
----
-
-### 2. Logic → Render (Common, Optional)
-
-```php
-// app/io/route/users.php
-return function (array $args) {
-    return [
-        'users' => qp("SELECT id, name FROM users")->fetchAll()
-    ];
-};
-```
-
-```php
-// app/io/render/users.php
-return function (array $args) {
-    extract($args, EXTR_SKIP);
-    ?>
-    <ul>
-        <?php foreach ($users as $u): ?>
-            <li><?= htmlspecialchars($u['name']) ?></li>
-        <?php endforeach ?>
-    </ul>
-    <?php
-};
-```
-
----
-
-### 3. API Fast-Path
-
-```php
-// app/io/route/api/users.php
-return function (array $args) {
-    io_die(
-        200,
-        json_encode(
-            qp("SELECT id, name FROM users")->fetchAll()
-        ),
-        ['Content-Type' => 'application/json']
-    );
-};
-```
-
-No render phase. Explicit exit.
-
----
-
-## Access Guards (Explicit)
-
-```php
-// app/io/route/admin/users.php
-return function (array $args) {
-    auth() || io_die(401, 'Unauthorized');
-
-    return [
-        'users' => qp("SELECT * FROM users")->fetchAll()
-    ];
-};
-```
-
-This is **not middleware**.
-It is just a file that decides whether execution continues.
-
----
-
-## Routing Examples
-
-```
-/                  → app/io/route/index.php
-/about             → app/io/route/about.php
-
-/users/edit/42     → app/io/route/users/edit.php   (args: ['42'])
-/api/posts/123/tag → app/io/route/api/posts.php    (args: ['123','tag'])
-
-/deep/missing/path → tries:
-  • deep/missing/path.php
-  • deep/missing/path/path.php
-  • deep/missing.php        (args: ['path'])
-  • deep.php                (args: ['missing','path'])
-  • index.php               (args: ['deep','missing','path'])
-```
-
-Filesystem-native.
-Deterministic.
-Debuggable.
-
----
-
-## Philosophy
-
-* **Explicitness** — nothing happens implicitly
-* **Minimalism** — fewer concepts, fewer bugs
-* **Control** — headers, exit, and flow are yours
-* **Honesty** — PHP is the abstraction
-
-BADHAT assumes discipline.
-It does not protect you from yourself.
-
----
-
-## When BADHAT Fits Naturally
-
-This is **not a recommendation matrix** — it describes alignment.
-
-**Fits well**
-
-* APIs
-* admin tools
-* internal apps
-* prototypes
-* small to mid teams
-* direct SQL
-
-**May fit**
-
-* apps up to ~50k LOC
-* read-heavy systems
-* simple domains
-
-**Probably not**
-
-* large compliance-driven orgs
-* massive teams (100+)
-* heavy vendor ecosystems
-* static marketing sites
-
+badhat just runs them.
 
 ---
 
