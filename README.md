@@ -1,13 +1,10 @@
 # BADHAT
 
 ```
-Bits
-Are
-Decisive
-HTTP
-As
-Terminal
+Bits As Decision
+HTTP As Terminal
 ```
+
 
 > **A request is just a path that becomes a file that becomes execution.**
 
@@ -15,13 +12,17 @@ Terminal
 files decide, files execute, files emit output.
 
 No controllers.
+
 No routers.
+
 No middleware stacks.
+
 No framework lock-in.
 
 Just ~200 lines of PHP that add **almost no overhead beyond PHP itself**, suitable for a large class of **direct, file-driven web applications**.
 
----
+
+
 # PHP structure without the theology
 
 PHP had a simple premise: URL maps to file, file runs, output goes to browser. Done. A contact form was one file. A blog was five.
