@@ -1,221 +1,242 @@
-# Core IO Functions
+# BADHAT IO — One-Page Guide
 
-Minimal execution lattice: URI → filesystem → execution → response.
+BADHAT IO turns **paths into execution**.
 
-No MVC. No controllers. Just tools.
+It is a small set of execution **primitives** whose **flags** let the filesystem **express architectures** normally imposed by frameworks.
+
+There are no controllers, no routing tables, no required architecture.
+Files run. Folders organize. Flags decide how execution flows.
 
 ---
 
-## Constants
+## The Rule
+
+> **Find a file. Run it. Decide what to do with what comes out.**
+
+
+---
+
+## The Primitives
+
+**`io_in`** exists to turn an inbound request into intent.
+It normalizes the path and separates what is structural from what is incidental.
+Nothing is executed here.
+
+> It has no flags.
+
+---
+
+**`io_map`** exists to decide what can run.
+It maps intent to filesystem reality.
+It does not execute, it only resolves.
+If nothing resolves, execution does not proceed.
+
+By combining deep-first or root-first resolution, it can express either intent-centric or entry-point-centric systems using the same directory tree.
+
+> IO_NEST, IO_DEEP, IO_ROOT
+---
+
+**`io_run`** exists to execute.
+It takes one or more resolved files and runs them in order.
+This is where output, return values, invocation, chaining, and transformation happen.
+
+With buffering enabled, output becomes a value.
+With invocation enabled, files become behaviors.
+With absorb enabled, output feeds behavior.
+With chaining enabled, execution becomes a pipeline.
+
+The same primitive can act as a renderer, a dispatcher, middleware, or a transformer — depending only on flags.
+
+> IO_BUFFER, IO_INVOKE, IO_ABSORB, IO_CHAIN
+
+---
+
+**`io_look`** exists to answer a single question:
+“Does this path correspond to an executable file?”
+It performs no walking, no guessing, no fallback.
+
+With nesting enabled, a directory can define its own local entry point without any central routing logic.
+
+> IO_NEST
+
+---
+
+**`io_seek`** exists to relax exactness.
+It walks a path until something executable appears, and returns what remains.
+This is how intent survives missing specificity.
+
+When walking deep-first, specificity wins.
+When walking root-first, authority wins.
+
+The same filesystem can therefore describe resources or commands without changing structure.
+
+> IO_DEEP, IO_ROOT and IO_NEST, through io_look calls
+
+
+---
+
+**`io_die`** exists to stop everything.
+It emits a response and terminates execution.
+There is no return path.
+
+It is the only absolute boundary in the system.
+
+---
+
+## Flags 
+
+Flags do not introduce new concepts.
+They **change what the same primitives are capable of expressing**.
+
+Through their combination, the filesystem can behave as:
+
+* a static site
+* a parameterized application
+* an API surface
+* a data pipeline
+* a rendering stack
+* a middleware chain
+
+No roles are declared.
+No architecture is enforced.
+Everything emerges from composition.
+
+
+---
+
+## Basic Setup
 
 ```php
-const IO_RETURN = 0;    // Loot slot: included file return value
-const IO_BUFFER = 1;    // Loot slot: output buffer content
+[$path] = io_in($_SERVER['REQUEST_URI']);
+$route  = io_map('/app/pages', $path);
 
-const IO_INVOKE = 2;    // Call fn(args), store in IO_RETURN
-const IO_ABSORB = 4 | IO_BUFFER | IO_INVOKE;  // Call fn(args + buffer)
-
-const IO_NEST   = 8;    // Try file + file/file patterns
-const IO_DEEP   = 16;   // Deep-first seek (N → 1 segments)
-const IO_ROOT   = 32;   // Root-first seek (1 → N segments)
-
-const IO_CHAIN  = 64;   // Propagate loot as args to next file
-```
-
-**Flags are orthogonal and composable.**
-
----
-
-## Functions
-
-### `io_in(string $raw, string $accept = 'html', string $default = 'index'): array`
-
-Normalize inbound URI.
-
-```php
-[$path, $ext] = io_in($_SERVER['REQUEST_URI']);
-```
-
-- Extracts path component
-- Rejects null bytes (400)
-- Normalizes `//` → `/`
-- Extracts trailing extension if present
-- Falls back to `$default` if empty
-
-**Returns:** `[$path, $accept_or_extension]`
-
-**Pure function:** no globals read, no output.
-
----
-
-### `io_map(string $base_dir, string $uri_path, string $file_ext = 'php', int $behave = 0): ?array`
-
-Resolve URI to executable path.
-
-**Resolution stages:**
-1. Direct lookup via `io_look()`
-2. Segment-based seek via `io_seek()` (if `IO_DEEP|IO_ROOT`)
-
-**Returns:**
-- `[string $filepath]` — exact match
-- `[string $filepath, array $remaining_segments]` — seek match
-- `null` — no match
-
-```php
-// Direct match
-$route = io_map('/app/route', 'users/edit', 'php');
-// → ['/app/route/users/edit.php']
-
-// Deep-first with args
-$route = io_map('/app/route', 'api/users/42', 'php', IO_DEEP);
-// → ['/app/route/api/users.php', ['42']]
-```
-
----
-
-### `io_run(array $file_paths, array $io_args, int $behave = 0): array`
-
-Execute resolved paths.
-
-**For each file:**
-1. Optionally capture output buffer (`IO_BUFFER`)
-2. Include file
-3. Optionally invoke returned callable (`IO_INVOKE`)
-4. Optionally pass buffer to callable (`IO_ABSORB`)
-5. Optionally chain result to next file (`IO_CHAIN`)
-
-**Invocation signatures:**
-- `IO_INVOKE` → `fn(array $args)`
-- `IO_ABSORB` → `fn(array $args_with_buffer_appended)`
-
-**Returns:** Last execution loot:
-```php
-[
-    IO_RETURN => mixed,  // return value or callable result
-    IO_BUFFER => string  // if IO_BUFFER enabled
-]
-```
-
-```php
-$loot = io_run(['/app/route/users.php'], ['id' => 42], IO_INVOKE);
-$data = $loot[IO_RETURN];
-
-$loot = io_run(['/app/render/users.php'], $data, IO_ABSORB);
-$html = $loot[IO_RETURN];  // callable result
-```
-
----
-
-### `io_die(int $status, string $body, array $headers = []): void`
-
-Terminate with HTTP response.
-
-```php
-io_die(404, 'Not Found');
-io_die(200, $json, ['Content-Type' => 'application/json']);
-```
-
-- Sets status code
-- Emits headers (validates no CRLF injection)
-- Outputs body
-- **Calls `exit`**
-
----
-
-### `io_look(string $base_dir, string $candidate, string $file_ext, int $behave = 0): ?string`
-
-Direct file resolution.
-
-Tries in order:
-1. `$base_dir/$candidate.$file_ext`
-2. `$base_dir/$candidate/basename($candidate).$file_ext` (if `IO_NEST`)
-
-**Security:** validates `realpath()` stays within `$base_dir`.
-
-**Returns:** full filepath or `null`
-
----
-
-### `io_seek(string $base_dir, string $uri_path, string $file_ext, int $behave = 0): ?array`
-
-Segment-based resolution.
-
-- `IO_DEEP`: N → 1 segments (deepest first)
-- `IO_ROOT`: 1 → N segments (shallowest first)
-
-Uses `io_look()` at each depth.
-
-**Returns:** `[$filepath, $remaining_segments]` or `null`
-
----
-
-## Usage Patterns
-
-### Mirroring (default)
-
-```php
-[$path, $accept] = io_in($_SERVER['REQUEST_URI']);
-$route = io_map('/app/route', $path);
-
-$route 
+$route
     ? io_run($route, [])
     : io_die(404, 'Not Found');
 ```
 
-### Deep-first API routing
-
-```php
-// /api/users/42/profile
-$route = io_map('/app/api', 'users/42/profile', 'php', IO_DEEP);
-
-// Tries: users/42/profile.php → users/42.php → users.php → index.php
-// Returns: ['/app/api/users.php', ['42', 'profile']]
+```
+/about   → /app/pages/about.php
+/contact → /app/pages/contact.php
 ```
 
-### Two-phase execution
+Rename a file, the URL changes.
 
-```php
-// Phase 1: Route (data)
-$route = io_map('/app/route', $path, 'php', IO_DEEP);
-$loot = io_run($route, [], IO_INVOKE);
+---
 
-// Phase 2: Render (output)
-$render = io_map('/app/render', $path, 'php', IO_DEEP | IO_NEST);
-$loot = io_run($render, $loot, IO_ABSORB);
+## Intent-First Paths (recommended)
 
-io_die(200, $loot[IO_RETURN], ['Content-Type' => 'text/html']);
+BADHAT works best when paths read **left → right**:
+
+```
+/users/profile/42
+/users/edit/42
+/api/users/get/42
 ```
 
-### Chained execution
+Intent first, data last.
+
+---
+
+## Parameters via Path Segments
 
 ```php
-$files = ['/app/middleware/auth.php', '/app/route/dashboard.php'];
+$route = io_map('/app/pages', 'users/profile/42', 'php', IO_DEEP);
+$loot  = io_run($route, [], IO_INVOKE);
+```
+
+```php
+// users.php
+return function(array $args) {
+    [$action, $id] = $args;
+    return "User $id, action $action";
+};
+```
+
+No placeholders.
+Segments are just arguments.
+
+---
+
+## Data → Render (Two-Phase)
+
+```php
+$route  = io_map('/app/route', 'users/profile/42', 'php', IO_DEEP);
+$loot   = io_run($route, [], IO_INVOKE);
+
+$render = io_map('/app/render', 'users', 'php');
+$loot   = io_run($render, $loot, IO_ABSORB);
+
+io_die(200, $loot[IO_RETURN]);
+```
+
+* First file returns data
+* Second file turns data into output
+
+No enforced roles.
+
+---
+
+## Output Capture (Templates Without Engines)
+
+```php
+$route = io_map('/app/pages', 'home');
+$loot  = io_run($route, [], IO_BUFFER);
+
+io_die(200, $loot[IO_OUTPUT]);
+```
+
+If a file echoes, BADHAT can capture it.
+
+---
+
+## Layout via Output Absorb
+
+```php
+// page.php
+<h1><?= $title ?></h1>
+
+<?php
+return fn($args) =>
+    "<html><body>{$args[0]}</body></html>";
+```
+
+```php
+$loot = io_run(['/app/page.php'], ['title' => 'Home'], IO_ABSORB);
+echo $loot[IO_RETURN];
+```
+
+Output becomes input.
+
+---
+
+## Chaining Files
+
+```php
+$files = [
+    '/app/mw/auth.php',
+    '/app/route/users.php',
+    '/app/render/users.php',
+];
+
 $loot = io_run($files, [], IO_INVOKE | IO_CHAIN);
-// Each file receives previous file's return as args
+io_die(200, $loot[IO_RETURN]);
 ```
+
+Each file receives the previous result.
+Order is explicit.
 
 ---
 
-## Resolution Examples
+## JSON API Example
 
+```php
+$route = io_map('/app/api', 'users/get/42', 'php', IO_DEEP);
+$loot  = io_run($route, [], IO_INVOKE);
+
+io_die(
+    200,
+    json_encode($loot[IO_RETURN]),
+    ['Content-Type' => 'application/json']
+);
 ```
-URI                     Flag        Result
-────────────────────────────────────────────────────
-/users                  default     route/users.php
-/users/edit             default     route/users/edit.php
-/users/edit             IO_NEST     route/users/edit/edit.php (fallback)
-/api/users/42           IO_DEEP     route/api/users.php + ['42']
-/api/users/42           IO_ROOT     route/api.php + ['users','42']
-/deep/missing/path      IO_DEEP     tries: deep/missing/path.php
-                                         → deep/missing.php + ['path']
-                                         → deep.php + ['missing','path']
-```
-
----
-
-## Design Notes
-
-- No normalized return shapes
-- No architectural role enforcement
-- No hidden execution order
-- Sharp tools, explicit control
