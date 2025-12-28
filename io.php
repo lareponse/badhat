@@ -17,22 +17,22 @@ const IO_CHAIN  = 64;                           // Chain loot results as args fo
 const USERLAND_ERROR = 0xBAD;
 
 
-function io_in(string $raw, string $accept = 'html', string $default = 'index'): array
+function io_in(string $raw): array
 {
     $path = parse_url($raw, PHP_URL_PATH) ?: '';
     $path = rawurldecode($path);
 
     strpos($path, "\0") === false || throw new InvalidArgumentException('Bad Request', 400);    // Reject null byte explicitly
 
-    $path = trim($path, '/'); // eats all trailing slashes
+    $path = trim($path, '/');   // eats all trailing slashes
 
     if (($last_dot = strrpos($path, '.')) !== false && ($last_dot > ((strrpos($path, '/') ?: -1) + 1)))
-        return [substr($path, 0, $last_dot), substr($path, $last_dot + 1)]; // path has extension
+        return [substr($path, 0, $last_dot), substr($path, $last_dot + 1)];
 
-    return [$path ?: $default, $accept];
+    return [$path, null];
 }
 
-function io_map(string $base_dir, string $uri_path, string $file_ext = 'php', int $behave = 0): ?array
+function io_map(string $base_dir, string $uri_path, string $file_ext, int $behave = 0): ?array
 { // resolves an execution path, returns existing path (and remaining segments), or null
     ($path = io_look($base_dir, $uri_path, $file_ext, $behave)) && ($path = [$path]);
     if (!$path && ((IO_DEEP | IO_ROOT) & $behave))
