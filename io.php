@@ -74,7 +74,7 @@ function io_run(array $file_paths, array $io_args, int $behave = 0): array
     return $loot;
 }
 
-function io_die(int $status, string $body, array $headers = []): void
+function io_die(int $status, string $body, array $headers): void
 {
     http_response_code($status);
     foreach ($headers as $h => $v)
