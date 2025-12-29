@@ -14,32 +14,28 @@ const IO_ROOT   = 32;                           // Root-first seek
 
 const IO_CHAIN  = 64;                           // Chain loot results as args for next included file
 
-const USERLAND_ERROR = 0xBAD;
+const USERLAND_ERROR = 0xBAD;                   // 2989
 
 
-function io_in(string $raw): array
+function io_in(string $raw): string
 {
     $path = parse_url($raw, PHP_URL_PATH) ?: '';
     $path = rawurldecode($path);
 
     strpos($path, "\0") === false || throw new InvalidArgumentException('Bad Request', 400);    // Reject null byte explicitly
 
-    $path = trim($path, '/');   // eats all trailing slashes
-
-    if (($last_dot = strrpos($path, '.')) !== false && ($last_dot > ((strrpos($path, '/') ?: -1) + 1)))
-        return [substr($path, 0, $last_dot), substr($path, $last_dot + 1)];
-
-    return [$path, null];
+    return trim($path, '/');   // eats all trailing slashes
 }
 
-function io_map(string $base_dir, string $uri_path, string $file_ext, int $behave = 0): ?array
-{ // resolves an execution path, returns existing path (and remaining segments), or null
-    ($path = io_look($base_dir, $uri_path, $file_ext, $behave)) && ($path = [$path]);
-    if (!$path && ((IO_DEEP | IO_ROOT) & $behave))
-        $path = io_seek($base_dir, $uri_path, $file_ext, $behave);
+function io_map(string $base_dir, string $uri_path, string $execution_suffix, int $behave = 0): ?array
+{ // resolves an execution path
+    if ((IO_DEEP | IO_ROOT) & $behave)
+        return io_seek($base_dir, $uri_path, $execution_suffix, $behave);
 
-    return $path;
-}
+    return ($look_up = io_look($base_dir, $uri_path, $execution_suffix, $behave)) !== null
+        ? [$look_up, null] 
+        : null;
+} // an array: [string path, ?array args]
 
 function io_run(array $file_paths, array $io_args, int $behave = 0): array
 { // executes one or more resolved execution paths and returns last execution result
@@ -83,21 +79,24 @@ function io_die(int $status, string $body, array $headers): void
     exit;
 }
 
-
-function io_look(string $base_dir, string $candidate, string $file_ext, int $behave = 0): ?string
-{ // returns a direct execution path, or null
-    $base = rtrim($base_dir, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
-    $base_path = $base . $candidate;
-    $file = $base_path . '.' . $file_ext;
-    $file = is_file($file) ? $file : null;
-    if (!$file && (IO_NEST & $behave)) {
-        $file = $base_path . DIRECTORY_SEPARATOR . basename($candidate) . '.' . $file_ext;
-        $file = is_file($file) ? $file : null;
+function io_look(string $base_dir, string $candidate, string $execution_suffix, int $behave = 0): ?string
+{
+    (!$base_dir || $base_dir[-1] !== DIRECTORY_SEPARATOR) && throw new InvalidArgumentException('base_dir must end with directory separator '. DIRECTORY_SEPARATOR); // for valid strpos security check 
+    
+    $path = $base_dir . $candidate;
+    $file = $path . $execution_suffix;
+    
+    if (!is_file($file) && (IO_NEST & $behave)) {
+        $file = $path . DIRECTORY_SEPARATOR . basename($candidate) . $execution_suffix;
+        is_file($file) || ($file = null);
     }
-    return $file && ($real = realpath($file)) && strpos($real, $base) === 0 ? $real : null;
-}
 
-function io_seek(string $base_dir, string $uri_path, string $file_ext, int $behave = 0): ?array
+    return $file !== null && ($real = realpath($file)) && strpos($real, $base_dir) === 0 
+        ? $real 
+        : null;
+} // returns a real, in-base direct execution path, or null
+
+function io_seek(string $base_dir, string $uri_path, string $execution_suffix, int $behave = 0): ?array
 { // resolves an execution path by segment walk (and remaining segments), or null
     $slashes_positions = [];
     $slashes = 0;
@@ -114,7 +113,7 @@ function io_seek(string $base_dir, string $uri_path, string $file_ext, int $beha
             ? substr($uri_path, 0, $slashes_positions[$depth - 1])
             : $uri_path;
 
-        if ($path = io_look($base_dir, $candidate, $file_ext, $behave)) {
+        if ($path = io_look($base_dir, $candidate, $execution_suffix, $behave)) {
             $args = $depth > $slashes ? [] : explode('/', substr($uri_path, $slashes_positions[$depth - 1] + 1));
             return [$path, $args];
         }
