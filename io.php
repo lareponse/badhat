@@ -1,21 +1,7 @@
 <?php
-
-const IO_OUTPUT = -2;                           // stores include output buffer
-const IO_RETURN = -1;                           // stores include return value
-
-const IO_BUFFER = 1;                            // activate buffering
-const IO_INVOKE = 2;                            // Call fn(args) and store return in IO_RETURN (if callable)
-const IO_ABSORB = 4 | IO_BUFFER | IO_INVOKE;    // Call fn(args + output buffer) and store return value IO_RETURN
-const IO_RESCUE = 8
-const IO_ONWARD = 16;
-
-const IO_NEST   = 32;                            // Flexible routing: try file + file/file
-const IO_DEEP   = 64;                           // Deep-first seek
-const IO_ROOT   = 128;                           // Root-first seek
-
-const IO_CHAIN  = 256;                           // Chain loot results as args for next included file
-const USERLAND_ERROR = 0xBAD;                   // 2989
-
+const IO_NEST   = 1;                            // Flexible routing: try file + file/file
+const IO_DEEP   = 2;                           // Deep-first seek
+const IO_ROOT   = 4;                           // Root-first seek
 
 function io_in(string $raw): string
 {
@@ -25,6 +11,14 @@ function io_in(string $raw): string
     strpos($path, "\0") === false || throw new InvalidArgumentException('Bad Request', 400);    // Reject null byte explicitly
 
     return trim($path, '/');   // eats all trailing slashes
+}
+
+function io_out(int $status, string $body, array $headers): void
+{
+    http_response_code($status);
+    foreach ($headers as $h => $v)
+        header("$h: $v"); // header() already detects CR/LF injection, drop them and logs a warning
+    echo $body;
 }
 
 function io_map(string $base_dir, string $url_path, string $execution_suffix, int $behave = 0): ?array
@@ -37,53 +31,7 @@ function io_map(string $base_dir, string $url_path, string $execution_suffix, in
         : null;
 } // an array: [string path, ?array args]
 
-function io_run(array $file_paths, array $io_args, int $behave = 0): array
-{ // executes one or more resolved execution paths and returns last execution result
-    $loot = $io_args;
 
-    foreach ($file_paths as $file_path) {
-        $args = (IO_CHAIN & $behave) ? $loot : $io_args;
-
-        $level = ob_get_level();
-        $fault = null;
-
-        (IO_BUFFER & $behave) && ob_start(null, 0, 0);                  // raw output is buffered, no autoflush
-
-        try {
-            $loot[IO_RETURN] = include $file_path;
-        } catch (Throwable $t) {
-            $fault = new RuntimeException("include:$file_path", USERLAND_ERROR, $t);
-        }
-
-        if($fault == null || (IO_RESCUE & $behave)){
-            if ((IO_INVOKE & $behave) && is_callable($loot[IO_RETURN])) {
-                (IO_ABSORB & $behave) === IO_ABSORB && ($args[] = ob_get_contents());
-
-                try {
-                    $loot[IO_RETURN] = $loot[IO_RETURN]($args);
-                } catch (Throwable $t) {
-                    $fault = new RuntimeException("invoke:$file_path", USERLAND_ERROR, $t);
-                }
-            }
-        }
-            
-        while (ob_get_level() > $level + 1) ob_end_clean();             // drain orphans
-
-        (IO_BUFFER & $behave) && ($loot[IO_OUTPUT] = ob_get_clean());
-        !(IO_ONWARD & $behave) && $fault !== null && throw $fault;
-    }
-
-    return $loot;
-}
-
-function io_die(int $status, string $body, array $headers): void
-{
-    http_response_code($status);
-    foreach ($headers as $h => $v)
-        header("$h: $v"); // header() already detects CR/LF injection, drop them and logs a warning
-    echo $body;
-    exit;
-}
 
 function io_look(string $base_dir, string $url_path, string $execution_suffix, int $behave = 0): ?string
 {
