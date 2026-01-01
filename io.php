@@ -9,6 +9,9 @@ const IO_RET_ABSOLUTE = 16;                         // io_in returns absolute pa
 const IO_RAW_AS_QUERY = 32;                         //
 const IO_THROW_ON_NUL = 64;
 const IO_THROW_ON_CTL = 128;
+const IO_THROW_ON_SP  = 256;
+
+const IO_HTTP_STRICT = IO_THROW_ON_NUL | IO_THROW_ON_SP | IO_THROW_ON_CTL;
 
 const ASCII_CONTROL_CARACTERS = "\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0A\x0B\x0C\x0D\x0E\x0F\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1A\x1B\x1C\x1D\x1E\x1F\x7F";
 const HTTP_QUERY_AND_FRAGMENTS = "?#";
@@ -24,6 +27,7 @@ function io_in(string $raw, string $forbidden = '', int $behave = 0): string
 
     $forbidden !== '' && isset($path[strcspn($path, $forbidden)])                           && throw new InvalidArgumentException('Bad Request: forbidden characters', 400);
     (IO_THROW_ON_NUL & $behave) && strpos($path, "\0") !== false                            && throw new InvalidArgumentException('Bad Request: nul byte character', 400);
+    (IO_THROW_ON_SP  & $behave) && strpos($path, ' ')  !== false                            && throw new InvalidArgumentException('Bad Request: space in path', 400); // RFC 9112
     (IO_THROW_ON_CTL & $behave) && isset($path[strcspn($path, ASCII_CONTROL_CARACTERS)])    && throw new InvalidArgumentException('Bad Request: control characters', 400);
 
     ((IO_RET_ROOTLESS | IO_RET_ABSOLUTE) & $behave) && ($path = ltrim($path, '/'));
