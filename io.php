@@ -39,7 +39,8 @@ function io_out(int $status, string $body, array $headers): void
         foreach ((array)$v as $val)                 // RFC 6265 and 9110
             header("$h: $val", is_string($v));      // header() already detects CR/LF injection, drop them and logs a warning
 
-    echo $body;
+    if ($status > 199 && $status !== 204 && $status !== 304) // rfc9112
+        echo $body;
 }
 
 function io_map(string $base_dir, string $url_path, string $execution_suffix, int $behave = 0): ?array
