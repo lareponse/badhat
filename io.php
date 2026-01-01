@@ -13,11 +13,11 @@ const IO_THROW_ON_CTL = 128;
 const ASCII_CONTROL_CARACTERS = "\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0A\x0B\x0C\x0D\x0E\x0F\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1A\x1B\x1C\x1D\x1E\x1F\x7F";
 const HTTP_QUERY_AND_FRAGMENTS = "?#";
 
-function io_in(string $raw, string $forbidden='', int $behave = 0): string
+function io_in(string $raw, string $forbidden = '', int $behave = 0): string
 {
     $path = $raw;
 
-    if(IO_RAW_AS_QUERY & $behave){
+    if (IO_RAW_AS_QUERY & $behave) {
         $stop = strcspn($path, HTTP_QUERY_AND_FRAGMENTS);
         isset($path[$stop]) && ($path = substr($path, 0, $stop));
     }
@@ -36,7 +36,9 @@ function io_out(int $status, string $body, array $headers): void
 {
     http_response_code($status);
     foreach ($headers as $h => $v)
-        header("$h: $v"); // header() already detects CR/LF injection, drop them and logs a warning
+        foreach ((array)$v as $val)                 // RFC 6265 and 9110
+            header("$h: $val", is_string($v));      // header() already detects CR/LF injection, drop them and logs a warning
+
     echo $body;
 }
 
