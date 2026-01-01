@@ -35,6 +35,9 @@ function io_in(string $raw, string $forbidden = '', int $behave = 0): string
 function io_out(int $status, string $body, array $headers): void
 {
     http_response_code($status);
+    if($status >= 200 && $status < 500)  // IMF-fixdate format per RFC 9110
+        header('Date: ' . gmdate('D, d M Y H:i:s') . ' GMT');
+
     foreach ($headers as $h => $v)
         foreach ((array)$v as $val)                 // RFC 6265 and 9110
             header("$h: $val", is_string($v));      // header() already detects CR/LF injection, drop them and logs a warning
