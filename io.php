@@ -1,16 +1,35 @@
 <?php
-const IO_NEST   = 1;                            // Flexible routing: try file + file/file
-const IO_DEEP   = 2;                           // Deep-first seek
-const IO_ROOT   = 4;                           // Root-first seek
 
-function io_in(string $raw): string
+const IO_NEST       = 1;                            // Flexible routing: try file + file/file
+const IO_DEEP       = 2;                            // Deep-first seek
+const IO_ROOT       = 4;                            // Root-first seek
+
+const IO_RET_ROOTLESS = 8;                          // io_in returns rootless path
+const IO_RET_ABSOLUTE = 16;                         // io_in returns absolute path
+const IO_RAW_AS_QUERY = 32;                         //
+const IO_THROW_ON_NUL = 64;
+const IO_THROW_ON_CTL = 128;
+
+const ASCII_CONTROL_CARACTERS = "\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0A\x0B\x0C\x0D\x0E\x0F\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1A\x1B\x1C\x1D\x1E\x1F\x7F";
+const HTTP_QUERY_AND_FRAGMENTS = "?#";
+
+function io_in(string $raw, string $forbidden='', int $behave = 0): string
 {
-    $path = parse_url($raw, PHP_URL_PATH) ?: '';
-    $path = rawurldecode($path);
+    $path = $raw;
 
-    strpos($path, "\0") === false || throw new InvalidArgumentException('Bad Request', 400);    // Reject null byte explicitly
+    if(IO_RAW_AS_QUERY & $behave){
+        $stop = strcspn($path, HTTP_QUERY_AND_FRAGMENTS);
+        isset($path[$stop]) && ($path = substr($path, 0, $stop));
+    }
 
-    return trim($path, '/');   // eats all trailing slashes
+    $forbidden !== '' && isset($path[strcspn($path, $forbidden)])                           && throw new InvalidArgumentException('Bad Request: forbidden characters', 400);
+    (IO_THROW_ON_NUL & $behave) && strpos($path, "\0") !== false                            && throw new InvalidArgumentException('Bad Request: nul byte character', 400);
+    (IO_THROW_ON_CTL & $behave) && isset($path[strcspn($path, ASCII_CONTROL_CARACTERS)])    && throw new InvalidArgumentException('Bad Request: control characters', 400);
+
+    ((IO_RET_ROOTLESS | IO_RET_ABSOLUTE) & $behave) && ($path = ltrim($path, '/'));
+    (IO_RET_ABSOLUTE & $behave)                     && ($path = '/'.$path);
+
+    return $path;
 }
 
 function io_out(int $status, string $body, array $headers): void
@@ -31,15 +50,12 @@ function io_map(string $base_dir, string $url_path, string $execution_suffix, in
         : null;
 } // an array: [string path, ?array args]
 
-
-
 function io_look(string $base_dir, string $url_path, string $execution_suffix, int $behave = 0): ?string
 {
     (!$base_dir || $base_dir[-1] !== DIRECTORY_SEPARATOR) && throw new InvalidArgumentException('base_dir must end with directory separator '. DIRECTORY_SEPARATOR); // for valid strpos security check
 
     $path = $base_dir . $url_path;
     $file = $path . $execution_suffix;
-
     if (!is_file($file) && (IO_NEST & $behave)) {
         $file = $path . DIRECTORY_SEPARATOR . basename($url_path) . $execution_suffix;
         is_file($file) || ($file = null);
