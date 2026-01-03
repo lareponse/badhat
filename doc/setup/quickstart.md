@@ -26,29 +26,29 @@ set_include_path(__DIR__ . '/..' . PATH_SEPARATOR . get_include_path());
 
 require 'add/badhat/error.php';
 require 'add/badhat/io.php';
+require 'add/badhat/run.php';
+require 'add/badhat/http.php';
 require 'add/badhat/db.php';
-require 'add/badhat/auth.php';
 
-badhat_install_error_handlers();
+badhat_install_error_handlers(EH_HANDLE_ALL | EH_LOG);
 
-[$path, $accept] = io_in($_SERVER['REQUEST_URI']);
+$path = io_in($_SERVER['REQUEST_URI'], "\0", IO_PATH_ONLY | IO_ROOTLESS);
 
-// Phase 1: Route
-$route = io_map(__DIR__ . '/../app/io/route', $path, 'php', IO_DEEP);
-$loot = $route ? io_run($route, [], IO_INVOKE) : [];
+// Route
+$route = io_map(__DIR__ . '/../app/io/route/', $path, '.php', IO_TAIL);
+$loot = $route ? run($route, [], RUN_INVOKE) : [];
 
-// Phase 2: Render
-$render = io_map(__DIR__ . '/../app/io/render', $path, 'php', IO_DEEP | IO_NEST);
-$loot = $render ? io_run($render, $loot, IO_ABSORB) : $loot;
+// Render
+$render = io_map(__DIR__ . '/../app/io/render/', $path, '.php', IO_TAIL | IO_NEST);
+$loot = $render ? run($render, $loot, RUN_ABSORB) : $loot;
 
-io_die(
-    isset($loot[IO_RETURN]) ? 200 : 404,
-    $loot[IO_RETURN] ?? 'Not Found',
-    ['Content-Type' => 'text/html; charset=utf-8']
-);
+// Output
+isset($loot[RUN_RETURN]) && is_string($loot[RUN_RETURN])
+    ? http_out(200, $loot[RUN_RETURN], ['Content-Type' => ['text/html; charset=utf-8']])
+    : http_out(404, 'Not Found');
 ```
 
-## 4. Create Environment Config
+## 4. Environment Config
 
 ```bash
 # .env (not tracked)
@@ -65,7 +65,7 @@ cat > .gitignore << 'EOF'
 EOF
 ```
 
-## 5. Create Sample Route
+## 5. Sample Route
 
 ```php
 <?php
@@ -73,21 +73,18 @@ EOF
 return function($args) {
     if ($_POST) {
         qp("INSERT INTO users (name) VALUES (?)", [$_POST['name']]);
-        header('Location: /users');
-        exit;
+        http_out(302, null, ['Location' => ['/users']]);
     }
     
-    $users = qp("SELECT * FROM users")->fetchAll();
-    return compact('users') + ['csrf' => csrf_token()];
+    return ['users' => qp("SELECT * FROM users")->fetchAll()];
 };
 ```
 
-## 6. Create Sample Render
+## 6. Sample Render
 
 ```php
 <?php // app/io/render/users.php
 $users = $args['users'] ?? [];
-$csrf = $args['csrf'] ?? '';
 ?>
 <h1>Users</h1>
 <ul>
@@ -97,9 +94,8 @@ $csrf = $args['csrf'] ?? '';
 </ul>
 
 <form method="post">
-    <input type="hidden" name="_csrf_token" value="<?= $csrf ?>">
     <input name="name" placeholder="Name" required>
-    <button>Add User</button>
+    <button>Add</button>
 </form>
 
 <?php return function($args) {
@@ -114,7 +110,7 @@ $csrf = $args['csrf'] ?? '';
 };
 ```
 
-## 7. Create Database Init Script
+## 7. Database Init
 
 ```php
 <?php
@@ -141,29 +137,26 @@ git add .
 git commit -m "Initial BADHAT project"
 ```
 
-Expected structure:
+Structure:
 ```
 myproject/
 ├── .gitignore
-├── add/
-│   └── badhat/
-│       ├── auth.php
-│       ├── db.php
-│       ├── error.php
-│       └── io.php
-├── app/
-│   └── io/
-│       ├── route/
-│       │   └── users.php
-│       └── render/
-│           └── users.php
-├── public/
-│   └── index.php
-└── scripts/
-    └── init-db.php
+├── add/badhat/
+│   ├── auth.php
+│   ├── csrf.php
+│   ├── db.php
+│   ├── error.php
+│   ├── http.php
+│   ├── io.php
+│   └── run.php
+├── app/io/
+│   ├── route/users.php
+│   └── render/users.php
+├── public/index.php
+└── scripts/init-db.php
 ```
 
-## 9. Test Setup
+## 9. Test
 
 ```bash
 php scripts/init-db.php
@@ -177,56 +170,115 @@ cd public && php -S localhost:8000
 git subtree pull --prefix=add/badhat git@github.com:lareponse/BADHAT.git main --squash
 ```
 
-## 11. Deployment
-
-```bash
-git clone https://github.com/you/myproject.git /var/www/app
-cd /var/www/app
-php scripts/init-db.php
-# Configure web server → public/
-```
-
-## Performance Notes
-
-- **Opcache:** All files real, no symlinks
-- **Single repo:** Zero deployment complexity
-- **Direct execution:** No framework bootstrap
-- **~200 bytes** routing memory
-
 ---
 
-## Adding Auth
+## Adding Auth + CSRF
+
+### Update Entry Point
 
 ```php
 <?php
-// public/index.php (add after db.php require)
-require 'add/badhat/auth.php';
+// public/index.php
+set_include_path(__DIR__ . '/..' . PATH_SEPARATOR . get_include_path());
 
-// After badhat_install_error_handlers():
-$stmt = qp("SELECT password FROM users WHERE name = ?", []);
+require 'add/badhat/error.php';
+require 'add/badhat/io.php';
+require 'add/badhat/run.php';
+require 'add/badhat/http.php';
+require 'add/badhat/db.php';
+require 'add/badhat/auth.php';
+require 'add/badhat/csrf.php';
+
+badhat_install_error_handlers(EH_HANDLE_ALL | EH_LOG);
+
+session_start();
+db();
+csrf(CSRF_SETUP);
+
+$stmt = qp("SELECT password FROM users WHERE username = ?", []);
 checkin(AUTH_SETUP, 'username', $stmt);
+
+// ... rest of routing ...
 ```
+
+### Login Route
 
 ```php
 <?php
 // app/io/route/login.php
 return function($args) {
     if ($_POST) {
-        $user = checkin(AUTH_ENTER, 'name', 'password');
-        if ($user) {
-            header('Location: /dashboard');
-            exit;
-        }
+        csrf(CSRF_CHECK) || http_out(403, 'Invalid token');
+        $user = checkin(AUTH_ENTER, 'username', 'password');
+        $user && http_out(302, null, ['Location' => ['/dashboard']]);
     }
-    return ['error' => $_POST ? 'Invalid credentials' : null, 'csrf' => csrf_token()];
+    return ['error' => $_POST ? 'Invalid credentials' : null];
 };
 ```
+
+### Login Render
+
+```php
+<?php // app/io/render/login.php
+$error = $args['error'] ?? null;
+?>
+<?php if ($error): ?>
+    <p style="color:red"><?= htmlspecialchars($error) ?></p>
+<?php endif; ?>
+
+<form method="post">
+    <?= csrf(CSRF_INPUT) ?>
+    <input name="username" placeholder="Username" required>
+    <input name="password" type="password" placeholder="Password" required>
+    <button>Login</button>
+</form>
+
+<?php return function($args) {
+    $content = $args[count($args) - 1];
+    return "<!DOCTYPE html><html><body>$content</body></html>";
+};
+```
+
+### Protected Route
 
 ```php
 <?php
 // app/io/route/dashboard.php
 return function($args) {
-    checkin(AUTH_GUARD, '/login');
+    checkin() ?? http_out(302, null, ['Location' => ['/login']]);
     return ['user' => checkin()];
 };
+```
+
+### Logout Route
+
+```php
+<?php
+// app/io/route/logout.php
+return function($args) {
+    checkin(AUTH_LEAVE);
+    http_out(302, null, ['Location' => ['/']]);
+};
+```
+
+### Users Table with Password
+
+```sql
+CREATE TABLE users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT UNIQUE NOT NULL,
+    password TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Insert test user (password: 'secret')
+INSERT INTO users (username, password) VALUES (
+    'admin',
+    '$2y$12$YourHashedPasswordHere'
+);
+```
+
+Generate hash:
+```php
+echo password_hash('secret', PASSWORD_DEFAULT);
 ```

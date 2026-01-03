@@ -1,28 +1,36 @@
 <?php
-// public/index.php - BADHAT Entry Point
+// public/index.php — BADHAT Entry Point
 
 set_include_path(__DIR__ . '/..' . PATH_SEPARATOR . get_include_path());
 
 require 'add/badhat/error.php';
 require 'add/badhat/io.php';
+require 'add/badhat/run.php';
+require 'add/badhat/http.php';
 require 'add/badhat/db.php';
 require 'add/badhat/auth.php';
+require 'add/badhat/csrf.php';
 
-badhat_install_error_handlers();
+badhat_install_error_handlers(EH_HANDLE_ALL | EH_LOG);
+
+session_start();
+csrf(CSRF_SETUP);
+
+$stmt = qp("SELECT password FROM users WHERE username = ?", []);
+checkin(AUTH_SETUP, 'username', $stmt);
 
 $io = __DIR__ . '/../app/io';
-
-[$path, $accept] = io_in($_SERVER['REQUEST_URI']);
+$path = io_in($_SERVER['REQUEST_URI'], "\0", IO_PATH_ONLY | IO_ROOTLESS);
 
 // Phase 1: Route (logic)
-$route = io_map($io . '/route', $path, 'php', IO_DEEP);
-$loot = $route ? io_run($route, [], IO_INVOKE) : [];
+$route = io_map($io . '/route/', $path, '.php', IO_TAIL);
+$loot = $route ? run($route, [], RUN_INVOKE) : [];
 
 // Phase 2: Render (presentation)
-$render = io_map($io . '/render', $path, 'php', IO_DEEP | IO_NEST);
-$loot = $render ? io_run($render, $loot, IO_ABSORB) : $loot;
+$render = io_map($io . '/render/', $path, '.php', IO_TAIL | IO_NEST);
+$loot = $render ? run($render, $loot, RUN_ABSORB) : $loot;
 
 // Output
-isset($loot[IO_RETURN]) && is_string($loot[IO_RETURN])
-    ? io_die(200, $loot[IO_RETURN], ['Content-Type' => 'text/html; charset=utf-8'])
-    : io_die(404, 'Not Found');
+isset($loot[RUN_RETURN]) && is_string($loot[RUN_RETURN])
+    ? http_out(200, $loot[RUN_RETURN], ['Content-Type' => ['text/html; charset=utf-8']])
+    : http_out(404, 'Not Found');
