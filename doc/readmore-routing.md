@@ -1,115 +1,145 @@
-# Performance Architecture: Routing Complexity Core
+# Performance Architecture: Routing Complexity
 
-**Real-world applications:**
-- Most requests hit a small subset of routes (80/20 rule)
-- Frameworks preload and scan routes that are never used
-- BADHAT only touches filesystem paths related to the current request
-
-**Resource efficiency:**
-- No memory wasted on unused route definitions
-- No CPU cycles scanning irrelevant patterns
-- Filesystem cache makes repeated calls nearly free
-
-**Performance predictability:**
-- BADHAT response time: depends on URI complexity
-- Framework response time: depends on total application size + URI position in route list
-
-
-
-## The Fundamental Architectural Difference
+## The Fundamental Difference
 
 **BADHAT routing time depends only on URI depth, not total routes.**
 
-
-
 ### BADHAT: O(d) Filesystem Resolution
+
 ```php
-// /api/users/alter/123 = 4 segments deep
-// Performance: O(1) to O(2d) regardless of application size
+// /api/users/edit/123 = 4 segments
+// Performance: O(1) to O(2d) regardless of app size
 
-URI depth = 1: /users                       → max  2 filesystem calls
-URI depth = 4: /api/users/alter/123         → max  8 filesystem calls  
-URI depth = 5: /api/v2/users/edit/123       → max 12 filesystem calls
-
-// If you reach 5+ segments, it’s time to rethink 
+URI depth = 1: /users                 → max 2 filesystem calls
+URI depth = 4: /api/users/edit/123    → max 8 filesystem calls  
+URI depth = 5: /api/v2/users/edit/123 → max 12 filesystem calls
 ```
-
-
 
 ### Framework: O(n×m) Route Table Scan
+
 ```php
-// Must scan ALL routes regardless of URI complexity
 $routes = [
-    '/simple' => 'Controller@simple',           // Route #1
-    '/api/users/alter/{id}' => 'UserController@alter',  // Route #500
-    // ... 4,500 more routes
+    '/simple' => 'Controller@simple',           // #1
+    '/api/users/edit/{id}' => 'UserController', // #500
+    // ... 4,500 more
 ];
 
-// To match /api/users/alter/123:
-// Scan route #1, #2, #3... #500 until match found
-// Performance degrades as application grows
+// Match /api/users/edit/123:
+// Scan #1, #2, #3... #500 until match
 ```
+
+---
 
 ## Scaling Behavior
-### Framework Performance Degradation
-```
-100 routes:   /api/users/alter/123 → scan ~50 routes  → 1,200 regex ops
-1,000 routes: /api/users/alter/123 → scan ~500 routes → 12,000 regex ops  
-5,000 routes: /api/users/alter/123 → scan ~2,500 routes → 60,000 regex ops
 
-Performance: O(n) where n = total application routes
+### Framework Degradation
+
+```
+100 routes:   scan ~50   → 1,200 regex ops
+1,000 routes: scan ~500  → 12,000 regex ops  
+5,000 routes: scan ~2,500 → 60,000 regex ops
+
+O(n) where n = total routes
 ```
 
-### BADHAT Constant Performance  
-```
-100 routes:   /api/users/alter/123 → 3-8 filesystem calls
-1,000 routes: /api/users/alter/123 → 3-8 filesystem calls
-5,000 routes: /api/users/alter/123 → 3-8 filesystem calls
+### BADHAT Constant
 
-Performance: O(d) where d = URI depth (typically 2-6)
 ```
-> **Architectural advantage:** performance scales with request complexity, not application complexity
+100 routes:   3-8 filesystem calls
+1,000 routes: 3-8 filesystem calls
+5,000 routes: 3-8 filesystem calls
 
-## Memory Architecture Comparison
-### Framework: Preloaded Route Table
+O(d) where d = URI depth (typically 2-6)
+```
+
+---
+
+## Memory Architecture
+
+### Framework: Preloaded Table
+
 ```php
-// Laravel RouteCollection in memory
 class RouteCollection {
-    protected $routes = [];          // 5,000 Route objects
-    protected $allRoutes = [];       // Flat array for iteration  
-    protected $nameList = [];        // Named route lookup
-    protected $actionList = [];      // Controller lookup
+    protected $routes = [];      // 5,000 Route objects
+    protected $allRoutes = [];   // flat array
+    protected $nameList = [];    // named lookup
+    protected $actionList = [];  // controller lookup
 }
 
-// Memory usage: 5,000 routes × ~700 bytes = 3.5MB route table
-// ALWAYS loaded, regardless of which route is needed
+// 5,000 routes × ~700 bytes = 3.5MB
+// ALWAYS loaded
 ```
 
-### BADHAT: No Route Table
+### BADHAT: No Table
+
 ```php
-// Zero preloaded routes
-// URI /api/users/alter/123 triggers:
+// /api/users/edit/123 triggers:
 $candidates = [
-    'route/api/users/alter/123.php',      // Try exact match
-    'route/api/users/alter.php',          // Try parent with args
-    'route/api/users.php',                // Try grandparent  
-    'route/api.php'                       // Try root
+    'route/api/users/edit/123.php',  // exact
+    'route/api/users/edit.php',      // parent
+    'route/api/users.php',           // grandparent
+    'route/api.php'                  // root
 ];
 
-// Memory usage: ~200 bytes for string building
-// Only attempts paths relevant to current URI
+// ~200 bytes for strings
+// Only paths relevant to current URI
 ```
+
 ---
-# Conclusion
+
+## Real-World Applications
+
+- Most requests hit small subset (80/20 rule)
+- Frameworks preload routes never used
+- BADHAT only touches paths for current request
+
+---
+
+## Resource Efficiency
+
+- No memory wasted on unused definitions
+- No CPU scanning irrelevant patterns
+- Filesystem cache makes repeated calls free
+
+---
+
+## Predictability
+
+```
+BADHAT: response time = f(URI complexity)
+Framework: response time = f(app size + URI position)
+```
+
+---
+
+## IO_TAIL vs IO_HEAD
+
+```php
+// IO_TAIL: deepest first (intent-centric)
+// /users/edit/42 tries: users/edit/42 → users/edit → users
+io_map('/app/route/', 'users/edit/42', '.php', IO_TAIL);
+
+// IO_HEAD: shallowest first (gateway pattern)  
+// /api/v2/users tries: api → api/v2 → api/v2/users
+io_map('/app/route/', 'api/v2/users', '.php', IO_HEAD);
+```
+
+Same filesystem, different resolution strategies.
+
+---
+
+## Conclusion
 
 ### Framework: Front-loaded Cost
-- **Memory:** route table permanently in RAM
-- **Startup:** parse and compile all routes during bootstrap  
-- **CPU:** O(n×m) scanning for every request
-- **Scaling:** Linear degradation as routes increase
+
+- Route table permanently in RAM
+- Parse all routes at bootstrap
+- O(n×m) scan every request
+- Linear degradation as routes grow
 
 ### BADHAT: Pay-per-use
-- **Memory:** ~200 bytes temporary strings
-- **Startup:** zero route preprocessing
-- **CPU:** O(d) filesystem calls only for requested URI
-- **Scaling:** Constant performance regardless of app size
+
+- ~200 bytes temporary strings
+- Zero preprocessing
+- O(d) calls for current URI only
+- Constant regardless of app size
