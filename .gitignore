@@ -9,6 +9,9 @@
 !io.php
 !db.php
 !error.php
+!run.php
+!guard.php
+!csrf.php
 
 # Whitelist doc directory and contents
 !doc/
