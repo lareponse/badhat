@@ -26,7 +26,7 @@ function qp(string $query, ?array $params = null, array $prepare_options = [], ?
             ? $prep : $prep);
 }
 
-function dbt(callable $transaction, ?string $suffix = null): mixed
+function dbt(callable $transaction, ?string $suffix = null)
 {
     $pdo = db($suffix);
     try {
