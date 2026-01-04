@@ -1,127 +1,141 @@
-# BADHAT Database Layer
+# BADHAT Database
 
-Procedural PDO helper: three functions, no classes, no abstractions.
+Procedural PDO. Three functions.
+
+---
 
 ## Environment
 
-Set env vars per profile suffix (empty = default):
-
 ```bash
-# Default (suffix = empty):
+# Default profile (empty suffix):
 export DB_DSN_="mysql:host=localhost;dbname=shop"
 export DB_USER_="shop_user"
 export DB_PASS_="secret"
 
-# "read" profile (SQLite):
+# Named profile "read":
 export DB_DSN_read="sqlite:/path/to/read.db"
-# (no DB_USER_read/DB_PASS_read needed for SQLite)
+```
 
-Notes:
-- Values are read from `$_SERVER[...]` first, then `getenv(...)`.
-- The default connection uses a trailing underscore keys like `DB_DSN_`.
+Values read from `$_SERVER` first, then `getenv()`.
 
-Notes:
-- Values are read from `$_SERVER[...]` first, then `getenv(...)`.
-- The default connection uses a trailing underscore keys like `DB_DSN_`.
+---
+
+## Functions
+
+### db
+
+```php
+function db($param = null, array $options = [PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC]): PDO
+```
+
+**Getter:**
+- `db()` — return cached PDO (auto-creates from default profile if none)
+
+**Setter:**
+- `db('suffix')` — create, cache, return PDO using ENV with suffix
+- `db($pdo)` — cache and return provided PDO
+
+**Throws:** `LogicException` if no cache and invalid param, `DomainException` if DSN missing
+
+```php
+// Default profile
+$users = db()->query("SELECT * FROM users")->fetchAll();
+
+// Named profile
+db('read');
+$data = db()->query("SELECT * FROM logs")->fetchAll();
+
+// Inject existing PDO
+db(new PDO('sqlite::memory:'));
 ```
 
 ---
 
-## 1. Connection
+### qp
 
 ```php
-function db($param = null, array $param_options = []): PDO
+function qp(string $query, ?array $params = null, array $prepare_options = [], ?string $suffix = null): PDOStatement|false
 ```
 
-**Getter**
-* `db()`: return cached PDO. Calls `db('')` if none.
-
-**Setter**
-* `db('suffix')`: create, cache and return new PDO using ENV with suffix
-* `db($pdo)`: cache & return the PDO
-
-**Throws**: `LogicException` if no cache and invalid param
-
-Defaults when creating a PDO (unless overridden via `$param_options`):
-- `PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION`
-- `PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC`
-- `PDO::ATTR_EMULATE_PREPARES => false`
-
-Details:
-- A single connection is cached; each setter call replaces it.
-- Falsy `$param` values are treated as the empty suffix `''`.
-
----
-
-## 2. Execution
+**Param semantics:**
+- `null` — `db()->query($query)` (immediate)
+- `[]` — prepare only, no execute
+- `[...]` — prepare + execute with bindings
 
 ```php
-function qp(string $query, ?array $params = null, array $prepareOptions = []): PDOStatement|false
-```
-
-dbq uses the cached `db()` connection internally.
-
-Semantics of `$params`:
-- `null`: run via `db()->query($query)` (immediate execute, no prepare)
-- `[]` (empty array): prepare only, no execute yet
-- non-empty array: prepare and execute with bindings
-
-Flow:
-1. If `$params === null`: return `db()->query($query)`
-2. Else: `$stmt = db()->prepare($query, $prepareOptions)`
-3. If `$params` is non-empty: `$stmt->execute($params)`
-4. Return `$stmt` (or `false` on prepare failure)
-
-Exceptions bubble up from PDO.
-
----
-
-## 3. Transactions
-
-```php
-function db_transaction(PDO $pdo, callable $transaction): mixed
-```
-
-**Precondition**: PDO must use `ERRMODE_EXCEPTION` or throws `DomainException`
-
-**Flow**:
-1. `beginTransaction()`
-2. call `$transaction($pdo)`
-3. on success → `commit()` → return result
-4. on exception → `rollBack()` → rethrow
-
----
-
-## Examples
-
-```php
-// Query without params (immediate execution)
+// Immediate query
 $users = qp("SELECT * FROM users")->fetchAll();
 
-// Query with params
+// Prepared with params
 $user = qp("SELECT * FROM users WHERE id = ?", [$id])->fetch();
 
-// Prepare only (no execute yet)
+// Named params
+$user = qp("SELECT * FROM users WHERE id = :id", ['id' => $id])->fetch();
+
+// Prepare only (reusable)
 $stmt = qp("INSERT INTO logs (msg) VALUES (?)", []);
 $stmt->execute(['login']);
 $stmt->execute(['logout']);
 
-// Transaction
-$result = db_transaction(db(), function($pdo) use ($data) {
+// Specific profile
+$data = qp("SELECT * FROM archive", null, [], 'read');
+```
+
+---
+
+### dbt
+
+```php
+function dbt(callable $transaction, ?string $suffix = null)
+```
+
+**Flow:**
+1. `beginTransaction()`
+2. Call `$transaction($pdo)`
+3. Success → `commit()` → return result
+4. Exception → `rollBack()` → rethrow
+
+```php
+$order_id = dbt(function($pdo) use ($data) {
     qp("INSERT INTO orders (total) VALUES (?)", [$data['total']]);
     $order_id = $pdo->lastInsertId();
+    
     qp("INSERT INTO order_items (order_id, item) VALUES (?, ?)", 
         [$order_id, $data['item']]);
+    
     return $order_id;
 });
+```
+
+**Error checking:** throws `RuntimeException` if `errorCode() !== '00000'` after commit.
+
+---
+
+## Patterns
+
+```php
+// Select
+$users = qp("SELECT * FROM users WHERE active = 1")->fetchAll();
+
+// Count
+$count = qp("SELECT COUNT(*) FROM users")->fetchColumn();
+
+// Insert + ID
+qp("INSERT INTO users (name) VALUES (?)", [$name]);
+$id = db()->lastInsertId();
+
+// Update
+qp("UPDATE users SET name = ? WHERE id = ?", [$name, $id]);
+
+// Delete
+qp("DELETE FROM users WHERE id = ?", [$id]);
 ```
 
 ---
 
 ## Notes
 
-* Single cached connection; each setter call replaces it
-* `dbq` returns `false` on prepare failure, `PDOStatement` on success
-* Wrap calls in `try/catch` to handle `PDOException`
-* Full PDO API remains available on returned instances
-* ENV is read from `$_SERVER` first, then `getenv`
+- Single cached connection; setter replaces
+- `qp()` returns `false` on prepare failure
+- Exceptions bubble from PDO
+- Full PDO API available on returned instances
