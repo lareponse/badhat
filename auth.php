@@ -30,7 +30,7 @@ function checkin(int $behave = 0, ?string $u = null, $p = null): ?string
         if (AUTH_ENTER & $behave)
             return auth_login($username_field, $password_query, $u, $p);
 
-        return $_SESSION[$username_field] ?? null;
+        return $_SESSION[__NAMESPACE__][$username_field] ?? null;
 
     } catch (Error $e) {
         throw new BadFunctionCallException('Invalid parameters for AUTH action', 400, $e);
@@ -45,7 +45,7 @@ function auth_login(string $username_field, PDOStatement $password_query, string
 
     if ($user !== null) {
         session_regenerate_id(true) || trigger_error('Session ID regeneration failed - fixation risk', E_USER_WARNING);
-        $_SESSION[$username_field] = $user;
+        $_SESSION[__NAMESPACE__][$username_field] = $user;
     }
 
     return $user;
