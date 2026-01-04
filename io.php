@@ -1,10 +1,12 @@
 <?php
+
 namespace bad\io;
 
 // io_in
 const IO_PATH_ONLY  = 1;
 const IO_ROOTLESS   = 2;
 const IO_ABSOLUTE   = 4 | IO_ROOTLESS;
+
 
 // io_map (io_look, io_seek)
 const IO_NEST       = 8;
@@ -16,6 +18,12 @@ function io_in(string $raw, string $forbidden = '', int $behave = 0): string
     $path = $raw;
 
     if (IO_PATH_ONLY & $behave) {
+        // strip authority (//host:port)
+        if (str_starts_with($path, '//')) {
+            $auth_end = strcspn($path, '/?#', 2) + 2;
+            $path = isset($path[$auth_end]) ? substr($path, $auth_end) : '';
+        }
+
         $stop = strcspn($path, "?#");
         if (isset($path[$stop]))
             $path = substr($path, 0, $stop);
