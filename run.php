@@ -1,4 +1,6 @@
 <?php
+namespace badhat\run;
+
 const RUN_BUFFER = 1;
 const RUN_INVOKE = 2;
 const RUN_ABSORB = 4 | RUN_BUFFER | RUN_INVOKE;

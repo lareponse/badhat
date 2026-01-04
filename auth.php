@@ -1,4 +1,5 @@
 <?php
+namespace badhat\auth;
 
 const AUTH_SETUP  = 1;
 const AUTH_ENTER  = 2;

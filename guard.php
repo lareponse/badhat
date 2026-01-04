@@ -1,4 +1,5 @@
 <?php
+namespace badhat\guard;
 
 const CSRF_KEY = '_csrf_token';
 
