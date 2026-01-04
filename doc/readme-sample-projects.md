@@ -8,13 +8,20 @@ Real projects. Real constraints. Real solutions.
 
 ```php
 // app/io/route/posts/edit.php
+use function bad\auth\checkin;
+use function bad\csrf\csrf;
+use function bad\db\qp;
+use function bad\http\http_out;
+
+use const bad\csrf\CSRF_CHECK;
+
 return function($args) {
     checkin() ?? http_out(302, null, ['Location' => ['/login']]);
     
     $id = $args[0] ?? throw new \InvalidArgumentException('Post ID required', 400);
     
     if ($_POST) {
-        csrf(CSRF_CHECK) || http_out(403, 'Invalid token');
+        csrf('_csrf', CSRF_CHECK) || http_out(403, 'Invalid token');
         qp("UPDATE posts SET title=?, body=? WHERE id=?", 
             [$_POST['title'], $_POST['body'], $id]);
         http_out(302, null, ['Location' => ["/posts/$id"]]);
@@ -32,6 +39,10 @@ return function($args) {
 
 ```php
 // app/io/route/admin/orders.php
+use function bad\auth\checkin;
+use function bad\db\qp;
+use function bad\http\http_out;
+
 return function($args) {
     checkin() ?? http_out(302, null, ['Location' => ['/login']]);
     
@@ -57,7 +68,10 @@ return function($args) {
 ## JSON API
 
 ```php
-// app/io/route/api/users.php  
+// app/io/route/api/users.php
+use function bad\db\qp;
+use function bad\http\http_out;
+
 return function($args) {
     $action = $args[0] ?? 'list';
     $id = $args[1] ?? null;
@@ -80,6 +94,8 @@ return function($args) {
 
 ```php
 // app/io/route/dashboard/metrics.php
+use function bad\db\qp;
+
 return function($args) {
     $range = $args[0] ?? '24h';
     $hours = $range === '24h' ? 24 : 168;
@@ -105,13 +121,20 @@ return function($args) {
 
 ```php
 // app/io/route/files/upload.php
+use function bad\auth\checkin;
+use function bad\csrf\csrf;
+use function bad\db\qp;
+use function bad\http\http_out;
+
+use const bad\csrf\CSRF_CHECK;
+
 return function($args) {
     checkin() ?? http_out(302, null, ['Location' => ['/login']]);
     
     if (!$_FILES) 
         return ['max_size' => ini_get('upload_max_filesize')];
     
-    csrf(CSRF_CHECK) || http_out(403, 'Invalid token');
+    csrf('_csrf', CSRF_CHECK) || http_out(403, 'Invalid token');
     
     $file = $_FILES['file'];
     $path = 'uploads/' . date('Y/m/') . uniqid() . '_' . basename($file['name']);
@@ -132,6 +155,9 @@ return function($args) {
 
 ```php
 // app/io/route/api/sensors.php
+use function bad\db\qp;
+use function bad\http\http_out;
+
 return function($args) {
     $device_id = $args[0] ?? http_out(400, '{"error":"Device ID required"}', 
         ['Content-Type' => ['application/json']]);
@@ -159,6 +185,8 @@ return function($args) {
 
 ```php
 // app/io/route/app/projects.php
+use function bad\db\{db, qp};
+
 return function($args) {
     $tenant = resolve_tenant($_SERVER['HTTP_HOST']);
     db('tenant_' . $tenant['id']);
@@ -183,9 +211,16 @@ return function($args) {
 
 ```php
 // app/io/route/trading/execute.php
+use function bad\auth\checkin;
+use function bad\csrf\csrf;
+use function bad\db\{qp, dbt};
+use function bad\http\http_out;
+
+use const bad\csrf\CSRF_CHECK;
+
 return function($args) {
     checkin() ?? http_out(302, null, ['Location' => ['/login']]);
-    csrf(CSRF_CHECK) || http_out(403, 'Invalid token');
+    csrf('_csrf', CSRF_CHECK) || http_out(403, 'Invalid token');
     
     $order = [
         'user' => checkin(),

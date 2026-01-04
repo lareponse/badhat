@@ -30,7 +30,16 @@ require 'add/badhat/run.php';
 require 'add/badhat/http.php';
 require 'add/badhat/db.php';
 
-register(SET_ALL | MESSAGE_LOG);
+use function bad\error\register;
+use function bad\io\{io_in, io_map};
+use function bad\run\run;
+use function bad\http\http_out;
+
+use const bad\error\{SET_ALL, LOG_ERR};
+use const bad\io\{IO_PATH_ONLY, IO_ROOTLESS, IO_TAIL, IO_NEST};
+use const bad\run\{RUN_INVOKE, RUN_ABSORB, RUN_RETURN};
+
+register(SET_ALL | LOG_ERR);
 
 $path = io_in($_SERVER['REQUEST_URI'], "\0", IO_PATH_ONLY | IO_ROOTLESS);
 
@@ -70,6 +79,9 @@ EOF
 ```php
 <?php
 // app/io/route/users.php
+use function bad\db\qp;
+use function bad\http\http_out;
+
 return function($args) {
     if ($_POST) {
         qp("INSERT INTO users (name) VALUES (?)", [$_POST['name']]);
@@ -119,7 +131,7 @@ require __DIR__ . '/../add/badhat/db.php';
 
 $_SERVER['DB_DSN_'] = 'sqlite:' . __DIR__ . '/../db.sqlite';
 
-db()->exec("
+bad\db\db()->exec("
     CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,
@@ -189,16 +201,44 @@ require 'add/badhat/db.php';
 require 'add/badhat/auth.php';
 require 'add/badhat/csrf.php';
 
-register(SET_ALL | MESSAGE_LOG);
+use function bad\error\register;
+use function bad\io\{io_in, io_map};
+use function bad\run\run;
+use function bad\http\http_out;
+use function bad\db\{db, qp};
+use function bad\auth\checkin;
+use function bad\csrf\csrf;
+
+use const bad\error\{SET_ALL, LOG_ERR};
+use const bad\io\{IO_PATH_ONLY, IO_ROOTLESS, IO_TAIL, IO_NEST};
+use const bad\run\{RUN_INVOKE, RUN_ABSORB, RUN_RETURN};
+use const bad\auth\AUTH_SETUP;
+use const bad\csrf\CSRF_SETUP;
+
+register(SET_ALL | LOG_ERR);
 
 session_start();
 db();
-csrf(CSRF_SETUP);
+csrf('_csrf', CSRF_SETUP);
 
 $stmt = qp("SELECT password FROM users WHERE username = ?", []);
 checkin(AUTH_SETUP, 'username', $stmt);
 
-// ... rest of routing ...
+$io = __DIR__ . '/../app/io';
+$path = io_in($_SERVER['REQUEST_URI'], "\0", IO_PATH_ONLY | IO_ROOTLESS);
+
+// Phase 1: Route (logic)
+$route = io_map($io . '/route/', $path, '.php', IO_TAIL);
+$loot = $route ? run($route, [], RUN_INVOKE) : [];
+
+// Phase 2: Render (presentation)
+$render = io_map($io . '/render/', $path, '.php', IO_TAIL | IO_NEST);
+$loot = $render ? run($render, $loot, RUN_ABSORB) : $loot;
+
+// Output
+isset($loot[RUN_RETURN]) && is_string($loot[RUN_RETURN])
+    ? http_out(200, $loot[RUN_RETURN], ['Content-Type' => ['text/html; charset=utf-8']])
+    : http_out(404, 'Not Found');
 ```
 
 ### Login Route
@@ -206,9 +246,16 @@ checkin(AUTH_SETUP, 'username', $stmt);
 ```php
 <?php
 // app/io/route/login.php
+use function bad\csrf\csrf;
+use function bad\auth\checkin;
+use function bad\http\http_out;
+
+use const bad\csrf\CSRF_CHECK;
+use const bad\auth\AUTH_ENTER;
+
 return function($args) {
     if ($_POST) {
-        csrf(CSRF_CHECK) || http_out(403, 'Invalid token');
+        csrf('_csrf', CSRF_CHECK) || http_out(403, 'Invalid token');
         $user = checkin(AUTH_ENTER, 'username', 'password');
         $user && http_out(302, null, ['Location' => ['/dashboard']]);
     }
@@ -220,6 +267,9 @@ return function($args) {
 
 ```php
 <?php // app/io/render/login.php
+use function bad\csrf\csrf;
+use const bad\csrf\{CSRF_INPUT, CSRF_SETUP};
+
 $error = $args['error'] ?? null;
 ?>
 <?php if ($error): ?>
@@ -227,7 +277,7 @@ $error = $args['error'] ?? null;
 <?php endif; ?>
 
 <form method="post">
-    <?= csrf(CSRF_INPUT) ?>
+    <?= csrf('_csrf', CSRF_INPUT | CSRF_SETUP) ?>
     <input name="username" placeholder="Username" required>
     <input name="password" type="password" placeholder="Password" required>
     <button>Login</button>
@@ -244,6 +294,9 @@ $error = $args['error'] ?? null;
 ```php
 <?php
 // app/io/route/dashboard.php
+use function bad\auth\checkin;
+use function bad\http\http_out;
+
 return function($args) {
     checkin() ?? http_out(302, null, ['Location' => ['/login']]);
     return ['user' => checkin()];
@@ -255,6 +308,11 @@ return function($args) {
 ```php
 <?php
 // app/io/route/logout.php
+use function bad\auth\checkin;
+use function bad\http\http_out;
+
+use const bad\auth\AUTH_LEAVE;
+
 return function($args) {
     checkin(AUTH_LEAVE);
     http_out(302, null, ['Location' => ['/']]);

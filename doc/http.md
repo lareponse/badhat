@@ -1,6 +1,5 @@
 # BADHAT HTTP — Response Output
 
-
 HTTP does one thing: emit responses.
 
 - Validates headers
@@ -10,15 +9,11 @@ HTTP does one thing: emit responses.
 
 Path resolution belongs to `io_map()`. Execution belongs to `run()`.
 
-
 ---
 
 ## Constants
 
 ```php
-const HTTP_HDR_SOFT   = 64;   // reserved
-const HTTP_HDR_STRICT = 128;  // reserved
-
 const ASCII_CTL = "\x00\x01...\x1F\x7F";  // control characters
 const HTTP_PATH_UNSAFE = ' ' . ASCII_CTL;
 const HTTP_TCHAR = '!#$%&\'*+-.^_`|~0-9A-Za-z';  // valid header name chars
@@ -60,7 +55,7 @@ http_headers('X-Data', "has\x00null");  // returns null
 ### http_out
 
 ```php
-function http_out(int $code, ?string $body = null, array $headers = []): array
+function http_out(int $code, ?string $body = null, array $headers = [])
 ```
 
 Emits HTTP response and exits. Does not return.
@@ -90,6 +85,34 @@ http_out(301, null, ['Location' => ['/new-path']]);
 - Emits all headers via `header()` with `replace=false`
 - Echoes body unless: `$code < 200`, `$code === 204`, `$code === 205`, or `$code === 304`
 - Calls `exit`
+
+---
+
+### csp_nonce
+
+```php
+function csp_nonce(): string
+```
+
+Returns a 32-character hex nonce for Content-Security-Policy. Generated once per request (static cached).
+
+```php
+$nonce = csp_nonce();
+// '3a7f2b9c1d4e5f6a7b8c9d0e1f2a3b4c'
+
+// In CSP header
+http_out(200, $body, [
+    'Content-Security-Policy' => ["script-src 'nonce-" . csp_nonce() . "'"]
+]);
+
+// In HTML
+echo '<script nonce="' . csp_nonce() . '">...</script>';
+```
+
+**Behavior:**
+- First call generates `bin2hex(random_bytes(16))`
+- Subsequent calls return same value
+- Resets per request (static variable)
 
 ---
 
@@ -136,6 +159,19 @@ http_out(200, $body, [
 ]);
 ```
 
+### CSP with Nonce
+
+```php
+$nonce = csp_nonce();
+
+$html = '<script nonce="' . $nonce . '">alert("safe")</script>';
+
+http_out(200, $html, [
+    'Content-Type' => ['text/html'],
+    'Content-Security-Policy' => ["default-src 'self'; script-src 'nonce-$nonce'"]
+]);
+```
+
 ---
 
 ## Header Format
@@ -149,5 +185,4 @@ $headers = [
 ];
 ```
 
-Each value emits a separate `header()` call with `replace=false`.
-
+Each value emits a separate `header()` call with `replace=false`.   

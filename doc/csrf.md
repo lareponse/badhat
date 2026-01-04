@@ -7,9 +7,9 @@ CSRF tokens via `csrf()`. Requires active session.
 ## Constants
 
 ```php
-const CSRF_SETUP = 1;               // generate/refresh token
-const CSRF_CHECK = 2;               // validate token
-const CSRF_INPUT = 4 | CSRF_SETUP;  // setup + return hidden input
+const CSRF_SETUP = 1;   // generate/refresh token
+const CSRF_CHECK = 2;   // validate token
+const CSRF_INPUT = 4;   // return hidden input (implies setup)
 ```
 
 ---
@@ -17,14 +17,22 @@ const CSRF_INPUT = 4 | CSRF_SETUP;  // setup + return hidden input
 ## Function
 
 ```php
-function csrf(int $behave = 0, $param = null, $k = null)
+function csrf(string $name, int $behave, $param = null)
 ```
 
-**Returns:** varies by behavior flag
+**Parameters:**
+- `$name` — session key and form field name (required)
+- `$behave` — bitmask of CSRF_* flags
+- `$param` — TTL (int) for SETUP, or token string for CHECK
+
+**Returns:** token string, hidden input HTML, or bool for CHECK
 
 **Requires:** `session_status() === PHP_SESSION_ACTIVE`
 
-**Throws:** `RuntimeException` (500) if no active session
+**Throws:** 
+- `RuntimeException` (500) if no active session
+- `InvalidArgumentException` (500) if name empty
+- `BadFunctionCallException` (403) if token not initialized or missing
 
 ---
 
@@ -34,9 +42,8 @@ function csrf(int $behave = 0, $param = null, $k = null)
 
 ```php
 session_start();
-csrf(CSRF_SETUP);           // default: 3600s TTL, '_csrf_token' key
-csrf(CSRF_SETUP, 7200);     // custom TTL
-csrf(CSRF_SETUP, 3600, 'my_token');  // custom key
+csrf('_csrf', CSRF_SETUP);           // default: 3600s TTL
+csrf('_csrf', CSRF_SETUP, 7200);     // custom TTL
 ```
 
 Token regenerates when expired.
@@ -44,29 +51,27 @@ Token regenerates when expired.
 ### 2. Get Token Value
 
 ```php
-$token = csrf();  // returns token string or null
+$token = csrf('_csrf', 0);  // returns token string
 ```
 
 ### 3. Generate Hidden Input
 
 ```php
-echo csrf(CSRF_INPUT);
-// <input type="hidden" name="_csrf_token" value="abc123..." />
+echo csrf('_csrf', CSRF_INPUT);
+// <input type="hidden" name="_csrf" value="abc123..." />
 
-echo csrf(CSRF_INPUT, 7200, 'custom_key');
-// <input type="hidden" name="custom_key" value="abc123..." />
+echo csrf('_csrf', CSRF_INPUT | CSRF_SETUP, 7200);
+// setup with custom TTL + return input
 ```
-
-`CSRF_INPUT` includes `CSRF_SETUP` — token is created/refreshed automatically.
 
 ### 4. Validate Token
 
 ```php
-// Check $_POST['_csrf_token'] (default)
-$valid = csrf(CSRF_CHECK);
+// Check $_POST['_csrf'] (default)
+$valid = csrf('_csrf', CSRF_CHECK);
 
 // Check specific value
-$valid = csrf(CSRF_CHECK, $_POST['my_token']);
+$valid = csrf('_csrf', CSRF_CHECK, $_POST['token']);
 ```
 
 **Returns:** `true` if valid and not expired, `false` otherwise
@@ -83,9 +88,10 @@ $valid = csrf(CSRF_CHECK, $_POST['my_token']);
 
 ```php
 // app/render/form.php
+session_start();
 ?>
 <form method="post">
-    <?= csrf(CSRF_INPUT) ?>
+    <?= csrf('_csrf', CSRF_INPUT | CSRF_SETUP) ?>
     <input name="email" type="email" required>
     <button>Submit</button>
 </form>
@@ -97,16 +103,19 @@ $valid = csrf(CSRF_CHECK, $_POST['my_token']);
 // app/route/update.php
 return function($args) {
     if ($_POST) {
-        csrf(CSRF_CHECK) || http_out(403, 'Invalid token');
+        csrf('_csrf', CSRF_CHECK) || http_out(403, 'Invalid token');
         // ... process form ...
     }
     return [];
 };
 ```
 
-### API Alternative
+### Multiple Forms (different tokens)
 
-For stateless APIs, use HMAC auth instead of CSRF tokens.
+```php
+<?= csrf('login_token', CSRF_INPUT | CSRF_SETUP) ?>
+<?= csrf('payment_token', CSRF_INPUT | CSRF_SETUP) ?>
+```
 
 ---
 
@@ -115,7 +124,7 @@ For stateless APIs, use HMAC auth instead of CSRF tokens.
 Tokens stored as:
 
 ```php
-$_SESSION[$key] = [$token, $expiry];
+$_SESSION['bad\csrf'][$name] = [$token, $expiry];
 // ['abc123...', 1704067200]
 ```
 
@@ -126,14 +135,7 @@ $_SESSION[$key] = [$token, $expiry];
 ```php
 // public/index.php
 session_start();
-csrf(CSRF_SETUP);  // init token
+csrf('_csrf', CSRF_SETUP);  // init token
 
 // ... routing ...
-```
-
-Or defer to first form render:
-
-```php
-// render/form.php
-<?= csrf(CSRF_INPUT) ?>  // setup + input in one call
 ```

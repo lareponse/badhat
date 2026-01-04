@@ -1,4 +1,4 @@
-# Authentication in BADHAT
+# BADHAT Authentication
 
 Session-based auth via `checkin()`. Bitmask-driven, no classes.
 
@@ -7,12 +7,7 @@ Session-based auth via `checkin()`. Bitmask-driven, no classes.
 ```php
 const AUTH_SETUP  = 1;    // Configure username field + password query
 const AUTH_ENTER  = 2;    // Login attempt via POST
-const AUTH_CHECK  = 4;    // Return current user or null
-const AUTH_LEAVE  = 8;    // Destroy session
-const AUTH_BOUNCE = 16;   // Redirect if not authenticated
-
-const AUTH_GUARD  = AUTH_CHECK | AUTH_BOUNCE;           // Check + redirect combo
-const AUTH_REQUIRE_SESSION = AUTH_ENTER | AUTH_CHECK | AUTH_LEAVE;  // Auto-start session
+const AUTH_LEAVE  = 4;    // Destroy session
 
 const AUTH_DUMMY_HASH = '$2y$12$...';  // Timing-safe comparison fallback
 ```
@@ -26,6 +21,12 @@ function checkin(int $behave = 0, ?string $u = null, $p = null): ?string
 ```
 
 **Returns:** username string or `null`
+
+**Requires:** `session_status() === PHP_SESSION_ACTIVE` (except for AUTH_SETUP)
+
+**Throws:**
+- `RuntimeException` (500) if no active session
+- `BadFunctionCallException` (400) if invalid parameters for action
 
 ---
 
@@ -48,7 +49,7 @@ checkin(AUTH_SETUP, 'username', $stmt);
 return function($args) {
     if ($_POST) {
         $user = checkin(AUTH_ENTER, 'username', 'password');
-        $user && header('Location: /dashboard') && exit;
+        $user && http_out(302, null, ['Location' => ['/dashboard']]);
         // login failed, fall through to form
     }
     return ['error' => $_POST ? 'Invalid credentials' : null];
@@ -59,24 +60,20 @@ return function($args) {
 - Verifies against DB hash
 - Regenerates session ID on success
 
-### 3. Protected Route (Guard)
-
-```php
-// app/io/route/admin/dashboard.php
-return function($args) {
-    checkin(AUTH_GUARD, '/login');  // redirect URL
-    return ['user' => checkin()];
-};
-```
-
-- Checks auth, redirects to `/login` if not authenticated
-- Combine: `AUTH_CHECK | AUTH_BOUNCE`
-
-### 4. Get Current User
+### 3. Get Current User
 
 ```php
 $user = checkin();  // returns username or null
-$user = checkin(AUTH_CHECK);  // explicit, same result
+```
+
+### 4. Protected Route
+
+```php
+// app/io/route/dashboard.php
+return function($args) {
+    checkin() ?? http_out(302, null, ['Location' => ['/login']]);
+    return ['user' => checkin()];
+};
 ```
 
 ### 5. Logout
@@ -85,8 +82,7 @@ $user = checkin(AUTH_CHECK);  // explicit, same result
 // app/io/route/logout.php
 return function($args) {
     checkin(AUTH_LEAVE);
-    header('Location: /');
-    exit;
+    http_out(302, null, ['Location' => ['/']]);
 };
 ```
 
@@ -99,11 +95,9 @@ return function($args) {
 ## Internal Functions
 
 ```php
-auth_bounce(string $url)      // header + exit
-auth_check(string $field)     // $_SESSION[$field] ?? null
-auth_leave()                  // full session teardown
-auth_login(...)               // POST verify + session setup
-auth_verify(PDOStatement, user, pass)  // timing-safe password check
+auth_login(string $username_field, PDOStatement $password_query, string $u, string $p): ?string
+auth_session_cookie_destroy(): void
+auth_verify(PDOStatement $password_query, string $user, string $pass): ?string
 ```
 
 ---
@@ -113,36 +107,15 @@ auth_verify(PDOStatement, user, pass)  // timing-safe password check
 - **Timing-safe:** Uses `AUTH_DUMMY_HASH` when user not found
 - **Session fixation:** Regenerates ID on successful login
 - **No plaintext:** Expects `password_hash()` in DB
-- **Session auto-start:** `AUTH_REQUIRE_SESSION` behaviors call `session_start()` if needed
-
----
-
-## HTTP-Based Auth (Stateless)
-
-For API/proxy auth, use `auth_http()` from http.php:
-
-```php
-function auth_http(): ?string
-```
-
-- Reads `HTTP_X_AUTH_USER` + `HTTP_X_AUTH_SIG`
-- Validates HMAC-SHA256 against `BADHAT_AUTH_HMAC_SECRET`
-- Returns username or `null`
-
-```php
-// app/io/route/api/resource.php
-return fn($args) => ($user = auth_http()) 
-    ? json_encode(['user' => $user])
-    : io_die(401, 'Unauthorized');
-```
+- **Cookie cleanup:** Properly expires session cookie on logout
 
 ---
 
 ## Recommendation Matrix
 
-| Scenario                      | Method                     |
-|-------------------------------|----------------------------|
-| Web app with sessions         | `checkin()` + `AUTH_GUARD` |
-| Stateless API                 | `auth_http()` HMAC         |
-| Behind SSO proxy              | Trust `HTTP_X_AUTH_USER`   |
-| Internal/staging              | Apache Basic Auth          |
+| Scenario                      | Method                          |
+|-------------------------------|---------------------------------|
+| Web app with sessions         | `checkin()` + redirect guard    |
+| Stateless API                 | Custom HMAC implementation      |
+| Behind SSO proxy              | Trust headers after validation  |
+| Internal/staging              | Apache Basic Auth               |
