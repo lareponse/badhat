@@ -1,5 +1,5 @@
 <?php
-namespace badhat\io;
+namespace bad\io;
 
 // io_in
 const IO_PATH_ONLY  = 1;
@@ -21,7 +21,7 @@ function io_in(string $raw, string $forbidden = '', int $behave = 0): string
             $path = substr($path, 0, $stop);
     }
 
-    ($forbidden !== '' && isset($path[strcspn($path, $forbidden)])) && throw new InvalidArgumentException('Bad Request', 400);
+    ($forbidden !== '' && isset($path[strcspn($path, $forbidden)])) && throw new \InvalidArgumentException('Bad Request', 400);
 
     (IO_ABSOLUTE & $behave) && ($path = '/' . ltrim($path, '/'));
     (IO_ROOTLESS & $behave) && ($path = ltrim($path, '/'));
@@ -41,7 +41,7 @@ function io_map(string $base_dir, string $url_path, string $execution_suffix, in
 
 function io_look(string $base_dir, string $url_path, string $execution_suffix, int $behave = 0): ?string
 {
-    (!$base_dir || $base_dir[-1] !== DIRECTORY_SEPARATOR) && throw new InvalidArgumentException('base_dir must end with directory separator '. DIRECTORY_SEPARATOR); // for valid strpos security check
+    (!$base_dir || $base_dir[-1] !== DIRECTORY_SEPARATOR) && throw new \InvalidArgumentException('base_dir must end with directory separator '. DIRECTORY_SEPARATOR); // for valid strpos security check
 
     $path = $base_dir . $url_path;
     $file = $path . $execution_suffix;

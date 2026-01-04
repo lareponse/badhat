@@ -1,5 +1,5 @@
 <?php
-namespace badhat\auth;
+namespace bad\auth;
 
 const AUTH_SETUP  = 1;
 const AUTH_ENTER  = 2;
@@ -18,7 +18,7 @@ function checkin(int $behave = 0, ?string $u = null, $p = null): ?string
         return null;
     }
 
-    session_status() === PHP_SESSION_ACTIVE || throw new RuntimeException('no active session for auth', 500);
+    session_status() === PHP_SESSION_ACTIVE || throw new \RuntimeException('no active session for auth', 500);
 
     try {
         if(AUTH_LEAVE & $behave){
@@ -32,12 +32,12 @@ function checkin(int $behave = 0, ?string $u = null, $p = null): ?string
 
         return $_SESSION[__NAMESPACE__][$username_field] ?? null;
 
-    } catch (Error $e) {
-        throw new BadFunctionCallException('Invalid parameters for AUTH action', 400, $e);
+    } catch (\Error $e) {
+        throw new \BadFunctionCallException('Invalid parameters for AUTH action', 400, $e);
     }
 }
 
-function auth_login(string $username_field, PDOStatement $password_query, string $u, string $p): ?string
+function auth_login(string $username_field, \PDOStatement $password_query, string $u, string $p): ?string
 {
     $user = isset($_POST[$u], $_POST[$p])
         ? auth_verify($password_query, $_POST[$u], $_POST[$p])
@@ -63,9 +63,9 @@ function auth_session_cookie_destroy()
     setcookie(session_name(), '', $opts) || trigger_error('session cookie destruction failed', E_USER_WARNING);
 }
 
-function auth_verify(PDOStatement $password_query, string $user, string $pass): ?string
+function auth_verify(\PDOStatement $password_query, string $user, string $pass): ?string
 {
-    $password_query->execute([$user]) || throw new RuntimeException('Password query execution failed', 500);
+    $password_query->execute([$user]) || throw new \RuntimeException('Password query execution failed', 500);
 
     $db_password = $password_query->fetchColumn() ?: AUTH_DUMMY_HASH;
     $password_query->closeCursor();
