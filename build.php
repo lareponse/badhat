@@ -39,6 +39,11 @@ function vd($first, ...$variad)
     return $first; // allows chaining like vd($var)->someMethod() or if(vd($var, 'label')->anotherMethod())
 }
 
+function assert_that(bool $cond, string $label): void
+{
+    ($cond && print htmlspecialchars("ASSERT SUCCESS: $label").PHP_EOL)  || throw new \RuntimeException("ASSERT FAILED: $label", 500);
+}
+
 // recovered from scaffold.php
 function scaffold()
 {
