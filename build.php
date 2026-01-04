@@ -1,11 +1,8 @@
 <?php
 
 // if build.php is included, then we are in dev mode
-function is_dev(): bool
-{
-    return true;
-}
 
+function is_dev(): void {} //    existence is the flag. define it, you're dev. remove it, production.
 
 // vd($name):                    backtrace depth 1 with $name content var_dump()
 // vd($city, $zip, $street):     backtrace depth 1 with $city, $zip and $street content in separate var_dump calls
@@ -26,12 +23,12 @@ function vd($first, ...$variad)
     debug_print_backtrace(0, $dpb_limit);
     echo str_repeat('-', 80).PHP_EOL;
     foreach ($variad as $value) {
-        echo str_repeat(' -', 40).PHP_EOL;
         var_dump($value);
+        echo str_repeat('-', 80).PHP_EOL;
     }
     $ob = ob_get_clean();
 
-    if (PHP_SAPI !== 'cli' && is_dev())
+    if (PHP_SAPI !== 'cli' && function_exists('is_dev'))
         echo '<pre class="vd">' . $ob . PHP_EOL . '</pre>';
 
     $die && die;
