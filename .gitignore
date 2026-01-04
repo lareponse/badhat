@@ -1,24 +1,2 @@
-# Ignore everything
-*
-
-# Whitelist core files
-!README.md
-!auth.php
-!build.php
-!http.php
-!io.php
-!db.php
-!error.php
-!run.php
-!guard.php
-!csrf.php
-
-# Whitelist doc directory and contents
-!doc/
-!doc/**
-
-# Keep this gitignore
-!.gitignore
-!composer.json
 .php-cs-fixer.dist.php
 .php-cs-fixer.cache
