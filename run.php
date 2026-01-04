@@ -1,5 +1,5 @@
 <?php
-namespace badhat\run;
+namespace bad\run;
 
 const RUN_BUFFER = 1;
 const RUN_INVOKE = 2;
@@ -26,8 +26,8 @@ function run(array $file_paths, array $args = [], int $behave = 0): array
 
         try {
             $loot[RUN_RETURN] = include $file;
-        } catch (Throwable $t) {
-            $fault = new RuntimeException("include:$file", USERLAND_ERROR, $t);
+        } catch (\Throwable $t) {
+            $fault = new \RuntimeException("include:$file", USERLAND_ERROR, $t);
         }
 
         if ($fault === null || (RUN_RESCUE & $behave)) {
@@ -36,8 +36,8 @@ function run(array $file_paths, array $args = [], int $behave = 0): array
 
                 try {
                     $loot[RUN_RETURN] = $loot[RUN_RETURN]($call_args);
-                } catch (Throwable $t) {
-                    $fault = new RuntimeException("invoke:$file", USERLAND_ERROR, $t);
+                } catch (\Throwable $t) {
+                    $fault = new \RuntimeException("invoke:$file", USERLAND_ERROR, $t);
                 }
             }
         }

@@ -1,5 +1,5 @@
 <?php
-namespace badhat\error;
+namespace bad\error;
 
 const EH_ERROR     = 1;    // set_error_handler
 const EH_EXCEPTION = 2;    // set_exception_handler
