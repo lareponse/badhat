@@ -4,9 +4,8 @@ namespace bad\io;
 
 // io_in
 const IO_PATH_ONLY  = 1;
-const IO_ROOTLESS   = 2;
-const IO_ABSOLUTE   = 4 | IO_ROOTLESS;
-
+const IO_ROOTLESS   = 2;    // return a/b form
+const IO_ABSOLUTE   = 4;    // return /a/b form
 
 // io_map (io_look, io_seek)
 const IO_NEST       = 8;
@@ -15,8 +14,9 @@ const IO_HEAD       = 32;
 
 function io_in(string $raw, string $forbidden = '', int $behave = 0): string
 {
+    ($behave & (IO_ROOTLESS | IO_ABSOLUTE))  === (IO_ROOTLESS | IO_ABSOLUTE) && throw new \BadFunctionCallException('path cannot be rootless and absolute', 400);
+    
     $path = $raw;
-
     if (IO_PATH_ONLY & $behave) {
         // strip authority (//host:port)
         if (str_starts_with($path, '//')) {
