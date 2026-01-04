@@ -1,5 +1,8 @@
 {
-    "name": "badhat",
-    "description": "BADHAT core",
-    "license": "MIT"
+    "name": "bad/hat",
+    "description": "Bitmask-driven PHP micro-core",
+    "license": "MIT",
+    "require": {
+        "php": ">=8.0"
+    }
 }
