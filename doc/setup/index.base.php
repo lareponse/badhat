@@ -11,13 +11,22 @@ require 'add/badhat/db.php';
 require 'add/badhat/auth.php';
 require 'add/badhat/csrf.php';
 
-badhat_install_error_handlers(EH_HANDLE_ALL | EH_LOG);
+use function bad\io\{io_in, io_map};
+use function bad\run\run;
+use function bad\http\http_out;
+
+use const bad\error\{SET_ALL, MESSAGE_LOG};
+use const bad\io\{IO_PATH_ONLY, IO_ROOTLESS, IO_TAIL, IO_NEST};
+use const bad\run\{RUN_INVOKE, RUN_ABSORB, RUN_RETURN};
+
+bad\error\register(SET_ALL | MESSAGE_LOG);
 
 session_start();
-csrf(CSRF_SETUP);
 
-$stmt = qp("SELECT password FROM users WHERE username = ?", []);
-checkin(AUTH_SETUP, 'username', $stmt);
+bad\csrf\csrf('_', bad\csrf\CSRF_SETUP);
+
+$stmt = bad\db\qp("SELECT password FROM users WHERE username = ?", []);
+bad\auth\checkin(bad\auth\AUTH_SETUP, 'username', $stmt);
 
 $io = __DIR__ . '/../app/io';
 $path = io_in($_SERVER['REQUEST_URI'], "\0", IO_PATH_ONLY | IO_ROOTLESS);
