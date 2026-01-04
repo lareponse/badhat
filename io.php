@@ -1,4 +1,5 @@
 <?php
+namespace badhat\io;
 
 // io_in
 const IO_PATH_ONLY  = 1;

@@ -1,4 +1,6 @@
 <?php
+namespace badhat\db;
+
 function db($param = null, array $options = [PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC]): PDO
 {
     static $cache = null;
