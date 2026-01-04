@@ -11,7 +11,7 @@ Real projects. Real constraints. Real solutions.
 return function($args) {
     checkin() ?? http_out(302, null, ['Location' => ['/login']]);
     
-    $id = $args[0] ?? throw new InvalidArgumentException('Post ID required', 400);
+    $id = $args[0] ?? throw new \InvalidArgumentException('Post ID required', 400);
     
     if ($_POST) {
         csrf(CSRF_CHECK) || http_out(403, 'Invalid token');
@@ -65,7 +65,7 @@ return function($args) {
     $data = match($action) {
         'list' => qp("SELECT id, name FROM users")->fetchAll(),
         'get'  => qp("SELECT * FROM users WHERE id = ?", [$id])->fetch(),
-        default => throw new InvalidArgumentException('Unknown action', 400)
+        default => throw new \InvalidArgumentException('Unknown action', 400)
     };
     
     http_out(200, json_encode($data), ['Content-Type' => ['application/json']]);
