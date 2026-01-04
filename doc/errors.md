@@ -1,226 +1,116 @@
-# Error Handling in BADHAT
+# bad\error
 
-Native PHP error mechanisms. No middleware, no wrappers.
+**Bitmask-driven error handler registration with request tracing**
 
-Three layers routed through one installer:
 
-- `set_error_handler()` for notices/warnings
-- `set_exception_handler()` for uncaught exceptions  
-- `register_shutdown_function()` for fatal errors
+Installs PHP error, exception, and shutdown handlers via bitmask configuration. Each handler formats errors with a request ID prefix, optionally logs or prints, and triggers a fatal exit routine that dumps request context. Returns previous handlers and a restore callable.
 
----
-
-## Constants
-
-```php
-const EH_ERROR     = 1;   // set_error_handler
-const EH_EXCEPTION = 2;   // set_exception_handler
-const EH_SHUTDOWN  = 4;   // register_shutdown_function
-const EH_SUPPRESS  = 8;   // suppress error propagation
-
-const EH_OSD = 16;        // output to screen (echo)
-const EH_LOG = 32;        // output to error_log
-
-const EH_HANDLE_ALL = EH_ERROR | EH_EXCEPTION | EH_SHUTDOWN;
-```
-
----
-
-## Functions
-
-### osd
-
-```php
-function osd(int $behave, $message): void
-```
-
-Output dispatcher. Routes message based on flags.
-
-```php
-osd(EH_LOG, 'to error log only');
-osd(EH_OSD, 'to screen only');
-osd(EH_LOG | EH_OSD, 'to both');
-```
-
-### badhat_install_error_handlers
-
-```php
-function badhat_install_error_handlers(int $behave = EH_HANDLE_ALL, ?string $request_id = null): string
-```
-
-Installs error handlers. Returns request ID.
-
-```php
-// Full installation with logging
-$req_id = badhat_install_error_handlers(EH_HANDLE_ALL | EH_LOG);
-
-// Development: screen output
-$req_id = badhat_install_error_handlers(EH_HANDLE_ALL | EH_OSD);
-
-// Both outputs
-$req_id = badhat_install_error_handlers(EH_HANDLE_ALL | EH_LOG | EH_OSD);
-
-// Custom request ID
-$req_id = badhat_install_error_handlers(EH_HANDLE_ALL | EH_LOG, 'abc123');
-
-// Selective handlers
-badhat_install_error_handlers(EH_EXCEPTION | EH_SHUTDOWN | EH_LOG);
-```
-
----
-
-## Log Format
-
-All handlers use consistent format:
-
-```
-[req=<id>] <Type> (<code>) <message> in <file>:<line>
-```
-
-Examples:
-```
-[req=a1b2c3d4] Error (errno=2) Missing file in /app/route/users.php:42
-[req=a1b2c3d4] Uncaught (RuntimeException) DB failed in /app/db.php:15
-[req=a1b2c3d4] Shutdown (type=1) Memory exhausted in /app/render.php:200
-```
-
----
-
-## Fatal Exit
-
-On uncaught exception or fatal error, logs context then exits:
-
-```
-[req=a1b2c3d4] EXEC:0.0234 MEM:2097152 URI:/users REMOTE:192.168.1.1 AGENT:Mozilla/5.0 METHOD:GET #GET:2 #POST:0 #SESSION:3 #COOKIES:1 #FILES:0
-```
-
-Then:
-- Cleans output buffer
-- Sets HTTP 500
-- Exits with code 1
-
----
-
-## Handler Behavior
-
-### Error Handler (EH_ERROR)
-
-```php
-// Logs error, optionally suppresses propagation
-set_error_handler(function($errno, $errstr, $errfile, $errline) {
-    osd($behave, sprintf($format, 'Error', "errno=$errno", ...));
-    return (bool)(EH_SUPPRESS & $behave);
-});
-```
-
-### Exception Handler (EH_EXCEPTION)
-
-```php
-// Logs exception + trace, triggers fatal exit
-set_exception_handler(function(Throwable $e) {
-    osd($behave, sprintf($format, 'Uncaught', get_class($e), ...));
-    osd($behave, $prefix . $e->getTraceAsString());
-    $fatal_exit();
-});
-```
-
-### Shutdown Handler (EH_SHUTDOWN)
-
-```php
-// Catches E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR, E_USER_ERROR
-register_shutdown_function(function() {
-    $err = error_get_last();
-    if (!$err || !($err['type'] & (E_ERROR | E_PARSE | ...)))
-        return;
-    osd($behave, sprintf($format, 'Shutdown', "type={$err['type']}", ...));
-    $fatal_exit();
-});
-```
-
----
-
-## Error Routing
-
-| Level | Mechanism | When |
-|-------|-----------|------|
-| debug | `error_log()` | diagnostics |
-| notice | `trigger_error(E_USER_NOTICE)` | unexpected but recoverable |
-| warning | `trigger_error(E_USER_WARNING)` | deprecated, fallback used |
-| error | `throw` (4xx) | client/application error |
-| critical | `throw` (5xx) | server/logic error |
-| emergency | `exit()` | shutdown, maintenance |
-
----
-
-## Usage Examples
-
-### Debug
-
-```php
-error_log("DEBUG: Cache miss key=$key");
-```
-
-### Notice
-
-```php
-trigger_error("Missing lang, using default", E_USER_NOTICE);
-```
-
-### Warning
-
-```php
-trigger_error("Using fallback endpoint", E_USER_WARNING);
-```
-
-### Error (4xx)
-
-```php
-throw new InvalidArgumentException("Invalid user ID", 400);
-```
-
-### Critical (5xx)
-
-```php
-throw new RuntimeException("Database connection failed", 500);
-```
-
----
-
-## Configuration Patterns
-
-### Production
-
-```php
-badhat_install_error_handlers(EH_HANDLE_ALL | EH_LOG);
-```
-
-### Development
-
-```php
-badhat_install_error_handlers(EH_HANDLE_ALL | EH_OSD | EH_LOG);
-```
-
-### Suppress Errors (continue execution)
-
-```php
-badhat_install_error_handlers(EH_HANDLE_ALL | EH_SUPPRESS | EH_LOG);
-```
-
----
 
 ## Design
 
-Let exceptions bubble. No local try/catch.
+Configuration lives in the function signature. Behavior flags compose: pick your handlers (`HND_ERR|HND_EXC|HND_SHUT`), pick your output channels (`LOG_ERR|OSD_ERR`), decide if PHP's internal handler runs (`ERR_SUPPRESS_PHP`), choose fatal buffer behavior (`OB_FLUSH_FATAL`). No objects, no config files, no DI. One call, one bitmask, done.
+
+Request ID ties all logged lines together. Fatal exit dumps timing, memory, and request shape—enough to reconstruct what happened without bloated context objects. Shutdown handler catches what `set_error_handler` cannot: parse errors, compile errors, the hard stops.
+
+## Usage
 
 ```php
-// Wrong
-try {
-    $result = qp($sql, $params)->fetch();
-} catch (PDOException $e) {
-    // breaks the pattern
-}
+// minimal: log all errors, install all handlers
+bad\error\register();
 
-// Right
-$result = qp($sql, $params)->fetch();
-// exception → handler → log → 500
+// production: log only, suppress PHP noise
+bad\error\register(SET_ALL | LOG_ERR | ERR_SUPPRESS_PHP);
+
+// debug: print to screen, flush buffers on crash
+bad\error\register(SET_ALL | OSD_ERR | OB_FLUSH_FATAL);
+
+// custom request id for distributed tracing
+bad\error\register(SET_ALL | LOG_ERR, $trace_id);
+
+// temporary handler swap
+$h = bad\error\register(HND_ERR | LOG_ERR);
+// ... risky operation ...
+$h['restore']();
+```
+
+## Reference
+
+### Constants
+
+| Constant | Value | Purpose |
+|----------|-------|---------|
+| `HND_ERR` | 1 | Install `set_error_handler` |
+| `HND_EXC` | 2 | Install `set_exception_handler` |
+| `HND_SHUT` | 4 | Install `register_shutdown_function` |
+| `SET_ALL` | 7 | All three handlers |
+| `ERR_SUPPRESS_PHP` | 8 | Return `true` from error handler |
+| `LOG_ERR` | 16 | Write to `error_log()` |
+| `OSD_ERR` | 32 | Print to stdout |
+| `OB_FLUSH_FATAL` | 64 | Flush output buffers on fatal (else discard) |
+| `PHP_FATAL_ERRORS` | — | Bitmask of fatal error types |
+
+### `report(int $behave, string $message): void`
+
+Conditional output. Prints if `OSD_ERR` set, logs if `LOG_ERR` set.
+
+### `register(int $behave = SET_ALL|LOG_ERR, ?string $request_id = null): array`
+
+Installs handlers per bitmask. Generates request ID if null.
+
+**Returns:**
+```php
+[
+    'request_id' => string,
+    'previous'   => [
+        'set_error_handler' => ?callable, 
+        'set_exception_handler' => ?callable
+    ],
+    'restore'    => callable  // reverts to previous handlers
+]
+```
+
+## Log Examples
+
+### Error (set_error_handler)
+```
+[req=a1b2c3d4] Error (errno=2) Undefined variable $foo in /app/io/route/user.php:42
+```
+
+### Uncaught Exception (set_exception_handler)
+```
+[req=a1b2c3d4] Uncaught (InvalidArgumentException) Bad Request in /app/lib/io.php:18
+[req=a1b2c3d4] #0 /app/io/route/api.php(23): io_in('')
+#1 /app/index.php(45): include('/app/io/route/...')
+#2 {main}
+[req=a1b2c3d4] EXEC:0.0034 MEM:2097152 URI:/api/user/99 REMOTE:192.168.1.50 AGENT:Mozilla/5.0 METHOD:POST #GET:1 #POST:3 #SESSION:2 #COOKIES:1 #FILES:0
+```
+
+### Fatal Shutdown (register_shutdown_function)
+```
+[req=a1b2c3d4] Shutdown (type=4) syntax error, unexpected '}' in /app/io/route/broken.php:17
+[req=a1b2c3d4] EXEC:0.0008 MEM:524288 URI:/broken REMOTE:127.0.0.1 AGENT:curl/7.68.0 METHOD:GET #GET:0 #POST:0 #SESSION:0 #COOKIES:0 #FILES:0
+```
+
+### Warning suppressed (ERR_SUPPRESS_PHP)
+```
+[req=a1b2c3d4] Error (errno=8) Undefined array key "missing" in /app/io/route/index.php:31
+```
+No PHP output, execution continues.
+
+### Multiple errors same request
+```
+[req=f7e8d9c0] Error (errno=8) Undefined array key "name" in /app/lib/auth.php:55
+[req=f7e8d9c0] Error (errno=2) file_get_contents(): Filename cannot be empty in /app/lib/io.php:89
+[req=f7e8d9c0] Uncaught (RuntimeException) include:/app/io/route/fail.php in /app/lib/io.php:47
+[req=f7e8d9c0] #0 /app/index.php(32): io_run(Array, Array, 6)
+#1 {main}
+[req=f7e8d9c0] EXEC:0.0127 MEM:4194304 URI:/fail REMOTE:10.0.0.1 AGENT:- METHOD:GET #GET:2 #POST:0 #SESSION:5 #COOKIES:3 #FILES:0
+```
+
+Request ID `f7e8d9c0` ties all five lines together. Grep it.
+
+
+**Fatal exit logs:**
+```
+[req=a1b2c3d4] EXEC:0.0123 MEM:2097152 URI:/path REMOTE:127.0.0.1 AGENT:curl METHOD:GET #GET:0 #POST:0 #SESSION:0 #COOKIES:0 #FILES:0
 ```
