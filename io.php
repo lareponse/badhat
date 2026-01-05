@@ -14,7 +14,7 @@ const IO_HEAD       = 32;
 
 function io_in(string $raw, string $forbidden = '', int $behave = 0): string
 {
-    ($behave & (IO_ROOTLESS | IO_ABSOLUTE))  === (IO_ROOTLESS | IO_ABSOLUTE) && throw new \BadFunctionCallException('path cannot be rootless and absolute', 400);
+    ($behave & (IO_ROOTLESS | IO_ABSOLUTE))  === (IO_ROOTLESS | IO_ABSOLUTE) && throw new \InvalidArgumentException('path cannot be rootless and absolute', 400);
     
     $path = $raw;
     if (IO_PATH_ONLY & $behave) {
