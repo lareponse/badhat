@@ -5,13 +5,14 @@ const CSRF_SETUP = 1;
 const CSRF_CHECK = 2;
 const CSRF_INPUT = 4;
 
-function csrf(string $name, int $behave, $param = null)
+function csrf(int $behave, string $name, $param = null)
 {
     session_status() === PHP_SESSION_ACTIVE     || throw new \RuntimeException('No active session for CSRF', 500);
     $name                                       ?: throw new \InvalidArgumentException('CSRF name required', 500);
 
     if (CSRF_SETUP & $behave) {
-        $ttl = is_int($param) && $param > 0 ? $param : 3600;
+        (!is_int($param) || $param <= 0)        && throw new \InvalidArgumentException('CSRF_SETUP requires a positive integer TTL');
+        $ttl = $param;
         $now = time();
 
         if (!isset($_SESSION[__NAMESPACE__][$name][1]) || $now > $_SESSION[__NAMESPACE__][$name][1])
