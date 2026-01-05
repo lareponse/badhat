@@ -18,7 +18,8 @@ function checkin(int $behave = 0, ?string $u = null, $p = null): ?string
         return null;
     }
 
-    session_status() === PHP_SESSION_ACTIVE || throw new \RuntimeException('no active session for auth', 500);
+    ($username_field && $password_query)        || throw new \BadFunctionCallException('AUTH not initialized (call with AUTH_SETUP first)', 500);
+    session_status() === PHP_SESSION_ACTIVE     || throw new \RuntimeException('no active session for auth', 500);
 
     try {
         if(AUTH_LEAVE & $behave){
