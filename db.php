@@ -1,44 +1,38 @@
 <?php
 namespace bad\db;
 
-function db($param = null, array $options = [\PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC]): \PDO
+const DB_DROP = 1;
+
+function db(?\PDO $pdo = null, int $behave = 0): \PDO
 {
     static $cache = null;
-
-    if ($cache && $param === null)  return $cache;  // db() call after setup, most frequent
-    !$param && ($param = '');                       // no cache, no param, switch to default
-
-    if ($param instanceof \PDO)      $cache = $param;
-    elseif (is_string($param))      $cache = new \PDO(
-        $_SERVER['DB_DSN_'  . $param] ?? (getenv('DB_DSN_'  . $param) ?: throw new \DomainException("db-empty-dsn-for($param)")),
-        $_SERVER['DB_USER_' . $param] ?? (getenv('DB_USER_' . $param) ?: null),
-        $_SERVER['DB_PASS_' . $param] ?? (getenv('DB_PASS_' . $param) ?: null),
-        $options
-    );
-
-    return $cache                   ?? throw new \LogicException('db-no-connection');
+    ($behave & DB_DROP) && ($cache = null);
+    $pdo !== null && ($cache = $pdo);
+    return $cache                                   ?? throw new \BadFunctionCallException('Call db(PDO) first', 500);
 }
 
-// $params: null > query(), [] > prepare only, [non-empty] > prepare + execute
-function qp(string $query, ?array $params = null, array $prepare_options = [], ?string $suffix = null): \PDOStatement|false
+function qp(string $query, ?array $params = null, array $prep_options = [], ?\PDO $pdo = null): \PDOStatement
 {
-    return $params === null
-        ? db($suffix)->query($query)
-        : (($prep = db($suffix)->prepare($query, $prepare_options)) && $params && $prep->execute($params)
-            ? $prep : $prep);
+    $pdo ??= db();                                  // throws if no previous db(PDO) call was made
+    if($params === null) return $pdo->query($query) ?: throw new \RuntimeException('query failed', 500);
+    $prepare = $pdo->prepare($query, $prep_options) ?: throw new \RuntimeException('prepare failed', 500);
+    if($params) $prepare->execute($params)          || throw new \RuntimeException('execute failed', 500);
+    return $prepare;
 }
 
-function dbt(callable $transaction, ?string $suffix = null)
+function dbt(callable $transaction, ?\PDO $pdo = null)
 {
-    $pdo = db($suffix);
+    $pdo ??= db();
     try {
-        $pdo->beginTransaction();
+        $pdo->beginTransaction()                    || throw new \RuntimeException('beginTransaction failed', 500);
         $out = $transaction($pdo);
-        $pdo->commit();
-        $pdo->errorCode() !== '00000' && ($error = $pdo->errorInfo()) && throw new \RuntimeException($error[0] . ':' . $error[2], $error[1]);
+        $pdo->commit()                              || throw new \RuntimeException('commit failed', 500);
+        if($pdo->errorCode() !== '00000')           // if PDO not in exception mode
+            ($error = $pdo->errorInfo())            && throw new \RuntimeException($error[0] . ':' . $error[2], $error[1]); // 0: sql-state  1: driver-code  2: message
         return $out;
     } catch (\Throwable $e) {
-        if ($pdo->inTransaction()) $pdo->rollBack();
+        if ($pdo->inTransaction())
+            $pdo->rollBack()                        || throw new \RuntimeException('rollback failed', 500, $e);
         throw $e;
     }
 }

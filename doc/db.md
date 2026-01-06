@@ -1,66 +1,63 @@
-# BADHAT Database
+# BADHAT PDO wrapper
 
 Procedural PDO. Three functions.
 
----
+## TL;DR
 
-## Environment
-
-```bash
-# Default profile (empty suffix):
-export DB_DSN_="mysql:host=localhost;dbname=shop"
-export DB_USER_="shop_user"
-export DB_PASS_="secret"
-
-# Named profile "read":
-export DB_DSN_read="sqlite:/path/to/read.db"
-```
-
-Values read from `$_SERVER` first, then `getenv()`.
+- Single cached connection; inject replaces
+- All failures throw — no false returns
+- Call `db($pdo)` before any `qp()` or `dbt()`
+- Full PDO API available on returned instances
 
 ---
 
 ## Functions
 
-### db
+### Connection
 
 ```php
-function db($param = null, array $options = [PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC]): PDO
+db(?\PDO $pdo = null, int $behave = 0): \PDO
 ```
 
-**Getter:**
-- `db()` — return cached PDO (auto-creates from default profile if none)
+**Inject:**
+- `db($pdo)` — cache and return PDO
 
-**Setter:**
-- `db('suffix')` — create, cache, return PDO using ENV with suffix
-- `db($pdo)` — cache and return provided PDO
+**Retrieve:**
+- `db()` — return cached PDO
 
-**Throws:** `LogicException` if no cache and invalid param, `DomainException` if DSN missing
+**Reset:**
+- `db(null, DB_DROP)` — clear cache, then throw (no connection)
+- `db($pdo, DB_DROP)` — clear cache, set new connection
+
+**Throws:** `BadFunctionCallException` if no cached connection
 
 ```php
-// Default profile
+// Bootstrap (once)
+db(new PDO('mysql:host=localhost;dbname=shop', 'user', 'pass', [
+    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
+]));
+
+// Use anywhere after
 $users = db()->query("SELECT * FROM users")->fetchAll();
 
-// Named profile
-db('read');
-$data = db()->query("SELECT * FROM logs")->fetchAll();
-
-// Inject existing PDO
-db(new PDO('sqlite::memory:'));
+// Reset connection
+db(null, DB_DROP);
+db($newPdo);
 ```
 
 ---
 
-### qp
-
-```php
-function qp(string $query, ?array $params = null, array $prepare_options = [], ?string $suffix = null): PDOStatement|false
+### Querying
+```php 
+qp(string $query, ?array $params = null, array $prep_options = [], ?\PDO $pdo = null): \PDOStatement
 ```
 
 **Param semantics:**
-- `null` — `db()->query($query)` (immediate)
+- `null` — `query()` immediate
 - `[]` — prepare only, no execute
 - `[...]` — prepare + execute with bindings
+
+**Throws:** `RuntimeException` on query/prepare/execute failure
 
 ```php
 // Immediate query
@@ -77,16 +74,16 @@ $stmt = qp("INSERT INTO logs (msg) VALUES (?)", []);
 $stmt->execute(['login']);
 $stmt->execute(['logout']);
 
-// Specific profile
-$data = qp("SELECT * FROM archive", null, [], 'read');
+// Explicit connection
+$data = qp("SELECT * FROM archive", null, [], $readReplica);
 ```
 
 ---
 
-### dbt
+### dbt()
 
 ```php
-function dbt(callable $transaction, ?string $suffix = null)
+function dbt(callable $transaction, ?\PDO $pdo = null)
 ```
 
 **Flow:**
@@ -94,6 +91,8 @@ function dbt(callable $transaction, ?string $suffix = null)
 2. Call `$transaction($pdo)`
 3. Success → `commit()` → return result
 4. Exception → `rollBack()` → rethrow
+
+**Throws:** `RuntimeException` on transactionnal failure (beginTransaction, commit, rollBack)
 
 ```php
 $order_id = dbt(function($pdo) use ($data) {
@@ -105,37 +104,41 @@ $order_id = dbt(function($pdo) use ($data) {
     
     return $order_id;
 });
-```
 
-**Error checking:** throws `RuntimeException` if `errorCode() !== '00000'` after commit.
+// Explicit connection
+dbt($fn, $writeConnection);
+```
 
 ---
 
 ## Patterns
 
 ```php
-// Select
 $users = qp("SELECT * FROM users WHERE active = 1")->fetchAll();
-
-// Count
 $count = qp("SELECT COUNT(*) FROM users")->fetchColumn();
 
-// Insert + ID
 qp("INSERT INTO users (name) VALUES (?)", [$name]);
 $id = db()->lastInsertId();
 
-// Update
 qp("UPDATE users SET name = ? WHERE id = ?", [$name, $id]);
-
-// Delete
 qp("DELETE FROM users WHERE id = ?", [$id]);
 ```
 
 ---
 
-## Notes
+## Multiple Connections
 
-- Single cached connection; setter replaces
-- `qp()` returns `false` on prepare failure
-- Exceptions bubble from PDO
-- Full PDO API available on returned instances
+Caller owns topology:
+
+```php
+// Bootstrap
+$write = new PDO($dsn_primary, ...);
+$read  = new PDO($dsn_replica, ...);
+
+db($write);                          // default
+
+// Usage
+qp($select, [$id], [], $read);       // explicit read
+qp($insert, [$data]);                // default write
+dbt($fn, $write);                    // explicit write
+```
