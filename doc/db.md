@@ -1,144 +1,91 @@
 # BADHAT PDO wrapper
 
-Procedural PDO. Three functions.
+A tiny procedural PDO helper: **1 cached PDO + 2 helpers**.
+If you want internals: it’s ~50 lines — just read the source.
 
 ## TL;DR
 
-- Single cached connection; inject replaces
-- All failures throw — no false returns
-- Call `db($pdo)` before any `qp()` or `dbt()`
-- Full PDO API available on returned instances
+* Call `db($pdo)` once during bootstrap
+* Use `qp()` for query/prepare/execute
+* Use `trans()` for transactions
+* **Everything throws** on failure (no `false` returns)
+* You can always pass an explicit `$pdo` if you don’t want the cache
 
 ---
 
-## Functions
+## Bootstrap
 
-### Connection
+```php
+use function bad\db\{db, qp, trans};
+
+db(new PDO($dsn, $user, $pass, [
+  PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+]));
+```
+
+---
+
+## API
+
+### `db()`
 
 ```php
 db(?\PDO $pdo = null, int $behave = 0): \PDO
 ```
 
-**Inject:**
-- `db($pdo)` — cache and return PDO
-
-**Retrieve:**
-- `db()` — return cached PDO
-
-**Reset:**
-- `db(null, DB_DROP)` — clear cache, then throw (no connection)
-- `db($pdo, DB_DROP)` — clear cache, set new connection
-
-**Throws:** `BadFunctionCallException` if no cached connection
+* `db($pdo)` → set/replace cached connection
+* `db()` → get cached connection (or throws)
+* `db(null, VOID_CACHE)` → clear cache (then throws)
 
 ```php
-// Bootstrap (once)
-db(new PDO('mysql:host=localhost;dbname=shop', 'user', 'pass', [
-    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
-]));
-
-// Use anywhere after
-$users = db()->query("SELECT * FROM users")->fetchAll();
-
-// Reset connection
-db(null, DB_DROP);
-db($newPdo);
+db(null, bad\db\VOID_CACHE);
 ```
 
 ---
 
-### Querying
-```php 
+### `qp()`
+
+```php
 qp(string $query, ?array $params = null, array $prep_options = [], ?\PDO $pdo = null): \PDOStatement
 ```
 
-**Param semantics:**
-- `null` — `query()` immediate
-- `[]` — prepare only, no execute
-- `[...]` — prepare + execute with bindings
+`$params` meaning:
 
-**Throws:** `RuntimeException` on query/prepare/execute failure
+* `null` → `$pdo->query($query)`
+* `[]` → prepare only (no execute)
+* non-empty array → prepare + execute
 
 ```php
-// Immediate query
-$users = qp("SELECT * FROM users")->fetchAll();
+$rows = qp("SELECT * FROM users")->fetchAll();
+$row  = qp("SELECT * FROM users WHERE id = ?", [$id])->fetch();
 
-// Prepared with params
-$user = qp("SELECT * FROM users WHERE id = ?", [$id])->fetch();
+$stmt = qp("INSERT INTO logs(msg) VALUES(?)", []);
+$stmt->execute(['hello']);
+```
 
-// Named params
-$user = qp("SELECT * FROM users WHERE id = :id", ['id' => $id])->fetch();
+Pass a specific connection:
 
-// Prepare only (reusable)
-$stmt = qp("INSERT INTO logs (msg) VALUES (?)", []);
-$stmt->execute(['login']);
-$stmt->execute(['logout']);
-
-// Explicit connection
-$data = qp("SELECT * FROM archive", null, [], $readReplica);
+```php
+$rows = qp("SELECT * FROM archive", null, [], $readPdo)->fetchAll();
 ```
 
 ---
 
-### dbt()
+### `trans()`
 
 ```php
-function dbt(callable $transaction, ?\PDO $pdo = null)
+trans(callable $transaction, ?\PDO $pdo = null)
 ```
 
-**Flow:**
-1. `beginTransaction()`
-2. Call `$transaction($pdo)`
-3. Success → `commit()` → return result
-4. Exception → `rollBack()` → rethrow
+Runs:
 
-**Throws:** `RuntimeException` on transactionnal failure (beginTransaction, commit, rollBack)
+* `beginTransaction()`
+* `$transaction($pdo)`
+* `commit()` or `rollBack()` on error
 
 ```php
-$order_id = dbt(function($pdo) use ($data) {
-    qp("INSERT INTO orders (total) VALUES (?)", [$data['total']]);
-    $order_id = $pdo->lastInsertId();
-    
-    qp("INSERT INTO order_items (order_id, item) VALUES (?, ?)", 
-        [$order_id, $data['item']]);
-    
-    return $order_id;
+$id = trans(function(\PDO $pdo){
+  qp("INSERT INTO t(x) VALUES(?)", [123], [], $pdo);
+  return $pdo->lastInsertId();
 });
-
-// Explicit connection
-dbt($fn, $writeConnection);
-```
-
----
-
-## Patterns
-
-```php
-$users = qp("SELECT * FROM users WHERE active = 1")->fetchAll();
-$count = qp("SELECT COUNT(*) FROM users")->fetchColumn();
-
-qp("INSERT INTO users (name) VALUES (?)", [$name]);
-$id = db()->lastInsertId();
-
-qp("UPDATE users SET name = ? WHERE id = ?", [$name, $id]);
-qp("DELETE FROM users WHERE id = ?", [$id]);
-```
-
----
-
-## Multiple Connections
-
-Caller owns topology:
-
-```php
-// Bootstrap
-$write = new PDO($dsn_primary, ...);
-$read  = new PDO($dsn_replica, ...);
-
-db($write);                          // default
-
-// Usage
-qp($select, [$id], [], $read);       // explicit read
-qp($insert, [$data]);                // default write
-dbt($fn, $write);                    // explicit write
 ```
