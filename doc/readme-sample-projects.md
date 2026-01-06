@@ -195,7 +195,7 @@ return function($args) {
         'type' => $_POST['type']
     ];
     
-    return dbt(function($pdo) use ($order) {
+    return trans(function($pdo) use ($order) {
         qp("INSERT INTO orders (user_id, symbol, qty, price, type) VALUES (?, ?, ?, ?, ?)",
             [$order['user'], $order['symbol'], $order['qty'], $order['price'], $order['type']]);
         
