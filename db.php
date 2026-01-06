@@ -1,38 +1,50 @@
 <?php
 namespace bad\db;
 
-const DB_DROP = 1;
+const VOID_CACHE = 1;
 
 function db(?\PDO $pdo = null, int $behave = 0): \PDO
 {
     static $cache = null;
-    ($behave & DB_DROP) && ($cache = null);
-    $pdo !== null && ($cache = $pdo);
-    return $cache                                   ?? throw new \BadFunctionCallException('Call db(PDO) first', 500);
+    
+    ($pdo !== null) && ($cache = $pdo);
+    (VOID_CACHE & $behave) && ($cache = null);
+    
+    return $cache                                   ?? throw new \BadFunctionCallException('Call db(PDO) first', 0xBAD);
 }
 
 function qp(string $query, ?array $params = null, array $prep_options = [], ?\PDO $pdo = null): \PDOStatement
 {
     $pdo ??= db();                                  // throws if no previous db(PDO) call was made
-    if($params === null) return $pdo->query($query) ?: throw new \RuntimeException('query failed', 500);
-    $prepare = $pdo->prepare($query, $prep_options) ?: throw new \RuntimeException('prepare failed', 500);
-    if($params) $prepare->execute($params)          || throw new \RuntimeException('execute failed', 500);
-    return $prepare;
+    if($params === null) return $pdo->query($query) ?: pdo_throw($pdo, 'PDO::query');
+    
+    $stm = $pdo->prepare($query, $prep_options)     ?: pdo_throw($pdo, 'PDO::prepare');
+    if($params) $stm->execute($params)              || pdo_throw($stm, 'PDO::execute');
+    return $stm;
 }
 
-function dbt(callable $transaction, ?\PDO $pdo = null)
+function trans(callable $transaction, ?\PDO $pdo = null)
 {
-    $pdo ??= db();
+    $pdo ??= db();                                  // throws if no previous db(PDO) call was made
+    $res = null;
     try {
-        $pdo->beginTransaction()                    || throw new \RuntimeException('beginTransaction failed', 500);
-        $out = $transaction($pdo);
-        $pdo->commit()                              || throw new \RuntimeException('commit failed', 500);
-        if($pdo->errorCode() !== '00000')           // if PDO not in exception mode
-            ($error = $pdo->errorInfo())            && throw new \RuntimeException($error[0] . ':' . $error[2], $error[1]); // 0: sql-state  1: driver-code  2: message
-        return $out;
+        $pdo->beginTransaction()                    || pdo_throw($pdo, 'PDO::beginTransaction', 0xACE);
+        try{
+            $res = $transaction($pdo);
+        }catch(\Throwable $t){
+            throw new \RuntimeException('transaction callable', 0xC0D, $t);
+        }
+        $pdo->commit()                              || pdo_throw($pdo, 'PDO::commit');
+        return $res;
     } catch (\Throwable $e) {
         if ($pdo->inTransaction())
-            $pdo->rollBack()                        || throw new \RuntimeException('rollback failed', 500, $e);
+            $pdo->rollBack()                        || pdo_throw($pdo, 'PDO::rollback', 0xACE, $e);
         throw $e;
     }
+}
+
+function pdo_throw($errorInfoable, string $action, int $exception_code = 500, ?\Throwable $chain = null)
+{
+    $error = $errorInfoable->errorInfo() ?? ['?????', 0, 'unknown error, errorInfo is null'];
+    throw new \RuntimeException("[STATE={$error[0]}, CODE={$error[1]}] $action failed ({$error[2]})", $exception_code, $chain); // 0: sql-state  1: driver-code  2: message
 }
