@@ -42,7 +42,7 @@ function run(array $file_paths, array $args = [], int $behave = 0): array
             }
         }
 
-        while (ob_get_level() > $level + 1) ob_end_clean();
+        while (ob_get_level() > $level + 1) ob_end_clean();     // clean nested buffers from include, keep ours
 
         (RUN_BUFFER & $behave) && ($loot[RUN_OUTPUT] = ob_get_clean());
         $fault !== null && !(RUN_ONWARD & $behave) && throw $fault;

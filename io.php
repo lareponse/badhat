@@ -49,7 +49,7 @@ function io_map(string $base_dir, string $url_path, string $execution_suffix, in
 
 function io_look(string $base_dir, string $url_path, string $execution_suffix, int $behave = 0): ?string
 {
-    (!$base_dir || $base_dir[-1] !== DIRECTORY_SEPARATOR) && throw new \InvalidArgumentException('base_dir must end with directory separator '. DIRECTORY_SEPARATOR); // for valid strpos security check
+    (!$base_dir || $base_dir[-1] !== DIRECTORY_SEPARATOR) && throw new \InvalidArgumentException('base_dir must end with directory separator '. DIRECTORY_SEPARATOR, 400); // trailing separator prevents /var/www matching /var/www-evil
 
     $path = $base_dir . $url_path;
     $file = $path . $execution_suffix;
