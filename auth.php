@@ -5,7 +5,7 @@ const AUTH_SETUP  = 1;
 const AUTH_ENTER  = 2;
 const AUTH_LEAVE  = 4;
 
-const AUTH_DUMMY_HASH = '$2y$12$8NidQXAmttzUc23lTnUDAuC.JoxuJtdG0NQTjhh3Y7C442uVQ4FTy';
+const AUTH_DUMMY_HASH = '$2y$12$8NidQXAmttzUc23lTnUDAuC.JoxuJtdG0NQTjhh3Y7C442uVQ4FTy';     // timing-safe: always run password_verify even if user missing
 
 function checkin(int $behave = 0, ?string $u = null, $p = null): ?string
 {
@@ -71,7 +71,7 @@ function auth_verify(\PDOStatement $password_query, string $user, string $pass):
     $db_password = $password_query->fetchColumn() ?: AUTH_DUMMY_HASH;
     $password_query->closeCursor();
 
-    return (password_verify($pass, $db_password) && AUTH_DUMMY_HASH !== $db_password)
+    return (password_verify($pass, $db_password) && AUTH_DUMMY_HASH !== $db_password) // verify ran, but reject if it was against dummy
         ? $user
         : null;
 }

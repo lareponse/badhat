@@ -9,7 +9,7 @@ function http_headers(string $name, string $value, bool $replace = true): ?array
 {
     static $headers = [];
 
-    if ($name === '' || isset($name[strspn($name, HTTP_TCHAR)]))
+    if ($name === '' || isset($name[strspn($name, HTTP_TCHAR)])) // char exists past valid span
         return null;
 
     if (strpbrk($value, ASCII_CTL) !== false)
@@ -27,7 +27,7 @@ function http_out(int $code, ?string $body = null, array $headers = [])
         foreach ((array)$values as $v)
             header("$name: $v", false);
 
-    if ($body !== null && $code >= 200 && $code !== 204 && $code !== 205 && $code !== 304)
+    if ($body !== null && $code >= 200 && $code !== 204 && $code !== 205 && $code !== 304) // RFC 7230: bodyless status codes
         echo $body;
 
     exit;
