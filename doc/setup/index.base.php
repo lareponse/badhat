@@ -15,11 +15,11 @@ use function bad\io\{io_in, io_map};
 use function bad\run\run;
 use function bad\http\http_out;
 
-use const bad\error\{SET_ALL, MESSAGE_LOG};
+use const bad\error\{HND_ALL, MESSAGE_LOG};
 use const bad\io\{IO_PATH_ONLY, IO_ROOTLESS, IO_TAIL, IO_NEST};
 use const bad\run\{RUN_INVOKE, RUN_ABSORB, RUN_RETURN};
 
-bad\error\register(SET_ALL | MESSAGE_LOG);
+bad\error\register(HND_ALL | MESSAGE_LOG);
 
 session_start();
 

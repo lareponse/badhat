@@ -29,8 +29,6 @@ const RUN_CHAIN  = 256;                         // pipe loot to next file
 const RUN_RETURN = -1;                          // include/invoke return value
 const RUN_OUTPUT = -2;                          // captured output buffer
 
-// Error code
-const USERLAND_ERROR = 0xBAD;                   // 2989
 ```
 
 ---
@@ -154,7 +152,7 @@ Each file receives the previous file's return value.
 
 ```php
 $loot = run(['/app/route/broken.php'], []);
-// throws RuntimeException("include:/app/route/broken.php", USERLAND_ERROR, $original)
+// throws RuntimeException("include:/app/route/broken.php", 0xC0D, $original)
 ```
 
 ### RUN_RESCUE: Invoke Despite Include Error
