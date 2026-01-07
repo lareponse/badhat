@@ -377,3 +377,66 @@ address {
     margin-inline: auto;
 }
 
+
+
+
+
+/* visually hidden (screen-reader only) */
+.sr-only{
+  position:absolute;
+  width:1px;height:1px;
+  padding:0;margin:-1px;
+  overflow:hidden;clip:rect(0,0,0,0);
+  white-space:nowrap;border:0;
+}
+
+/* make sure your hero can host absolute elements */
+html{ position: relative; }
+
+/* the scroll marker button */
+.scroll-marker{
+  /* position inside the hero */
+  position: absolute;
+  right: 2rem;
+  bottom: 2rem;
+  z-index: 5;
+
+  /* round button */
+  width: 2.75rem;
+  aspect-ratio: 1 / 1;
+  border-radius: 999px;
+
+  /* icon */
+  background: #fff url("/ui/scroll-bar.png") center / 1.4rem no-repeat;
+
+  /* clean/pro look */
+  border: 1px solid rgba(0,0,0,.12);
+  box-shadow: 0 .6rem 1.2rem rgba(0,0,0,.12);
+
+  /* interactions */
+  display: inline-block;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+}
+
+/* hover/focus */
+.scroll-marker:hover{
+  transform: translateY(.15rem);
+  box-shadow: 0 .85rem 1.6rem rgba(0,0,0,.16);
+}
+.scroll-marker:focus-visible{
+  outline: .2rem solid rgba(108,99,255,.45); /* change to your accent */
+  outline-offset: .25rem;
+}
+
+/* subtle “scroll hint” animation */
+@media (prefers-reduced-motion: no-preference){
+  .scroll-marker{
+    animation: scroll-bob 1.6s ease-in-out infinite;
+  }
+  @keyframes scroll-bob{
+    0%,100%{ transform: translateY(0); }
+    50%    { transform: translateY(.35rem); }
+  }
+}

@@ -87,7 +87,13 @@
             <a href="/don" class="btn btn-primary">Faire un don</a>
             <button class="nav-toggle" aria-label="Ouvrir le menu">☰</button>
         </nav>
+            <!-- put this inside your hero/header -->
+        <a class="scroll-marker" href="#services">
+            <span class="visually-hidden">Faire défiler jusqu’à la section suivante</span>
+        </a>
+
     </header>
+
     <?php
     $breadcrumb = explode('/', trim(http_in(), '/'));
     $page_id = implode('-', $breadcrumb);
