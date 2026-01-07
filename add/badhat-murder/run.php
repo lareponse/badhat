@@ -9,7 +9,6 @@ const RUN_ONWARD = 16;
 
 const RUN_CHAIN  = 256;
 
-const USERLAND_ERROR = 0xBAD;
 const RUN_RETURN = -1;
 const RUN_OUTPUT = -2;
 
@@ -27,7 +26,7 @@ function run(array $file_paths, array $args = [], int $behave = 0): array
         try {
             $loot[RUN_RETURN] = include $file;
         } catch (\Throwable $t) {
-            $fault = new \RuntimeException("include:$file", USERLAND_ERROR, $t);
+            $fault = new \RuntimeException("include:$file", 0xC0D, $t);
         }
 
         if ($fault === null || (RUN_RESCUE & $behave)) {
@@ -37,7 +36,7 @@ function run(array $file_paths, array $args = [], int $behave = 0): array
                 try {
                     $loot[RUN_RETURN] = $loot[RUN_RETURN]($call_args);
                 } catch (\Throwable $t) {
-                    $fault = new \RuntimeException("invoke:$file", USERLAND_ERROR, $t);
+                    $fault = new \RuntimeException("invoke:$file", 0xC0D, $t);
                 }
             }
         }
