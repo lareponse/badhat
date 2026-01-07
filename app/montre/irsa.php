@@ -76,7 +76,7 @@ $oa = qp('SELECT * FROM `page` WHERE `slug` = ?', ['irsa-oa'])->fetch(PDO::FETCH
         <h2 id="oa-heading"><?= $oa['label']; ?></h2>
         <?= $oa['content']; ?>
         <p class="cta">
-            <a href="#" class="btn">Voir la composition complète de l'OA</a>
+            <a href="/oa" class="btn">Voir la composition complète de l'OA</a>
         </p>
     </div>
 
