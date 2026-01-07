@@ -6,22 +6,26 @@ namespace bad\error;
 const HND_ERR   = 1;   // set_error_handler
 const HND_EXC   = 2;   // set_exception_handler
 const HND_SHUT  = 4;   // register_shutdown_function
-const SET_ALL   = HND_ERR | HND_EXC | HND_SHUT;
+const HND_ALL   = HND_ERR | HND_EXC | HND_SHUT; // (default)
 
 // behavior flags
-const ERR_SUPPRESS_PHP = 8;    // return true from error handler (hide PHP internal handler)
-const LOG_ERR          = 16;   // write to error_log (default off if you want explicit)
-const OSD_ERR          = 32;   // print to stdout/stderr (on-screen display)
-const OB_FLUSH_FATAL   = 64;   // flush output buffers on fatal exit (else discard)
+const ALLOW_INTERNAL   = 8;  // allow PHP internal error handler to run
+const ERR_LOG          = 16;   // write to error_log (default)
+const ERR_OSD          = 32;   // print to stdout/stderr (on-screen display)
+const FATAL_OB_FLUSH   = 64;   // flush output buffers on fatal exit (else discard)
+const FATAL_HTTP_500   = 128;  // emit 500 http code
 
+// badhat classification code, for reference
+const CODE_ACE = 0xACE;  // PHP execution, missing or failing env   (2766 - Abnormal Computing Environment)
+const CODE_BAD = 0xBAD;  // badhat misuse or edge case              (2989 - Broken Abstraction Detected)
+const CODE_COD = 0xC0D;  // userland origin (invoked callable)      (3085 - Code Of Doom)
 
 const PHP_FATAL_ERRORS = E_ERROR | E_PARSE | E_CORE_ERROR | E_COMPILE_ERROR | E_USER_ERROR;
 
 $report = function ($behave, string $message): void {
-        (OSD_ERR & $behave) && print $message;
-        (LOG_ERR & $behave) && error_log($message);
+        (ERR_OSD & $behave) && print $message;
+        (ERR_LOG & $behave) && error_log($message);
 };
-
 
 $fatal_exit = function ($behave, $prefix, $start) use($report): void {
     $report(
@@ -33,15 +37,15 @@ $fatal_exit = function ($behave, $prefix, $start) use($report): void {
         . ' #SESSION:' . (isset($_SESSION) ? count($_SESSION) : 0) . ' #COOKIES:' . count($_COOKIE) . ' #FILES:' . count($_FILES)
     );
 
-    headers_sent() || http_response_code(500);
+    (FATAL_HTTP_500 & $behave) && (headers_sent() || http_response_code(500));
 
     while (ob_get_level())
-        $behave & OB_FLUSH_FATAL ? ob_end_flush() : ob_end_clean();
+        $behave & FATAL_OB_FLUSH ? ob_end_flush() : ob_end_clean();
 
     exit(1);
 };
 
-return function (int $behave = SET_ALL | LOG_ERR, ?string $request_id = null) use($report, $fatal_exit): callable
+return function (int $behave = HND_ALL | ERR_LOG, ?string $request_id = null) use($report, $fatal_exit): callable
 {
     $start  = $_SERVER['REQUEST_TIME_FLOAT'] ?? microtime(true);
 
@@ -52,16 +56,16 @@ return function (int $behave = SET_ALL | LOG_ERR, ?string $request_id = null) us
     $prev_err_handler = null;
     $prev_exc_handler = null;
 
-    (HND_ERR & $behave)       && ($prev_err_handler = set_error_handler(
+    (HND_ERR & $behave) && ($prev_err_handler = set_error_handler(
         function (int $errno, string $errstr, string $errfile, int $errline) use ($format, $behave, $report): bool {
             $message = sprintf($format, 'Error', "errno={$errno}", $errstr, $errfile, $errline);
             $report($behave, $message);
-            return (bool)(ERR_SUPPRESS_PHP & $behave);
+            return !(ALLOW_INTERNAL & $behave);
         }
     ));
 
-    (HND_EXC & $behave)   && ($prev_exc_handler = set_exception_handler(
-        function (\Throwable $e) use ($format, $behave, $prefix, $fatal_exit, $report): void {
+    (HND_EXC & $behave) && ($prev_exc_handler = set_exception_handler(
+        function (\Throwable $e) use ($format, $behave, $prefix, $fatal_exit, $start, $report): void {
             $message = sprintf($format, 'Uncaught', $e::class, $e->getMessage(), $e->getFile(), $e->getLine());
             $report($behave, $message);
             $report($behave, $prefix . $e->getTraceAsString());

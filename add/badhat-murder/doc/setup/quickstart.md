@@ -30,7 +30,7 @@ require 'add/badhat/run.php';
 require 'add/badhat/http.php';
 require 'add/badhat/db.php';
 
-register(SET_ALL | MESSAGE_LOG);
+register(HND_ALL | MESSAGE_LOG);
 
 $path = io_in($_SERVER['REQUEST_URI'], "\0", IO_PATH_ONLY | IO_ROOTLESS);
 
@@ -189,7 +189,7 @@ require 'add/badhat/db.php';
 require 'add/badhat/auth.php';
 require 'add/badhat/csrf.php';
 
-register(SET_ALL | MESSAGE_LOG);
+register(HND_ALL | MESSAGE_LOG);
 
 session_start();
 db();
