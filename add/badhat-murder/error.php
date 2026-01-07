@@ -45,8 +45,7 @@ $fatal_exit = function ($behave, $prefix, $start) use($report): void {
     exit(1);
 };
 
-return function (int $behave = HND_ALL | ERR_LOG, ?string $request_id = null) use($report, $fatal_exit): callable
-{
+return function (int $behave = HND_ALL | ERR_LOG, ?string $request_id = null) use($report, $fatal_exit): callable{
     $start  = $_SERVER['REQUEST_TIME_FLOAT'] ?? microtime(true);
 
     $request_id ??= bin2hex(random_bytes(4));
@@ -89,4 +88,4 @@ return function (int $behave = HND_ALL | ERR_LOG, ?string $request_id = null) us
         $prev_err_handler ? set_error_handler($prev_err_handler) : restore_error_handler();
         $prev_exc_handler ? set_exception_handler($prev_exc_handler) : restore_exception_handler();
     };
-}
+};
