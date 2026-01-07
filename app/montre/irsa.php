@@ -37,9 +37,8 @@ $oa = qp('SELECT * FROM `page` WHERE `slug` = ?', ['irsa-oa'])->fetch(PDO::FETCH
                     </div>
 
                     <div class="flip-back">
-                        <?= $event['content'] ?? '<p><strong>Sed sed ex metus</strong>. Ut sollicitudin ipsum leo, ultricies eleifend ligula commodo et.</p><p> Cras vel velit sed lectus ultricies lobortis vel eget diam.</p>' ?>
+                        <?= $event['content'] ?? '<p><strong>Contenu en cours de rédaction.</strong></p><p>Cette étape de l’histoire sera bientôt complétée.</p>' ?>
                     </div>
-
                 </div>
             </article>
 

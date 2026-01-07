@@ -2,7 +2,7 @@
     display: grid;
     gap: 3rem;
     justify-content: center;
-    grid-template-columns: 13rem;
+    grid-template-columns: 16rem;
 }
 
 .timeline>article {
@@ -51,7 +51,7 @@
 
 @media screen and (min-width:64rem) {
     .timeline {
-        grid-template-columns: repeat(3, 13rem);
+        grid-template-columns: repeat(3, 16rem);
         grid-auto-flow: dense;
         justify-content: center;
     }
@@ -86,7 +86,7 @@
 
     .timeline .move-lr,
     .timeline .move-rl {
-        width: calc(0.93*13rem);
+        width: calc(0.93*16rem);
     }
 
     .timeline .move-ud {
