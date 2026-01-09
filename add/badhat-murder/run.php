@@ -1,4 +1,5 @@
 <?php
+
 namespace bad\run;
 
 const RUN_BUFFER = 1;
@@ -21,7 +22,7 @@ function run(array $file_paths, array $args = [], int $behave = 0): array
         $level = ob_get_level();
         $fault = null;
 
-        (RUN_BUFFER & $behave) && ob_start(null, 0, 0);
+        (RUN_BUFFER & $behave) && ob_start();
 
         try {
             $loot[RUN_RETURN] = include $file;
@@ -40,10 +41,10 @@ function run(array $file_paths, array $args = [], int $behave = 0): array
                 }
             }
         }
+        $keep = $level + ((RUN_BUFFER & $behave) ? 1 : 0);
+        for ($n = ob_get_level(); $n > $keep + 1; --$n)  @ob_end_clean();  // clean nested buffers from include, keep ours
 
-        while (ob_get_level() > $level + 1) ob_end_clean();     // clean nested buffers from include, keep ours
-
-        (RUN_BUFFER & $behave) && ($loot[RUN_OUTPUT] = ob_get_clean());
+        (RUN_BUFFER & $behave) && ($loot[RUN_OUTPUT] = (ob_get_level() > $level) ? ob_get_clean() : '');
         $fault !== null && !(RUN_ONWARD & $behave) && throw $fault;
     }
 
