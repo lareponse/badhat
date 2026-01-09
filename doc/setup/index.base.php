@@ -3,7 +3,7 @@
 
 set_include_path(__DIR__ . '/..' . PATH_SEPARATOR . get_include_path());
 
-require 'add/badhat/error.php';
+$install = require 'add/badhat/error.php';
 require 'add/badhat/io.php';
 require 'add/badhat/run.php';
 require 'add/badhat/http.php';
@@ -14,19 +14,24 @@ require 'add/badhat/csrf.php';
 use function bad\io\{io_in, io_map};
 use function bad\run\run;
 use function bad\http\http_out;
+use function bad\db\{db, qp};
+use function bad\auth\checkin;
+use function bad\csrf\csrf;
 
-use const bad\error\{HND_ALL, MESSAGE_LOG};
+use const bad\error\{HND_ALL, ERR_LOG};
 use const bad\io\{IO_PATH_ONLY, IO_ROOTLESS, IO_TAIL, IO_NEST};
 use const bad\run\{RUN_INVOKE, RUN_ABSORB, RUN_RETURN};
+use const bad\auth\AUTH_SETUP;
+use const bad\csrf\CSRF_SETUP;
 
-bad\error\register(HND_ALL | MESSAGE_LOG);
+$install(HND_ALL | ERR_LOG);
 
 session_start();
 
-bad\csrf\csrf('_', bad\csrf\CSRF_SETUP);
+csrf(CSRF_SETUP, '_csrf', 3600);
 
-$stmt = bad\db\qp("SELECT password FROM users WHERE username = ?", []);
-bad\auth\checkin(bad\auth\AUTH_SETUP, 'username', $stmt);
+$stmt = qp("SELECT password FROM users WHERE username = ?", []);
+checkin(AUTH_SETUP, 'username', $stmt);
 
 $io = __DIR__ . '/../app/io';
 $path = io_in($_SERVER['REQUEST_URI'], "\0", IO_PATH_ONLY | IO_ROOTLESS);
