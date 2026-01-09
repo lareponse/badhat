@@ -1,5 +1,5 @@
 <?php
-$statistics = qp('SELECT label, value FROM `statistics`')->fetchAll(PDO::FETCH_KEY_PAIR);
+$statistics = bad\db\qp('SELECT label, value FROM `statistics`')->fetchAll(PDO::FETCH_KEY_PAIR);
 ?>
 
 <img src="/ui/blob/blob_home_top_right.svg" alt="decorative blob shape" class="blob" id="blob_home_top_right" aria-hidden="true">
@@ -410,10 +410,4 @@ $statistics = qp('SELECT label, value FROM `statistics`')->fetchAll(PDO::FETCH_K
         </p>
     </div>
 </section>
-
-
-<?php
-return function ($this_html, $args) {
-    [$ret, $page] = ob_ret_get('app/layout.php', ['main' => $this_html, 'css' => ['page-home']], IO_EXTRACT);
-    return $page;
-};
+<?php return ['page-home'];?>

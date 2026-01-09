@@ -122,8 +122,4 @@
     </div>
 </section>
 
-<?php
-return function ($this_html, $args) {
-    [$ret, $page] = ob_ret_get('app/layout.php', ['main' => $this_html, 'css' => ['page-services-dash']], IO_EXTRACT);
-    return $page;
-};
+<?php return ['page-services-dash'];?>
