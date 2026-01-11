@@ -23,7 +23,7 @@
         <div class="card-grid">
             <!-- Don 50 € -->
             <article>
-                <a href="/don/unique/50">
+                <a href="/documents/irsa-don-virement.pdf">
                     <img src="/ui/pages/don/don_50.webp" alt="Enfant souriant avec un appareil auditif">
                     <h3><span>En donnant</span> <span>50 €</span></h3>
                     <p>Vous contribuez à l'achat d'un appareil auditif reconditionné</p>
@@ -34,7 +34,7 @@
 
             <!-- Don 75 € -->
             <article>
-                <a href="/don/unique/30">
+                <a href="/documents/irsa-don-virement.pdf">
                     <img src="/ui/pages/don/don_75.webp" alt="Bébé lors d'une séance d'éveil sensoriel">
                     <h3><span>En donnant</span> <span>75 €</span></h3>
                     <p>Vous financez une séance d'éveil sensoriel pour un bébé avec TSA</p>
@@ -45,7 +45,7 @@
 
             <!-- Don 100 € -->
             <article>
-                <a href="/don/unique/100">
+                <a href="/documents/irsa-don-virement.pdf">
 
                     <img src="/ui/pages/don/don_100.webp" alt="Enseignant en langue des signes avec un enfant">
                     <h3><span>En donnant</span> <span>100 €</span></h3>
@@ -59,7 +59,7 @@
     </div>
 
     <footer>
-        <a href="/don/mensuel">
+        <a href="/documents/irsa-don-virement.pdf">
             <svg width="33" height="33" viewBox="0 0 33 33" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M0 16.4999C0 7.38722 7.38786 0 16.5001 0C25.6121 0 33 7.38722 33 16.4999C33 25.6128 25.6121 33 16.5001 33C7.38786 33 0 25.6128 0 16.4999ZM17.3284 10.9805C16.8659 11.172 16.5643 11.6233 16.5643 12.124V15.2607H10.8238C10.1403 15.2607 9.58622 15.8146 9.58622 16.4983C9.58622 17.1818 10.1403 17.7359 10.8238 17.7359H16.5643V20.8761C16.5643 21.3768 16.8659 21.8281 17.3284 22.0195C17.7909 22.2111 18.3234 22.105 18.6772 21.7509L23.0304 17.3948C23.2672 17.1694 23.4149 16.8511 23.4149 16.4983C23.4149 16.1245 23.2492 15.7894 22.9873 15.5625L18.6772 11.2492C18.3234 10.8951 17.7911 10.789 17.3284 10.9805Z" fill="#5F5EA5" />
             </svg>
@@ -78,7 +78,7 @@
         <div class="card-grid">
             <!-- Don 7 €/mois -->
             <article>
-                <a href="/don/mensuel/7">
+                <a href="/documents/irsa-don-virement.pdf">
                     <img src="/ui/pages/don/don_mensuel_7.webp" alt="Personne non-voyante marchant avec une canne blanche">
                     <h3><span>En donnant</span> <span>7 €/mois</span></h3>
                     <p>Vous financez 1 canne blanche tous les 2 mois pour un enfant ou un adulte aveugle en cours d'apprentissage.</p>
@@ -89,7 +89,7 @@
 
             <!-- Don 15 €/mois -->
             <article>
-                <a href="/don/mensuel/15">
+                <a href="/documents/irsa-don-virement.pdf">
                     <img src="/ui/pages/don/don_mensuel_15.webp" alt="Enfant portant un casque anti-bruit">
                     <h3><span>En donnant</span> <span>15 €/mois</span></h3>
                     <p>
@@ -103,7 +103,7 @@
 
             <!-- Don 30 €/mois -->
             <article>
-                <a href="/don/mensuel/30">
+                <a href="/documents/irsa-don-virement.pdf">
                     <img src="/ui/pages/don/don_mensuel_30.webp" alt="Enfant accompagné en classe spécialisée">
                     <h3><span>En donnant</span> <span>30 €/mois</span></h3>
                     <p>
@@ -117,7 +117,7 @@
         </div>
     </div>
     <footer>
-        <a href="/don/mensuel">
+        <a href="/documents/irsa-don-virement.pdf">
             <svg width="33" height="33" viewBox="0 0 33 33" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M0 16.4999C0 7.38722 7.38786 0 16.5001 0C25.6121 0 33 7.38722 33 16.4999C33 25.6128 25.6121 33 16.5001 33C7.38786 33 0 25.6128 0 16.4999ZM17.3284 10.9805C16.8659 11.172 16.5643 11.6233 16.5643 12.124V15.2607H10.8238C10.1403 15.2607 9.58622 15.8146 9.58622 16.4983C9.58622 17.1818 10.1403 17.7359 10.8238 17.7359H16.5643V20.8761C16.5643 21.3768 16.8659 21.8281 17.3284 22.0195C17.7909 22.2111 18.3234 22.105 18.6772 21.7509L23.0304 17.3948C23.2672 17.1694 23.4149 16.8511 23.4149 16.4983C23.4149 16.1245 23.2492 15.7894 22.9873 15.5625L18.6772 11.2492C18.3234 10.8951 17.7911 10.789 17.3284 10.9805Z" fill="#5F5EA5" />
             </svg>
@@ -175,7 +175,7 @@
                 <p>
                     Les revenus générés sont intégralement reversés à l'IRSA pour soutenir ses projets éducatifs et sociaux.
                 </p>
-                <a href="contribuer/chateau">Réservez le Château</a>
+                <a href="/services/chateau-orangerie">Réservez le Château</a>
             </article>
         </div>
     </div>
