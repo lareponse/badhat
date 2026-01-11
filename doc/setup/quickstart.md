@@ -34,11 +34,11 @@ use function bad\io\{io_in, io_map};
 use function bad\run\run;
 use function bad\http\http_out;
 
-use const bad\error\{HND_ALL, ERR_LOG};
+use const bad\error\{HND_ALL};
 use const bad\io\{IO_PATH_ONLY, IO_ROOTLESS, IO_TAIL, IO_NEST};
 use const bad\run\{RUN_INVOKE, RUN_ABSORB, RUN_RETURN};
 
-$install(HND_ALL | ERR_LOG);
+$install(HND_ALL);
 
 $path = io_in($_SERVER['REQUEST_URI'], "\0", IO_PATH_ONLY | IO_ROOTLESS);
 
@@ -211,13 +211,13 @@ use function bad\db\{db, qp};
 use function bad\auth\checkin;
 use function bad\csrf\csrf;
 
-use const bad\error\{HND_ALL, ERR_LOG};
+use const bad\error\HND_ALL;
 use const bad\io\{IO_PATH_ONLY, IO_ROOTLESS, IO_TAIL, IO_NEST};
 use const bad\run\{RUN_INVOKE, RUN_ABSORB, RUN_RETURN};
 use const bad\auth\AUTH_SETUP;
 use const bad\csrf\CSRF_SETUP;
 
-$install(HND_ALL | ERR_LOG);
+$install(HND_ALL);
 
 session_start();
 
