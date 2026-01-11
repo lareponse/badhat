@@ -2,6 +2,7 @@
 $events = bad\db\qp('SELECT * FROM `timeline` ORDER BY `event_year` ASC')->fetchAll(PDO::FETCH_ASSOC);
 $intro = bad\db\qp('SELECT * FROM `page` WHERE `slug` = ?', ['irsa-intro'])->fetch(PDO::FETCH_ASSOC);
 $oa = bad\db\qp('SELECT * FROM `page` WHERE `slug` = ?', ['irsa-oa'])->fetch(PDO::FETCH_ASSOC);
+
 ?>
 <header>
     <h1><span class="tight">L'IRSA : une histoire qui dure !</span></h1>
@@ -13,7 +14,7 @@ $oa = bad\db\qp('SELECT * FROM `page` WHERE `slug` = ?', ['irsa-oa'])->fetch(PDO
     </h2>
 
     <div class="timeline">
-        <?php foreach ($args['events'] as $event) : ?>
+        <?php foreach ($events as $event) : ?>
             <article class="timeline-item <?= $event['position_hint'] ?>"
                 tabindex="0"
                 aria-expanded="false"
