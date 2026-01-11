@@ -294,29 +294,29 @@ img {
     }
 }
 
-.tight ul,
-.tight ol{
+.tight> ul,
+.tight> ol{
   padding-left: 1.15rem; /* default is often ~2.5rem */
   margin-left: 0;
 }
 
 /* base: readable stack on small screens */
-.tight dl{
+.tight>dl{
   margin: 1rem 0 0;
 }
 
-.tight dl dt{
+.tight>dl dt{
   font-weight: 700;
   margin: 1rem 0 .25rem;
 }
 
-.tight dl dd{
+.tight>dl dd{
   margin: 0 0 .75rem;
 }
 
 /* large screens: grid */
 @media screen and (min-width:64rem) {
-  .tight dl{
+  .tight>dl{
     display: grid;
     grid-template-columns: minmax(12rem, 18rem) 1fr; /* label | value */
     column-gap: 2rem;
@@ -324,11 +324,11 @@ img {
     align-items: baseline;
   }
 
-  .tight dl dt{
+  .tight>dl dt{
     margin: 0;
   }
 
-    .tight dl dd{
+    .tight>dl dd{
     margin: 0;
     padding:0;
   }
