@@ -173,7 +173,7 @@
 
         <section class="tight">
             <p>&copy; <?= date('Y') ?> IRSA – Institut Royal pour Sourds et Aveugles – Tous droits réservés</small></p>
-            <small>Experience concue par <a href="https://evohe.be">Z.Kiss</a> et <a href="https://lareponse.be">lareponse</a></small>
+            <small>Experience concue par <a href="https://evohe.be">Z.Kiss</a> et <a href="https://lareponse.org">lareponse</a></small>
         </section>
     </footer>
 
