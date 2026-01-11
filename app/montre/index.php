@@ -332,50 +332,50 @@ $statistics = bad\db\qp('SELECT label, value FROM `statistics`')->fetchAll(PDO::
         Un accompagnement global qui prend en compte les besoins éducatifs,
         thérapeutiques et sociaux de chaque personne.
     </p>
+</section>
 
-    <div class="card-grid">
-        <!-- Éducation spécialisée -->
-        <article>
-            <a href="/ecoles">
-                <figure>
-                    <img src="/ui/home/service_education.jpg" alt="Salle de classe avec des élèves attentifs et un enseignant">
-                </figure>
+<section class="card-grid">
+    <!-- Éducation spécialisée -->
+    <article>
+        <a href="/ecoles">
+            <figure>
+                <img src="/ui/home/service_education.jpg" alt="Salle de classe avec des élèves attentifs et un enseignant">
+            </figure>
 
-                <h3>Éducation spécialisée</h3>
-                <span class="cta">Vers Écoles</span>
+            <h3>Éducation spécialisée</h3>
+            <span class="cta">Vers Écoles</span>
 
-                <p>Un enseignement sur mesure, de la crèche au secondaire.</p>
-            </a>
+            <p>Un enseignement sur mesure, de la crèche au secondaire.</p>
+        </a>
 
-        </article>
+    </article>
 
-        <!-- Hébergements -->
-        <article>
-            <a href="/hebergements">
-                <figure>
-                    <img src="/ui/home/service_hebergement.jpg" alt="Chambre aménagée dans un centre d'hébergement">
-                </figure>
+    <!-- Hébergements -->
+    <article>
+        <a href="/hebergements">
+            <figure>
+                <img src="/ui/home/service_hebergement.jpg" alt="Chambre aménagée dans un centre d'hébergement">
+            </figure>
 
-                <h3>Hébergements</h3>
-                <span class="cta">Vers centres d'hébergement</span>
+            <h3>Hébergements</h3>
+            <span class="cta">Vers centres d'hébergement</span>
 
 
-                <p>Des lieux de vie pour accompagner l'autonomie et soulager les familles.</p>
-            </a>
-        </article>
+            <p>Des lieux de vie pour accompagner l'autonomie et soulager les familles.</p>
+        </a>
+    </article>
 
-        <!-- Centres de jour -->
-        <article>
-            <a href="/centres-jour">
-                <figure>
-                    <img src="/ui/home/service_centres_jour.jpg" alt="Atelier artistique avec plusieurs personnes en activité">
-                </figure>
-                <h3>Centres de jour</h3>
-                <span class="cta">Vers centres de jour</span>
-                <p>Un cadre structuré et bienveillant où chaque personne bénéficie d'activités et de soins répondant à ses besoins.</p>
-            </a>
-        </article>
-    </div>
+    <!-- Centres de jour -->
+    <article>
+        <a href="/centres-jour">
+            <figure>
+                <img src="/ui/home/service_centres_jour.jpg" alt="Atelier artistique avec plusieurs personnes en activité">
+            </figure>
+            <h3>Centres de jour</h3>
+            <span class="cta">Vers centres de jour</span>
+            <p>Un cadre structuré et bienveillant où chaque personne bénéficie d'activités et de soins répondant à ses besoins.</p>
+        </a>
+    </article>
 </section>
 
 <section class="tight" aria-labelledby="stats-heading" lang="fr">

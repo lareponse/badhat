@@ -2,7 +2,6 @@
 
 <header class="page-header">
     <h1><span class="tight">Faire un don à l'IRSA</span></h1>
-
     <p class="tight">
         Soutenir l'IRSA, c'est permettre à des enfants, des jeunes et des adultes en situation de handicap sensoriel de grandir,
         d'apprendre, de s'épanouir et de vivre pleinement. Grâce à votre aide, nous contribuons à financer des accompagnements
@@ -19,45 +18,43 @@
             Concrètement, un don de 100 € ne vous coûte en réalité que 55 €.
             À vous de choisir le montant qui correspond à votre engagement.
         </p>
-
-        <div class="card-grid">
-            <!-- Don 50 € -->
-            <article>
-                <a href="/documents/irsa-don-virement.pdf">
-                    <img src="/ui/pages/don/don_50.webp" alt="Enfant souriant avec un appareil auditif">
-                    <h3><span>En donnant</span> <span>50 €</span></h3>
-                    <p>Vous contribuez à l'achat d'un appareil auditif reconditionné</p>
-                    <span class="cta">Faites un don</span>
-                    <p class="don-note">Cela ne vous coûte que 27 € en réalité après déduction fiscale.</p>
-                </a>
-            </article>
-
-            <!-- Don 75 € -->
-            <article>
-                <a href="/documents/irsa-don-virement.pdf">
-                    <img src="/ui/pages/don/don_75.webp" alt="Bébé lors d'une séance d'éveil sensoriel">
-                    <h3><span>En donnant</span> <span>75 €</span></h3>
-                    <p>Vous financez une séance d'éveil sensoriel pour un bébé avec TSA</p>
-                    <span class="cta">Faites un don</span>
-                    <p class="don-note">Cela ne vous coûte que 34 € en réalité après déduction fiscale.</p>
-                </a>
-            </article>
-
-            <!-- Don 100 € -->
-            <article>
-                <a href="/documents/irsa-don-virement.pdf">
-
-                    <img src="/ui/pages/don/don_100.webp" alt="Enseignant en langue des signes avec un enfant">
-                    <h3><span>En donnant</span> <span>100 €</span></h3>
-                    <p>Vous soutenez la formation d'un enseignant spécialisé en langue des signes</p>
-                    <span class="cta">Faites un don</span>
-                    <p class="don-note">Cela ne vous coûte que 55 € en réalité après déduction fiscale.</p>
-                </a>
-            </article>
-        </div>
-
     </div>
 
+    <section class="card-grid" aria-labelledby="ponctuels-heading">
+        <!-- Don 50 € -->
+        <article>
+            <a href="/documents/irsa-don-virement.pdf">
+                <img src="/ui/pages/don/don_50.webp" alt="Enfant souriant avec un appareil auditif">
+                <h3><span>En donnant</span> <span>50 €</span></h3>
+                <p>Vous contribuez à l'achat d'un appareil auditif reconditionné</p>
+                <span class="cta">Faites un don</span>
+                <p class="don-note">Cela ne vous coûte que 27 € en réalité après déduction fiscale.</p>
+            </a>
+        </article>
+
+        <!-- Don 75 € -->
+        <article>
+            <a href="/documents/irsa-don-virement.pdf">
+                <img src="/ui/pages/don/don_75.webp" alt="Bébé lors d'une séance d'éveil sensoriel">
+                <h3><span>En donnant</span> <span>75 €</span></h3>
+                <p>Vous financez une séance d'éveil sensoriel pour un bébé avec TSA</p>
+                <span class="cta">Faites un don</span>
+                <p class="don-note">Cela ne vous coûte que 34 € en réalité après déduction fiscale.</p>
+            </a>
+        </article>
+
+        <!-- Don 100 € -->
+        <article>
+            <a href="/documents/irsa-don-virement.pdf">
+
+                <img src="/ui/pages/don/don_100.webp" alt="Enseignant en langue des signes avec un enfant">
+                <h3><span>En donnant</span> <span>100 €</span></h3>
+                <p>Vous soutenez la formation d'un enseignant spécialisé en langue des signes</p>
+                <span class="cta">Faites un don</span>
+                <p class="don-note">Cela ne vous coûte que 55 € en réalité après déduction fiscale.</p>
+            </a>
+        </article>
+    </section>
     <footer>
         <a href="/documents/irsa-don-virement.pdf">
             <svg width="33" height="33" viewBox="0 0 33 33" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -66,56 +63,53 @@
             <span>Choisissez le montant de votre don mensuel</span>
         </a>
     </footer>
-
 </section>
 
 
 <!-- Dons mensuels -->
 <section aria-labelledby="mensuels-heading">
-    <div class="tight">
-        <h2 id="mensuels-heading">Dons mensuels</h2>
+    <h2 class="tight" id="mensuels-heading">Dons mensuels</h2>
+    <section class="card-grid" >
+        <!-- Don 7 €/mois -->
+        <article>
+            <a href="/documents/irsa-don-virement.pdf">
+                <img src="/ui/pages/don/don_mensuel_7.webp" alt="Personne non-voyante marchant avec une canne blanche">
+                <h3><span>En donnant</span> <span>7 €/mois</span></h3>
+                <p>Vous financez 1 canne blanche tous les 2 mois pour un enfant ou un adulte aveugle en cours d'apprentissage.</p>
+                <span class="cta">Faites un don</span>
+                <p class="don-note">Coût réel après déduction&nbsp;: 3,8 €/mois.</p>
+            </a>
+        </article>
 
-        <div class="card-grid">
-            <!-- Don 7 €/mois -->
-            <article>
-                <a href="/documents/irsa-don-virement.pdf">
-                    <img src="/ui/pages/don/don_mensuel_7.webp" alt="Personne non-voyante marchant avec une canne blanche">
-                    <h3><span>En donnant</span> <span>7 €/mois</span></h3>
-                    <p>Vous financez 1 canne blanche tous les 2 mois pour un enfant ou un adulte aveugle en cours d'apprentissage.</p>
-                    <span class="cta">Faites un don</span>
-                    <p class="don-note">Coût réel après déduction&nbsp;: 3,8 €/mois.</p>
-                </a>
-            </article>
+        <!-- Don 15 €/mois -->
+        <article>
+            <a href="/documents/irsa-don-virement.pdf">
+                <img src="/ui/pages/don/don_mensuel_15.webp" alt="Enfant portant un casque anti-bruit">
+                <h3><span>En donnant</span> <span>15 €/mois</span></h3>
+                <p>
+                    Vous permettez l'achat de 2 casques anti-bruit par trimestre
+                    pour des enfants présentant des troubles sensoriels ou TSA.
+                </p>
+                <span class="cta">Faites un don</span>
+                <p class="don-note">Coût réel après déduction&nbsp;: 8 €/mois.</p>
+            </a>
+        </article>
 
-            <!-- Don 15 €/mois -->
-            <article>
-                <a href="/documents/irsa-don-virement.pdf">
-                    <img src="/ui/pages/don/don_mensuel_15.webp" alt="Enfant portant un casque anti-bruit">
-                    <h3><span>En donnant</span> <span>15 €/mois</span></h3>
-                    <p>
-                        Vous permettez l'achat de 2 casques anti-bruit par trimestre
-                        pour des enfants présentant des troubles sensoriels ou TSA.
-                    </p>
-                    <span class="cta">Faites un don</span>
-                    <p class="don-note">Coût réel après déduction&nbsp;: 8 €/mois.</p>
-                </a>
-            </article>
+        <!-- Don 30 €/mois -->
+        <article>
+            <a href="/documents/irsa-don-virement.pdf">
+                <img src="/ui/pages/don/don_mensuel_30.webp" alt="Enfant accompagné en classe spécialisée">
+                <h3><span>En donnant</span> <span>30 €/mois</span></h3>
+                <p>
+                    Vous contribuez à l'équipement de nos classes spécialisées
+                    avec du matériel de communication pictographique.
+                </p>
+                <span class="cta">Faites un don</span>
+                <p class="don-note">Coût réel après déduction&nbsp;: 14 €/mois.</p>
+            </a>
+        </article>
+    </section>
 
-            <!-- Don 30 €/mois -->
-            <article>
-                <a href="/documents/irsa-don-virement.pdf">
-                    <img src="/ui/pages/don/don_mensuel_30.webp" alt="Enfant accompagné en classe spécialisée">
-                    <h3><span>En donnant</span> <span>30 €/mois</span></h3>
-                    <p>
-                        Vous contribuez à l'équipement de nos classes spécialisées
-                        avec du matériel de communication pictographique.
-                    </p>
-                    <span class="cta">Faites un don</span>
-                    <p class="don-note">Coût réel après déduction&nbsp;: 14 €/mois.</p>
-                </a>
-            </article>
-        </div>
-    </div>
     <footer>
         <a href="/documents/irsa-don-virement.pdf">
             <svg width="33" height="33" viewBox="0 0 33 33" fill="none" xmlns="http://www.w3.org/2000/svg">
