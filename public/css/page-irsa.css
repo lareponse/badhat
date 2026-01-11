@@ -228,3 +228,8 @@
         transform: none;
     }
 }
+
+.gouvernance{
+    display:flex;
+    gap:3rem;
+}

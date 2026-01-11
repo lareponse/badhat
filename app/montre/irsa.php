@@ -2,6 +2,7 @@
 $events = bad\db\qp('SELECT * FROM `timeline` ORDER BY `event_year` ASC')->fetchAll(PDO::FETCH_ASSOC);
 $intro = bad\db\qp('SELECT * FROM `page` WHERE `slug` = ?', ['irsa-intro'])->fetch(PDO::FETCH_ASSOC);
 $oa = bad\db\qp('SELECT * FROM `page` WHERE `slug` = ?', ['irsa-oa'])->fetch(PDO::FETCH_ASSOC);
+$fondation_pro_irsa = bad\db\qp('SELECT * FROM `page` WHERE `slug` = ?', ['irsa-fondation-pro'])->fetch(PDO::FETCH_ASSOC);
 
 ?>
 <header>
@@ -71,14 +72,18 @@ $oa = bad\db\qp('SELECT * FROM `page` WHERE `slug` = ?', ['irsa-oa'])->fetch(PDO
 
 <!-- Organisme d'Administration -->
 <section class="oa" aria-labelledby="oa-heading">
-    <div class="tight">
-        <h2 id="oa-heading"><?= $oa['label']; ?></h2>
-        <?= $oa['content']; ?>
-        <p class="cta">
-            <a href="/oa" class="btn">Voir la composition complète de l'OA</a>
-        </p>
+    <div class="tight gouvernance">
+        <div>
+            <h2 id="oa-heading"><?= $oa['label']; ?></h2>
+            <?= $oa['content']; ?>
+            <p class="cta"><a href="/oa" class="btn">Voir la composition complète</a></p>
+        </div>
+        <div>
+            <h2 id="oa-heading"><?= $fondation_pro_irsa['label']; ?></h2>
+            <?= $fondation_pro_irsa['content']; ?>
+            <p class="cta"><a href="/fondation-pro" class="btn">Voir la composition complète</a></p>
+        </div>
     </div>
-
 </section>
 
 <section id="partners" aria-labelledby="partners-title">
@@ -89,7 +94,6 @@ $oa = bad\db\qp('SELECT * FROM `page` WHERE `slug` = ?', ['irsa-oa'])->fetch(PDO
             <li><a href="https://www.ceth.be" target="_blank" rel="noopener"><img src="/ui/partners/c_eth.png" alt="CETH - Centre d'Éducation Thérapeutique"></a></li>
             <li><a href="https://www.kbs-frb.be/fr" target="_blank" rel="noopener"><img src="/ui/partners/fondation_roi_baudouin.png" alt="Fondation Roi Baudouin"></a></li>
             <li><a href="https://www.federation-wallonie-bruxelles.be" target="_blank" rel="noopener"><img src="/ui/partners/federation_wallonie_bruxelles.png" alt="Fédération Wallonie-Bruxelles"></a></li>
-            <li><a href="https://www.irsa.be" target="_blank" rel="noopener"><img src="/ui/partners/fondation_irsa.png" alt="Fondation IRSA"></a></li>
             <li><a href="https://fondationisee.be" target="_blank" rel="noopener"><img src="/ui/partners/fondation_isee.svg" alt="Fondation ISEE"></a></li>
             <li><a href="https://www.enseignement.be/index.php?page=28001" target="_blank" rel="noopener"><img src="/ui/partners/centres_pms.jpg" alt="Centres PMS"></a></li>
             <li><a href="https://www.one.be" target="_blank" rel="noopener"><img src="/ui/partners/one.png" alt="ONE - Office de la Naissance et de l’Enfance"></a></li>
