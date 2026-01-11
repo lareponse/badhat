@@ -207,7 +207,7 @@ footer hr {
     margin: 2rem 0 1rem;
 }
 
-footer p, footer small {
+footer section:last-child p, footer small {
     display: block;
     text-align: center;
     margin: 0.3rem 0;
