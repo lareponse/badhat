@@ -62,6 +62,9 @@ section[aria-labelledby="autres-heading"] .card-grid article {
 section[aria-labelledby="autres-heading"] .card-grid article a {
     padding:0.5rem
 }
+section[aria-labelledby="autres-heading"] .card-grid article  h3 {
+    justify-content: center;
+}
 
 section[aria-labelledby="autres-heading"] .card-grid article:hover {
     transform: translateY(-4px);
@@ -72,6 +75,7 @@ section .card-grid h3 {
     font-weight: 700;
     color: var(--color-text-primary);
     margin-bottom: 0.75rem;
+    justify-content: space-between;
     color: var(--color-text);
     min-height: initial;
 }
