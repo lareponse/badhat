@@ -79,14 +79,15 @@
     </article>
 
 
-    <article>
-        <h2>Documents à télécharger</h2>
-        <div class="downloads">
-            <a href="/documents/chateau/formulaire-demande-visite.pdf" class="btn" download>Formulaire de demande de visite</a>
-            <a href="/documents/chateau/convention-location.pdf" class="btn" download>Convention de location</a>
-        </div>
-    </article>
 
+
+</section>
+<section class="tight">
+    <h2>Documents à télécharger</h2>
+    <div class="downloads">
+        <a href="/documents/chateau/formulaire-demande-visite.pdf" class="btn" download>Formulaire de demande de visite</a>
+        <a href="/documents/chateau/convention-location.pdf" class="btn" download>Convention de location</a>
+    </div>
 </section>
 
 <section class="tight">
