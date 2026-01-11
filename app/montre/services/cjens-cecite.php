@@ -155,8 +155,4 @@
     <a class="btn btn-primary" href="/documents/brochure-cjens-deficience-visuelle.pdf" download>T&eacute;l&eacute;charger brochure de pr&eacute;sentation</a>
 </section>
 <?php
-return function ($this_html, $args) {
-    [$ret, $page] = ob_ret_get('app/layout.php', ['main' => $this_html, 'css' => ['page-ecole', 'page-services']], IO_EXTRACT);
-
-    return $page;
-};
+return ['page-ecole', 'page-services'];

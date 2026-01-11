@@ -186,8 +186,4 @@
 </section>
 
 <?php
-return function ($this_html, $args) {
-    [$ret, $page] = ob_ret_get('app/layout.php', ['main' => $this_html, 'css' => ['page-ecole', 'page-services']], IO_EXTRACT);
-
-    return $page;
-};
+return ['page-ecole', 'page-services'];

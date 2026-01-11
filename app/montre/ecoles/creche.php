@@ -96,9 +96,4 @@
     </p>
 </section>
 
-
-<?php
-return function ($this_html) {
-    [$ret, $page] = ob_ret_get('app/layout.php', ['main' => $this_html, 'css' => ['page-school-detail']], IO_EXTRACT);
-    return $page;
-};
+<?php return ['page-school-detail'];
