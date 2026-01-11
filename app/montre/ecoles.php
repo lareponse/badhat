@@ -9,7 +9,7 @@
     </div>
 </header>
 
-<section class="card-grid tight">
+<section class="card-grid ">
     <article>
         <a href="/ecoles/t6-t8">
 
@@ -52,7 +52,7 @@
     </article>
 </section>
 
-<section class="card-grid tight">
+<section class="card-grid">
     <article>
         <a href="/ecoles/creche">
             <img src="/ui/pages/ecoles/creche.jpg" alt="Jeune enfant jouant avec des blocs colorés">

@@ -65,7 +65,7 @@
 <!-- Services -->
 <section aria-labelledby="services-heading">
     <h2 id="services-heading">Nos services</h2>
-    <div class="card-grid tight">
+    <div class="card-grid">
         <article>
             <a href="/services/ludotheque">
                 <img src="/ui/pages/service/ludotheque.webp" alt="Ludothèque Oasis">

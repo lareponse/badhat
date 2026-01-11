@@ -144,6 +144,9 @@
 
     --size-header: 9rem;
     --size-card-radius: 1rem;
+
+    --card-size: 23rem;
+    --card-gap: 2rem;
 }
 
 * {

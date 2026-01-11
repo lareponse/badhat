@@ -75,11 +75,3 @@ section[aria-labelledby="services-heading"] {
     background: var(--color-accent-secondary-light);
     text-decoration: none;
 }
-
-
-@media screen and (min-width:64rem) {
-
-    .services .card-grid {
-        grid-template-columns: repeat(3, minmax(16rem, 1fr));
-    }
-}
