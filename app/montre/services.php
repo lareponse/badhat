@@ -68,7 +68,7 @@
     <div class="card-grid tight">
         <article>
             <a href="/services/ludotheque">
-                <img src="/ui/pages/service/ludotheque.jpg" alt="Ludothèque Oasis">
+                <img src="/ui/pages/service/ludotheque.webp" alt="Ludothèque Oasis">
                 <h3>Ludothèque Oasis</h3>
                 <span class="cta">Horaires et Infos</span>
                 <p>Un espace de jeux sensoriels à tous, internes ou externes.</p>
@@ -86,7 +86,7 @@
 
         <article>
             <a href="/services/documentation">
-                <img src="/ui/pages/service/documentation.jpg" alt="Centre de documentation">
+                <img src="/ui/pages/service/documentation.webp" alt="Centre de documentation">
                 <h3>Centre de documentation</h3>
                 <span class="cta">Horaires et Infos</span>
                 <p>Un enseignement sur mesure, du déjà acquis au secondaire.</p>
@@ -95,7 +95,7 @@
 
         <article>
             <a href="/services/restaurant-application">
-                <img src="/ui/pages/service/restaurant.jpg" alt="Restaurant d'application">
+                <img src="/ui/pages/service/restaurant.webp" alt="Restaurant d'application">
                 <h3>Restaurant d'application</h3>
                 <span class="cta">Horaires et Infos</span>
                 <p>Un lieu de formation et d'évolution où les jeunes en insertion vous cuisinent pour vous.</p>
