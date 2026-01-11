@@ -50,19 +50,12 @@
     <link rel="stylesheet" href="/css/card.css?v=20251214-1334">
     <link rel="stylesheet" href="/css/blob.css?v=20251214-1334">
     <link rel="stylesheet" href="/css/triple-infos.css?v=20251214-1334">
-    <?php
-    if (isset($css) && is_array($css)):
-        foreach ($css as $file):
-    ?>
-            <link rel="stylesheet" href="/css/<?= $file ?>.css?v=20251214-1334">
-        <?php endforeach ?>
-    <?php endif ?>
+    <?php if (isset($css) && is_array($css)):foreach ($css as $file):?><link rel="stylesheet" href="/css/<?= $file ?>.css?v=20251214-1334"><?php endforeach; endif; ?>
 
     <!-- Accessibility: use modern color scheme detection -->
     <meta name="color-scheme" content="light dark">
 
 </head>
-
 <body>
     <a href="#main" class="skip-link visually-hidden">Aller au contenu principal</a>
     <?php include('app/a11y.html'); ?>
@@ -91,11 +84,10 @@
         <a class="scroll-marker" href="#services">
             <span class="visually-hidden">Faire défiler jusqu’à la section suivante</span>
         </a>
-
     </header>
 
     <?php
-    $breadcrumb = explode('/', trim(http_in(), '/'));
+    $breadcrumb = explode('/', bad\io\io_in($_SERVER['REQUEST_URI'], bad\io\IO_PATH_ONLY, bad\io\IO_ROOTLESS));
     $page_id = implode('-', $breadcrumb);
     $page_class = implode(' ', $breadcrumb);
     ?>
@@ -106,6 +98,10 @@
         <section class="tight">
             <h2 class="visually-hidden">Pied de page du site IRSA</h2>
             <div class="footer-grid">
+
+                <a href="/">
+                    <img src="/ui/logo_irsa_text.jpg" alt="IRSA – Un projet pour chacun" height="60">
+                </a>
                 <!-- Coordonnées -->
                 <article aria-labelledby="coords-heading">
                     <h3 id="coords-heading">Coordonnées</h3>
@@ -183,5 +179,4 @@
 
     <script src="/js/onload.js?v=20251214-1334"></script>
 </body>
-
 </html>
