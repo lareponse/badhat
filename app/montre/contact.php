@@ -4,9 +4,33 @@
     <h1><span class="tight">Contact</span></h1>
 </header>
 
+<?php if (isset($sent)): ?>
+<section class="tight contact-message" aria-live="<?= $sent ? 'polite' : 'assertive' ?>" role="<?= $sent ? 'status' : 'alert' ?>">
+    <div class="message-box <?= $sent ? 'success' : 'error' ?>">
+        <?php if ($sent): ?>
+            <h2>Message envoyé</h2>
+            <p>
+                Merci pour votre message.
+                Nous l’avons bien reçu et y répondrons dans les meilleurs délais.
+            </p>
+        <?php else: ?>
+            <h2>Envoi impossible</h2>
+            <p>
+                Une erreur est survenue lors de l’envoi du message.
+                Veuillez réessayer ultérieurement ou nous contacter par téléphone.
+            </p>
+        <?php endif; ?>
+    </div>
+</section>
+<?php endif; ?>
+
+
+
+     
 <section class="tight contact-grid">
     <!-- Formulaire -->
-    <form class="contact-form" action="contact.php" method="post" aria-labelledby="form-heading">
+
+    <form class="contact-form" action="/contact" method="post" aria-labelledby="form-heading">
         <legend>
             <h2 id="form-heading">Envoyez-nous un message</h2>
         </legend>

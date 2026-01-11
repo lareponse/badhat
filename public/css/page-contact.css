@@ -155,3 +155,41 @@ aside>*{
     margin-bottom:3rem;
 }
 
+
+
+/* --------------------------
+   Contact message box
+--------------------------- */
+.contact-message{
+  margin: 2rem 0;
+}
+
+.message-box{
+  padding: 1.25rem 1.5rem;
+  border-radius: var(--size-card-radius);
+  background: var(--color-surface-alt);
+  border: 1px solid var(--color-border);
+  box-shadow: 0 .35rem 1rem rgba(0,0,0,.06);
+}
+
+.message-box h2{
+  margin: 0 0 .5rem;
+  font-size: 1.1em;
+  color: var(--color-text-primary);
+}
+
+.message-box p{
+  margin: 0;
+  line-height: 1.5;
+  color: var(--color-text);
+}
+
+/* optional: slightly emphasize success state with your palette */
+.message-box.success{
+  border-color: var(--color-accent-primary-light);
+  background: var(--color-surface-alt);
+}
+
+.message-box.error{
+  border-color: var(--color-border);
+}
