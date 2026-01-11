@@ -24,13 +24,21 @@ git subtree add --prefix=add/badhat git@github.com:lareponse/BADHAT.git main --s
 // public/index.php
 set_include_path(__DIR__ . '/..' . PATH_SEPARATOR . get_include_path());
 
-require 'add/badhat/error.php';
+$install = require 'add/badhat/error.php';
 require 'add/badhat/io.php';
 require 'add/badhat/run.php';
 require 'add/badhat/http.php';
 require 'add/badhat/db.php';
 
-register(HND_ALL | MESSAGE_LOG);
+use function bad\io\{io_in, io_map};
+use function bad\run\run;
+use function bad\http\http_out;
+
+use const bad\error\{HND_ALL};
+use const bad\io\{IO_PATH_ONLY, IO_ROOTLESS, IO_TAIL, IO_NEST};
+use const bad\run\{RUN_INVOKE, RUN_ABSORB, RUN_RETURN};
+
+$install(HND_ALL);
 
 $path = io_in($_SERVER['REQUEST_URI'], "\0", IO_PATH_ONLY | IO_ROOTLESS);
 
@@ -70,6 +78,9 @@ EOF
 ```php
 <?php
 // app/io/route/users.php
+use function bad\db\qp;
+use function bad\http\http_out;
+
 return function($args) {
     if ($_POST) {
         qp("INSERT INTO users (name) VALUES (?)", [$_POST['name']]);
@@ -117,7 +128,11 @@ $users = $args['users'] ?? [];
 // scripts/init-db.php
 require __DIR__ . '/../add/badhat/db.php';
 
-$_SERVER['DB_DSN_'] = 'sqlite:' . __DIR__ . '/../db.sqlite';
+use function bad\db\db;
+
+$pdo = new PDO('sqlite:' . __DIR__ . '/../db.sqlite');
+$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+db($pdo);
 
 db()->exec("
     CREATE TABLE IF NOT EXISTS users (
@@ -181,7 +196,7 @@ git subtree pull --prefix=add/badhat git@github.com:lareponse/BADHAT.git main --
 // public/index.php
 set_include_path(__DIR__ . '/..' . PATH_SEPARATOR . get_include_path());
 
-require 'add/badhat/error.php';
+$install = require 'add/badhat/error.php';
 require 'add/badhat/io.php';
 require 'add/badhat/run.php';
 require 'add/badhat/http.php';
@@ -189,11 +204,29 @@ require 'add/badhat/db.php';
 require 'add/badhat/auth.php';
 require 'add/badhat/csrf.php';
 
-register(HND_ALL | MESSAGE_LOG);
+use function bad\io\{io_in, io_map};
+use function bad\run\run;
+use function bad\http\http_out;
+use function bad\db\{db, qp};
+use function bad\auth\checkin;
+use function bad\csrf\csrf;
+
+use const bad\error\HND_ALL;
+use const bad\io\{IO_PATH_ONLY, IO_ROOTLESS, IO_TAIL, IO_NEST};
+use const bad\run\{RUN_INVOKE, RUN_ABSORB, RUN_RETURN};
+use const bad\auth\AUTH_SETUP;
+use const bad\csrf\CSRF_SETUP;
+
+$install(HND_ALL);
 
 session_start();
-db();
-csrf(CSRF_SETUP);
+
+$pdo = new PDO($_SERVER['DB_DSN_'], $_SERVER['DB_USER_'] ?? null, $_SERVER['DB_PASS_'] ?? null);
+$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+$pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
+db($pdo);
+
+csrf(CSRF_SETUP, '_csrf', 3600);
 
 $stmt = qp("SELECT password FROM users WHERE username = ?", []);
 checkin(AUTH_SETUP, 'username', $stmt);
@@ -206,9 +239,16 @@ checkin(AUTH_SETUP, 'username', $stmt);
 ```php
 <?php
 // app/io/route/login.php
+use function bad\csrf\csrf;
+use function bad\auth\checkin;
+use function bad\http\http_out;
+
+use const bad\csrf\CSRF_CHECK;
+use const bad\auth\AUTH_ENTER;
+
 return function($args) {
     if ($_POST) {
-        csrf(CSRF_CHECK) || http_out(403, 'Invalid token');
+        csrf(CSRF_CHECK, '_csrf') || http_out(403, 'Invalid token');
         $user = checkin(AUTH_ENTER, 'username', 'password');
         $user && http_out(302, null, ['Location' => ['/dashboard']]);
     }
@@ -220,6 +260,9 @@ return function($args) {
 
 ```php
 <?php // app/io/render/login.php
+use function bad\csrf\csrf;
+use const bad\csrf\CSRF_INPUT;
+
 $error = $args['error'] ?? null;
 ?>
 <?php if ($error): ?>
@@ -227,7 +270,7 @@ $error = $args['error'] ?? null;
 <?php endif; ?>
 
 <form method="post">
-    <?= csrf(CSRF_INPUT) ?>
+    <?= csrf(CSRF_INPUT, '_csrf') ?>
     <input name="username" placeholder="Username" required>
     <input name="password" type="password" placeholder="Password" required>
     <button>Login</button>
@@ -244,6 +287,9 @@ $error = $args['error'] ?? null;
 ```php
 <?php
 // app/io/route/dashboard.php
+use function bad\auth\checkin;
+use function bad\http\http_out;
+
 return function($args) {
     checkin() ?? http_out(302, null, ['Location' => ['/login']]);
     return ['user' => checkin()];
@@ -255,6 +301,10 @@ return function($args) {
 ```php
 <?php
 // app/io/route/logout.php
+use function bad\auth\checkin;
+use function bad\http\http_out;
+use const bad\auth\AUTH_LEAVE;
+
 return function($args) {
     checkin(AUTH_LEAVE);
     http_out(302, null, ['Location' => ['/']]);
