@@ -76,7 +76,7 @@
         </article>
 
         <article>
-            <a href="/services/chateau-orangerie">
+            <a href="/services/chateau">
                 <img src="/ui/pages/service/chateau.jpg" alt="Location du Château d'Orangerie">
                 <h3>Location du Château d'Orangerie</h3>
                 <span class="cta">Découvrir</span>

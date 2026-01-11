@@ -99,7 +99,4 @@
 </section>
 
 <?php
-return function ($this_html) {
-    [$ret, $page] = ob_ret_get('app/layout.php', ['main' => $this_html, 'css' => ['page-chateau']], IO_EXTRACT);
-    return $page;
-};
+return ['page-chateau'];
