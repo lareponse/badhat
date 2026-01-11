@@ -86,12 +86,14 @@
         <article>
             <a href="/contact" class="btn btn-primary">Vers le formulaire de contact</a>
         </article>
-
     </div>
+    <nav class="doc-nav" aria-label="Documents">
+        <a href="/documents/brochure/aubier-brochure.pdf" class="btn btn-primary">
+            Télécharger brochure de présentation
+        </a>
+    </nav>
+
 </section>
 
-<section>
-    <a class="btn btn-primary" href="/documents/brochure-aubier.pdf" download>Télécharger brochure de présentation</a>
-</section>
 <?php
 return ['page-ecole', 'page-services'];

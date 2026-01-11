@@ -510,3 +510,32 @@ html{ position: relative; }
     50%    { transform: translateY(.35rem); }
   }
 }
+
+
+.doc-nav{
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;     /* centered as a group */
+  align-items: center;
+  gap: .85rem;                 /* constant spacing */
+  margin-block: 1.25rem 2rem;
+}
+
+/* optional: keep buttons visually aligned in rows */
+.doc-nav > .btn{
+  white-space: nowrap;         /* prevents ugly mid-label wraps */
+}
+
+/* optional intrinsic nicety: on very narrow screens, allow long labels */
+@media (max-width: 28rem){
+  .doc-nav > .btn{
+    white-space: normal;
+    text-align: center;
+  }
+}
+
+/* optional: if you want the bar to never stretch full width */
+.doc-nav{
+  width: fit-content;
+  margin-inline: auto;
+}

@@ -90,10 +90,11 @@
             <a href="/contact" class="btn btn-secondary">Vers le formulaire de contact</a>
         </article>
     </div>
-
-    <p class="centered">
-        <a href="/docs/creche-brochure.pdf" class="btn btn-primary">Télécharger brochure de présentation</a>
-    </p>
+    <nav class="doc-nav" aria-label="Documents">
+        <a href="/documents/brochure/creche-brochure.pdf" class="btn btn-primary">
+            Télécharger brochure de présentation
+        </a>
+    </nav>
 </section>
 
 <?php return ['page-school-detail'];

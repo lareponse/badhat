@@ -117,7 +117,7 @@
 
 <section class="tight">
     <p>
-        <a href="/docs/brochure-oasis.pdf"
+        <a href="/documents/brochure/brochure-oasis.pdf"
            class="btn btn-primary">
             Télécharger la brochure de présentation
         </a>

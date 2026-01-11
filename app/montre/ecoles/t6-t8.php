@@ -117,10 +117,11 @@
         <a class="btn btn-tag" href="#">Règlement des études</a>
         <a class="btn btn-tag" href="#">Brochure métiers</a>
     </div>
-
-    <p class="centered">
-        <a href="/docs/brochure-fondamentale.pdf" class="btn btn-primary">Télécharger Brochure de présentation</a>
-    </p>
+    <nav class="doc-nav" aria-label="Documents">
+        <a href="/documents/brochure/fondamentale-brochure.pdf" class="btn btn-primary">
+            Télécharger brochure de présentation
+        </a>
+    </nav>
 </section>
 
 
