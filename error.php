@@ -1,67 +1,70 @@
 <?php
+
 namespace bad\error;
 
-const HND_ERR  = 1;
-const HND_EXC  = 2;
-const HND_SHUT = 4;
+const HND_ERR  = 1;    // handle runtime PHP errors
+const HND_EXC  = 2;    // handle uncaught exceptions
+const HND_SHUT = 4;    // handle fatal shutdown errors
 const HND_ALL  = HND_ERR | HND_EXC | HND_SHUT;
-const ERR_LOG  = 8;
-const ERR_OSD  = 16;
-const MSG_WITH_TRACE = 32;
-const ALLOW_INTERNAL = 64;
-const FATAL_OB_FLUSH = 128;
-const FATAL_HTTP_500 = 256;
 
-const PHP_FATAL_ERRORS = E_ERROR | E_PARSE | E_CORE_ERROR | E_COMPILE_ERROR | E_USER_ERROR;
+const MSG_WITH_TRACE = 8;    // attach execution trace to reports
+const ALLOW_INTERNAL = 16;   // let PHP internal handler continue
+const FATAL_OB_FLUSH = 32;   // flush all output buffers on fatal
+const FATAL_OB_CLEAN = 64;   // discard all output buffers on fatal
+const FATAL_HTTP_500 = 128;  // force HTTP 500 on fatal conditions
 
-const CODE_ACE = 0xACE;  // 2766 - Abnormal Computing Environment
-const CODE_BAD = 0xBAD;  // 2989 - Broken Abstraction Detected
-const CODE_COD = 0xC0D;  // 3085 - Code Of Doom
+const CODE_ACE = 0xACE;
+const CODE_BAD = 0xBAD;
+const CODE_COD = 0xC0D;
 
-return function (int $behave = HND_ALL | ERR_LOG, ?string $request_id = null): callable {
-    $start          = $_SERVER['REQUEST_TIME_FLOAT'] ?? microtime(true);
-    $request_id   ??= bin2hex(random_bytes(4));
-
-    $report = function ($source, $code, $message, $file, $line, $trace) use ($behave, $request_id) {
-        $msg = "[req=$request_id] $source ($code) $message";
-        ($file || $line)            && ($msg .= PHP_EOL."in $file($line)");
-        ($behave & MSG_WITH_TRACE)  && ($msg .= PHP_EOL . $trace);
-        ($behave & ERR_OSD)         && print '<pre>'.$msg.'</pre>';
-        ($behave & ERR_LOG)         && error_log($msg);
-    };
-
-    $fatal_exit = function () use ($behave, $report, $start) {
-        $report('Fatal', 1, 'EXEC:' . (microtime(true) - $start) . ' MEM:' . memory_get_peak_usage(true)
-            . ' URI:' . ($_SERVER['REQUEST_URI'] ?? 'cli') . ' REMOTE:' . ($_SERVER['REMOTE_ADDR'] ?? '-')
-            . ' METHOD:' . ($_SERVER['REQUEST_METHOD'] ?? 'cli') . ' AGENT:' . ($_SERVER['HTTP_USER_AGENT'] ?? '-'), 0, 0, '');
-
+return function (int $behave = HND_ALL, ?string $request_id = null): callable {
+    $start  = $_SERVER['REQUEST_TIME_FLOAT'] ?? microtime(true);
+    $prefix = '[req=' . ($request_id ?? dechex((int)($start * 10000) ^ getmypid())) . ']';
+    $report = static fn (string $line): void => error_log("$prefix $line");
+    
+    $fatal = static function (string $src, string $type, string $msg, string $file = '', int $line = 0, string $trace = '') use ($behave, $report, $start): void {
+        $ctx = sprintf('%.2fms %dKiB %s %s @%s', (microtime(true) - $start) * 1000, memory_get_peak_usage(true) >> 10, $_SERVER['REQUEST_METHOD'] ?? 'CLI', $_SERVER['REQUEST_URI'] ?? '-', $_SERVER['REMOTE_ADDR'] ?? '-');
+        $report("FATAL ($src:$type) $msg" . ($file ? " in $file:$line" : '') . " [$ctx]");
+        $trace && $report("TRACE\n$trace");
         ($behave & FATAL_HTTP_500) && !headers_sent() && http_response_code(500);
-        for ($n = ob_get_level(); $n > 0; --$n)($behave & FATAL_OB_FLUSH) ? @ob_end_flush() : @ob_end_clean(); // buffers dont always close, infinite loop is possible
-        exit(1);
+        if ($behave & (FATAL_OB_FLUSH | FATAL_OB_CLEAN))
+            for ($max = ob_get_level(), $i = 0; $i < $max && ob_get_level(); ++$i)($behave & FATAL_OB_FLUSH) ? @ob_end_flush() : @ob_end_clean();
     };
 
-    ($behave & HND_ERR) && ($prev_err_hnd = set_error_handler(function ($code, $message, $file, $line) use ($behave, $report) {
-        ($behave & MSG_WITH_TRACE) && ob_start() && !debug_print_backtrace() && ($trace = ob_get_clean());
-        $report('HND_ERR', "errno=$code", $message, $file, $line, $trace ?? '');
-        return !($behave & ALLOW_INTERNAL);
-    })) || ($prev_err_hnd = null);
+    $prev_err = $prev_exc = null;   // previous handlers, restored on uninstall
 
-    ($behave & HND_EXC) && ($prev_exc_hnd = set_exception_handler(function ($e) use ($behave, $report, $fatal_exit) {
-        $trace = ($behave & MSG_WITH_TRACE) ? $e->getTraceAsString() : '';
-        do $report($e::class, $e->getCode(), $e->getMessage(), $e->getFile(), $e->getLine(), $trace);
-        while ($e = $e->getPrevious());
-        $fatal_exit();
-    })) || ($prev_exc_hnd = null);
+    ($behave & HND_ERR) && $prev_err = set_error_handler(static function (int $code, string $msg, string $file, int $line) use ($behave, $report): bool {
+        if (!(error_reporting() & $code)) return false;
 
-    ($behave & HND_SHUT) && register_shutdown_function(function () use ($report, $fatal_exit) {
-        if (($err = error_get_last()) && ($err['type'] & PHP_FATAL_ERRORS)) {
-            $report('HND_SHUT', "type={$err['type']}", $err['message'], $err['file'], $err['line'], '');
-            $fatal_exit();
+        $report("ERR (errno=$code) $msg in $file:$line");
+
+        if ($behave & MSG_WITH_TRACE) {
+            ob_start();
+            debug_print_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
+            ($trace = ob_get_clean()) && $report("TRACE\n$trace");
         }
+
+        return !($behave & ALLOW_INTERNAL);
     });
 
-    return function () use ($prev_err_hnd, $prev_exc_hnd) {
-        $prev_err_hnd ? set_error_handler($prev_err_hnd) : restore_error_handler();
-        $prev_exc_hnd ? set_exception_handler($prev_exc_hnd) : restore_exception_handler();
+    ($behave & HND_EXC) && $prev_exc = set_exception_handler(static function (\Throwable $e) use ($behave, $fatal): void {
+        $msg = $e->getMessage();
+        for ($c = $e->getPrevious(); $c; $c = $c->getPrevious()) $msg .= ' <- ' . $c::class . ':' . $c->getMessage();
+
+        $trace = '';
+        if ($behave & MSG_WITH_TRACE) foreach ($e->getTrace() as $i => $f) $trace .= ($trace ? "\n" : '') . sprintf('#%d %s:%s %s%s%s()',$i, $f['file'] ?? '-', $f['line'] ?? '?', $f['class'] ?? '', $f['type'] ?? '', $f['function'] ?? '?');
+
+        $fatal('exception', $e::class, $msg, $e->getFile(), $e->getLine(), $trace);
+        exit(1);
+    });
+
+    ($behave & HND_SHUT) && register_shutdown_function(static function () use ($fatal): void {
+        if (($err = error_get_last()) && ($err['type'] & (E_ERROR | E_PARSE | E_CORE_ERROR | E_COMPILE_ERROR | E_USER_ERROR))) // PHP FATAL ERRORS
+            $fatal('shutdown', "type={$err['type']}", $err['message'], $err['file'], (int)$err['line'], '');
+    });
+
+    return static function () use ($prev_err, $prev_exc): void {
+        $prev_err !== null ? set_error_handler($prev_err) : restore_error_handler();
+        $prev_exc !== null ? set_exception_handler($prev_exc) : restore_exception_handler();
     };
 };
