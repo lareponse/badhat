@@ -224,36 +224,60 @@ img {
     height: auto;
 }
 
-#partners ul {
-    list-style-type: none;
-    /* intrinsic, responsive grid */
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(100px, max-content));
-    justify-content: center;
-    gap: 1.73rem;
-    padding: 1.5rem;
-    align-items: center;
+/* --- Partners carousel --- */
+#partners{
+  padding-block: 3rem;
+  background: #fff;
 }
 
-#partners ul li {
-    transition: transform 0.25s ease, opacity 0.25s ease;
+/* viewport */
+.partners-carousel{
+  overflow: hidden;
+  position: relative;
 }
 
-#partners ul li:hover {
-    transform: translateY(-4px);
+/* moving strip */
+.partners-track{
+  list-style: none;
+  margin: 0;
+  padding: 0;
+
+  display: flex;
+  align-items: center;
+  gap: 4rem;
+
+  width: max-content;
+  will-change: transform;
 }
 
-#partners ul img {
-    display: block;
-    max-width: 100px;
-    /* intrinsic max size */
-    width: 100%;
-    height: auto;
-    object-fit: contain;
+/* logo tile */
+.partners-track li{
+  flex: 0 0 auto;
 }
 
-#partners ul a {
-    display: inline-block;
+.partners-track a{
+  display: grid;
+  place-items: center;
+
+  inline-size: 14rem;      /* bigger presence */
+  block-size: 300px;        
+  padding: 1rem;           /* breathing room */
+
+  border-radius: 1rem;
+  transition: transform .25s ease;
+}
+
+.partners-track a:hover{
+  transform: translateY(-4px);
+}   
+
+/* logo itself */
+.partners-track img{
+  max-inline-size: 100%;
+  max-block-size: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
 }
 
 .tight {

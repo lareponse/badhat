@@ -81,25 +81,56 @@ $oa = bad\db\qp('SELECT * FROM `page` WHERE `slug` = ?', ['irsa-oa'])->fetch(PDO
 </section>
 
 <section id="partners" aria-labelledby="partners-title">
-    <h2 id="partners-title" class="visually-hidden">Nos partenaires</h2>
-    <ul class="partners-list">
-        <li><a href="https://www.aviq.be" target="_blank" rel="noopener"><img src="/ui/partners/aviq.png" alt="AVIQ - Agence pour une Vie de Qualité"></a></li>
-        <li><a href="https://c-h-s.be/" target="_blank" rel="noopener"><img src="/ui/partners/chs.be.webp" alt="CHS - Centre Hospitalier Spécialisé"></a></li>
-        <li><a href="https://www.ceth.be" target="_blank" rel="noopener"><img src="/ui/partners/c_eth.png" alt="CETH - Centre d'Éducation Thérapeutique"></a></li>
-        <li><a href="https://www.kbs-frb.be/fr" target="_blank" rel="noopener"><img src="/ui/partners/fondation_roi_baudouin.png" alt="Fondation Roi Baudouin"></a></li>
-        <li><a href="https://www.federation-wallonie-bruxelles.be" target="_blank" rel="noopener"><img src="/ui/partners/federation_wallonie_bruxelles.png" alt="Fédération Wallonie-Bruxelles"></a></li>
-        <li><a href="https://www.irsa.be" target="_blank" rel="noopener"><img src="/ui/partners/fondation_irsa.png" alt="Fondation IRSA"></a></li>
-        <li><a href="https://fondationisee.be" target="_blank" rel="noopener"><img src="/ui/partners/fondation_isee.svg" alt="Fondation ISEE"></a></li>
-        <li><a href="https://www.enseignement.be/index.php?page=28001" target="_blank" rel="noopener"><img src="/ui/partners/centres_pms.jpg" alt="Centres PMS"></a></li>
-        <li><a href="https://www.one.be" target="_blank" rel="noopener"><img src="/ui/partners/one.png" alt="ONE - Office de la Naissance et de l’Enfance"></a></li>
-        <li><a href="https://shc.health.belgium.be" target="_blank" rel="noopener"><img src="/ui/partners/shc.png" alt="SHC - Service d’Hygiène Communale"></a></li>
-        <li><a href="https://ccf.brussels/" target="_blank" rel="noopener"><img src="/ui/partners/francophones_bruxelles.png" alt="Francophones Bruxelles - COCOF"></a></li>
-        <li><a href="https://www.reseaudefrance.be" target="_blank" rel="noopener"><img src="/ui/partners/reseau_francophone.png" alt="Réseau Francophone"></a></li>
-        <li><a href="https://www.uccle.be" target="_blank" rel="noopener"><img src="/ui/partners/uccle.png" alt="Commune d’Uccle"></a></li>
-        <li><a href="https://uclouvain.be" target="_blank" rel="noopener"><img src="/ui/partners/uc_louvain.png" alt="UC Louvain - Université catholique de Louvain"></a></li>
-    </ul>
+    <div class="partners-carousel" aria-roledescription="carousel">
+        <ul class="partners-track">
+            <li><a href="https://www.aviq.be" target="_blank" rel="noopener"><img src="/ui/partners/aviq.png" alt="AVIQ - Agence pour une Vie de Qualité"></a></li>
+            <li><a href="https://c-h-s.be/" target="_blank" rel="noopener"><img src="/ui/partners/chs.be.webp" alt="CHS - Centre Hospitalier Spécialisé"></a></li>
+            <li><a href="https://www.ceth.be" target="_blank" rel="noopener"><img src="/ui/partners/c_eth.png" alt="CETH - Centre d'Éducation Thérapeutique"></a></li>
+            <li><a href="https://www.kbs-frb.be/fr" target="_blank" rel="noopener"><img src="/ui/partners/fondation_roi_baudouin.png" alt="Fondation Roi Baudouin"></a></li>
+            <li><a href="https://www.federation-wallonie-bruxelles.be" target="_blank" rel="noopener"><img src="/ui/partners/federation_wallonie_bruxelles.png" alt="Fédération Wallonie-Bruxelles"></a></li>
+            <li><a href="https://www.irsa.be" target="_blank" rel="noopener"><img src="/ui/partners/fondation_irsa.png" alt="Fondation IRSA"></a></li>
+            <li><a href="https://fondationisee.be" target="_blank" rel="noopener"><img src="/ui/partners/fondation_isee.svg" alt="Fondation ISEE"></a></li>
+            <li><a href="https://www.enseignement.be/index.php?page=28001" target="_blank" rel="noopener"><img src="/ui/partners/centres_pms.jpg" alt="Centres PMS"></a></li>
+            <li><a href="https://www.one.be" target="_blank" rel="noopener"><img src="/ui/partners/one.png" alt="ONE - Office de la Naissance et de l’Enfance"></a></li>
+            <li><a href="https://shc.health.belgium.be" target="_blank" rel="noopener"><img src="/ui/partners/shc.png" alt="SHC - Service d’Hygiène Communale"></a></li>
+            <li><a href="https://ccf.brussels/" target="_blank" rel="noopener"><img src="/ui/partners/francophones_bruxelles.png" alt="Francophones Bruxelles - COCOF"></a></li>
+            <li><a href="https://www.reseaudefrance.be" target="_blank" rel="noopener"><img src="/ui/partners/reseau_francophone.png" alt="Réseau Francophone"></a></li>
+            <li><a href="https://www.uccle.be" target="_blank" rel="noopener"><img src="/ui/partners/uccle.png" alt="Commune d’Uccle"></a></li>
+            <li><a href="https://uclouvain.be" target="_blank" rel="noopener"><img src="/ui/partners/uc_louvain.png" alt="UC Louvain - Université catholique de Louvain"></a></li>
+        </ul>
+    </div>
 </section>
 
+<script>
+(function () {
+  const track = document.querySelector('.partners-track');
+  if (!track) return;
+
+  // duplicate content for infinite loop
+  track.innerHTML += track.innerHTML;
+
+  let x = 0;
+  let speed = 0.3; // px per frame (adjust)
+
+  function animate() {
+    x -= speed;
+
+    // reset when half passed
+    if (Math.abs(x) >= track.scrollWidth / 2) {
+      x = 0;
+    }
+
+    track.style.transform = `translateX(${x}px)`;
+    requestAnimationFrame(animate);
+  }
+
+  animate();
+
+  /* pause on hover (accessibility + UX) */
+  track.addEventListener('mouseenter', () => speed = 0);
+  track.addEventListener('mouseleave', () => speed = 0.3);
+})();
+</script>
 
 <?php
 return ['page-irsa'];
