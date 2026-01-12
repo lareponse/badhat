@@ -1,15 +1,15 @@
 # BADHAT Run — File Execution
 
-
-Run does one thing: execute files and capture results.
+`bad\run` does one thing: execute files and capture results.
 
 - Includes files
 - Can invoke returned callables
 - Can buffer output
-- Can chain execution
-- Wraps errors
+- Can *pipe* the previous step into the next invoke
+- Wraps include/invoke failures as `RuntimeException("include:..."|"invoke:...", 0xC0D, $previous)`
 
-Path resolution belongs to `io_map()`. HTTP output belongs to `http_out()`.
+Path resolution belongs to `bad\io\look()` / `bad\io\seek()`.
+HTTP output belongs to `bad\http\http_out()`.
 
 ---
 
@@ -19,16 +19,15 @@ Path resolution belongs to `io_map()`. HTTP output belongs to `http_out()`.
 // Behavior flags
 const RUN_BUFFER = 1;                           // capture output
 const RUN_INVOKE = 2;                           // call returned callable
-const RUN_ABSORB = 4 | RUN_BUFFER | RUN_INVOKE; // pass buffer to callable
-const RUN_RESCUE = 8;                           // invoke even if include threw
+const RUN_ABSORB = 4 | RUN_BUFFER | RUN_INVOKE; // append buffer to callable args
+const RUN_RESCUE = 8;                           // attempt invoke even if include threw
 const RUN_ONWARD = 16;                          // suppress throws, continue
 
-const RUN_CHAIN  = 256;                         // pipe loot to next file
+const RUN_CHAIN  = 256;                         // pass loot bag to next invoke
 
 // Loot keys
 const RUN_RETURN = -1;                          // include/invoke return value
 const RUN_OUTPUT = -2;                          // captured output buffer
-
 ```
 
 ---
@@ -36,36 +35,31 @@ const RUN_OUTPUT = -2;                          // captured output buffer
 ## Function
 
 ```php
-function run(array $file_paths, array $io_args, int $behave = 0): array
+function run(array $file_paths, array $args = [], int $behave = 0): array
 ```
 
-Executes one or more files. Returns loot array with results.
+Executes one or more files (in order) and returns a **loot array**.
 
-**Parameters:**
-- `$file_paths` — files to execute in order
-- `$io_args` — arguments passed to callables
-- `$behave` — bitmask of RUN_* flags
-
-**Returns:** loot array containing `RUN_RETURN` and optionally `RUN_OUTPUT`
+- Included files run in the current scope (so `$args` is visible inside them).
+- `RUN_RETURN` and (optionally) `RUN_OUTPUT` are written into the loot array.
 
 ---
 
-## Basic Execution
+## Basic execution
 
 ```php
-// Just include (no buffering, no invoke)
-$loot = run(['/app/route/home.php'], []);
-// $loot[RUN_RETURN] = whatever the file returned (or 1)
+// Just include
+$loot = run(['/app/route/home.php']);
 
-// With args available as $args in file
+// Include with args (visible to the file as $args)
 $loot = run(['/app/route/users.php'], ['edit', '42']);
 ```
 
 ---
 
-## Invoke Pattern
+## Invoke pattern
 
-Files return callables. Run calls them.
+If a file returns a callable, `RUN_INVOKE` calls it.
 
 ```php
 // users.php
@@ -77,135 +71,128 @@ return function(array $args) {
 
 ```php
 $loot = run(['/app/route/users.php'], ['view', '42'], RUN_INVOKE);
-// $loot[RUN_RETURN] = user row from database
+// $loot[RUN_RETURN] is the callable return value
 ```
 
 ---
 
-## Buffer Pattern
+## Buffer pattern
 
-Capture output instead of echoing.
-
-```php
-// template.php
-<h1>Hello <?= $args['name'] ?></h1>
-```
+Capture output instead of streaming it.
 
 ```php
 $loot = run(['/app/render/template.php'], ['name' => 'World'], RUN_BUFFER);
-echo $loot[RUN_OUTPUT]; // <h1>Hello World</h1>
+
+echo $loot[RUN_OUTPUT];
 ```
 
 ---
 
-## Absorb Pattern
+## Absorb pattern
 
-Output becomes input to returned callable.
+With `RUN_ABSORB`, the current output buffer is appended to the invoked callable's argument list.
 
 ```php
 // page.php
-<article><?= $args['content'] ?></article>
+?><article><?= $args['content'] ?></article><?php
 
-<?php return function(array $args) {
-    $body = $args[count($args) - 1]; // buffer is last
-    return "<!DOCTYPE html><html><body>$body</body></html>";
+return function(array $args) {
+    $body = end($args); // appended buffer
+    return "<!doctype html><html><body>$body</body></html>";
 };
 ```
 
 ```php
 $loot = run(['/app/render/page.php'], ['content' => 'Hello'], RUN_ABSORB);
-echo $loot[RUN_RETURN]; // full HTML document
+
+echo $loot[RUN_RETURN];
 ```
 
 ---
 
-## Chain Pattern
+## Chain pattern
 
-Loot flows between files.
+`RUN_CHAIN` changes what arguments are passed to invoked callables:
+
+- **without** `RUN_CHAIN`: each callable receives the original `$args`
+- **with** `RUN_CHAIN`: each callable receives the current **loot bag**
+
+In chain mode, the previous step's return value is available as `$args[RUN_RETURN]`.
 
 ```php
 // auth.php
-return fn($args) => ['user' => checkin()] + $args;
+return fn(array $args) => checkin();
 
-// users.php  
-return fn($args) => ['users' => get_users($args['user'])] + $args;
+// users.php
+use const bad\run\RUN_RETURN;
+return fn(array $args) => get_users($args[RUN_RETURN]);
 
 // render.php
-return fn($args) => render_template($args);
+use const bad\run\RUN_RETURN;
+return fn(array $args) => render_template(['users' => $args[RUN_RETURN]]);
 ```
 
 ```php
 $loot = run([
     '/app/mw/auth.php',
-    '/app/route/users.php', 
-    '/app/render/users.php'
+    '/app/route/users.php',
+    '/app/render/users.php',
 ], [], RUN_INVOKE | RUN_CHAIN);
-```
 
-Each file receives the previous file's return value.
+echo $loot[RUN_RETURN];
+```
 
 ---
 
-## Error Handling
+## Error handling
 
-### Default: Throw on Error
+### Default: throw on error
 
 ```php
-$loot = run(['/app/route/broken.php'], []);
+$loot = run(['/app/route/broken.php']);
 // throws RuntimeException("include:/app/route/broken.php", 0xC0D, $original)
 ```
 
-### RUN_RESCUE: Invoke Despite Include Error
+### RUN_RESCUE: try invoke even if include threw
+
+If `include` throws but `RUN_RESCUE` is enabled, `run()` will still attempt to invoke **if** there is a callable in `RUN_RETURN`.
 
 ```php
 $loot = run(['/app/route/noisy.php'], [], RUN_INVOKE | RUN_RESCUE);
-// if include throws but returned a callable before throwing,
-// still attempts to invoke it
 ```
 
-### RUN_ONWARD: Continue to Next File
+### RUN_ONWARD: continue to next file
 
 ```php
 $loot = run(['/app/a.php', '/app/b.php'], [], RUN_ONWARD);
-// if a.php throws, continues to b.php
-// final throw suppressed
 ```
 
 ---
 
-## Loot Structure
+## Complete example
 
 ```php
-$loot = run([$file], $args, RUN_ABSORB);
-
-$loot[RUN_RETURN]; // -1: callable's return value
-$loot[RUN_OUTPUT]; // -2: captured output (if RUN_BUFFER)
-$loot['key'];      // any other keys from $args preserved
-```
-
----
-
-## Complete Example
-
-```php
-// index.php
 require 'badhat/io.php';
 require 'badhat/run.php';
 require 'badhat/http.php';
 
-$path = io_in($_SERVER['REQUEST_URI'], "\0", IO_PATH_ONLY | IO_ROOTLESS);
+use function bad\io\path;
+use function bad\io\seek;
+use function bad\run\run;
+use function bad\http\http_out;
 
-// Route phase
-$route = io_map('/app/route/', $path, '.php', IO_TAIL);
-$loot = $route ? run($route, [], RUN_INVOKE) : [];
+use const bad\run\RUN_BUFFER;
+use const bad\run\RUN_INVOKE;
+use const bad\run\RUN_OUTPUT;
 
-// Render phase
-$render = io_map('/app/render/', $path, '.php', IO_TAIL | IO_NEST);
-$loot = $render ? run($render, $loot, RUN_ABSORB) : $loot;
+$routes = __DIR__ . '/app/route/';
 
-// Output
-isset($loot[RUN_RETURN]) && is_string($loot[RUN_RETURN])
-    ? http_out(200, $loot[RUN_RETURN], ['Content-Type' => ['text/html']])
-    : http_out(404, 'Not Found');
+[$file, $segments] = seek($routes, path($_SERVER['REQUEST_URI'], "\0"), '.php')
+    ?? http_out(404, 'Not Found');
+
+$loot = run([$file], $segments, RUN_BUFFER | RUN_INVOKE);
+
+http_out(200, $loot[RUN_OUTPUT], [
+    'Content-Type' => 'text/html; charset=utf-8',
+]);
 ```
-

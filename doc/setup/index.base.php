@@ -11,40 +11,73 @@ require 'add/badhat/db.php';
 require 'add/badhat/auth.php';
 require 'add/badhat/csrf.php';
 
-use function bad\io\{io_in, io_map};
-use function bad\run\run;
+use function bad\io\{look, seek};
 use function bad\http\http_out;
-use function bad\db\{db, qp};
-use function bad\auth\checkin;
-use function bad\csrf\csrf;
-
-use const bad\error\{HND_ALL};
-use const bad\io\{IO_PATH_ONLY, IO_ROOTLESS, IO_TAIL, IO_NEST};
+use const bad\io\{IO_URL, IO_NEST};
 use const bad\run\{RUN_INVOKE, RUN_ABSORB, RUN_RETURN};
-use const bad\auth\AUTH_SETUP;
-use const bad\csrf\CSRF_SETUP;
 
-$install(HND_ALL);
+// --------------------------------------------------
+// Bootstrap
+// --------------------------------------------------
+
+$restore = $install(bad\error\HND_ALL);
 
 session_start();
 
-csrf(CSRF_SETUP, '_csrf', 3600);
+bad\csrf\csrf(bad\csrf\CSRF_SETUP, '_csrf', 3600);
 
-$stmt = qp("SELECT password FROM users WHERE username = ?", []);
-checkin(AUTH_SETUP, 'username', $stmt);
+$pdo = new PDO(
+    getenv('DB_DSN')  ?: 'mysql:host=127.0.0.1;dbname=app;charset=utf8mb4',
+    getenv('DB_USER') ?: 'root',
+    getenv('DB_PASS') ?: '',
+    [
+        PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+        PDO::ATTR_EMULATE_PREPARES   => false,
+    ]
+);
 
-$io = __DIR__ . '/../app/io';
-$path = io_in($_SERVER['REQUEST_URI'], "\0", IO_PATH_ONLY | IO_ROOTLESS);
+bad\db\db($pdo); // <- seed the static cache used by qp()
 
-// Phase 1: Route (logic)
-$route = io_map($io . '/route/', $path, '.php', IO_TAIL);
-$loot = $route ? run($route, [], RUN_INVOKE) : [];
+// auth example (unchanged, but now explicit)
+$stmt = bad\db\qp("SELECT password FROM users WHERE username = ?", []);
+bad\auth\checkin(bad\auth\AUTH_SETUP, 'username', $stmt);
 
-// Phase 2: Render (presentation)
-$render = io_map($io . '/render/', $path, '.php', IO_TAIL | IO_NEST);
-$loot = $render ? run($render, $loot, RUN_ABSORB) : $loot;
+// --------------------------------------------------
+// Normalize request path
+// --------------------------------------------------
 
+$io_root = __DIR__ . '/../app/io';
+$key = bad\io\path($_SERVER['REQUEST_URI'], "\0", IO_URL);
+
+// --------------------------------------------------
+// Phase 1 — Route (logic)
+// --------------------------------------------------
+
+$route = seek($io_root . '/route/', $key, '.php');
+$loot  = [];
+
+if ($route) {
+    [$file, $args] = $route;
+    $loot = bad\run\run([$file], $args, RUN_INVOKE);
+}
+
+// --------------------------------------------------
+// Phase 2 — Render (presentation)
+// --------------------------------------------------
+
+$render = look($io_root . '/render/', $key, '.php', IO_NEST);
+
+if ($render) {
+    $loot = bad\run\run([$render], $loot, RUN_ABSORB);
+}
+
+// --------------------------------------------------
 // Output
+// --------------------------------------------------
+
 isset($loot[RUN_RETURN]) && is_string($loot[RUN_RETURN])
-    ? http_out(200, $loot[RUN_RETURN], ['Content-Type' => ['text/html; charset=utf-8']])
+    ? http_out(200, $loot[RUN_RETURN], [
+        'Content-Type' => ['text/html; charset=utf-8']
+      ])
     : http_out(404, 'Not Found');
