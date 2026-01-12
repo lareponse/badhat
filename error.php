@@ -20,7 +20,7 @@ const CODE_COD = 0xC0D;
 return function (int $behave = HND_ALL, ?string $request_id = null): callable {
     $start  = $_SERVER['REQUEST_TIME_FLOAT'] ?? microtime(true);
     $prefix = '[req=' . ($request_id ?? dechex((int)($start * 10000) ^ getmypid())) . ']';
-    $report = static fn (string $line): void => error_log("$prefix $line");
+    $report = static function (string $line) use($prefix): void {error_log("$prefix $line");};
     
     $fatal = static function (string $src, string $type, string $msg, string $file = '', int $line = 0, string $trace = '') use ($behave, $report, $start): void {
         $ctx = sprintf('%.2fms %dKiB %s %s @%s', (microtime(true) - $start) * 1000, memory_get_peak_usage(true) >> 10, $_SERVER['REQUEST_METHOD'] ?? 'CLI', $_SERVER['REQUEST_URI'] ?? '-', $_SERVER['REMOTE_ADDR'] ?? '-');
