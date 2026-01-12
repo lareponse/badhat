@@ -35,12 +35,12 @@ use function bad\run\run;
 use function bad\http\http_out;
 
 use const bad\error\{HND_ALL};
-use const bad\io\{IO_URL, IO_ROOTLESS, IO_TAIL, IO_NEST};
+use const bad\io\{IO_URL, IO_NEST};
 use const bad\run\{RUN_INVOKE, RUN_ABSORB, RUN_RETURN};
 
 $install(HND_ALL);
 
-$path = path($_SERVER['REQUEST_URI'], "\0", IO_URL | IO_ROOTLESS);
+$path = path($_SERVER['REQUEST_URI'], "\0", IO_URL);
 
 // Route
 $route = io_map(__DIR__ . '/../app/io/route/', $path, '.php', IO_TAIL);
@@ -212,7 +212,7 @@ use function bad\auth\checkin;
 use function bad\csrf\csrf;
 
 use const bad\error\HND_ALL;
-use const bad\io\{IO_URL, IO_ROOTLESS, IO_TAIL, IO_NEST};
+use const bad\io\{IO_URL, IO_NEST};
 use const bad\run\{RUN_INVOKE, RUN_ABSORB, RUN_RETURN};
 use const bad\auth\AUTH_SETUP;
 use const bad\csrf\CSRF_SETUP;

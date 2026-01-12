@@ -193,14 +193,14 @@ require 'badhat/io.php';
 require 'badhat/run.php';
 require 'badhat/http.php';
 
-$path = path($_SERVER['REQUEST_URI'], "\0", IO_URL | IO_ROOTLESS);
+$path = path($_SERVER['REQUEST_URI'], "\0", IO_URL);
 
 // Route phase
-$route = io_map('/app/route/', $path, '.php', IO_TAIL);
+$route = io_map('/app/route/', $path, '.php');
 $loot = $route ? run($route, [], RUN_INVOKE) : [];
 
 // Render phase
-$render = io_map('/app/render/', $path, '.php', IO_TAIL | IO_NEST);
+$render = io_map('/app/render/', $path, '.php', IO_NEST);
 $loot = $render ? run($render, $loot, RUN_ABSORB) : $loot;
 
 // Output

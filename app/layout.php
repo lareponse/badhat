@@ -87,7 +87,7 @@
     </header>
 
     <?php
-    $breadcrumb = explode('/', bad\io\io_in($_SERVER['REQUEST_URI'], bad\io\IO_PATH_ONLY, bad\io\IO_ROOTLESS));
+    $breadcrumb = explode('/', bad\io\path($_SERVER['REQUEST_URI'], bad\io\IO_URL));
     $page_id = implode('-', $breadcrumb);
     $page_class = implode(' ', $breadcrumb);
     ?>
