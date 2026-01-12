@@ -6,11 +6,6 @@ It's messy: it might include a query string, a fragment, maybe even a full URL i
 
 > a stable **routing key** you can trust, and a safe way to turn that key into an **executable file inside your app**.
 
-This module is that bridge.
-
-And the big shift in this version is: **the defaults are the design**.
-
-You shouldn't have to spell out the obvious on every call. The “normal” path is now the *path of least code*.
 
 ---
 
@@ -131,6 +126,3 @@ But if your input might be:
 ```php
 $key = bad\io\path($raw, "\0", bad\io\IO_URL);
 ```
-
-**Story:**
-“Treat this as URL-shaped. Strip the ceremony and keep the route.”
