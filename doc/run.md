@@ -193,7 +193,7 @@ require 'badhat/io.php';
 require 'badhat/run.php';
 require 'badhat/http.php';
 
-$path = io_in($_SERVER['REQUEST_URI'], "\0", IO_PATH_ONLY | IO_ROOTLESS);
+$path = path($_SERVER['REQUEST_URI'], "\0", IO_URL | IO_ROOTLESS);
 
 // Route phase
 $route = io_map('/app/route/', $path, '.php', IO_TAIL);
