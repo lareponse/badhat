@@ -19,7 +19,7 @@ use function bad\auth\checkin;
 use function bad\csrf\csrf;
 
 use const bad\error\{HND_ALL};
-use const bad\io\{IO_URL, IO_ROOTLESS, IO_TAIL, IO_NEST};
+use const bad\io\{IO_URL, IO_NEST};
 use const bad\run\{RUN_INVOKE, RUN_ABSORB, RUN_RETURN};
 use const bad\auth\AUTH_SETUP;
 use const bad\csrf\CSRF_SETUP;
@@ -34,14 +34,14 @@ $stmt = qp("SELECT password FROM users WHERE username = ?", []);
 checkin(AUTH_SETUP, 'username', $stmt);
 
 $io = __DIR__ . '/../app/io';
-$path = path($_SERVER['REQUEST_URI'], "\0", IO_URL | IO_ROOTLESS);
+$path = path($_SERVER['REQUEST_URI'], "\0", IO_URL);
 
 // Phase 1: Route (logic)
-$route = io_map($io . '/route/', $path, '.php', IO_TAIL);
+$route = io_map($io . '/route/', $path, '.php');
 $loot = $route ? run($route, [], RUN_INVOKE) : [];
 
 // Phase 2: Render (presentation)
-$render = io_map($io . '/render/', $path, '.php', IO_TAIL | IO_NEST);
+$render = io_map($io . '/render/', $path, '.php', IO_NEST);
 $loot = $render ? run($render, $loot, RUN_ABSORB) : $loot;
 
 // Output
