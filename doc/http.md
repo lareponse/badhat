@@ -1,28 +1,25 @@
 # BADHAT HTTP — Response Output
 
+`bad\http` emits responses.
 
-HTTP does one thing: emit responses.
+- `http_headers()` validates + accumulates headers (optional helper)
+- `http_out()` sets status, emits headers/body, then `exit`s
+- `csp_nonce()` gives you a per-request CSP nonce
 
-- Validates headers
-- Sets status code
-- Outputs body (when appropriate)
-- Exits
-
-Path resolution belongs to `io_map()`. Execution belongs to `run()`.
-
+Path resolution lives in `bad\io\path()` / `bad\io\look()` / `bad\io\seek()`.
+Execution lives in `bad\run\run()`.
 
 ---
 
 ## Constants
 
 ```php
-const HTTP_HDR_SOFT   = 64;   // reserved
-const HTTP_HDR_STRICT = 128;  // reserved
-
-const ASCII_CTL = "\x00\x01...\x1F\x7F";  // control characters
-const HTTP_PATH_UNSAFE = ' ' . ASCII_CTL;
-const HTTP_TCHAR = '!#$%&\'*+-.^_`|~0-9A-Za-z';  // valid header name chars
+const ASCII_CTL = "\x00...\x1F\x7F"; // all ASCII control chars
+const HTTP_PATH_UNSAFE = ' ' . ASCII_CTL; // space + all control chars
+const HTTP_TCHAR = "!#$%&'*+-.^_`|~0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 ```
+
+> `HTTP_PATH_UNSAFE` is a good *forbidden set* to pass to `bad\io\path(...)`.
 
 ---
 
@@ -34,120 +31,62 @@ const HTTP_TCHAR = '!#$%&\'*+-.^_`|~0-9A-Za-z';  // valid header name chars
 function http_headers(string $name, string $value, bool $replace = true): ?array
 ```
 
-Accumulates headers with validation. Returns header state or `null` on invalid input.
+Validates and stores headers in a static map. Returns the full map on success, or `null` on invalid input.
+
+Rules (as implemented):
+- header name must be non-empty and contain only `HTTP_TCHAR`
+- header value must not contain any `ASCII_CTL`
 
 ```php
-// Set header (replaces existing)
 http_headers('Content-Type', 'application/json');
-
-// Append header (for Set-Cookie, etc.)
-http_headers('Set-Cookie', 'a=1', false);
-http_headers('Set-Cookie', 'b=2', false);
-
-// Invalid name (contains non-tchar)
-http_headers('Bad Header', 'value');  // returns null
-
-// Invalid value (contains control char)
-http_headers('X-Data', "has\x00null");  // returns null
+http_headers('Set-Cookie', 'a=1; Path=/', false);
+http_headers('Set-Cookie', 'b=2; Path=/', false);
 ```
-
-**Validation:**
-- Header names must contain only `HTTP_TCHAR` characters
-- Header values must not contain `ASCII_CTL` characters
 
 ---
 
 ### http_out
 
 ```php
-function http_out(int $code, ?string $body = null, array $headers = []): array
+function http_out(int $code, ?string $body = null, array $headers = []): void
 ```
 
-Emits HTTP response and exits. Does not return.
+Emits an HTTP response and exits.
+
+- calls `http_response_code($code)`
+- emits each header value via `header("$name: $v", false)`
+- echoes `$body` only when `$code >= 200` and not `204/205/304`
+- calls `exit`
+
+Header values may be a string or an array of strings:
 
 ```php
-// Simple response
-http_out(200, 'Hello World');
-
-// With headers
-http_out(200, json_encode($data), [
-    'Content-Type' => ['application/json'],
-    'Cache-Control' => ['no-store']
+http_out(200, 'ok', [
+    'Content-Type' => 'text/plain; charset=utf-8',
 ]);
 
-// Multiple values for same header
-http_out(200, $body, [
-    'Set-Cookie' => ['a=1; Path=/', 'b=2; Path=/']
+http_out(200, 'ok', [
+    'Set-Cookie' => ['a=1; Path=/', 'b=2; Path=/'],
 ]);
-
-// No body (204, 205, 304 or <200)
-http_out(204, null);
-http_out(301, null, ['Location' => ['/new-path']]);
 ```
 
-**Behavior:**
-- Sets `http_response_code($code)`
-- Emits all headers via `header()` with `replace=false`
-- Echoes body unless: `$code < 200`, `$code === 204`, `$code === 205`, or `$code === 304`
-- Calls `exit`
+> `http_out()` does **not** validate header names/values. If you want validation, build them via `http_headers()` (or validate yourself) first.
 
 ---
 
-## Patterns
-
-### JSON API
+### csp_nonce
 
 ```php
-$data = run($route, $args, RUN_INVOKE)[RUN_RETURN];
+function csp_nonce(): string
+```
 
-http_out(200, json_encode($data), [
-    'Content-Type' => ['application/json; charset=utf-8']
+Returns `bin2hex(random_bytes(16))`, cached for the rest of the request.
+
+```php
+$nonce = csp_nonce();
+
+http_out(200, $html, [
+    'Content-Security-Policy' => "script-src 'nonce-$nonce'",
+    'Content-Type'           => 'text/html; charset=utf-8',
 ]);
 ```
-
-### Redirect
-
-```php
-http_out(302, null, ['Location' => ['/dashboard']]);
-```
-
-### Error Response
-
-```php
-http_out(404, 'Not Found');
-http_out(500, 'Internal Server Error');
-```
-
-### Download
-
-```php
-http_out(200, $file_contents, [
-    'Content-Type' => ['application/octet-stream'],
-    'Content-Disposition' => ['attachment; filename="export.csv"']
-]);
-```
-
-### CORS
-
-```php
-http_out(200, $body, [
-    'Access-Control-Allow-Origin' => ['https://example.com'],
-    'Access-Control-Allow-Methods' => ['GET, POST, OPTIONS']
-]);
-```
-
----
-
-## Header Format
-
-Headers passed to `http_out()` use array values:
-
-```php
-$headers = [
-    'Header-Name' => ['value1', 'value2'],  // multiple values
-    'Single' => ['only-value'],              // single value
-];
-```
-
-Each value emits a separate `header()` call with `replace=false`.
-
