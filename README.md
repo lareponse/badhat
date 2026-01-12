@@ -73,7 +73,7 @@ The filesystem is the router. You request `/admin/users`, badhat looks for `admi
 
 Scripts are scripts. They run. They can return a callable — badhat will invoke it. They can echo output — badhat can buffer it. They can do both. badhat doesn't care.
 
-Pipelines are explicit. You want a boot script, a handler, and a renderer? Build the array, pass it to `io_run`. You want one file that does everything? Pass one file. Your architecture is your decision.
+Pipelines are explicit. You want a boot script, a handler, and a renderer? Build the array, pass it to `run`. You want one file that does everything? Pass one file. Your architecture is your decision.
 
 DRY is applied once, at the infrastructure level. Path resolution, include logic, output capture — written once in badhat, used everywhere in your app. Your app code repeats whatever it wants.
 
@@ -84,12 +84,12 @@ No base controllers. No service providers. No config cascades. No interface cont
 ## The actual code
 
 ```php
-[$handler, $segments] = io_map($scripts, $uri, 'php', IO_DEEP) 
+[$handler, $segments] = seek($scripts, $uri, 'php', IO_TAIL) 
     ?? io_die(404, 'Not Found');
 
-$loot = io_run([$handler], $segments, IO_BUFFER | IO_INVOKE);
+$loot = run([$handler], $segments, RUN_BUFFER | RUN_INVOKE);
 
-echo $loot[IO_OUTPUT];
+echo $loot[RUN_OUTPUT];
 ```
 
 Three lines. Request to response. Add a boot script and a renderer if you want. Or don't.
