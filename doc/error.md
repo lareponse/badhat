@@ -141,7 +141,7 @@ With `MSG_WITH_TRACE`:
 ```
 [req=1a2b3c] FATAL (exception:InvalidArgumentException) Bad Request in /app/lib/io.php:18 [3.41ms 2048KiB POST /api/user @192.168.1.50]
 [req=1a2b3c] TRACE
-#0 /app/io/route/api.php:23 io_in()
+#0 /app/io/route/api.php:23 path()
 #1 /app/index.php:45 include()
 #2 {main}
 ```

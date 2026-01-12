@@ -1,163 +1,128 @@
-# BADHAT IO — Path Resolution
+# badhat\io
 
-IO does one thing: resolve paths to files.
+A request hits your server.
 
-- No execution
-- No output handling
-- No HTTP concerns
-- Just filesystem mapping
+It's messy: it might include a query string, a fragment, maybe even a full URL if it came from somewhere you didn't expect. But what you actually want is simple:
 
-Execution belongs to `run()`. HTTP belongs to `http_out()`.
+> a stable **routing key** you can trust, and a safe way to turn that key into an **executable file inside your app**.
+
 
 ---
 
-## Constants
+## 1) First, turn “whatever came in” into a routing key
+
+You start with raw input. You want one thing back: `a/b/c`.
 
 ```php
-// io_in behavior
-const IO_PATH_ONLY  = 1;              // strip ?query and #fragment
-const IO_ROOTLESS   = 2;              // strip leading /
-const IO_ABSOLUTE   = 4 | IO_ROOTLESS; // ensure leading /
-
-// io_map, io_look, io_seek behavior
-const IO_NEST       = 8;              // try path/basename pattern
-const IO_TAIL       = 16;             // seek deepest first (intent-centric)
-const IO_HEAD       = 32;             // seek shallowest first (entry-point-centric)
+$key = bad\io\path($_SERVER['REQUEST_URI'], "\0");
 ```
+
+That single line quietly does what you used to have to ask for:
+
+* it drops `?query` and `#fragment`
+* it trims leading `/`
+* it returns a **rootless** key (`users/edit/42`), always
+
+So your app stops arguing with slashes and delimiters. Every route begins the same way.
+
+**Default story:**
+“Give me the meaningful path, in the shape my router expects.”
 
 ---
 
-## Functions
+## 2) Then, decide what kind of router you're building
 
-### io_in
+There are two common philosophies. BADHAT supports both.
 
-```php
-function io_in(string $raw, string $forbidden = '', int $behave = 0): string
-```
+### A) “A route *is* a file” (strict routing)
 
-Normalizes a raw URI into a usable path string.
+You already know the handler file you want to exist. No guessing.
 
 ```php
-// Basic usage
-$path = io_in('/users/profile?tab=settings');           // '/users/profile?tab=settings'
-$path = io_in('/users/profile?tab=settings', '', IO_PATH_ONLY);  // '/users/profile'
-$path = io_in('/users/profile', '', IO_ROOTLESS);       // 'users/profile'
-$path = io_in('users/profile', '', IO_ABSOLUTE);        // '/users/profile'
+$file = bad\io\look('/app/route/', $key, '.php');
 
-// Reject forbidden characters
-$path = io_in($uri, "\0");                              // throws on null byte
-$path = io_in($uri, "\0..");                            // throws on null or '..'
+$file
+  ? run([$file], [], RUN_INVOKE)
+  : http_out(404, 'Not Found');
 ```
 
-**Throws:** `InvalidArgumentException` (400) if forbidden chars found.
+**Story:**
+“I only run exactly what exists. If it's not there, it's not a route.”
+
+That's the default posture of `look()`—direct, boring, predictable.
 
 ---
 
-### io_map
+### B) “A route is a controller + remaining segments” (parameterized routing)
+
+Sometimes you want `/users/edit/42` to land on `users.php`, with `['edit','42']` handed to it.
+
+That's what `seek()` is for.
 
 ```php
-function io_map(string $base_dir, string $url_path, string $execution_suffix, int $behave = 0): ?array
+[$file, $args] = bad\io\seek('/app/route/', $key, '.php')
+  ?? http_out(404, 'Not Found');
+
+run([$file], $args, RUN_INVOKE);
 ```
 
-Resolves a URL path to an executable file. Returns `[filepath, args]` or `null`.
+And here's the key default:
 
-**Note:** `$base_dir` must end with `DIRECTORY_SEPARATOR`.
+> `seek()` assumes **tail-seeking** (deepest-first).
 
-```php
-// Direct lookup (no flags)
-$route = io_map('/app/route/', 'users', '.php');
-// → ['/app/route/users.php', null] or null
+Because that matches how people usually think about intent:
 
-// With nesting
-$route = io_map('/app/route/', 'admin/users', '.php', IO_NEST);
-// tries: admin/users.php, then admin/users/users.php
+* “Try the most specific handler first”
+* then gracefully fall back to the broader controller
 
-// With seeking (captures remaining segments as args)
-$route = io_map('/app/route/', 'users/edit/42', '.php', IO_TAIL);
-// tries: users/edit/42.php → users/edit.php → users.php
-// returns: ['/app/route/users.php', ['edit', '42']]
-
-$route = io_map('/app/route/', 'api/v2/users', '.php', IO_HEAD);
-// tries: api.php → api/v2.php → api/v2/users.php
-// returns first match with remaining segments
-```
+**Story:**
+“I'll try to find the tightest matching handler. If I can't, I'll hand the leftover intent to something that can.”
 
 ---
 
-### io_look
+## 3) Only when you need it, you opt in
+
+The flags now read like plot twists: you use them when the story changes.
+
+### `IO_HEAD`: you want a gateway at the top
+
+Sometimes your app has entry points like `api.php` or `admin.php` that intentionally swallow everything underneath.
 
 ```php
-function io_look(string $base_dir, string $url_path, string $execution_suffix, int $behave = 0): ?string
+[$file, $args] = bad\io\seek('/app/route/', $key, '.php', bad\io\IO_HEAD);
 ```
 
-Direct file lookup. No walking. Returns real path or `null`.
-
-```php
-$file = io_look('/app/route/', 'users', '.php');
-// → '/app/route/users.php' or null
-
-$file = io_look('/app/route/', 'admin', '.php', IO_NEST);
-// tries: admin.php, then admin/admin.php
-```
-
-**Security:** validates resolved path stays within `$base_dir`.
+**Story:**
+“Start at the front door. Let the gateway decide what the rest means.”
 
 ---
 
-### io_seek
+### `IO_NEST`: folders get their own “index handler”
+
+When `admin.php` doesn't exist, you might want `admin/admin.php` to be the real entry point.
 
 ```php
-function io_seek(string $base_dir, string $url_path, string $execution_suffix, int $behave = 0): ?array
+$file = bad\io\look('/app/route/', 'admin', '.php', bad\io\IO_NEST);
 ```
 
-Walking lookup. Returns `[filepath, remaining_segments]` or `null`.
+And because `seek()` calls `look()` internally, `IO_NEST` works there too.
 
-```php
-// IO_TAIL: deepest first (default for intent-centric routing)
-$route = io_seek('/app/route/', 'users/edit/42', '.php', IO_TAIL);
-// walks: users/edit/42 → users/edit → users
-// if users.php exists: ['/app/route/users.php', ['edit', '42']]
-
-// IO_HEAD: shallowest first (for gateway patterns)
-$route = io_seek('/app/route/', 'api/v2/users/42', '.php', IO_HEAD);
-// walks: api → api/v2 → api/v2/users → api/v2/users/42
-// if api.php exists: ['/app/route/api.php', ['v2', 'users', '42']]
-```
+**Story:**
+“If a section is a directory, let it own itself.”
 
 ---
 
-## Patterns
+### `IO_URL`: the input is a full URL, not just a path
 
-### Basic File Router
+Most of the time you already have `REQUEST_URI` and you're fine.
 
-```php
-$path = io_in($_SERVER['REQUEST_URI'], "\0", IO_PATH_ONLY | IO_ROOTLESS);
-$route = io_map('/app/route/', $path, '.php');
+But if your input might be:
 
-$route
-    ? run($route, [])
-    : http_out(404, 'Not Found');
-```
+* `https://example.com/users/edit/42?x=1#y`
+* `//example.com/users`
 
-### Parameterized Routes
+…then you opt in:
 
 ```php
-// /users/edit/42 → users.php receives ['edit', '42']
-$route = io_map('/app/route/', $path, '.php', IO_TAIL);
-[$file, $args] = $route ?? http_out(404, 'Not Found');
-run([$file], $args ?? [], RUN_INVOKE);
-```
-
-### Gateway Pattern
-
-```php
-// /api/v2/users/42 → api.php receives ['v2', 'users', '42']
-$route = io_map('/app/route/', $path, '.php', IO_HEAD);
-```
-
-### Nested Entry Points
-
-```php
-// /admin → admin/admin.php (if admin.php doesn't exist)
-$route = io_map('/app/route/', $path, '.php', IO_NEST | IO_TAIL);
+$key = bad\io\path($raw, "\0", bad\io\IO_URL);
 ```

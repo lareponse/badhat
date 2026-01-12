@@ -84,7 +84,7 @@ No base controllers. No service providers. No config cascades. No interface cont
 ## The actual code
 
 ```php
-[$handler, $segments] = io_map($scripts, $uri, 'php', IO_TAIL) 
+[$handler, $segments] = seek($scripts, $uri, 'php', IO_TAIL) 
     ?? io_die(404, 'Not Found');
 
 $loot = run([$handler], $segments, RUN_BUFFER | RUN_INVOKE);
