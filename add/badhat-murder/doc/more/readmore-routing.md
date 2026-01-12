@@ -110,23 +110,6 @@ BADHAT: response time = f(URI complexity)
 Framework: response time = f(app size + URI position)
 ```
 
----
-
-## IO_TAIL vs IO_HEAD
-
-```php
-// IO_TAIL: deepest first (intent-centric)
-// /users/edit/42 tries: users/edit/42 → users/edit → users
-io_map('/app/route/', 'users/edit/42', '.php', IO_TAIL);
-
-// IO_HEAD: shallowest first (gateway pattern)  
-// /api/v2/users tries: api → api/v2 → api/v2/users
-io_map('/app/route/', 'api/v2/users', '.php', IO_HEAD);
-```
-
-Same filesystem, different resolution strategies.
-
----
 
 ## Conclusion
 
