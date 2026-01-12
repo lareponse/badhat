@@ -30,17 +30,17 @@ require 'add/badhat/run.php';
 require 'add/badhat/http.php';
 require 'add/badhat/db.php';
 
-use function bad\io\{io_in, io_map};
+use function bad\io\{path, io_map};
 use function bad\run\run;
 use function bad\http\http_out;
 
 use const bad\error\{HND_ALL};
-use const bad\io\{IO_PATH_ONLY, IO_ROOTLESS, IO_TAIL, IO_NEST};
+use const bad\io\{IO_URL, IO_ROOTLESS, IO_TAIL, IO_NEST};
 use const bad\run\{RUN_INVOKE, RUN_ABSORB, RUN_RETURN};
 
 $install(HND_ALL);
 
-$path = io_in($_SERVER['REQUEST_URI'], "\0", IO_PATH_ONLY | IO_ROOTLESS);
+$path = path($_SERVER['REQUEST_URI'], "\0", IO_URL | IO_ROOTLESS);
 
 // Route
 $route = io_map(__DIR__ . '/../app/io/route/', $path, '.php', IO_TAIL);
@@ -204,7 +204,7 @@ require 'add/badhat/db.php';
 require 'add/badhat/auth.php';
 require 'add/badhat/csrf.php';
 
-use function bad\io\{io_in, io_map};
+use function bad\io\{path, io_map};
 use function bad\run\run;
 use function bad\http\http_out;
 use function bad\db\{db, qp};
@@ -212,7 +212,7 @@ use function bad\auth\checkin;
 use function bad\csrf\csrf;
 
 use const bad\error\HND_ALL;
-use const bad\io\{IO_PATH_ONLY, IO_ROOTLESS, IO_TAIL, IO_NEST};
+use const bad\io\{IO_URL, IO_ROOTLESS, IO_TAIL, IO_NEST};
 use const bad\run\{RUN_INVOKE, RUN_ABSORB, RUN_RETURN};
 use const bad\auth\AUTH_SETUP;
 use const bad\csrf\CSRF_SETUP;
