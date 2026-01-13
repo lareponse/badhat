@@ -9,7 +9,7 @@ require 'add/badhat-murder/db.php';
 require 'add/badhat-murder/http.php';
 require 'add/badhat-murder/auth.php';
 
-use const bad\io\{IO_URL, IO_NEST};
+use const bad\io\{IO_NEST, IO_GROW};
 use const bad\error\{HND_ALL, FATAL_OB_FLUSH, MSG_WITH_TRACE};
 use const bad\run\{RUN_BUFFER, RUN_OUTPUT, RUN_RETURN};
 
@@ -28,26 +28,25 @@ $pwd = $_SERVER['DB_PASS_'] ?: (getenv('DB_PASS_') ?: null);
 
 bad\db\db(new \PDO($dsn, $usr, $pwd, $options));
 
-// try {
-    $in_path    = __DIR__ . '/decide/';
-    $out_path   = __DIR__ . '/montre/';
+        
+$re_quest   = bad\io\path(__DIR__.'/', $_SERVER['REQUEST_URI']) ?: 'index';
 
-    $re_quest   = bad\io\path($_SERVER['REQUEST_URI'], IO_URL);
+$pipeline = [];
+// business: find the route and invoke it
+$in_path    = __DIR__ . '/decide/';
+[$route_path, $args]   = bad\io\seek($in_path, $re_quest, '.php', IO_NEST) ?: bad\io\seek($in_path, 'index', '.php');
 
-    $pipeline = [];
-    // business: find the route and invoke it
-    [$route_path, $args]   = bad\io\seek($in_path, $re_quest, '.php', IO_NEST) ?: bad\io\seek($in_path, 'index', '.php');
-    
-    if($route_path)
-        $pipeline [] = $route_path;
-    
-    // render: match route file and absorb it when possible
-    [$render_path, $render_args]   = bad\io\seek($out_path, $re_quest, '.php', IO_NEST) ?: bad\io\seek($out_path, 'index', '.php');
-    // $out_quest              = run($render_path, $in_quest[IO_RETURN] ?? $args ?? [], RUN_ABSORB);
-    if($render_path)
-        $pipeline [] = $render_path;
+if($route_path)
+    $pipeline [] = $route_path;
 
-    $res = bad\run\run($pipeline, $args ?? [], RUN_BUFFER);
-    $main = $res[RUN_OUTPUT];
-    $css = $res[RUN_RETURN];
-    require('app/layout.php');
+$out_path   = __DIR__ . '/montre/';
+// render: match route file and absorb it when possible
+[$render_path, $render_args]   = bad\io\seek($out_path, $re_quest, '.php', IO_NEST) ?: bad\io\seek($out_path, 'index', '.php');
+// $out_quest              = run($render_path, $in_quest[IO_RETURN] ?? $args ?? [], RUN_ABSORB);
+if($render_path)
+    $pipeline [] = $render_path;
+
+$res = bad\run\run($pipeline, $args ?? [], RUN_BUFFER);
+$main = $res[RUN_OUTPUT];
+$css = $res[RUN_RETURN];
+require('app/layout.php');
