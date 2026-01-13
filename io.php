@@ -2,67 +2,54 @@
 
 namespace bad\io;
 
-const IO_URL   = 1;
-const IO_NEST  = 2;
-const IO_HEAD  = 4;
+const IO_NEST  = 1;
+const IO_GROW  = 2;
 
-function path(string $raw, string $forbidden = '', int $behave = 0): string
+function path(string $base, string $url, string $forbidden = '', int $behave = 0): string
 {
-    $path = $raw;
+    (!$base || $base[-1] !== DIRECTORY_SEPARATOR)                   && throw new \InvalidArgumentException('BASE_NO_SLASHEND', 400); // trailing separator prevents /var/www matching /var/www-evil
+    $base && ($base !== realpath($base) . DIRECTORY_SEPARATOR)      && throw new \InvalidArgumentException('BASE_IS_NOT_REAL', 400);
+
+    $stop = strcspn($url, '?#');    // PHP REQUEST_URI
+    isset($url[$stop]) && ($url = substr($url, 0, $stop));
     
-    if (IO_URL & $behave) {
-        $scheme_end = strcspn($path, ':/?#');  //strcspn ensures : appears before any /?#
-        if (isset($path[$scheme_end]) && $path[$scheme_end] === ':')
-            $path = substr($path, $scheme_end + 1);
+    ($forbidden !== '' && isset($url[strcspn($url, $forbidden)]))   && throw new \InvalidArgumentException('PATH_IS_CORRUPTED', 400);
 
-        if (isset($path[1]) && $path[0] === '/' && $path[1] === '/') {
-            $auth_end = strcspn($path, '/?#', 2) + 2;
-            $path = isset($path[$auth_end]) ? substr($path, $auth_end) : '';
-        }
-    }
-    $stop = strcspn($path, '?#');
-    isset($path[$stop]) && $path = substr($path, 0, $stop);
-
-    ($forbidden !== '' && isset($path[strcspn($path, $forbidden)])) && throw new \InvalidArgumentException('Bad Request', 400);
-
-    return ltrim($path, '/');
+    return $url;
 }
 
-function look(string $base_dir, string $url_path, string $execution_suffix, int $behave = 0): ?string
+// real base + rootless path + shim = a real in-base file (or null)
+function look(string $base, string $path, string $shim = '', int $behave = 0): ?string
 {
-    (!$base_dir || $base_dir[-1] !== DIRECTORY_SEPARATOR) && throw new \InvalidArgumentException('base_dir must end with directory separator '. DIRECTORY_SEPARATOR, 400); // trailing separator prevents /var/www matching /var/www-evil
+    $leaf = $base . $path . $shim;
+    if ((IO_NEST & $behave) && !is_file($leaf))     // test !is_file or NEST becomes a preference instead of fallback
+        $leaf = $base . $path . DIRECTORY_SEPARATOR . basename($path) . $shim;
 
-    $path = $base_dir . $url_path;
-    $file = $path . $execution_suffix;
-    if (!is_file($file) && (IO_NEST & $behave)) {
-        $file = $path . DIRECTORY_SEPARATOR . basename($url_path) . $execution_suffix;
-        is_file($file) || ($file = null);
-    }
+    return is_file($leaf) && ($real = realpath($leaf)) && strpos($real, $base) === 0 ? $real : null;
+}
 
-    return $file !== null && ($real = realpath($file)) && strpos($real, $base_dir) === 0 ? $real : null;
-} // returns a real, in-base direct execution path, or null
+function seek(string $base, string $path, string $shim = '', int $behave = 0): ?array
+{
+    $len = strlen($path);
+    $pos  = (IO_GROW & $behave) ? 0 : $len;
 
-function seek(string $base_dir, string $url_path, string $execution_suffix, int $behave = 0): ?array
-{ // resolves an execution path by segment walk
-    $slashes_positions = [];
-    $slashes = 0;
-    for ($pos = -1; ($pos = strpos($url_path, '/', $pos + 1)) !== false; ++$slashes)
-        $slashes_positions[] = $pos;
-
-    $segments = $slashes + 1;
-
-    $depth  = IO_HEAD & $behave ? 1 : $segments;
-    $end    = IO_HEAD & $behave ? $segments + 1 : 0; // +1 ? off-by-one workaround for $depth !== $end
-
-    for ($step = (IO_HEAD & $behave) ? 1 : -1; $depth !== $end; $depth += $step) {
-        $candidate = $depth <= $slashes
-            ? substr($url_path, 0, $slashes_positions[$depth - 1])
-            : $url_path;
-
-        if ($path = look($base_dir, $candidate, $execution_suffix, $behave)) {
-            $args = $depth > $slashes ? [] : explode('/', substr($url_path, $slashes_positions[$depth - 1] + 1));
-            return [$path, $args];
+    do {
+        if ((IO_GROW & $behave)) {
+            $cut = strpos($path, '/', $pos);
+            $end = ($cut === false) ? $len : $cut;
+        } else {
+            $cut = ($pos > 0) ? strrpos($path, '/', $pos - $len - 1) : false; // negative offset
+            $end = $pos;
         }
-    }
+
+        $test = ($end === $len) ? $path : substr($path, 0, $end);
+        if ($file = look($base, $test, $shim, $behave)) {
+            $args = ($end + 1 < $len) ? explode('/', substr($path, $end + 1)) : [];
+            return [$file, $args];
+        }
+
+        ($cut !== false) && ($pos = (IO_GROW & $behave) ? $cut + 1 : $cut);
+    } while ($cut !== false);
+
     return null;
 }
