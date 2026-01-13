@@ -43,7 +43,7 @@ use function bad\http\http_out;
 use function bad\db\db;
 
 use const bad\error\HND_ALL;
-use const bad\io\{IO_URL, IO_NEST};
+use const bad\io\{IO_NEST};
 use const bad\run\{RUN_INVOKE, RUN_ABSORB, RUN_RETURN};
 
 // --------------------------------------------------
@@ -72,7 +72,7 @@ db($pdo);
 // Normalize request path
 // --------------------------------------------------
 
-$key = path($_SERVER['REQUEST_URI'], "\0", IO_URL);
+$key = path($_SERVER['REQUEST_URI'], "\0");
 $io  = __DIR__ . '/../app/io';
 
 // --------------------------------------------------
