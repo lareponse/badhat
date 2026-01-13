@@ -13,7 +13,7 @@ require 'add/badhat/csrf.php';
 
 use function bad\io\{look, seek};
 use function bad\http\http_out;
-use const bad\io\{IO_URL, IO_NEST};
+use const bad\io\{IO_NEST};
 use const bad\run\{RUN_INVOKE, RUN_ABSORB, RUN_RETURN};
 
 // --------------------------------------------------
@@ -48,7 +48,7 @@ bad\auth\checkin(bad\auth\AUTH_SETUP, 'username', $stmt);
 // --------------------------------------------------
 
 $io_root = __DIR__ . '/../app/io';
-$key = bad\io\path($_SERVER['REQUEST_URI'], "\0", IO_URL);
+$key = bad\io\path($_SERVER['REQUEST_URI'], "\0");
 
 // --------------------------------------------------
 // Phase 1 — Route (logic)
