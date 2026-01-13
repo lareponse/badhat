@@ -84,12 +84,12 @@ Because that matches how people usually think about intent:
 
 The flags now read like plot twists: you use them when the story changes.
 
-### `IO_HEAD`: you want a gateway at the top
+### `IO_GROW`: you want a gateway at the top
 
 Sometimes your app has entry points like `api.php` or `admin.php` that intentionally swallow everything underneath.
 
 ```php
-[$file, $args] = bad\io\seek('/app/route/', $key, '.php', bad\io\IO_HEAD);
+[$file, $args] = bad\io\seek('/app/route/', $key, '.php', bad\io\IO_GROW);
 ```
 
 **Story:**
@@ -109,20 +109,3 @@ And because `seek()` calls `look()` internally, `IO_NEST` works there too.
 
 **Story:**
 “If a section is a directory, let it own itself.”
-
----
-
-### `IO_URL`: the input is a full URL, not just a path
-
-Most of the time you already have `REQUEST_URI` and you're fine.
-
-But if your input might be:
-
-* `https://example.com/users/edit/42?x=1#y`
-* `//example.com/users`
-
-…then you opt in:
-
-```php
-$key = bad\io\path($raw, "\0", bad\io\IO_URL);
-```
