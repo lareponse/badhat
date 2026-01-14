@@ -1,65 +1,45 @@
-# BADHAT Run — File Execution
+# badhat\run
 
-`bad\run` does one thing: execute files and capture results.
+You've resolved a path to a file. Now what?
 
-- Includes files
-- Can invoke returned callables
-- Can buffer output
-- Can *pipe* the previous step into the next invoke
-- Wraps include/invoke failures as `RuntimeException("include:..."|"invoke:...", 0xC0D, $previous)`
+PHP's `include` is powerful but raw. You get the file's return value, but output streams immediately. Errors are messy. Chaining files means writing the same try/catch/buffer dance every time.
 
-Path resolution belongs to `bad\io\look()` / `bad\io\seek()`.
-HTTP output belongs to `bad\http\http_out()`.
+> `run()` executes files and collects what they produce—return values, output, or both.
 
 ---
 
-## Constants
+## 1) First, you include
+
+At its simplest, `run()` is just `include` with structure:
 
 ```php
-// Behavior flags
-const RUN_BUFFER = 1;                           // capture output
-const RUN_INVOKE = 2;                           // call returned callable
-const RUN_ABSORB = 4 | RUN_BUFFER | RUN_INVOKE; // append buffer to callable args
-const RUN_RESCUE = 8;                           // attempt invoke even if include threw
-const RUN_ONWARD = 16;                          // suppress throws, continue
+use function bad\run\run;
+use const bad\run\RUN_RETURN;
 
-const RUN_CHAIN  = 256;                         // pass loot bag to next invoke
-
-// Loot keys
-const RUN_RETURN = -1;                          // include/invoke return value
-const RUN_OUTPUT = -2;                          // captured output buffer
+$loot = run(['/app/boot.php']);
+// $loot[RUN_RETURN] = whatever boot.php returned
 ```
 
----
-
-## Function
+Pass arguments, and they're visible inside the file as `$args`:
 
 ```php
-function run(array $file_paths, array $args = [], int $behave = 0): array
+// users.php
+$id = $args[0];  // '42'
+return load_user($id);
 ```
-
-Executes one or more files (in order) and returns a **loot array**.
-
-- Included files run in the current scope (so `$args` is visible inside them).
-- `RUN_RETURN` and (optionally) `RUN_OUTPUT` are written into the loot array.
-
----
-
-## Basic execution
 
 ```php
-// Just include
-$loot = run(['/app/route/home.php']);
-
-// Include with args (visible to the file as $args)
-$loot = run(['/app/route/users.php'], ['edit', '42']);
+$loot = run(['/app/route/users.php'], ['42']);
 ```
+
+**Default story:**
+"Include a file. Get back what it returned."
 
 ---
 
-## Invoke pattern
+## 2) Then, you invoke
 
-If a file returns a callable, `RUN_INVOKE` calls it.
+Most handlers don't just return data—they return a function that *processes* data. The file defines behavior; execution happens when you're ready.
 
 ```php
 // users.php
@@ -69,130 +49,205 @@ return function(array $args) {
 };
 ```
 
+Add `RUN_INVOKE`, and badhat calls the returned callable:
+
 ```php
+use const bad\run\RUN_INVOKE;
+
 $loot = run(['/app/route/users.php'], ['view', '42'], RUN_INVOKE);
-// $loot[RUN_RETURN] is the callable return value
+// $loot[RUN_RETURN] = the user row, not the function
 ```
+
+**Story:**
+"Files define handlers. `RUN_INVOKE` runs them."
 
 ---
 
-## Buffer pattern
+## 3) Buffer when you need the output
 
-Capture output instead of streaming it.
+PHP files can echo. Sometimes you want that output captured, not streamed.
 
 ```php
-$loot = run(['/app/render/template.php'], ['name' => 'World'], RUN_BUFFER);
-
-echo $loot[RUN_OUTPUT];
+// template.php
+<h1>Hello, <?= htmlspecialchars($args['name']) ?></h1>
 ```
+
+```php
+use const bad\run\RUN_BUFFER;
+use const bad\run\RUN_OUTPUT;
+
+$loot = run(['/app/template.php'], ['name' => 'World'], RUN_BUFFER);
+
+echo $loot[RUN_OUTPUT];  // "<h1>Hello, World</h1>"
+```
+
+Without `RUN_BUFFER`, output goes straight to the browser. With it, output lands in `$loot[RUN_OUTPUT]`.
+
+**Story:**
+"Sometimes you want to capture, not emit."
 
 ---
 
-## Absorb pattern
+## 4) Absorb: when output feeds into the callable
 
-With `RUN_ABSORB`, the current output buffer is appended to the invoked callable's argument list.
+Here's where it gets interesting. What if your file outputs HTML *and* returns a wrapper function?
 
 ```php
 // page.php
-?><article><?= $args['content'] ?></article><?php
-
+<article><?= $args['content'] ?></article>
+<?php
 return function(array $args) {
-    $body = end($args); // appended buffer
+    $body = end($args);  // the buffered output, appended
     return "<!doctype html><html><body>$body</body></html>";
 };
 ```
 
+`RUN_ABSORB` captures the output, then passes it as the last argument to the invoked callable:
+
 ```php
-$loot = run(['/app/render/page.php'], ['content' => 'Hello'], RUN_ABSORB);
+use const bad\run\RUN_ABSORB;
+
+$loot = run(['/app/page.php'], ['content' => 'Hello'], RUN_ABSORB);
 
 echo $loot[RUN_RETURN];
+// <!doctype html><html><body><article>Hello</article></body></html>
 ```
+
+`RUN_ABSORB` implies both `RUN_BUFFER` and `RUN_INVOKE`—it's the full pipeline.
+
+**Story:**
+"Template outputs markup. Wrapper receives it. One file, two phases."
 
 ---
 
-## Chain pattern
+## 5) Chain: pipelines across files
 
-`RUN_CHAIN` changes what arguments are passed to invoked callables:
+One file is simple. But what about auth → handler → renderer?
 
-- **without** `RUN_CHAIN`: each callable receives the original `$args`
-- **with** `RUN_CHAIN`: each callable receives the current **loot bag**
+Without `RUN_CHAIN`, each callable gets the original `$args`.
 
-In chain mode, the previous step's return value is available as `$args[RUN_RETURN]`.
+With `RUN_CHAIN`, each callable gets the **loot bag**—including whatever the previous step returned:
 
 ```php
 // auth.php
-return fn(array $args) => checkin();
+return fn($args) => get_current_user();  // returns user or null
 
-// users.php
+// handler.php
 use const bad\run\RUN_RETURN;
-return fn(array $args) => get_users($args[RUN_RETURN]);
+return fn($args) => [
+    'user'  => $args[RUN_RETURN],        // from auth.php
+    'posts' => load_posts(),
+];
 
 // render.php
 use const bad\run\RUN_RETURN;
-return fn(array $args) => render_template(['users' => $args[RUN_RETURN]]);
+return fn($args) => render('home', $args[RUN_RETURN]);
 ```
 
 ```php
+use const bad\run\RUN_INVOKE;
+use const bad\run\RUN_CHAIN;
+
 $loot = run([
     '/app/mw/auth.php',
-    '/app/route/users.php',
-    '/app/render/users.php',
+    '/app/route/home.php',
+    '/app/render/home.php',
 ], [], RUN_INVOKE | RUN_CHAIN);
 
 echo $loot[RUN_RETURN];
 ```
 
----
+Each step sees what came before. No globals. No shared state objects. Just the loot bag flowing forward.
 
-## Error handling
-
-### Default: throw on error
-
-```php
-$loot = run(['/app/route/broken.php']);
-// throws RuntimeException("include:/app/route/broken.php", 0xC0D, $original)
-```
-
-### RUN_RESCUE: try invoke even if include threw
-
-If `include` throws but `RUN_RESCUE` is enabled, `run()` will still attempt to invoke **if** there is a callable in `RUN_RETURN`.
-
-```php
-$loot = run(['/app/route/noisy.php'], [], RUN_INVOKE | RUN_RESCUE);
-```
-
-### RUN_ONWARD: continue to next file
-
-```php
-$loot = run(['/app/a.php', '/app/b.php'], [], RUN_ONWARD);
-```
+**Story:**
+"Middleware isn't magic. It's files that return values to the next file."
 
 ---
 
-## Complete example
+## 6) When things break
+
+By default, `run()` throws on failure. The exception wraps the original:
 
 ```php
-require 'badhat/io.php';
-require 'badhat/run.php';
-require 'badhat/http.php';
+$loot = run(['/app/broken.php']);
+// RuntimeException("include:/app/broken.php", 0xC0D, $originalException)
+```
 
-use function bad\io\path;
-use function bad\io\seek;
+### RUN_RESCUE: invoke anyway
+
+If the include throws but somehow left a callable in `RUN_RETURN`, try to invoke it anyway:
+
+```php
+$loot = run(['/app/noisy.php'], [], RUN_INVOKE | RUN_RESCUE);
+```
+
+Rare. But sometimes a file does setup that throws, yet still defines a handler.
+
+### RUN_ONWARD: keep going
+
+Multiple files, and you want to continue even if one fails:
+
+```php
+$loot = run(['/app/a.php', '/app/b.php', '/app/c.php'], [], RUN_ONWARD);
+```
+
+Failures are swallowed. The last file's results end up in `$loot`.
+
+**Story:**
+"Usually, fail fast. Sometimes, fail forward."
+
+---
+
+## Putting it together
+
+```php
+use function bad\io\{path, seek};
 use function bad\run\run;
 use function bad\http\http_out;
+use const bad\run\{RUN_BUFFER, RUN_INVOKE, RUN_OUTPUT};
 
-use const bad\run\RUN_BUFFER;
-use const bad\run\RUN_INVOKE;
-use const bad\run\RUN_OUTPUT;
+$base = realpath(__DIR__ . '/routes') . '/';
+$path = path($base, $_SERVER['REQUEST_URI']);
 
-$routes = __DIR__ . '/app/route/';
-
-[$file, $segments] = seek($routes, path($_SERVER['REQUEST_URI'], "\0"), '.php')
+[$file, $args] = seek($base, $path, '.php')
     ?? http_out(404, 'Not Found');
 
-$loot = run([$file], $segments, RUN_BUFFER | RUN_INVOKE);
+$loot = run([$file], $args, RUN_BUFFER | RUN_INVOKE);
 
-http_out(200, $loot[RUN_OUTPUT], [
-    'Content-Type' => 'text/html; charset=utf-8',
-]);
+http_out(200, $loot[RUN_OUTPUT]);
 ```
+
+Five lines. Request to response.
+
+---
+
+## Reference
+
+### Constants (behavior)
+
+| Constant | Value | Effect |
+|----------|-------|--------|
+| `RUN_BUFFER` | 1 | Capture output to `RUN_OUTPUT` |
+| `RUN_INVOKE` | 2 | Call returned callable |
+| `RUN_ABSORB` | 7 | Buffer + Invoke + append buffer to callable args |
+| `RUN_RESCUE` | 8 | Try invoke even if include threw |
+| `RUN_ONWARD` | 16 | Suppress throws, continue to next file |
+| `RUN_CHAIN` | 256 | Pass loot bag (not original args) to each callable |
+
+### Constants (loot keys)
+
+| Constant | Value | Contains |
+|----------|-------|----------|
+| `RUN_RETURN` | -1 | Return value from include or invoke |
+| `RUN_OUTPUT` | -2 | Captured output buffer |
+
+### Throws
+
+Failures wrap as `RuntimeException` with code `0xC0D`:
+
+```
+RuntimeException("include:/path/to/file.php", 0xC0D, $original)
+RuntimeException("invoke:/path/to/file.php", 0xC0D, $original)
+```
+
+The message tells you which phase failed. The previous exception tells you why.
