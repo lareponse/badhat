@@ -15,7 +15,7 @@ You start with raw input. You want one thing back: a path you can trust.
 
 ```php
 $base = realpath(__DIR__ . '/routes') . '/';
-$path = bad\io\path($base, $_SERVER['REQUEST_URI']);
+$path = bad\io\hook($base, $_SERVER['REQUEST_URI']);
 ```
 
 That single line quietly does what you used to have to ask for:
@@ -134,12 +134,21 @@ And because `seek()` calls `look()` internally, `IO_NEST` works there too.
 | `IO_NEST` | 1 | Fallback: `base/x.shim` missing → try `base/x/x.shim` |
 | `IO_GROW` | 2 | Reverse search: shallowest match first, not deepest |
 
-### Throws
+### Functions
 
-`path()` throws `\InvalidArgumentException` with these codes:
+#### `hook(string $base, string $url, string $forbidden = '', int $behave = 0): string`
 
-| Message | Cause |
-|---------|-------|
-| `BASE_NO_SLASHEND` | Base path must end with `/` |
-| `BASE_IS_NOT_REAL` | Base must equal its own `realpath()` |
-| `PATH_IS_CORRUPTED` | Path contains forbidden characters |
+Validates base directory and sanitizes URL path. Throws on security violations.
+
+**Throws `\InvalidArgumentException` (code 400):**
+- `'base has no trailing separator...'` — Base must end with `/`
+- `'base is not real...'` — Base must equal its own `realpath()`
+- `'request has explicitly forbidden chars...'` — Path contains forbidden characters
+
+#### `look(string $base, string $path, string $shim = '', int $behave = 0): ?string`
+
+Direct file lookup. Returns canonical path if file exists within base, `null` otherwise.
+
+#### `seek(string $base, string $path, string $shim = '', int $behave = 0): ?array`
+
+Progressive segment search. Returns `[file, args]` on match, `null` otherwise.
