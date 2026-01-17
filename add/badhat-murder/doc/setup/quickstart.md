@@ -1,6 +1,6 @@
-# BADHAT Project Setup 
+# BADHAT Project Setup
 
-Complete tutorial for starting a BADHAT project with the **current core**.
+Complete tutorial for starting a BADHAT project with the **current core**, pulled in as a **squashed subtree** with a **shallow fetch**.
 
 ---
 
@@ -15,11 +15,19 @@ touch .gitignore
 
 ---
 
-## 2. Add BADHAT Core via Subtree
+## 2. Add BADHAT Core via Subtree (shallow + squashed)
+
+**Recommended**: shallow-fetch the tip of `main`, then add subtree from `FETCH_HEAD`.
 
 ```bash
-git subtree add --prefix=add/badhat git@github.com:lareponse/BADHAT.git main --squash
+git fetch --depth=1 git@github.com:lareponse/BADHAT.git main
+git subtree add --prefix=add/badhat FETCH_HEAD --squash
 ```
+
+Why this method:
+
+* `--squash` keeps BADHAT as **one commit** in *your* history.
+* `--depth=1` keeps the fetch **small** (only the tip snapshot, minimal history objects).
 
 ---
 
@@ -213,7 +221,7 @@ db()->exec("
     )
 ");
 
-echo \"Database initialized.\n\";
+echo "Database initialized.\n";
 ```
 
 ---
@@ -261,15 +269,18 @@ cd public && php -S localhost:8000
 
 ---
 
-## 11. Update BADHAT Core
+## 11. Update BADHAT Core (shallow + squashed)
+
+Same approach: shallow-fetch latest `main`, then subtree pull from `FETCH_HEAD`.
 
 ```bash
-git subtree pull --prefix=add/badhat git@github.com:lareponse/BADHAT.git main --squash
+git fetch --depth=1 git@github.com:lareponse/BADHAT.git main
+git subtree pull --prefix=add/badhat FETCH_HEAD --squash
 ```
 
 ---
 
-## Notes (Important, by design)
+## Notes 
 
 * `db($pdo)` **must be called once per request** before `qp()`
 * Routing is **filesystem-driven**, not table-driven
