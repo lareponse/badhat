@@ -1,13 +1,17 @@
+Here’s the **updated doc**, reflecting the new `http_out()` contract (non-terminal, returns an exit status), while keeping the rest intact and consistent.
+
+---
+
 # BADHAT HTTP — Response Output
 
 `bad\http` emits responses.
 
-- `http_headers()` validates + accumulates headers (optional helper)
-- `http_out()` sets status, emits headers/body, then `exit`s
-- `csp_nonce()` gives you a per-request CSP nonce
+* `http_headers()` validates + accumulates headers (optional helper)
+* `http_out()` sets status, emits headers/body, **returns a process exit status**
+* `csp_nonce()` gives you a per-request CSP nonce
 
-Path resolution lives in `bad\io\path()` / `bad\io\look()` / `bad\io\seek()`.
-Execution lives in `bad\run\run()`.
+Path resolution lives in `bad\io`.
+Execution lives in `bad\run`.
 
 ---
 
@@ -34,8 +38,9 @@ function http_headers(string $name, string $value, bool $replace = true): ?array
 Validates and stores headers in a static map. Returns the full map on success, or `null` on invalid input.
 
 Rules (as implemented):
-- header name must be non-empty and contain only `HTTP_TCHAR`
-- header value must not contain any `ASCII_CTL`
+
+* header name must be non-empty and contain only `HTTP_TCHAR`
+* header value must not contain any `ASCII_CTL`
 
 ```php
 http_headers('Content-Type', 'application/json');
@@ -48,15 +53,25 @@ http_headers('Set-Cookie', 'b=2; Path=/', false);
 ### http_out
 
 ```php
-function http_out(int $code, ?string $body = null, array $headers = []): void
+function http_out(int $code, ?string $body = null, array $headers = []): int
 ```
 
-Emits an HTTP response and exits.
+Emits an HTTP response and **returns a process exit status**.
+It does **not** terminate execution by itself.
 
-- calls `http_response_code($code)`
-- emits each header value via `header("$name: $v", false)`
-- echoes `$body` only when `$code >= 200` and not `204/205/304`
-- calls `exit`
+Behavior:
+
+* calls `http_response_code($code)`
+* emits each header value via `header("$name: $v", false)`
+* echoes `$body` only when `$code >= 200` and not `204/205/304`
+* returns an exit status derived from the HTTP status code
+
+Exit status mapping:
+
+* `< 400` → `0`
+* `400–499` → `4`
+* `500–599` → `5`
+* otherwise → `1`
 
 Header values may be a string or an array of strings:
 
@@ -70,7 +85,21 @@ http_out(200, 'ok', [
 ]);
 ```
 
-> `http_out()` does **not** validate header names/values. If you want validation, build them via `http_headers()` (or validate yourself) first.
+Terminal usage (one-liner):
+
+```php
+exit(http_out(404, 'Not found'));
+```
+
+Non-terminal usage:
+
+```php
+http_out(200, 'ok');
+// continue execution
+```
+
+> `http_out()` does **not** validate header names/values.
+> If you want validation, build them via `http_headers()` (or validate yourself) first.
 
 ---
 
@@ -90,3 +119,7 @@ http_out(200, $html, [
     'Content-Type'           => 'text/html; charset=utf-8',
 ]);
 ```
+
+---
+
+This keeps the API flexible, explicit, and composable—**callers decide whether the response is terminal**, without sacrificing one-liner ergonomics.
