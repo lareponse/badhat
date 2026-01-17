@@ -45,7 +45,7 @@ function http_out(int $code, ?string $body = null, array $headers = [])
     if ($body !== null && $code >= 200 && $code !== 204 && $code !== 205 && $code !== 304) // RFC 7230: bodyless status codes
         echo $body;
 
-    exit;
+    return $code < 400 ? 0 : ($code < 500 ? 4 : ($code < 600 ? 5 : 1));
 }
 
 function csp_nonce(): string
