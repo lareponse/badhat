@@ -54,12 +54,15 @@ function auth_login(string $username_field, \PDOStatement $password_query, strin
 
 function auth_session_cookie_destroy()
 {
-    $opts = ['expires' => time() - 3600]
-            + session_get_cookie_params()
-            + ['path' => '/', 'domain' => '', 'secure' => false, 'httponly' => true];
-
-    unset($opts['lifetime']); // not a setcookie() option
-    $opts['samesite'] ??= (ini_get('session.cookie_samesite') ?: 'Lax');
+    $p = session_get_cookie_params();
+    $opts = [
+        'expires'  => 0,
+        'path'     => $p['path'] ?? '/',
+        'domain'   => $p['domain'] ?? '',
+        'secure'   => $p['secure'] ?? false,
+        'httponly' => $p['httponly'] ?? true,
+        'samesite' => $p['samesite'] ?? (ini_get('session.cookie_samesite') ?: 'Lax'),
+    ];
 
     setcookie(session_name(), '', $opts) || trigger_error('session cookie destruction failed', E_USER_WARNING);
 }
