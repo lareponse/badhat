@@ -41,7 +41,8 @@
     background-color: var(--color-border);
     border-radius: 8px;
     font-size: 1rem;
-    background: var(--color-surface);
+    background: var(--color-bg);
+    color: var(--color-text);
     margin-bottom:2rem;
 }
 
