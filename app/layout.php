@@ -3,7 +3,6 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <!-- Document metadata -->
@@ -17,6 +16,7 @@
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="icon" href="/favicon.ico">
     <link rel="manifest" href="/site.webmanifest">
 
     <!-- Preload critical fonts -->
@@ -33,15 +33,14 @@
     <meta property="og:description" content="Depuis 1835, l’IRSA accompagne enfants, jeunes et adultes atteints de déficience auditive, visuelle ou multiple à Uccle.">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://www.irsa.be/">
-    <meta property="og:image" content="https://www.irsa.be/assets/og-image.jpg">
+    <meta property="og:image" content="https://www.irsa.be/ui/logo_irsa_text.jpg">
     <meta property="og:locale" content="fr_BE">
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="IRSA – Institut Royal pour Sourds et Aveugles">
     <meta name="twitter:description" content="Depuis 1835, l’IRSA accompagne enfants, jeunes et adultes atteints de déficience auditive, visuelle ou multiple à Uccle.">
-    <meta name="twitter:image" content="https://www.irsa.be/assets/og-image.jpg">
-    <meta name="twitter:site" content="@irsa_be">
+    <meta name="twitter:image" content="https://www.irsa.be/ui/logo_irsa_text.jpg">
 
     <!-- Stylesheets (ordered: variables/base → components → pages) -->
     <link rel="stylesheet" href="/css/irsa.css?v=20260118-1318">
