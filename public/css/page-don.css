@@ -173,8 +173,10 @@ section[aria-labelledby="faq-heading"] {
 
 }
 
-section.footer[aria-labelledby] footer {
+footer {
     background-color: var(--color-accent-primary-light);
+    padding: 2rem 0;
+    margin-top: 3rem;
 }
 
 section[aria-labelledby] footer a {

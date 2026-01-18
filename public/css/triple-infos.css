@@ -5,23 +5,35 @@
     margin-bottom: 2rem;
 }
 
-.triple-infos>article {
+.triple-infos > article {
+    position: relative;
+    padding: 0 1rem;
     text-align: left;
-    padding: 0;
 }
 
 .triple-infos h3 {
-    font-weight: 700;
-    font-size: 1rem;
     margin-bottom: 0.25rem;
+    font-size: 1rem;
+    font-weight: 700;
 }
 
 .triple-infos article p {
     margin: 0;
     font-size: 0.95rem;
 }
-.triple-infos .btn{
 
+.triple-infos > article::before,
+.triple-infos > article::after {
+    position: absolute;
+    top: 20%;
+    bottom: 20%;
+    width: 2px;
+    background-color: black;
+}
+
+.triple-infos > article::before {
+    content: "";
+    left: 0;
 }
 
 @media (min-width: 64rem) {
@@ -29,27 +41,19 @@
         flex-direction: row;
         justify-content: space-between;
         align-items: stretch;
-        /* equal height */
         gap: 2rem;
     }
 
-    .triple-infos>article {
+    .triple-infos > article {
         flex: 1 1 0;
-        padding: 0 1rem;
-        box-sizing: border-box;
-        position: relative;
-        display: flex;
-        flex-direction: column;
     }
 
-    /* Dividers between columns */
-    .triple-infos>article:not(:last-of-type)::after {
+    .triple-infos > article::before {
+        content: none; /* resset mobile */
+    }
+
+    .triple-infos > article:not(:last-of-type)::after {
         content: "";
-        position: absolute;
         right: 0;
-        top: 20%;
-        bottom: 20%;
-        width: 2px;
-        background-color: black;
     }
 }
