@@ -49,7 +49,7 @@ $res = bad\run\run($pipeline, $args ?? [], RUN_BUFFER);
 $main = $res[RUN_OUTPUT];
 $css = $res[RUN_RETURN];
 
-$breadcrumb = explode('/', $re_quest);
+$breadcrumb = explode('/', trim($re_quest, '/'));
 $page_id = implode('-', $breadcrumb) ?: 'index';
 $page_class = implode(' ', $breadcrumb) ?: 'index';
 require('app/layout.php');
