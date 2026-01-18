@@ -1,108 +1,38 @@
-/* grid */
-.card-grid.admin-bureau{
-  display: grid;
-  gap: 2rem;
-
-  grid-template-columns: repeat(auto-fit, minmax(min(15rem, 100%), 1fr));
-  margin-inline: auto;
-}
-/* the card */
-.card-grid.admin-bureau a{
-  text-decoration: none;
-  color: inherit;
+main.irsa h2{
+  margin-bottom:4rem;
 }
 
-.card-grid.admin-bureau figure{
-  margin: 0;
-  border-radius: 24px;
-  overflow: hidden;
-  background: #fff;                 /* bottom area */
-  box-shadow: 0 18px 40px rgba(0,0,0,.12);
+main.irsa section > div {
+  display:flex;
+  gap:4rem;
 }
 
-/* photo */
-.card-grid.admin-bureau img{
-  display: block;
-  width: 100%;
-  aspect-ratio: 4 / 5;              /* same size */
-  object-fit: cover;
-  object-position: center;
-  background: #111;                  /* in case image loads slowly */
+main.irsa article{
+    background: var(--color-surface);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
-/* caption area */
-.card-grid.admin-bureau figcaption{
-  padding: 1.4rem 1.2rem 1.6rem;
-  text-align: center;
-  line-height: 1.15;
+main.irsa article img{
+    border-top-left-radius: var(--size-card-radius);
+    border-top-right-radius: var(--size-card-radius);
+    width: 400px;
+
 }
 
-/* role (Présidente, Vice-président…) */
-.card-grid.admin-bureau figcaption strong{
-  display: block;
-  font-size: clamp(1.4rem, 2.2vw, 2.1rem);
-  font-weight: 800;
-  margin-bottom: 0.6em;
+main.irsa section article figcaption{
+  font-size:2rem;
+  text-align:center;
 }
 
-/* name */
-.card-grid.admin-bureau figcaption{
-  font-size: clamp(1.1rem, 1.8vw, 1.8rem);
-  font-weight: 500;
+main.irsa .admin-members{
+  list-style-type:none;
 }
 
-/* optional: nicer hover */
-.card-grid.admin-bureau a:hover figure{
-  transform: translateY(-2px);
-  transition: transform .15s ease, box-shadow .15s ease;
-  box-shadow: 0 22px 55px rgba(0,0,0,.16);
+main.irsa .admin-members>li{
+  display:inline;
 }
 
-
-
-
-
-.admin-members{
-  list-style: none;
-  padding: 0;
-  margin: 1rem 0 0;
-
-  display: grid;
-  gap: .75rem;
-  grid-template-columns: repeat(auto-fit, minmax(min(15rem, 100%), 1fr));
-  /* 15rem controls when it wraps. adjust: 16–20rem explained below */
-}
-
-.admin-members li{
-  padding: .85rem 1rem;
-  border-radius: .85rem;
-
-  background: #fff;
-  border: 1px solid rgba(0,0,0,.08);
-  box-shadow: 0 .35rem 1rem rgba(0,0,0,.06);
-
-  line-height: 1.35;
-}
-
-/* cap at 3 columns (intrinsic, no breakpoints) */
-@supports (grid-template-columns: subgrid){
-  /* ignore: just to avoid people thinking we rely on subgrid */
-}
-
-.admin-members{
-  /* this ensures you never exceed 3 tracks */
-  grid-auto-flow: row;
-}
-
-/* modern, simple cap: only define up to 3 tracks */
-@media (min-width: 0px){
-  .admin-members{
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-}
-
-/* BUT: that would force 3 always.
-   So instead: cap via container max-width per track: */
-.admin-members{
-  grid-template-columns: repeat(auto-fit, minmax(min(15rem, 100%), 1fr));
+main.irsa .admin-members>li::after{
+  content:'—';
+  padding:0rem 0.4rem 0rem 0.4rem;
 }

@@ -81,7 +81,7 @@ $fondation_pro_irsa = bad\db\qp('SELECT * FROM `page` WHERE `slug` = ?', ['irsa-
         <div>
             <h2 id="oa-heading"><?= $fondation_pro_irsa['label']; ?></h2>
             <?= $fondation_pro_irsa['content']; ?>
-            <p class="cta"><a href="/fondation-pro" class="btn">Voir la composition complète</a></p>
+            <p class="cta"><a href="/irsa/fondation" class="btn">Voir la composition complète</a></p>
         </div>
     </div>
 </section>
