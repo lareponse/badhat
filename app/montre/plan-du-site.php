@@ -5,85 +5,59 @@
     </div>
 </header>
 
-<section class="tight">
+<nav class="tight" aria-label="Plan du site">
+    <dl>
+        <dt>Présentation</dt>
+        <dd><a href="/">Accueil</a></dd>
+        <dd><a href="/a-propos">À propos de l'IRSA</a></dd>
+        <dd><a href="/histoire">Notre histoire</a></dd>
 
-    <nav aria-label="Plan du site">
-        <section>
-            <h2>Présentation</h2>
+        <dt>Services et structures</dt>
+        <dd><a href="/services">Vue d'ensemble des services</a></dd>
+        <dd>
+            <a href="/ecoles">Écoles</a>
             <ul>
-                <li><a href="/">Accueil</a></li>
-                <li><a href="/a-propos">À propos de l'IRSA</a></li>
-                <li><a href="/histoire">Notre histoire</a></li>
+                <li><a href="/ecoles/primaire-deficience-auditive">Primaire - Déficience auditive</a></li>
+                <li><a href="/ecoles/primaire-deficience-visuelle">Primaire - Déficience visuelle</a></li>
+                <li><a href="/ecoles/secondaire-deficience-auditive">Secondaire - Déficience auditive</a></li>
+                <li><a href="/ecoles/secondaire-deficience-visuelle">Secondaire - Déficience visuelle</a></li>
             </ul>
-        </section>
+        </dd>
+        <dd>
+            <a href="/hebergements">Centres d'hébergement</a>
+            <ul>
+                <li><a href="/hebergements/enfants">Enfants</a></li>
+                <li><a href="/hebergements/aubier">Adultes - L'Aubier</a></li>
+            </ul>
+        </dd>
+        <dd>
+            <a href="/centres-jour">Centres de jour</a>
+            <ul>
+                <li><a href="/centres-jour/enfants">Enfants</a></li>
+                <li><a href="/centres-jour/adultes">Adultes</a></li>
+            </ul>
+        </dd>
+        <dd><a href="/creche">Crèche Le Petit Prince</a></dd>
+        <dd><a href="/ludotheque">Ludothèque Oasis</a></dd>
+        <dd><a href="/location-chateau">Location du Château d'Orangerie</a></dd>
 
-        <section>
-            <h2>Services et structures</h2>
-            <ul>
-                <li><a href="/services">Vue d'ensemble des services</a></li>
-                <li>
-                    <a href="/ecoles">Écoles</a>
-                    <ul>
-                        <li><a href="/ecoles/primaire-deficience-auditive">Primaire - Déficience auditive</a></li>
-                        <li><a href="/ecoles/primaire-deficience-visuelle">Primaire - Déficience visuelle</a></li>
-                        <li><a href="/ecoles/secondaire-deficience-auditive">Secondaire - Déficience auditive</a></li>
-                        <li><a href="/ecoles/secondaire-deficience-visuelle">Secondaire - Déficience visuelle</a></li>
-                    </ul>
-                </li>
-                <li>
-                    <a href="/hebergements">Centres d'hébergement</a>
-                    <ul>
-                        <li><a href="/hebergements/enfants">Enfants</a></li>
-                        <li><a href="/hebergements/aubier">Adultes - L'Aubier</a></li>
-                    </ul>
-                </li>
-                <li>
-                    <a href="/centres-jour">Centres de jour</a>
-                    <ul>
-                        <li><a href="/centres-jour/enfants">Enfants</a></li>
-                        <li><a href="/centres-jour/adultes">Adultes</a></li>
-                    </ul>
-                </li>
-                <li><a href="/creche">Crèche Le Petit Prince</a></li>
-                <li><a href="/ludotheque">Ludothèque Oasis</a></li>
-                <li><a href="/location-chateau">Location du Château d'Orangerie</a></li>
-            </ul>
-        </section>
+        <dt>Admission et inscriptions</dt>
+        <dd><a href="/admission">Procédure d'admission</a></dd>
+        <dd><a href="/questionnaire">Questionnaire d'orientation</a></dd>
 
-        <section>
-            <h2>Admission et inscriptions</h2>
-            <ul>
-                <li><a href="/admission">Procédure d'admission</a></li>
-                <li><a href="/questionnaire">Questionnaire d'orientation</a></li>
-            </ul>
-        </section>
+        <dt>Soutenir l'IRSA</dt>
+        <dd><a href="/don">Faire un don</a></dd>
+        <dd><a href="/rejoindre">Rejoindre nos équipes</a></dd>
 
-        <section>
-            <h2>Soutenir l'IRSA</h2>
-            <ul>
-                <li><a href="/don">Faire un don</a></li>
-                <li><a href="/rejoindre">Rejoindre nos équipes</a></li>
-            </ul>
-        </section>
+        <dt>Contact et informations</dt>
+        <dd><a href="/contact">Nous contacter</a></dd>
+        <dd><a href="/acces">Accès et localisation</a></dd>
 
-        <section>
-            <h2>Contact et informations</h2>
-            <ul>
-                <li><a href="/contact">Nous contacter</a></li>
-                <li><a href="/acces">Accès et localisation</a></li>
-            </ul>
-        </section>
-
-        <section>
-            <h2>Mentions légales</h2>
-            <ul>
-                <li><a href="/mentions-legales">Mentions légales</a></li>
-                <li><a href="/confidentialite">Politique de confidentialité</a></li>
-                <li><a href="/accessibilite">Accessibilité du site</a></li>
-                <li><a href="/cookies">Cookies</a></li>
-                <li><a href="/donnees-personnelles">Gestion des données personnelles</a></li>
-            </ul>
-        </section>
-    </nav>
-</section>
-<?php return ['page-ecole'];
+        <dt>Mentions légales</dt>
+        <dd><a href="/mentions-legales">Mentions légales</a></dd>
+        <dd><a href="/confidentialite">Politique de confidentialité</a></dd>
+        <dd><a href="/accessibilite">Accessibilité du site</a></dd>
+        <dd><a href="/cookies">Cookies</a></dd>
+        <dd><a href="/donnees-personnelles">Gestion des données personnelles</a></dd>
+    </dl>
+</nav>
