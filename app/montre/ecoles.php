@@ -13,7 +13,7 @@
     <article>
         <a href="/ecoles/t6-t8">
 
-            <img src="/ui/pages/ecoles/enseignante-assise-au-bureau-eleve.jpg" alt="Enseignante avec un élève">
+            <img src="/ui/pages/ecoles/enseignante-assise-au-bureau-eleve.webp" alt="Enseignante avec un élève">
             <h2>École fondamentale déficience visuelle et troubles associés</h2>
             <span class="cta">Découvrir l'école</span>
             <dl>
@@ -27,7 +27,7 @@
     <article>
         <a href="/ecoles/t7">
 
-            <img src="/ui/pages/ecoles/ecole-auditive.jpg" alt="Enseignante en langue des signes avec un élève">
+            <img src="/ui/pages/ecoles/ecole-auditive.webp" alt="Enseignante en langue des signes avec un élève">
             <h2>École fondamentale déficience auditive</h2>
             <span class="cta">Découvrir l'école</span>
 
@@ -55,7 +55,7 @@
 <section class="card-grid">
     <article>
         <a href="/ecoles/creche">
-            <img src="/ui/pages/ecoles/creche.jpg" alt="Jeune enfant jouant avec des blocs colorés">
+            <img src="/ui/pages/ecoles/creche.webp" alt="Jeune enfant jouant avec des blocs colorés">
             <h2>Crèche inclusive Le Petit Prince</h2>
             <span class="cta">Découvrir la crèche</span>
             <p>Accueille les tout-petits à partir de quelques mois, avec ou sans déficience sensorielle.</p>
@@ -63,7 +63,7 @@
     </article>
 
     <article>
-        <a href="#">
+        <a href="https://www.cpmslibrespecialiseuccle.be/" target="_blank" rel="noopener noreferrer" aria-label="Centre PMS spécialisé — ouvre le site externe dans un nouvel onglet">
             <img src="/ui/pages/ecoles/pms.jpg" alt="Psychologue en discussion avec une adolescente et sa mère">
             <h2>Centre PMS spécialisé</h2>
             <span class="cta">Découvrir le PMS</span>

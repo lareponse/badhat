@@ -339,7 +339,7 @@ $statistics = bad\db\qp('SELECT label, value FROM `statistics`')->fetchAll(PDO::
     <article>
         <a href="/ecoles">
             <figure>
-                <img src="/ui/home/service_education.jpg" alt="Salle de classe avec des élèves attentifs et un enseignant">
+                <img src="/ui/banners/accueil_3.webp" alt="Salle de classe avec des élèves attentifs et un enseignant">
             </figure>
 
             <h3>Éducation spécialisée</h3>
@@ -352,9 +352,9 @@ $statistics = bad\db\qp('SELECT label, value FROM `statistics`')->fetchAll(PDO::
 
     <!-- Hébergements -->
     <article>
-        <a href="/hebergements">
+        <a href="/services">
             <figure>
-                <img src="/ui/home/service_hebergement.jpg" alt="Chambre aménagée dans un centre d'hébergement">
+                <img src="/ui/banners/accueil_4.webp" alt="Chambre aménagée dans un centre d'hébergement">
             </figure>
 
             <h3>Hébergements</h3>
@@ -367,9 +367,9 @@ $statistics = bad\db\qp('SELECT label, value FROM `statistics`')->fetchAll(PDO::
 
     <!-- Centres de jour -->
     <article>
-        <a href="/centres-jour">
+        <a href="/services">
             <figure>
-                <img src="/ui/home/service_centres_jour.jpg" alt="Atelier artistique avec plusieurs personnes en activité">
+                <img src="/ui/banners/accueil_1.webp" alt="Atelier artistique avec plusieurs personnes en activité">
             </figure>
             <h3>Centres de jour</h3>
             <span class="cta">Vers centres de jour</span>
