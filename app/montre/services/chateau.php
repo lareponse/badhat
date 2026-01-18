@@ -55,7 +55,7 @@
 <section class="tight" aria-labelledby="tarifs-heading">
     <h2 id="tarifs-heading">Tarification</h2>
 
-    <dl>
+    <dl class="grid">
         <dt>Participation financière</dt>
         <dd>1.650 € + 150 € de nettoyage</dd>
 

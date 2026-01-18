@@ -16,7 +16,7 @@
         </p>
 
     <div aria-label="Coordonnées et informations administratives">
-        <dl>
+        <dl class="grid">
         <dt>Siège social</dt>
         <dd>
             <address>Chaussée de Waterloo 1504, 1180 Bruxelles, Belgique</address>

@@ -99,7 +99,7 @@
 
 <section class="tight" aria-labelledby="journee-heading">
     <h2 id="journee-heading">Une journée type</h2>
-    <dl>
+    <dl class="grid">
         <dt>Matin</dt>
         <dd>Lever, hygiène, petit-déjeuner, préparation et départ vers l’école en fonction du niveau scolaire</dd>
 

@@ -102,7 +102,7 @@
 
 <section class="tight" aria-labelledby="journee-heading">
     <h2 id="journee-heading">Une journée type</h2>
-    <dl>
+    <dl class="grid">
         <dt>16h00 – 18h00</dt>
         <dd>Arrivée des jeunes, temps libre, activités, goûter</dd>
 

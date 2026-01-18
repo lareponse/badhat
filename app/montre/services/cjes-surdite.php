@@ -70,7 +70,7 @@
 
 <section class="tight" aria-labelledby="journee-heading">
     <h2 id="journee-heading">Une journée type</h2>
-    <dl>
+    <dl class="grid">
         <dt>08:00 – 08:30</dt>
         <dd>Accueil CJES et accompagnement vers l’école</dd>
 
