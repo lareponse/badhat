@@ -104,7 +104,7 @@
 
         <article>
             <h3>Adresse mail</h3>
-            <a href="mailto:fonda.t7@irsa.be">fonda.t7@irsa.be</a>
+            <a href="mailto:f.moral@irsa.be">f.moral@irsa.be</a>
         </article>
 
         <article>
