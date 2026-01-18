@@ -67,51 +67,45 @@
     </ul>
 </section>
 
-<section class="tight" aria-labelledby="metiers-heading">
+<section class="card-grid tight" aria-labelledby="metiers-heading">
     <h2 id="metiers-heading">Secteurs & métiers</h2>
 
-    <div class="metiers-grid">
+    <article>
+        <h3>Forme 3 – Type 7 :</h3>
+        <ul>
+            <li>Agronomie</li>
+            <li>Construction (bois, électricité)</li>
+            <li>Hôtellerie/Alimentation</li>
+            <li>Économie</li>
+            <li>Service aux personnes</li>
+            <li>Arts appliqués</li>
+        </ul>
+    </article>
 
-        <article>
-            <h3>Forme 3 – Type 7 :</h3>
-            <ul>
-                <li>Agronomie</li>
-                <li>Construction (bois, électricité)</li>
-                <li>Hôtellerie/Alimentation</li>
-                <li>Économie</li>
-                <li>Service aux personnes</li>
-                <li>Arts appliqués</li>
-            </ul>
-        </article>
+    <article>
+        <h3>Forme 3 – Type 6 :</h3>
+        <ul>
+            <li>Construction (électricité)</li>
+            <li>Hôtellerie/Alimentation</li>
+            <li>Économie</li>
+            <li>Service aux personnes</li>
+            <li>Arts appliqués</li>
+            <li>Agronomie</li>
+        </ul>
+    </article>
 
-        <article>
-            <h3>Forme 3 – Type 6 :</h3>
-            <ul>
-                <li>Construction (électricité)</li>
-                <li>Hôtellerie/Alimentation</li>
-                <li>Économie</li>
-                <li>Service aux personnes</li>
-                <li>Arts appliqués</li>
-                <li>Agronomie</li>
-            </ul>
-        </article>
+    <article>
+        <h3>Forme 4 – Type 6 :</h3>
+        <ul>
+            <li>Construction (électricité)</li>
+            <li>Hôtellerie/Alimentation</li>
+            <li>Économie</li>
+            <li>Service aux personnes</li>
+            <li>Arts appliqués</li>
+        </ul>
+    </article>
 
-        <article>
-            <h3>Forme 4 – Type 6 :</h3>
-            <ul>
-                <li>Construction (électricité)</li>
-                <li>Hôtellerie/Alimentation</li>
-                <li>Économie</li>
-                <li>Service aux personnes</li>
-                <li>Arts appliqués</li>
-            </ul>
-        </article>
-
-    </div>
-
-    <p class="centered">
-        <a href="#" class="btn btn-secondary">Découvrir tous les métiers</a>
-    </p>
+    <footer><a href="#" class="btn btn-secondary">Découvrir tous les métiers</a></footer>
 </section>
 
 <section class="tight" aria-labelledby="services-heading">

@@ -97,4 +97,4 @@
     </nav>
 </section>
 
-<?php return ['page-school-detail'];
+<?php return ['page-ecoles'];

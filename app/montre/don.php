@@ -20,7 +20,7 @@
         </p>
     </div>
 
-    <section class="card-grid" aria-labelledby="ponctuels-heading">
+    <div class="card-grid" aria-labelledby="ponctuels-heading">
         <!-- Don 50 € -->
         <article>
             <a href="/documents/irsa-don-virement.pdf">
@@ -54,7 +54,7 @@
                 <p class="don-note">Cela ne vous coûte que 55 € en réalité après déduction fiscale.</p>
             </a>
         </article>
-    </section>
+    </div>
     <footer>
         <a href="/documents/irsa-don-virement.pdf">
             <svg width="33" height="33" viewBox="0 0 33 33" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -69,7 +69,7 @@
 <!-- Dons mensuels -->
 <section aria-labelledby="mensuels-heading">
     <h2 class="tight" id="mensuels-heading">Dons mensuels</h2>
-    <section class="card-grid" >
+    <div class="card-grid" >
         <!-- Don 7 €/mois -->
         <article>
             <a href="/documents/irsa-don-virement.pdf">
@@ -108,8 +108,7 @@
                 <p class="don-note">Coût réel après déduction&nbsp;: 14 €/mois.</p>
             </a>
         </article>
-    </section>
-
+    </div>
     <footer>
         <a href="/documents/irsa-don-virement.pdf">
             <svg width="33" height="33" viewBox="0 0 33 33" fill="none" xmlns="http://www.w3.org/2000/svg">
