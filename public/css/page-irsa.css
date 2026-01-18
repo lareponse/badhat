@@ -1,35 +1,33 @@
+/* Timeline */
 .timeline {
     display: grid;
+    grid-template-columns: 16rem;
     gap: 3rem;
     justify-content: center;
-    grid-template-columns: 16rem;
 }
 
-.timeline>article {
-    height: 17rem;
-    background: #fff;
-    border: 1px solid black;
-    border-radius: 1rem;
-    padding: 0.7rem;
-    text-align: center;
-    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.05);
-    transition: transform 0.2s, box-shadow 0.2s;
-
+.timeline > article {
     display: flex;
     flex-direction: column;
     gap: 0.7rem;
+    height: 17rem;
+    padding: 0.7rem;
+    background: #fff;
+    border: 1px solid black;
+    border-radius: 1rem;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.05);
+    text-align: center;
+    transition: transform 0.2s, box-shadow 0.2s;
 }
-
 
 .timeline article img {
     width: calc(100% / 1.678);
 }
 
-/* Titre (année) */
 .timeline h3 {
     font-size: 1.4rem;
-    color: var(--color-accent-secondary-dark);
     font-weight: bold;
+    color: var(--color-accent-secondary-dark);
 }
 
 .timeline figure {
@@ -41,65 +39,49 @@
     height: 11rem;
 }
 
-/* Texte (événement) */
 .timeline figcaption {
-    font-size: 0.95rem;
-    line-height: 1.4;
-    font-weight: 700;
     margin-top: 0.7rem;
+    font-size: 0.95rem;
+    font-weight: 700;
+    line-height: 1.4;
 }
 
-@media screen and (min-width:64rem) {
+@media (min-width: 64rem) {
     .timeline {
         grid-template-columns: repeat(3, 16rem);
         grid-auto-flow: dense;
-        justify-content: center;
     }
 
-    .timeline>article {
+    .timeline > article {
         position: relative;
     }
 
-    /* Even rows (reverse order: 4 → 6, 10 → 12, …) */
-    .timeline>:nth-child(6n+4) {
-        grid-column: 3;
-        justify-self: right;
-    }
+    .timeline > :nth-child(6n+4) { grid-column: 3; justify-self: right; }
+    .timeline > :nth-child(6n+5) { grid-column: 2; }
+    .timeline > :nth-child(6n+6) { grid-column: 1; }
 
-    /* 4, 10, 16, 22… */
-    .timeline>:nth-child(6n+5) {
-        grid-column: 2;
-    }
-
-    /* 5, 11, 17, 23… */
-    .timeline>:nth-child(6n+6) {
-        grid-column: 1;
-    }
-
-    .timeline>::after {
+    .timeline > ::after {
         position: absolute;
         font-size: 1.7rem;
-        animation-duration: 3s;
-        animation-timing-function: ease-in-out;
-        animation-iteration-count: infinite;
+        animation: 3s ease-in-out infinite;
     }
 
     .timeline .move-lr,
     .timeline .move-rl {
-        width: calc(0.93*16rem);
+        width: calc(0.93 * 16rem);
     }
 
     .timeline .move-ud {
-        height: calc(0.93*17rem);
+        height: calc(0.93 * 17rem);
     }
 
     .timeline .move-lr::after {
         --shift: 0.5rem;
         content: "→";
-        right: -2.4rem;
         top: 50%;
+        right: -2.4rem;
+        color: var(--black);
         animation-name: wiggle-x;
-        color:var(--black);
     }
 
     .timeline .move-ud::after {
@@ -119,117 +101,90 @@
     }
 
     @keyframes wiggle-x {
-
-        0%,
-        100% {
-            transform: translateX(0);
-        }
-
-        50% {
-            transform: translateX(var(--shift, .5rem));
-        }
+        0%, 100% { transform: translateX(0); }
+        50% { transform: translateX(var(--shift, 0.5rem)); }
     }
 
     @keyframes wiggle-y {
-
-        0%,
-        100% {
-            transform: translateY(0);
-        }
-
-        50% {
-            transform: translateY(var(--shift, .5rem));
-        }
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(var(--shift, 0.5rem)); }
     }
-
 }
 
-/* OA Section */
-.oa {
-    background: var(--color-accent-primary-light);
-    text-align: center;
-    padding: 3rem 2rem;
-    border-radius: 0.5rem;
-    margin: 3rem 0;
-}
-
-.oa h2 {
-    font-size: 1.75rem;
-    margin-bottom: 1.5rem;
-    color: var(--color-text);
-}
-
-.oa p {
-    margin: 1rem auto;
-    max-width: 60ch;
-    line-height: 1.6;
-    color: var(--color-text);
-}
-
-.oa .cta {
-    margin-top: 2rem;
-}
-
-.oa .btn {
-    background: var(--color-accent-primary-dark);
-    color: #fff;
-    padding: 0.9rem 1.8rem;
-    border-radius: 2rem;
-    text-decoration: none;
-    font-weight: 700;
-    display: inline-block;
-    transition: background 0.2s;
-}
-
-.oa .btn:hover {
-    background: var(--color-accent-primary);
-}
-
-
-
+/* Timeline Flip Cards */
 .flip-inner {
     position: relative;
+    height: 16rem;
+    overflow: hidden;
 }
 
 .flip-front {
     position: absolute;
     inset: 0;
     z-index: 2;
-
     background: white;
-    transition:
-        transform .45s ease,
-        opacity .35s ease;
+    transition: transform 0.45s ease, opacity 0.35s ease;
 }
 
-/* ÉTAT OUVERT */
 .timeline-item.is-flipped .flip-front {
     transform: translateX(-105%);
     opacity: 0;
     pointer-events: none;
 }
+
 .flip-back {
     position: relative;
     z-index: 1;
 }
 
-
-
-/* Focus clavier (toujours nécessaire sans button) */
 .timeline-item:focus-visible {
     outline: 2px solid currentColor;
     outline-offset: 4px;
 }
 
-/* Motion safety */
 @media (prefers-reduced-motion: reduce) {
     .flip-front {
         transition: none;
-        transform: none;
     }
 }
 
-.gouvernance{
-    display:flex;
-    gap:3rem;
+/* Gouvernance */
+.gouvernance {
+    display: flex;
+    gap: 3rem;
+}
+
+.gouvernance > div {
+    display: flex;
+    flex-direction:column;
+    justify-content:space-between;
+}
+
+/* OA Section */
+.oa {
+    margin: 3rem 0;
+    padding: 3rem 2rem;
+    background: var(--color-accent-primary-light);
+    border-radius: 0.5rem;
+    text-align: center;
+}
+
+.gouvernance h2 {
+    margin-bottom: 1.5rem;
+    font-size: 1.75rem;
+    color: var(--color-text);
+}
+
+.gouvernance p {
+    max-width: 60ch;
+    margin: 1rem auto;
+    color: var(--color-text);
+    line-height: 1.6;
+}
+
+
+.gouvernance .btn {
+    background: var(--color-accent-primary-dark);
+    color: #fff;
+    font-weight: 700;
 }
