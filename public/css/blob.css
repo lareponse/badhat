@@ -10,7 +10,7 @@
 }
 
 /* Exemple : blob en haut à droite */
-#blob_home_top_right {
+.blob_home_top_right {
     top: 0;
     right: 0;
 }

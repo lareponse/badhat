@@ -49,11 +49,11 @@
             <option value="don">Faire un don</option>
             <option value="autre">Autre</option>
         </select>
-
+<!-- 
         <label for="subcategory">Sous-catégorie</label>
         <select id="subcategory" name="subcategory" disabled>
             <option value="">-- Choisissez d'abord une catégorie --</option>
-        </select>
+        </select> -->
 
         <label for="message">Message</label>
         <textarea id="message" name="message" placeholder="Votre message..." required></textarea>

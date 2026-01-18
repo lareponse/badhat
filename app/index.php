@@ -28,9 +28,8 @@ $pwd = $_SERVER['DB_PASS_'] ?: (getenv('DB_PASS_') ?: null);
 
 bad\db\db(new \PDO($dsn, $usr, $pwd, $options));
 
-        
-$re_quest   = bad\io\path(__DIR__.'/', $_SERVER['REQUEST_URI']) ?: 'index';
 
+$re_quest   = bad\io\hook(__DIR__.'/', $_SERVER['REQUEST_URI']) ?: 'index';
 $pipeline = [];
 // business: find the route and invoke it
 $in_path    = __DIR__ . '/decide/';
@@ -49,4 +48,8 @@ if($render_path)
 $res = bad\run\run($pipeline, $args ?? [], RUN_BUFFER);
 $main = $res[RUN_OUTPUT];
 $css = $res[RUN_RETURN];
+
+$breadcrumb = explode('/', $re_quest);
+$page_id = implode('-', $breadcrumb) ?: 'index';
+$page_class = implode(' ', $breadcrumb) ?: 'index';
 require('app/layout.php');

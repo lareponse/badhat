@@ -60,8 +60,8 @@
     <a href="#main" class="skip-link visually-hidden">Aller au contenu principal</a>
     <?php include('app/a11y.html'); ?>
     <div id="menu_filler"></div>
-    <header role="banner">
-        <nav role="navigation" class="tight">
+    <header>
+        <nav class="tight">
             <h1>
                 <a href="/">
                     <img src="/ui/logo_irsa_text.jpg" alt="IRSA – Un projet pour chacun" height="60">
@@ -86,15 +86,9 @@
         </a>
     </header>
 
-    <?php
-    $breadcrumb = explode('/', bad\io\path(__DIR__.'/', $_SERVER['REQUEST_URI']));
-    $page_id = implode('-', $breadcrumb);
-    $page_class = implode(' ', $breadcrumb);
-    ?>
-
     <main id="<?= $page_id ?>" class="<?= $page_class ?>"><?= $main ?? '' ?></main>
 
-    <footer role="contentinfo" lang="fr">
+    <footer lang="fr">
         <section class="tight">
             <h2 class="visually-hidden">Pied de page du site IRSA</h2>
             <div class="footer-grid">
@@ -115,10 +109,10 @@
                 <nav aria-labelledby="useful-links-heading">
                     <h3 id="useful-links-heading">Liens utiles</h3>
                     <ul>
-                        <li><a href="/a-propos">À propos de l'IRSA</a></li>
+                        <li><a href="/irsa">À propos de l'IRSA</a></li>
                         <li><a href="/services">Nos services</a></li>
                         <li><a href="/don">Faire un don</a></li>
-                        <li><a href="/rejoindre">Rejoindre nos équipes</a></li>
+                        <li><a href="/contact">Rejoindre nos équipes</a></li>
                         <li><a href="/contact">Contact</a></li>
                         <li><a href="/plan-du-site">Plan du site</a></li>
                     </ul>
@@ -129,10 +123,10 @@
                     <h3 id="legal-access-heading">Mentions et accessibilité</h3>
                     <ul>
                         <li><a href="/mentions-legales">Mentions légales</a></li>
-                        <li><a href="/confidentialite">Politique de confidentialité</a></li>
-                        <li><a href="/accessibilite">Accessibilité du site</a></li>
-                        <li><a href="/cookies">Cookies</a></li>
-                        <li><a href="/donnees-personnelles">Gestion des données personnelles</a></li>
+                        <li><a href="/mentions-legales#confidentialite">Politique de confidentialité</a></li>
+                        <li><a href="/mentions-legales#accessibilite">Accessibilité du site</a></li>
+                        <li><a href="/mentions-legales#cookies">Cookies</a></li>
+                        <li><a href="/mentions-legales#donnees-personnelles">Gestion des données personnelles</a></li>
                     </ul>
                 </nav>
 
@@ -172,7 +166,7 @@
         <hr aria-hidden="true">
 
         <section class="tight">
-            <p>&copy; <?= date('Y') ?> IRSA – Institut Royal pour Sourds et Aveugles – Tous droits réservés</small></p>
+            <p>&copy; <?= date('Y') ?> IRSA – Institut Royal pour Sourds et Aveugles – Tous droits réservés</p>
             <small>Experience concue par <a href="https://evohe.be">Z.Kiss</a> et <a href="https://lareponse.org">lareponse</a></small>
         </section>
     </footer>

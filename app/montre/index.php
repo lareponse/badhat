@@ -2,7 +2,7 @@
 $statistics = bad\db\qp('SELECT label, value FROM `statistics`')->fetchAll(PDO::FETCH_KEY_PAIR);
 ?>
 
-<img src="/ui/blob/blob_home_top_right.svg" alt="decorative blob shape" class="blob" id="blob_home_top_right" aria-hidden="true">
+<img src="/ui/blob/blob_home_top_right.svg" alt="decorative blob shape" class="blob blob_home_top_right" aria-hidden="true">
 
 <section class="tight" id="home-hero" aria-labelledby="hero-heading" lang="fr">
     <div>
@@ -25,8 +25,10 @@ $statistics = bad\db\qp('SELECT label, value FROM `statistics`')->fetchAll(PDO::
     </figure>
 </section>
 
-<iframe width="100%" height="600px" src="https://www.youtube.com/embed/-Y0r8Sve0Sc" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen=""></iframe>
-
+<iframe height="600" src="https://www.youtube.com/embed/-Y0r8Sve0Sc" 
+    title="YouTube video player" 
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+    allowfullscreen=""></iframe>
 
 <section class="tight" id="home-questionnaire" aria-labelledby="questionnaire-heading" lang="fr">
     <h2 id="questionnaire-heading" class="visually-hidden">
@@ -327,7 +329,7 @@ $statistics = bad\db\qp('SELECT label, value FROM `statistics`')->fetchAll(PDO::
 
 <section class="tight" aria-labelledby="services-heading">
     <h2 id="services-heading">Des services adaptés à chaque étape de la vie</h2>
-    <img src="/ui/blob/blob_home_top_right.svg" alt="decorative blob shape" class="blob" id="blob_home_top_right" aria-hidden="true">
+    <img src="/ui/blob/blob_home_top_right.svg" alt="decorative blob shape" class="blob blob_home_top_right" aria-hidden="true">
     <p>
         Un accompagnement global qui prend en compte les besoins éducatifs,
         thérapeutiques et sociaux de chaque personne.
