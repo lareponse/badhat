@@ -45,9 +45,9 @@ require 'add/badhat/run.php';
 require 'add/badhat/http.php';
 require 'add/badhat/db.php';
 
-use function bad\io\{path, seek, look};
+use function bad\io\{hook, seek, look};
+use function bad\http\{http_in, http_out};
 use function bad\run\run;
-use function bad\http\http_out;
 use function bad\db\db;
 
 use const bad\error\HND_ALL;
@@ -80,15 +80,16 @@ db($pdo);
 // Normalize request path
 // --------------------------------------------------
 
-$key = hook($_SERVER['REQUEST_URI'], "\0");
-$io  = __DIR__ . '/../app/io';
+$io   = __DIR__ . '/../app/io';
+$base = realpath($io . '/route') . '/';
+$key  = bad\io\hook($base, $_SERVER['REQUEST_URI'], "\0");
 
 // --------------------------------------------------
 // Phase 1 — Route (logic)
 // --------------------------------------------------
 
 $loot = [];
-$route = seek($io . '/route/', $key, '.php');
+$route = seek($base, $key, '.php');
 
 if ($route) {
     [$file, $args] = $route;
