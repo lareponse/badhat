@@ -11,8 +11,6 @@ require 'add/badhat/db.php';
 require 'add/badhat/auth.php';
 require 'add/badhat/csrf.php';
 
-use function bad\io\{look, seek};
-use function bad\http\http_out;
 use const bad\io\{IO_NEST};
 use const bad\run\{RUN_INVOKE, RUN_ABSORB, RUN_RETURN};
 
@@ -48,13 +46,14 @@ bad\auth\checkin(bad\auth\AUTH_SETUP, 'username', $stmt);
 // --------------------------------------------------
 
 $io_root = __DIR__ . '/../app/io';
-$key = bad\io\path($_SERVER['REQUEST_URI'], "\0");
+$base = realpath($io_root . '/route') . '/';
+$key = bad\io\hook($base, $_SERVER['REQUEST_URI'], "\0");
 
 // --------------------------------------------------
 // Phase 1 — Route (logic)
 // --------------------------------------------------
 
-$route = seek($io_root . '/route/', $key, '.php');
+$route = seek($base, $key, '.php');
 $loot  = [];
 
 if ($route) {
@@ -77,7 +76,7 @@ if ($render) {
 // --------------------------------------------------
 
 isset($loot[RUN_RETURN]) && is_string($loot[RUN_RETURN])
-    ? http_out(200, $loot[RUN_RETURN], [
+    ? bad\http\out(200, $loot[RUN_RETURN], [
         'Content-Type' => ['text/html; charset=utf-8']
       ])
-    : http_out(404, 'Not Found');
+    : bad\http\out(404, 'Not Found');
