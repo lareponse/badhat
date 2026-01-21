@@ -1,37 +1,42 @@
 <?php
 namespace bad\csrf;
 
-const CSRF_SETUP = 1;
-const CSRF_CHECK = 2;
-const CSRF_INPUT = 4;
+const SETUP = 1;
+const CHECK = 2;
+const FORCE = 4;
 
-function csrf(int $behave, string $name, $param = null)
+function csrf(string $key, $param = null, int $behave = 0)
 {
-    session_status() === PHP_SESSION_ACTIVE     || throw new \RuntimeException('No active session for CSRF', 500);
-    $name                                       ?: throw new \InvalidArgumentException('CSRF name required', 500);
+    ((SETUP | CHECK) & $behave) === (SETUP | CHECK)         && throw new \InvalidArgumentException('CSRF cannot SETUP and CHECK at the same time', 400);
+    session_status() === PHP_SESSION_ACTIVE                 || throw new \BadFunctionCallException('CSRF requires an active session', 400);
+    $key                                                    ?: throw new \InvalidArgumentException('CSRF key cannot be empty (?:)', 400);
+    $now = time();                                          // current timestamp for expiry checks
+    
+    $_SESSION[__NAMESPACE__][__FUNCTION__] ??= [];          // init storage
+    $session = &$_SESSION[__NAMESPACE__][__FUNCTION__];     // reference for mutation
+    
+    if (SETUP & $behave) {
+        is_int($param) && $param > 0                        || throw new \InvalidArgumentException("CSRF '{$key}' TTL must be a positive integer", 400);
+        
+        $active = isset($session[$key][1]) && $now <= $session[$key][1];
+        $active && !(FORCE & $behave)                       && throw new \BadFunctionCallException("CSRF '{$key}' is not expired (use the FORCE)", 400);
 
-    if (CSRF_SETUP & $behave) {
-        (!is_int($param) || $param <= 0)        && throw new \InvalidArgumentException('CSRF_SETUP requires a positive integer TTL');
-        $ttl = $param;
-        $now = time();
+        $session[$key] = [bin2hex(random_bytes(32)), $now + $param]; // [token, expiry]
+    }                                                       
 
-        if (!isset($_SESSION[__NAMESPACE__][$name][1]) || $now > $_SESSION[__NAMESPACE__][$name][1])
-            $_SESSION[__NAMESPACE__][$name] = [bin2hex(random_bytes(32)),$now + $ttl];
+    [$expect, $expire] = ($session[$key]                    ?? throw new \BadFunctionCallException("CSRF '{$key}' not initialized", 400));
+
+    if ($now > $expire) {                                   // expired: cleanup and fail
+        unset($session[$key]);
+        return false;
+    }
+    
+    if (CHECK & $behave) {
+        $actual = is_string($param) ? $param : ($_POST[$key] ?? null);
+        $actual                                             || throw new \InvalidArgumentException("CSRF '{$key}' token required", 400);
+        
+        return hash_equals($expect, $actual);               // timing-safe comparison
     }
 
-    $_SESSION[__NAMESPACE__][$name]          ?? throw new \BadFunctionCallException("CSRF '$name' not initialized", 403);
-
-    if (CSRF_CHECK & $behave) {
-        [$master, $exp] = $_SESSION[__NAMESPACE__][$name];
-
-        $token = is_string($param) ? $param : ($_POST[$name] ?? '');
-        $token                                  || throw new \BadFunctionCallException("CSRF '$name' token required", 403);
-
-        return time() <= $exp && hash_equals($master, $token);
-    }
-
-    if (CSRF_INPUT & $behave)
-        return '<input type="hidden" name="' . htmlspecialchars($name, ENT_QUOTES). '" value="' . $_SESSION[__NAMESPACE__][$name][0] . '" />';
-
-    return $_SESSION[__NAMESPACE__][$name][0];
+    return $expect;                                         // return token for form embedding
 }
