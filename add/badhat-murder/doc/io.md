@@ -44,7 +44,7 @@ $file = bad\io\look($base, $path, '.php');
 
 $file
   ? run([$file], [], RUN_INVOKE)
-  : http_out(404, 'Not Found');
+  : bad\http\out(404, 'Not Found');
 ```
 
 **Story:**
@@ -62,7 +62,7 @@ That's what `seek()` is for.
 
 ```php
 [$file, $args] = bad\io\seek($base, $path, '.php')
-  ?? http_out(404, 'Not Found');
+  ?? out(404, 'Not Found');
 
 run([$file], $args, RUN_INVOKE);
 ```
@@ -138,7 +138,13 @@ And because `seek()` calls `look()` internally, `IO_NEST` works there too.
 
 #### `hook(string $base, string $url, string $forbidden = '', int $behave = 0): string`
 
-Validates base directory and sanitizes URL path. Throws on security violations.
+Validates base directory and sanitizes URL path. Returns the cleaned path (query/fragment stripped).
+
+**Parameters:**
+- `$base` — Must be a real path ending with directory separator
+- `$url` — Raw URL to sanitize
+- `$forbidden` — Optional string of characters to reject in path
+- `$behave` — Reserved for future use
 
 **Throws `\InvalidArgumentException` (code 400):**
 - `'base has no trailing separator...'` — Base must end with `/`
@@ -149,6 +155,18 @@ Validates base directory and sanitizes URL path. Throws on security violations.
 
 Direct file lookup. Returns canonical path if file exists within base, `null` otherwise.
 
+**Parameters:**
+- `$base` — Directory to search within
+- `$path` — Relative path to look up
+- `$shim` — File extension or suffix to append
+- `$behave` — Behavior flags (`IO_NEST`)
+
 #### `seek(string $base, string $path, string $shim = '', int $behave = 0): ?array`
 
 Progressive segment search. Returns `[file, args]` on match, `null` otherwise.
+
+**Parameters:**
+- `$base` — Directory to search within
+- `$path` — Relative path to search
+- `$shim` — File extension or suffix to append
+- `$behave` — Behavior flags (`IO_NEST`, `IO_GROW`)
