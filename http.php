@@ -6,7 +6,7 @@ const ASCII_CTL = "\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0A\x0B\x0C\x0D\x0E\
 const HTTP_PATH_UNSAFE = ' ' . ASCII_CTL;
 const HTTP_TCHAR = '!#$%&\'*+-.^_`|~0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
 
-function http_headers(string $name, string $value, bool $replace = true): ?array
+function headers($name, $value, $replace = true): ?array
 {
     static $headers = [];
 
@@ -21,7 +21,7 @@ function http_headers(string $name, string $value, bool $replace = true): ?array
     return $headers;
 }
 
-function http_in(string $url): string
+function in($url): string
 {
     $end = strcspn($url, ':/?#');                           // scheme detection (strcspn ensures : appears before any /?#)
     if (isset($url[$end]) && $url[$end] === ':')
@@ -35,7 +35,7 @@ function http_in(string $url): string
     return $url;
 }
 
-function http_out(int $code, ?string $body = null, array $headers = [])
+function out($code, $body = null, $headers = []): int
 {
     http_response_code($code);
     foreach ($headers as $name => $values)

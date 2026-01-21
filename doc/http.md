@@ -1,70 +1,91 @@
-Here’s the **updated doc**, reflecting the new `http_out()` contract (non-terminal, returns an exit status), while keeping the rest intact and consistent.
+# badhat\http
+
+Your app needs to speak HTTP.
+
+Not a framework. Not a router. Not a response object hierarchy. Just a few sharp helpers to normalize an incoming URL, collect headers safely, and emit a response without repeating the same `header()` / `http_response_code()` ceremony everywhere.
+
+> One nonce, cached. One output function that returns an exit status.
+> One optional header helper that refuses bad input. That's it.
 
 ---
 
-# BADHAT HTTP — Response Output
+## 1) First, you normalize the incoming URL
 
-`bad\http` emits responses.
+Whether you get a raw path, a full URL, or something in between, `in()` strips the parts you don't route on.
 
-* `http_headers()` validates + accumulates headers (optional helper)
-* `http_out()` sets status, emits headers/body, **returns a process exit status**
-* `csp_nonce()` gives you a per-request CSP nonce
+```php
+use function bad\http\in;
 
-Path resolution lives in `bad\io`.
-Execution lives in `bad\run`.
+$path = in($_SERVER['REQUEST_URI'] ?? '/');
+```
+
+What it does:
+
+* removes a leading scheme when `:` appears before any `/`, `?`, or `#`
+* removes an authority when the string starts with `//` (or becomes `//` after scheme removal)
+* returns whatever remains (path + optional query/fragment)
+
+```php
+in('/a/b?x=1');               // "/a/b?x=1"
+in('https://ex.com/a/b?x=1'); // "/a/b?x=1"
+in('//ex.com/a/b?x=1');       // "/a/b?x=1"
+in('mailto:user@ex.com');     // "user@ex.com"
+```
+
+**Default story:**
+"I want one routing input, no matter what shape the URL came in."
 
 ---
 
-## Constants
+## 2) Then, you collect headers (only if you want validation)
+
+You can always pass headers directly to `out()`. But if you want a helper that refuses invalid header names/values, `headers()` gives you that.
 
 ```php
-const ASCII_CTL = "\x00...\x1F\x7F"; // all ASCII control chars
-const HTTP_PATH_UNSAFE = ' ' . ASCII_CTL; // space + all control chars
-const HTTP_TCHAR = "!#$%&'*+-.^_`|~0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+use function bad\http\headers;
+
+headers('Content-Type', 'application/json');
+headers('Set-Cookie', 'a=1; Path=/', false);
+headers('Set-Cookie', 'b=2; Path=/', false);
 ```
 
-> `HTTP_PATH_UNSAFE` is a good *forbidden set* to pass to `bad\io\hook(...)`.
+`headers()` validates and stores headers in a static map:
+
+* name must be non-empty and contain only `HTTP_TCHAR`
+* value must not contain any `ASCII_CTL`
+
+On success it returns the full map. On invalid input it returns `null`.
+
+```php
+$h = headers('X-Test', "ok");
+if ($h === null) {
+    // invalid header input
+}
+```
+
+**Default story:**
+"I want a tiny guardrail for header injection and bad names."
 
 ---
 
-## Functions
+## 3) Finally, you emit a response
 
-### http_headers
-
-```php
-function http_headers(string $name, string $value, bool $replace = true): ?array
-```
-
-Validates and stores headers in a static map. Returns the full map on success, or `null` on invalid input.
-
-Rules (as implemented):
-
-* header name must be non-empty and contain only `HTTP_TCHAR`
-* header value must not contain any `ASCII_CTL`
+`out()` does the usual HTTP bits, and returns a process exit status so you can `exit(...)` cleanly when you want.
 
 ```php
-http_headers('Content-Type', 'application/json');
-http_headers('Set-Cookie', 'a=1; Path=/', false);
-http_headers('Set-Cookie', 'b=2; Path=/', false);
+use function bad\http\out;
+
+exit(out(404, 'Not found', [
+    'Content-Type' => 'text/plain; charset=utf-8',
+]));
 ```
 
----
+What it does:
 
-### http_out
-
-```php
-function http_out(int $code, ?string $body = null, array $headers = []): int
-```
-
-Emits an HTTP response and **returns a process exit status**.
-It does **not** terminate execution by itself.
-
-Behavior:
-
-* calls `http_response_code($code)`
-* emits each header value via `header("$name: $v", false)`
-* echoes `$body` only when `$code >= 200` and not `204/205/304`
-* returns an exit status derived from the HTTP status code
+1. `http_response_code($code)`
+2. emits each header value via `header("$name: $v", false)`
+3. echoes `$body` only when it makes sense (no body for `204/205/304`, and only for `>= 200`)
+4. returns an exit status derived from the HTTP code
 
 Exit status mapping:
 
@@ -73,53 +94,71 @@ Exit status mapping:
 * `500–599` → `5`
 * otherwise → `1`
 
-Header values may be a string or an array of strings:
+Header values can be a string or an array of strings:
 
 ```php
-http_out(200, 'ok', [
-    'Content-Type' => 'text/plain; charset=utf-8',
-]);
-
-http_out(200, 'ok', [
+out(200, 'ok', [
     'Set-Cookie' => ['a=1; Path=/', 'b=2; Path=/'],
 ]);
 ```
 
-Terminal usage (one-liner):
+`out()` does **not** validate headers. If you want validation, build your map with `headers()` (or validate yourself) and pass it in.
 
-```php
-exit(http_out(404, 'Not found'));
-```
-
-Non-terminal usage:
-
-```php
-http_out(200, 'ok');
-// continue execution
-```
-
-> `http_out()` does **not** validate header names/values.
-> If you want validation, build them via `http_headers()` (or validate yourself) first.
+**Default story:**
+"Emit the response. Give me an exit code. Don't make me remember the rules."
 
 ---
 
-### csp_nonce
+## 4) CSP nonce, when you need it
+
+`csp_nonce()` gives you a per-request nonce, cached after the first call.
 
 ```php
-function csp_nonce(): string
-```
+use function bad\http\{csp_nonce, out};
 
-Returns `bin2hex(random_bytes(16))`, cached for the rest of the request.
-
-```php
 $nonce = csp_nonce();
 
-http_out(200, $html, [
+out(200, $html, [
     'Content-Security-Policy' => "script-src 'nonce-$nonce'",
     'Content-Type'           => 'text/html; charset=utf-8',
 ]);
 ```
 
+**Default story:**
+"I need a nonce once. Don't generate it twice."
+
 ---
 
-This keeps the API flexible, explicit, and composable—**callers decide whether the response is terminal**, without sacrificing one-liner ergonomics.
+## Reference
+
+### Constants
+
+| Constant           | Value               | Effect                    |
+| ------------------ | ------------------- | ------------------------- |
+| `ASCII_CTL`        | `"\x00...\x1F\x7F"` | All ASCII control chars   |
+| `HTTP_PATH_UNSAFE` | `' ' . ASCII_CTL`   | Space + all control chars |
+| `HTTP_TCHAR`       | token chars         | Allowed header-name chars |
+
+> `HTTP_PATH_UNSAFE` is a good *forbidden set* to pass to `bad\io\hook(...)`.
+
+### Functions
+
+| Function                           | Purpose                            |
+| ---------------------------------- | ---------------------------------- |
+| `in($url)`                         | Strip scheme/authority for routing |
+| `headers($name, $value, $replace)` | Validate + accumulate headers      |
+| `out($code, $body, $headers)`      | Emit response + return exit status |
+| `csp_nonce()`                      | Per-request CSP nonce              |
+
+### Returns
+
+`out()` returns an exit status derived from the HTTP status code:
+
+* `< 400` → `0`
+* `400–499` → `4`
+* `500–599` → `5`
+* otherwise → `1`
+
+### Notes
+
+`headers()` returns `null` when input is invalid. `out()` always emits what you pass it (it does not validate).
