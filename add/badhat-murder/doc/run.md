@@ -207,7 +207,7 @@ use function bad\http\http_out;
 use const bad\run\{RUN_BUFFER, RUN_INVOKE, RUN_OUTPUT};
 
 $base = realpath(__DIR__ . '/routes') . '/';
-$path = path($base, $_SERVER['REQUEST_URI']);
+$path = hook($base, $_SERVER['REQUEST_URI']);
 
 [$file, $args] = seek($base, $path, '.php')
     ?? http_out(404, 'Not Found');
