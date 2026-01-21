@@ -1,248 +1,143 @@
-# BADHAT CSRF
+# badhat\csrf
 
-**Namespace-based CSRF token protection with explicit token names and TTL enforcement**
+Your forms need CSRF protection.
 
-* Supports **multiple CSRF tokens** via explicit token names
-* Designed for **session-based HTML forms**
-* Not suitable for stateless APIs (use HMAC / signatures instead)
+Just tokens that expire and validate.
 
-
-**Namespace:** `bad\csrf`
-**Storage:** `$_SESSION['bad\csrf'][$name]`
+> One function, three behaviors. Bitwise flags control what it does.
 
 ---
 
-## Constants
+## 1) First, you set up a token
+
+Somewhere you're rendering a form—the page where the user sees inputs and a submit button:
 
 ```php
-const CSRF_SETUP = 1;   // generate or refresh token
-const CSRF_CHECK = 2;   // validate token
-const CSRF_INPUT = 4;   // return hidden input
+use function bad\csrf\csrf;
+use const bad\csrf\{SETUP, CHECK, FORCE};
+
+$token = csrf('checkout', 900, SETUP);  // 15 minutes
 ```
 
-Flags are **bitwise combinable**.
-
----
-
-## Function
-
-```php
-function csrf(int $behave, string $name, $param = null)
-```
-
-⚠️ **Important:**
-The `$behave` argument comes **first**, followed by `$name`.
-
----
-
-## Parameters
-
-| Name      | Type   | Description                                               |
-| --------- | ------ | --------------------------------------------------------- |
-| `$behave` | int    | Behavior flags (`CSRF_SETUP`, `CSRF_CHECK`, `CSRF_INPUT`) |
-| `$name`   | string | **Required.** CSRF token name / form field name           |
-| `$param`  | mixed  | Depends on behavior (TTL or token value)                  |
-
----
-
-## Requirements
-
-* `session_status() === PHP_SESSION_ACTIVE`
-* `$name` **must be non-empty**
-
-Violations throw immediately.
-
----
-
-## Exceptions
-
-| Exception                  | Code | When                                                |
-| -------------------------- | ---- | --------------------------------------------------- |
-| `RuntimeException`         | 500  | No active session                                   |
-| `InvalidArgumentException` | 500  | Missing name or invalid TTL                         |
-| `BadFunctionCallException` | 403  | Token not initialized or token missing during CHECK |
-
----
-
-## Behavior Details
-
-### CSRF_SETUP
-
-```php
-csrf(CSRF_SETUP, 'token_name', int $ttl);
-```
-
-**Rules:**
-
-* `$param` **must be a positive integer TTL (seconds)**
-* Token is generated **only if missing or expired**
-* Token length: **64 hex characters**
-* Token persists until expiration
-
-**Storage format:**
-
-```php
-$_SESSION['bad\csrf'][$name] = [
-    0 => $token,   // string
-    1 => $expiry   // int (unix timestamp)
-];
-```
-
-**Return value (if alone):**
-
-```php
-string $token
-```
-
----
-
-### CSRF_CHECK
-
-```php
-csrf(CSRF_CHECK, 'token_name');
-csrf(CSRF_CHECK, 'token_name', $token);
-```
-
-**Token source priority:**
-
-1. Explicit `$param` if it is a string
-2. `$_POST[$name]`
-
-**Validation logic:**
-
-```php
-time() <= $expiry && hash_equals($stored, $provided)
-```
-
-**Returns:**
-
-```php
-true   // token valid and not expired
-false  // token expired or mismatch
-```
-
-**Throws (403) if:**
-
-* Token was never initialized
-* No token provided via `$param` or `$_POST`
-
-⚠️ Expired tokens **do not throw** — they return `false`.
-
----
-
-### CSRF_INPUT
-
-```php
-csrf(CSRF_INPUT, 'token_name');
-```
-
-**Returns HTML string:**
+That's it. Token created, stored in session, returned for embedding.
 
 ```html
-<input type="hidden" name="token_name" value="abc123..." />
+<input type="hidden" name="checkout" value="<?= htmlspecialchars($token) ?>">
 ```
 
-* `name` is escaped via `htmlspecialchars(…, ENT_QUOTES)`
-* Uses the **currently stored token**
-* Requires prior initialization (or combined SETUP)
+If a valid token already exists for that key, it throws. You probably have a bug—why are you setting up twice? Unless you meant to:
+
+```php
+$token = csrf('checkout', 900, SETUP | FORCE);  // overwrite existing
+```
+
+**Default story:**
+"I need a token for this form. Warn me if I'm clobbering one accidentally."
 
 ---
 
-## Combined Behaviors
+## 2) Then, you check it
 
-### SETUP + INPUT (Recommended)
-
-```php
-csrf(CSRF_SETUP | CSRF_INPUT, '_csrf', 3600);
-```
-
-* Creates token if missing or expired
-* Outputs hidden input
-* Safe, idempotent, single-call pattern
-
----
-
-### SETUP + CHECK
+When the form submits—POST handler, controller, wherever:
 
 ```php
-csrf(CSRF_SETUP | CSRF_CHECK, '_csrf', 3600);
-```
+$valid = csrf('checkout', null, CHECK);
 
-* Ensures token exists
-* Immediately validates provided token
-
----
-
-## Common Usage Patterns
-
-### 1. Bootstrap (Early Init)
-
-```php
-use function bad\csrf\csrf;
-use const bad\csrf\CSRF_SETUP;
-
-session_start();
-csrf(CSRF_SETUP, '_csrf', 3600);
-```
-
----
-
-### 2. Form Rendering
-
-```php
-use function bad\csrf\csrf;
-use const bad\csrf\CSRF_INPUT;
-
-?>
-<form method="post">
-    <?= csrf(CSRF_INPUT, '_csrf') ?>
-    <input name="email" type="email" required>
-    <button>Submit</button>
-</form>
-```
-
----
-
-### 3. Form Handling / Route Validation
-
-```php
-use function bad\csrf\csrf;
-use const bad\csrf\CSRF_CHECK;
-
-if ($_POST) {
-    csrf(CSRF_CHECK, '_csrf') || http_out(403, 'Invalid CSRF token');
-    // process request
+if (!$valid) {
+    // expired or wrong token
 }
 ```
 
----
-
-## Token Lifecycle
-
-* Token persists **until expiration**
-* Regenerated **only when expired**
-* Expired tokens:
-
-  * ❌ fail validation
-  * ✅ regenerated on next `CSRF_SETUP`
-
----
-
-## Storage Summary
+`CHECK` pulls the submitted value from `$_POST[$key]` automatically. Or pass it explicitly:
 
 ```php
-$_SESSION['bad\csrf'][$name] = [
-    'abc123...',     // token
-    1704067200       // expiry timestamp
-];
+$valid = csrf('checkout', $_SERVER['HTTP_X_CSRF_TOKEN'], CHECK);
 ```
+
+Returns `true` if valid, `false` if expired. Throws if the token is missing entirely—that's not "invalid," that's "your form is broken."
+
+**Default story:**
+"Validate the submission. Tell me if it's good, bad, or missing."
 
 ---
 
-## Design Guarantees
+## 3) Just need the token?
 
-* Per-session, per-token isolation
-* Timing-safe comparison (`hash_equals`)
-* No auto-regeneration during validation
-* Explicit, predictable control flow
-* Zero dependencies
+Sometimes you need the token value without setup or check. Rendering a second form on the same page. Passing it to JavaScript.
+
+```php
+$token = csrf('checkout');  // returns existing token, or throws if not initialized
+```
+
+Returns `false` if expired.
+
+**Default story:**
+"I already set this up. Just give me the value."
+
+---
+
+## 4) Flags control behavior
+
+| Flag | What it does |
+|------|--------------|
+| `SETUP` | Create new token with TTL (second param, seconds) |
+| `CHECK` | Validate submitted token |
+| `FORCE` | With SETUP: overwrite unexpired token |
+
+Combine with bitwise OR:
+
+```php
+csrf('key', 300, SETUP);           // create, 5 min TTL
+csrf('key', null, CHECK);          // validate
+csrf('key', 600, SETUP | FORCE);   // recreate even if active
+```
+
+`SETUP | CHECK` throws. Pick one.
+
+---
+
+## 5) Requirements
+
+Active session. That's it.
+
+```php
+session_start();
+// now csrf() works
+```
+
+No session? It throws. This isn't optional—CSRF tokens without sessions don't make sense.
+
+---
+
+## Reference
+
+### Constants
+
+| Constant | Value | Use |
+|----------|-------|-----|
+| `SETUP` | 1 | Create token |
+| `CHECK` | 2 | Validate token |
+| `FORCE` | 4 | Allow overwrite |
+
+### Function
+
+```php
+csrf(string $key, $param = null, int $behave = 0): string|bool
+```
+
+| `$behave` | `$param` | Returns |
+|-----------|----------|---------|
+| `0` | ignored | Token string, or `false` if expired |
+| `SETUP` | TTL (int, seconds) | Token string |
+| `CHECK` | Token string or null (uses `$_POST[$key]`) | `true` or `false` |
+
+### Throws
+
+| Exception | When |
+|-----------|------|
+| `InvalidArgumentException` | Empty key, invalid TTL, `SETUP\|CHECK` combined, missing token on CHECK |
+| `BadFunctionCallException` | No session, token not initialized, overwriting without FORCE |
+
+### Storage
+
+Tokens live in `$_SESSION['bad\csrf']['csrf'][$key]`. They're cleaned up on access when expired. Abandoned tokens persist until session expiry—use bounded key names or short sessions.
