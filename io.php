@@ -5,7 +5,7 @@ namespace bad\io;
 const IO_NEST  = 1;                                                                                                     // enables nested path/filename/filename pattern fallback in look()
 const IO_GROW  = 2;                                                                                                     // forward scan in seek() instead of reverse (default shrinks from end)
 
-function hook(string $base, string $url, string $forbidden = '', int $behave = 0): string
+function hook(string $base, string $url, string $forbidden = ''): string
 {                                                                                                                       // receive a request: extract and validate the path to navigate
     (!$base || $base[-1] !== DIRECTORY_SEPARATOR)                   && throw new \InvalidArgumentException('base has no trailing separator to prevent directory name extension exploit', 400);
     $base && ($base !== realpath($base) . DIRECTORY_SEPARATOR)      && throw new \InvalidArgumentException('base is not real, symlinks and relative paths would bypass boundary checks', 400);
