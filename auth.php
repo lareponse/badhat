@@ -26,6 +26,7 @@ function checkin(int $behave = 0, ?string $u = null, $p = null): ?string
             $_SESSION = [];
             ini_get('session.use_cookies') && auth_session_cookie_destroy();
             session_destroy() || trigger_error('session_destroy failed', E_USER_WARNING);
+            return null;
         }
 
         if (AUTH_ENTER & $behave)

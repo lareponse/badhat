@@ -80,7 +80,7 @@ db($pdo);
 // Normalize request path
 // --------------------------------------------------
 
-$key = path($_SERVER['REQUEST_URI'], "\0");
+$key = hook($_SERVER['REQUEST_URI'], "\0");
 $io  = __DIR__ . '/../app/io';
 
 // --------------------------------------------------

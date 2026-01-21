@@ -23,7 +23,7 @@ const HTTP_PATH_UNSAFE = ' ' . ASCII_CTL; // space + all control chars
 const HTTP_TCHAR = "!#$%&'*+-.^_`|~0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 ```
 
-> `HTTP_PATH_UNSAFE` is a good *forbidden set* to pass to `bad\io\path(...)`.
+> `HTTP_PATH_UNSAFE` is a good *forbidden set* to pass to `bad\io\hook(...)`.
 
 ---
 
