@@ -210,11 +210,11 @@ $base = realpath(__DIR__ . '/routes') . '/';
 $path = hook($base, $_SERVER['REQUEST_URI']);
 
 [$file, $args] = seek($base, $path, '.php')
-    ?? http_out(404, 'Not Found');
+    ?? out(404, 'Not Found');
 
 $loot = run([$file], $args, RUN_BUFFER | RUN_INVOKE);
 
-http_out(200, $loot[RUN_OUTPUT]);
+out(200, $loot[RUN_OUTPUT]);
 ```
 
 Five lines. Request to response.
