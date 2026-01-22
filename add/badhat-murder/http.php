@@ -3,7 +3,7 @@ namespace bad\http;
 
 const H_SET = 1;                    // replace (single)
 const H_ADD = 2;                    // append (lines)
-const H_CSV = 4 | H_ADD;            // append (csv)
+const H_CSV = 4;                    // append (csv)
 const H_OUT = 8;                    // output + clear
 
 const H_LOCK = 16;                  // lock (one-time set or no further changes)
@@ -29,16 +29,15 @@ function headers(int $behave, ?string $name = null, $value = null): ?string
 
     ((H_SET | H_ADD) & $behave) !== (H_SET | H_ADD)                 || throw new \BadFunctionCallException('H_SET XOR H_ADD');
     (strpbrk((string)$value, CTRL_ASCII) === false)                 || throw new \InvalidArgumentException('invalid ASCII control char in header value');
-    (isset($name) && $name !== '')                                  || throw new \InvalidArgumentException('header name required');
+    
+    $name = strtolower(trim((string)$name))                         ?: throw new \InvalidArgumentException('header name cannot be empty');
+    
     (!isset($name[strspn($name, HTTP_TCHAR)]))                      || throw new \InvalidArgumentException('invalid T_CHAR header name');
-
-    $name = strtolower(trim($name))                                 ?: throw new \InvalidArgumentException('header name cannot be empty');
-
     (($headers[H_LOCK][$name] ?? false) !== true)                   || throw new \BadFunctionCallException("header '{$name}' is locked (H_ONE)");
 
     if ($name === 'set-cookie')
-        (($behave & ~(H_ADD | H_LOCK)) === 0) || (H_ADD & $behave)  || throw new \InvalidArgumentException('Set-Cookie only supports H_ADD and optionally H_LOCK');
-
+       ($behave & H_ADD) && !($behave & (H_SET | H_CSV)) && (($behave & ~(H_ADD | H_LOCK)) === 0) || throw new \InvalidArgumentException('Set-Cookie requires H_ADD and optionally H_LOCK');
+    
     if (H_SET & $behave) 
         $headers[H_SET][$name] = $value;
 

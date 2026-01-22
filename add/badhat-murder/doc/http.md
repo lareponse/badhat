@@ -23,7 +23,7 @@ What it does:
 
 * removes a leading scheme when `:` appears before any `/`, `?`, or `#`
 * removes an authority when the string starts with `//` (or becomes `//` after scheme removal)
-* returns whatever remains (path + optional query/fragment)
+* returns whatever remains (path + optional query/fragment), or `''` if nothing remains
 
 ```php
 in('/a/b?x=1');               // "/a/b?x=1"
@@ -52,9 +52,10 @@ headers(H_SET, 'Content-Type', 'application/json');
 headers(H_ADD, 'Set-Cookie', 'a=1; Path=/');
 headers(H_ADD, 'Set-Cookie', 'b=2; Path=/');
 
-// Multiple values as CSV (combined into one line)
-headers(H_CSV, 'Vary', 'Accept');
-headers(H_CSV, 'Vary', 'Accept-Encoding');
+// Multiple values as CSV (combined into one line on flush)
+// NOTE: CSV mode is enabled via H_ADD | H_CSV
+headers(H_ADD | H_CSV, 'Vary', 'Accept');
+headers(H_ADD,           'Vary', 'Accept-Encoding'); // continues CSV mode once enabled
 // emits: Vary: Accept, Accept-Encoding
 ```
 
@@ -71,14 +72,19 @@ headers(H_OUT);  // emits all accumulated headers, clears the map
 
 ## 3) Header modes
 
-| Flag | Value | Effect |
-|------|-------|--------|
-| `H_SET` | 1 | Single value, replaces previous |
-| `H_ADD` | 2 | Append as separate header line |
-| `H_CSV` | 6 | Append as comma-separated value |
-| `H_OUT` | 8 | Flush all headers, clear map |
-| `H_LOCK` | 16 | Prevent further changes to this header |
-| `H_FOLD` | 32 | Promote existing H_SET value to H_ADD/H_CSV |
+| Flag     | Value | Effect                                                                                    |
+| -------- | ----- | ----------------------------------------------------------------------------------------- |
+| `H_SET`  | 1     | Single value, replaces previous                                                           |
+| `H_ADD`  | 2     | Append as separate header line                                                            |
+| `H_CSV`  | 4     | CSV mode (used with `H_ADD`): append values and emit as one comma-separated line on flush |
+| `H_OUT`  | 8     | Flush all headers, clear map                                                              |
+| `H_LOCK` | 16    | Prevent further changes to this header                                                    |
+| `H_FOLD` | 32    | Promote existing H_SET value to H_ADD/H_CSV                                               |
+
+Notes on CSV mode:
+
+* To add values in CSV mode, pass `H_ADD | H_CSV` at least once for that header name.
+* Once a header has any CSV values stored, subsequent `H_ADD` calls for that name keep appending to CSV.
 
 ### Lock a header
 
@@ -100,9 +106,11 @@ headers(H_ADD | H_FOLD, 'Cache-Control', 'no-store');
 ### Set-Cookie requires H_ADD
 
 ```php
-headers(H_SET, 'Set-Cookie', 'x=1');  // throws BadFunctionCallException
+headers(H_SET, 'Set-Cookie', 'x=1');  // throws InvalidArgumentException
 headers(H_ADD, 'Set-Cookie', 'x=1');  // correct
 ```
+
+`Set-Cookie` is restricted to `H_ADD` and optionally `H_LOCK` (no `H_SET`, no `H_CSV`, no other flags).
 
 ---
 
@@ -110,22 +118,26 @@ headers(H_ADD, 'Set-Cookie', 'x=1');  // correct
 
 `headers()` throws on invalid input:
 
-| Exception | Condition |
-|-----------|-----------|
-| `InvalidArgumentException` | Empty or missing name |
-| `InvalidArgumentException` | Name contains non-token characters |
-| `InvalidArgumentException` | Value contains ASCII control characters |
-| `BadFunctionCallException` | Set-Cookie without H_ADD |
-| `BadFunctionCallException` | Header is locked |
-| `BadFunctionCallException` | H_SET and H_ADD both set |
+| Exception                  | Condition                                                                   |
+| -------------------------- | --------------------------------------------------------------------------- |
+| `InvalidArgumentException` | Empty or missing name                                                       |
+| `InvalidArgumentException` | Name contains non-token characters                                          |
+| `InvalidArgumentException` | Value contains ASCII control characters                                     |
+| `InvalidArgumentException` | `Set-Cookie` used without `H_ADD` (or combined with other disallowed flags) |
+| `BadFunctionCallException` | Header is locked                                                            |
+| `BadFunctionCallException` | `H_SET` and `H_ADD` both set                                                |
 
 Token characters (`HTTP_TCHAR`): ``!#$%&'*+-.^_`|~`` plus alphanumerics.
+
+Additional behavior:
+
+* Header names are normalized to lowercase internally (and emitted in lowercase on flush).
 
 ---
 
 ## 5) Finally, you emit a response
 
-`out()` sets the status code, flushes accumulated headers, outputs the body, and returns a process exit status.
+`out()` sets the status code, flushes accumulated headers, optionally emits one extra raw header line, outputs the body, and returns a process exit status.
 
 ```php
 use function bad\http\out;
@@ -138,19 +150,18 @@ What it does:
 
 1. `http_response_code($code)`
 2. `headers(H_OUT)` — flushes accumulated headers
-3. echoes `$body` only when appropriate (no body for `1xx`, `204`, `205`, `304`)
-4. returns an exit status derived from the HTTP code
+3. if `$header` is provided, calls `header($header)` (unvalidated, emitted after the flush)
+4. echoes `$body` only when appropriate (no body for `<200`, `204`, `205`, `304`)
+5. returns an exit status derived from the HTTP code
 
 Exit status mapping:
 
 | HTTP code | Exit |
-|-----------|------|
-| `< 400` | `0` |
-| `400–499` | `4` |
-| `500–599` | `5` |
-| other | `1` |
-
-**Note:** The `$headers` parameter in `out()` is currently unused. Accumulate headers via `headers()` calls before calling `out()`.
+| --------- | ---- |
+| `< 400`   | `0`  |
+| `400–499` | `4`  |
+| `500–599` | `5`  |
+| other     | `1`  |
 
 **Default story:**
 "Emit the response. Give me an exit code. Don't make me remember the rules."
@@ -180,26 +191,26 @@ exit(out(200, $html));
 
 ### Constants
 
-| Constant | Description |
-|----------|-------------|
-| `H_SET` | Single value mode |
-| `H_ADD` | Append as separate lines |
-| `H_CSV` | Append as CSV |
-| `H_OUT` | Flush and clear |
-| `H_LOCK` | Prevent changes |
-| `H_FOLD` | Promote SET to ADD/CSV |
-| `CTRL_ASCII` | All ASCII control chars (forbidden in values) |
-| `HTTP_TCHAR` | Allowed header name characters |
+| Constant     | Description                                            |
+| ------------ | ------------------------------------------------------ |
+| `H_SET`      | Single value mode                                      |
+| `H_ADD`      | Append as separate lines                               |
+| `H_CSV`      | CSV mode flag (combine with `H_ADD` to add CSV values) |
+| `H_OUT`      | Flush and clear                                        |
+| `H_LOCK`     | Prevent changes                                        |
+| `H_FOLD`     | Promote SET to ADD/CSV                                 |
+| `CTRL_ASCII` | All ASCII control chars (forbidden in values)          |
+| `HTTP_TCHAR` | Allowed header name characters                         |
 
 ### Functions
 
-| Function | Signature | Purpose |
-|----------|-----------|---------|
-| `in` | `(string $url): string` | Strip scheme/authority for routing |
-| `headers` | `(int $behave, ?string $name = null, $value = null): array` | Accumulate/flush headers |
-| `out` | `(int $code, $body = null, array $headers = []): int` | Emit response, return exit status |
-| `csp_nonce` | `(): string` | Per-request CSP nonce |
+| Function    | Signature                                                     | Purpose                                                                 |
+| ----------- | ------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| `in`        | `($url): string`                                              | Strip scheme/authority for routing                                      |
+| `headers`   | `(int $behave, ?string $name = null, $value = null): ?string` | Accumulate/flush headers (returns `"name: value"` or `null` on `H_OUT`) |
+| `out`       | `($code, $body = null, $header = null): int`                  | Emit response, return exit status                                       |
+| `csp_nonce` | `(): string`                                                  | Per-request CSP nonce                                                   |
 
 ### Throws
 
-`headers()` throws `InvalidArgumentException` for validation failures and `BadFunctionCallException` for usage violations. `out()` does not validate — use `headers()` for that.
+`headers()` throws `InvalidArgumentException` for validation failures and `BadFunctionCallException` for usage violations. `out()` does not validate the optional `$header` string — use `headers()` for validated accumulation.
