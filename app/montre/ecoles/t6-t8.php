@@ -112,11 +112,10 @@
 
 <section class="tight" aria-labelledby="liens-heading">
     <h2 id="liens-heading">Liens utiles</h2>
-
     <div class="links-grid">
-        <a class="btn btn-tag" href="#">Projet pédagogique</a>
-        <a class="btn btn-tag" href="#">Règlement des études</a>
-        <a class="btn btn-tag" href="#">Brochure métiers</a>
+        <a class="btn btn-tag" href="/contact/t6-t8/projet-pedagogique">Projet pédagogique</a>
+        <a class="btn btn-tag" href="/contact/t6-t8/reglement-etudes">Règlement des études</a>
+        <a class="btn btn-tag" href="/contact/t6-t8/brochure-metiers">Brochure métiers</a>
     </div>
     <nav class="doc-nav" aria-label="Documents">
         <a href="/documents/brochure/fondamentale-brochure.pdf" class="btn btn-primary">
