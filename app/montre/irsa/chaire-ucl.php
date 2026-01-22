@@ -28,6 +28,9 @@ $links = [
     ],
 ];
 ?>
+<img src="/ui/blob/blob_ecoles_top_right.svg" alt="decorative blob shape" class="blob" id="blob_ecoles_top_right" aria-hidden="true">
+<img src="/ui/blob/blob_ecoles_middle_left.svg" alt="decorative blob shape" class="blob" id="blob_ecoles_middle_left" aria-hidden="true">
+
 <header>
     <h1><span class="tight">Chaire UCLouvain-IRSA</span></h1>
     <p class="tight subtitle">Déficiences sensorielles et troubles d’apprentissage</p>

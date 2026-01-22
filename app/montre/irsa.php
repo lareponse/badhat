@@ -5,6 +5,9 @@ $oa = bad\db\qp('SELECT * FROM `page` WHERE `slug` = ?', ['irsa-oa'])->fetch(PDO
 $fondation_pro_irsa = bad\db\qp('SELECT * FROM `page` WHERE `slug` = ?', ['irsa-fondation-pro'])->fetch(PDO::FETCH_ASSOC);
 
 ?>
+<img src="/ui/blob/blob_ecoles_top_right.svg" alt="decorative blob shape" class="blob" id="blob_ecoles_top_right" aria-hidden="true">
+<img src="/ui/blob/blob_ecoles_middle_left.svg" alt="decorative blob shape" class="blob" id="blob_ecoles_middle_left" aria-hidden="true">
+
 <header>
     <h1><span class="tight">L'IRSA : une histoire qui dure !</span></h1>
     <div class="tight"><?= $intro['content']; ?></div>
