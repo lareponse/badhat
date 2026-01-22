@@ -99,7 +99,7 @@
     <div class="triple-infos">
         <article>
             <h3>Numéro de téléphone</h3>
-            <span>02/375.92.69</span>
+            <span>02/375.92.69</span><br>
             <span>0478/37.58.22</span>
             
         </article>

@@ -90,7 +90,7 @@ section[aria-labelledby="stats-heading"] {
     min-height: 51rem;
     display: flex;
     flex-wrap: wrap;
-    justify-content: space-between;
+    justify-content: space-around;
     align-items: center;
     gap: 1rem
 }

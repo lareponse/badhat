@@ -19,7 +19,8 @@
             <dl>
                 <dt>Pour les enfants atteints de :</dt>
                 <dd>Déficience visuelle <span>(T6)</span></dd>
-                <dd>Troubles associés <span>(T8)</span></dd>
+                <dd>Troubles du spectre de l’autisme<span>(T8)</span></dd>
+                <dd>Déficiences multiples <span>(T2)</span></dd>
             </dl>
         </a>
     </article>
@@ -32,7 +33,7 @@
             <span class="cta">Découvrir l'école</span>
 
             <dl>
-                <dd>Approche bilingue <span>(LSFB / FR)</span></dd>
+                <dd>Approche bilingue (LSFB / FR)<span>(T7)</span></dd>
             </dl>
         </a>
     </article>

@@ -125,7 +125,7 @@
                         <li><a href="/mentions-legales#confidentialite">Politique de confidentialité</a></li>
                         <li><a href="/mentions-legales#accessibilite">Accessibilité du site</a></li>
                         <li><a href="/mentions-legales#cookies">Cookies</a></li>
-                        <li><a href="/mentions-legales#donnees-personnelles">Gestion des données personnelles</a></li>
+                        <li><a href="/mentions-legales#h-droits">Gestion des données personnelles</a></li>
                     </ul>
                 </nav>
 
