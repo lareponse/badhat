@@ -43,13 +43,13 @@
     <meta name="twitter:image" content="https://www.irsa.be/ui/logo_irsa_text.jpg">
 
     <!-- Stylesheets (ordered: variables/base → components → pages) -->
-    <link rel="stylesheet" href="/css/irsa.css?v=20260122-1421">
-    <link rel="stylesheet" href="/css/header-footer.css?v=20260122-1421">
-    <link rel="stylesheet" href="/css/button.css?v=20260122-1421">
-    <link rel="stylesheet" href="/css/card.css?v=20260122-1421">
-    <link rel="stylesheet" href="/css/blob.css?v=20260122-1421">
-    <link rel="stylesheet" href="/css/triple-infos.css?v=20260122-1421">
-    <?php if (isset($css) && is_array($css)):foreach ($css as $file):?><link rel="stylesheet" href="/css/<?= $file ?>.css?v=20260122-1421"><?php endforeach; endif; ?>
+    <link rel="stylesheet" href="/css/irsa.css?v=20260122-1708">
+    <link rel="stylesheet" href="/css/header-footer.css?v=20260122-1708">
+    <link rel="stylesheet" href="/css/button.css?v=20260122-1708">
+    <link rel="stylesheet" href="/css/card.css?v=20260122-1708">
+    <link rel="stylesheet" href="/css/blob.css?v=20260122-1708">
+    <link rel="stylesheet" href="/css/triple-infos.css?v=20260122-1708">
+    <?php if (isset($css) && is_array($css)):foreach ($css as $file):?><link rel="stylesheet" href="/css/<?= $file ?>.css?v=20260122-1708"><?php endforeach; endif; ?>
 
     <!-- Accessibility: use modern color scheme detection -->
     <meta name="color-scheme" content="light dark">
@@ -170,6 +170,6 @@
         </section>
     </footer>
 
-    <script src="/js/onload.js?v=20260122-1421"></script>
+    <script src="/js/onload.js?v=20260122-1708"></script>
 </body>
 </html>
