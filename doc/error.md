@@ -31,6 +31,10 @@ That's it. From this point forward:
 
 Every log line gets a request ID: `[req=a1b2c3]`. When something breaks at 3am, you can grep.
 
+**Request ID**
+- If you pass `$request_id`, it is used as-is.
+- Otherwise it is generated as: `dechex((int)($start * 10000) ^ getmypid())`
+
 **Default story:**
 "One request, one ID. Everything that goes wrong is tagged."
 
@@ -135,14 +139,14 @@ Your handler logs. PHP's handler prints. You see both.
 
 ---
 
-## 6) Restore when you're done
+## 6) Restore when you're done 
 
-The installer returns a restore function. Call it to put things back:
+The installer returns a restore function. Call it to put **MOST** things back:
 
 ```php
 $restore = $install(HND_ALL);
 // ... app runs ...
-$restore();  // previous handlers restored
+$restore();  // previous handlers restored, except for shutdown
 ```
 
 Order matters. If you nest installs, restore in reverse order (LIFO).

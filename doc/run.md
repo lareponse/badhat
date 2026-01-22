@@ -201,7 +201,7 @@ Failures are swallowed. The last file's results end up in `$loot`.
 ## Putting it together
 
 ```php
-use function bad\io\{path, seek};
+use function bad\io\{hook, seek};
 use function bad\run\run;
 use function bad\http\http_out;
 use const bad\run\{RUN_BUFFER, RUN_INVOKE, RUN_OUTPUT};

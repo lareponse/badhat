@@ -13,7 +13,7 @@ const RUN_CHAIN  = 256;
 const RUN_RETURN = -1;
 const RUN_OUTPUT = -2;
 
-function run(array $file_paths, array $args = [], int $behave = 0): array
+function run($file_paths, $args = [], int $behave = 0): array
 {
     $loot = $args;
 

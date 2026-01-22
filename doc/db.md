@@ -1,10 +1,10 @@
 # badhat\db
 
-Your app needs a database.
+Your app needs one database, use it everywhere without passing it anywhere.
+Not an ORM or a query builder, just a way to run queries without repeating the same PDO boilerplate in every file.
 
-Not an ORM. Not a query builder. Not an abstraction that "protects you from SQL." Just a way to run queries without repeating the same PDO boilerplate in every file.
-
-> One connection, cached. Two helpers that throw on failure. That's it.
+> One PDO connection, cached. App-wide access without DI or globals. 
+> Two helpers that throw on failure. That's it.
 
 ---
 
@@ -24,9 +24,6 @@ db(new PDO($dsn, $user, $pass, [
 That's the setup. One line. The connection is now cached.
 
 Every subsequent call to `db()` returns that same connection. No containers. No service providers. No "resolving dependencies." You made a PDO, you stored it, you're done.
-
-**Default story:**
-"I have one database. I want to use it everywhere without passing it everywhere."
 
 ---
 
