@@ -65,7 +65,7 @@ $user = checkin();  // returns username or null
 ```php
 // app/io/route/admin/dashboard.php
 return function($args) {
-    checkin() ?? http_out(302, null, ['Location' => ['/login']]);
+    checkin() ?? out(302, null, ['Location' => ['/login']]);
     return ['user' => checkin()];
 };
 ```
