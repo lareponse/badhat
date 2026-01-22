@@ -27,10 +27,13 @@ $body    = $body_t;
 $contact_email = $_POST['email'];
 $contact_name  = $_POST['name'];
 
-$destination_email = 'info@irsa.be';
-$destination_name = 'IRSA Destinataire';
+$destination_email = $_POST['recipient'];
+$destination_name = $_POST['recipient_label'];
 
-$destination_email = 'irsa@amstram.be';     // ------------ //////////
+// $destination_email = 'touch@hexmakina.be';
+// $destination_name = 'Sammy Hexmakina';
+
+// $destination_email = 'irsa@amstram.be';     // ------------ //////////
 
 try {
     // Debug (turn off in prod)
@@ -49,7 +52,7 @@ try {
     $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
 
     // Mail headers
-    $mail->setFrom('site@irsa.be', 'Contact IRSA.be');
+    $mail->setFrom('irsa.be@amstram.be', 'IRSA.be');
     $mail->addAddress($destination_email, $destination_name);
     $mail->addReplyTo($contact_email, $contact_name);
 
@@ -61,8 +64,11 @@ try {
 
     $mail->send();
     $sent = true;
+    vd(-1, 'Mail sent successfully', $mail);
 } catch (Exception $e) {
     // In production: log $e->getMessage() / $mail->ErrorInfo, don’t echo to users
     trigger_error($e->getMessage(), E_USER_WARNING);
+    vd(-1, 'Mail could not be sent.', $mail);
+
     return false;
 }
