@@ -190,3 +190,8 @@
 }
 .chaire-logo { margin: 1rem; text-align: center; }
 .chaire-logo img { max-width: 260px; height: auto; }
+
+.chaire-kicker { margin: 0 0 .5rem;  font-size: 1.7rem;}
+    
+.chaire-kicker__title { font-weight: 800; letter-spacing: .02em;}
+.chaire-kicker__tag { margin-left: .5rem; opacity: .85; }
