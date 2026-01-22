@@ -65,15 +65,6 @@
     </article>
 </section>
 
-<section class="tight" aria-labelledby="environnement-heading">
-    <h2 id="environnement-heading" class="visually-hidden">Notre environnement</h2>
-    <figure>
-        <img src="" alt="Espace d’accueil lumineux et structuré, pensé pour les repères de la journée">
-        <img src="" alt="Atelier de groupe favorisant la communication : jeux, échanges, gestes et pictogrammes">
-        <img src="" alt="Activité motrice ou sensorielle encadrée par des professionnels">
-    </figure>
-</section>
-
 <section class="tight" aria-labelledby="missions-heading">
     <h2 id="missions-heading">Missions et valeurs</h2>
     <ul>
@@ -147,6 +138,8 @@
     <p>
         <a href="/contact" class="btn btn-primary">Vers le formulaire de contact</a>
     </p>
+
+    
 </section>
 
 <?php

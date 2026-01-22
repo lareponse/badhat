@@ -53,16 +53,6 @@
     </p>
 </section>
 
-
-<section class="tight" aria-labelledby="environnement-heading">
-    <h2 id="environnement-heading" class="visually-hidden">Notre environnement</h2>
-    <figure>
-        <img src="" alt="Vue ext&eacute;rieure du b&acirc;timent du CJENS, avec acc&egrave;s s&eacute;curis&eacute; et espaces adapt&eacute;s">
-        <img src="" alt="Jeunes participant &agrave; un atelier sensoriel dans un espace calme et structur&eacute;">
-        <img src="" alt="Membres de l&rsquo;&eacute;quipe pluridisciplinaire accompagnant un jeune lors d&rsquo;une activit&eacute;">
-    </figure>
-</section>
-
 <section class="tight" aria-labelledby="missions-heading">
     <h2 id="missions-heading">Missions &amp; valeurs</h2>
     <ul>
@@ -122,11 +112,6 @@
     </ul>
 </section>
 
-<section class="tight" aria-labelledby="modalites-heading">
-    <h2 id="modalites-heading">Modalit&eacute;s d&rsquo;admission</h2>
-    <p>&Agrave; voir&nbsp;!!!</p>
-</section>
-
 <section class="tight" aria-labelledby="contact-heading">
     <h2 id="contact-heading">Contact</h2>
     <div class="triple-infos">
@@ -148,10 +133,13 @@
         </article>
 
     </div>
+    
+    <nav class="doc-nav" aria-label="Documents">
+        <a href="/documents/brochure-cjens-deficience-visuelle.pdf" class="btn btn-primary">
+            Télécharger brochure de présentation
+        </a>
+    </nav>
 </section>
 
-<section>
-    <a class="btn btn-primary" href="/documents/brochure-cjens-deficience-visuelle.pdf" download>T&eacute;l&eacute;charger brochure de pr&eacute;sentation</a>
-</section>
 <?php
 return ['page-ecole', 'page-services'];
