@@ -46,7 +46,7 @@
             <img src="/ui/publication/99224-PUL-Deprez-identitesourde-COV-WEB.jpg" alt="Identité sourde et implant cochléaire" width="300" height="442">
             <div>
                 <p>Vers une identité plurielle</p>
-                <a href="#" target="_blank" rel="noopener">Identité sourde et implant cochléaire</a>
+                <a href="https://pul.uclouvain.be/FR/book/?GCOI=29303100140690" target="_blank" rel="noopener">Identité sourde et implant cochléaire</a>
                 <p>par Alice Leidensdorf</p>
             </div>
         </article>
