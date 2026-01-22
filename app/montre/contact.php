@@ -129,7 +129,7 @@
       "CJES T7": ["j.piras@irsa.be", "j.abera@irsa.be"],
       "CJES TSA": ["c.wierre@irsa.be"],
       "CJENS T6": ["c.becarren@irsa.be"],
-      "CJENS T7": [], // no email provided in your data
+      "CJENS T7": ['C.BECARREN@irsa.be'], 
       "CJA T6": ["o.chenebon@irsa.be"],
     },
 
