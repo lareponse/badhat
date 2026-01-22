@@ -52,7 +52,7 @@ headers('Set-Cookie', 'b=2; Path=/', false);
 `headers()` validates and stores headers in a static map:
 
 * name must be non-empty and contain only `HTTP_TCHAR`
-* value must not contain any `ASCII_CTL`
+* value must not contain any `CTRL_ASCII`
 
 On success it returns the full map. On invalid input it returns `null`.
 
@@ -135,8 +135,8 @@ out(200, $html, [
 
 | Constant           | Value               | Effect                    |
 | ------------------ | ------------------- | ------------------------- |
-| `ASCII_CTL`        | `"\x00...\x1F\x7F"` | All ASCII control chars   |
-| `HTTP_PATH_UNSAFE` | `' ' . ASCII_CTL`   | Space + all control chars |
+| `CTRL_ASCII`        | `"\x00...\x1F\x7F"` | All ASCII control chars   |
+| `HTTP_PATH_UNSAFE` | `' ' . CTRL_ASCII`   | Space + all control chars |
 | `HTTP_TCHAR`       | token chars         | Allowed header-name chars |
 
 > `HTTP_PATH_UNSAFE` is a good *forbidden set* to pass to `bad\io\hook(...)`.
