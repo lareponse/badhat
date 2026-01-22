@@ -92,6 +92,8 @@ $orderId = trans(function(\PDO $pdo) use ($cart, $userId) {
 
 The callable receives `$pdo` so you can pass it explicitly to `qp()` calls inside. You return whatever you want—`trans()` passes it through.
 
+**Note:** Nested transactions throw `LogicException`. PDO doesn't support real nested transactions.
+
 **Default story:**
 "I need atomicity. Don't make me remember the try/catch/rollback pattern."
 
@@ -120,40 +122,59 @@ trans(function($pdo) {
 
 ---
 
-## 5) And if you need to reset
+## 5) Replacing the connection
 
-Testing. Connection rotation. Whatever the reason:
+To swap the cached connection, just call `db()` with a new PDO:
 
 ```php
-db(null, bad\db\VOID_CACHE);  // clears the cache (next db() throws)
-db($newPdo);                   // set a new connection
+db($newPdo);  // replaces the cached connection
 ```
+
+There is no explicit "clear cache" operation. The cache persists for the request lifetime.
 
 ---
 
 ## Reference
 
-### Constants
-
-| Constant | Value | Effect |
-|----------|-------|--------|
-| `VOID_CACHE` | 1 | Clears the cached PDO |
-
 ### Functions
 
-| Function | Purpose |
-|----------|---------|
-| `db($pdo)` | Cache a connection |
-| `db()` | Retrieve cached connection |
-| `qp($sql, $params, $opts, $pdo)` | Query / prepare / execute |
-| `trans($callable, $pdo)` | Wrapped transaction |
+| Function | Signature | Purpose |
+|----------|-----------|---------|
+| `db` | `(?\PDO $pdo = null, int $behave = 0): \PDO` | Get/set cached connection |
+| `qp` | `(string $query, ?array $params = null, array $prep_options = [], ?\PDO $pdo = null): \PDOStatement` | Query/prepare/execute |
+| `trans` | `(callable $transaction, ?\PDO $pdo = null): mixed` | Wrapped transaction |
+
+### db()
+
+```php
+db($pdo);   // cache this connection
+db();       // retrieve cached connection (throws if not set)
+```
+
+### qp()
+
+| `$params` | Behavior |
+|-----------|----------|
+| `null` | `$pdo->query($sql)` — direct execution |
+| `[]` | `$pdo->prepare($sql)` — returns unexecuted statement |
+| `[...]` | `$pdo->prepare($sql)` + `$stmt->execute($params)` |
+
+### trans()
+
+Executes callable inside `beginTransaction()` / `commit()`. Rolls back on any exception. Returns whatever the callable returns.
 
 ### Throws
 
-Everything throws `\RuntimeException` or `\BadFunctionCallException` on failure. Error info from PDO is included in the message:
+| Exception | Condition |
+|-----------|-----------|
+| `BadFunctionCallException` | `db()` called before connection cached |
+| `LogicException` | `trans()` called while already in transaction |
+| `RuntimeException` | PDO operation failed (message includes `[STATE=..., CODE=...]`) |
+
+Error info from PDO is embedded in the message:
 
 ```
-[STATE=23000, CODE=1062] PDO::execute failed (Duplicate entry '5' for key 'PRIMARY')
+[STATE=23000, CODE=1062] PDO::execute() failed (Duplicate entry '5' for key 'PRIMARY')
 ```
 
 No silent failures. No checking return values. It works or it explodes.
