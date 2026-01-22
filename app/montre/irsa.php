@@ -86,13 +86,18 @@ $fondation_pro_irsa = bad\db\qp('SELECT * FROM `page` WHERE `slug` = ?', ['irsa-
     </div>
 </section>
 
-<figure class="chaire-logo">
-  <a href="/irsa/chaire-ucl" class="chaire-logo__link">
+<figure class="chaire-logo" aria-labelledby="chaire-title">
+  <figcaption class="chaire-kicker" id="chaire-title">
+    <span class="chaire-kicker__title">La Chaire</span>
+    <span class="chaire-kicker__tag">Recherche &amp; terrain</span>
+  </figcaption>
+
+  <a href="/irsa/chaire-ucl" class="chaire-logo__link" aria-label="Découvrir la Chaire UCLouvain-IRSA">
     <img
       src="/ui/pages/irsa/logo-chaire-irsa.png"
       alt="Chaire UCLouvain-IRSA"
       loading="lazy"
-      decoding="async"    >
+      decoding="async">
   </a>
 </figure>
 
