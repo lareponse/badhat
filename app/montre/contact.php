@@ -32,27 +32,32 @@
             <h2 id="form-heading">Envoyez-nous un message</h2>
         </legend>
 
-        <label for="name">Nom et prénom</label>
+        <label for="name" class="required">Nom et prénom</label>
         <input type="text" id="name" name="name" placeholder="Votre nom complet" required>
 
-        <label for="email">Adresse e-mail</label>
+        <label for="email" class="required">Adresse e-mail</label>
         <input type="email" id="email" name="email" placeholder="exemple@mail.com" required>
-        <label for="category">Catégorie principale</label>
+        
+        
+        <input type="hidden" id="recipient" name="recipient" value="">
+        <input type="hidden" id="recipient_label" name="recipient_label" value="">
+
+        <label for="category" class="required">Catégorie principale</label>
         <select id="category" name="category" required>
             <option value="">-- Sélectionnez une catégorie --</option>
-            <option value="general">Informations générales</option>
-            <option value="services">Nos services</option>
-            <option value="ecoles">Écoles</option>
-            <option value="don">Faire un don</option>
-            <option value="autre">Autre</option>
+            <option value="centre">Centre</option>
+            <option value="ecoles">Écoles et Crèche</option>
+            <option value="dons">Dons</option>
+            <option value="services">Services</option>
+            <option value="autres">Autres</option>
         </select>
-<!-- 
-        <label for="subcategory">Sous-catégorie</label>
-        <select id="subcategory" name="subcategory" disabled>
-            <option value="">-- Choisissez d'abord une catégorie --</option>
-        </select> -->
 
-        <label for="message">Message</label>
+        <label for="subcategory" class="required">Sous-catégorie</label>
+        <select id="subcategory" name="subcategory" required>
+            <option value="">-- Choisissez d'abord une catégorie --</option>
+        </select>
+
+        <label for="message" class="required">Message</label>
         <textarea id="message" name="message" placeholder="Votre message..." required></textarea>
 
         <button class="btn btn-primary" type="submit">Envoyer</button>
@@ -66,7 +71,7 @@
             <dd>
                 <address>
                     <strong>IRSA – Institut Royal pour Sourds et Aveugles</strong>
-                    <p>Chaussée de Waterloo 1502-1508<br>1180 Uccle – Belgique</p>
+                    <span>Chaussée de Waterloo 1502-1508<br>1180 Uccle – Belgique</span>
                 </address>
             </dd>
 
@@ -110,6 +115,133 @@
     </section>
 
 </section>
+
+<script>
+    (() => {
+  // Category → Subcategory → one or more emails
+  const ROUTING = {
+    centre: {
+      "CHE T6 avec poly": ["cds.t2@irsa.be"],
+      "CHE T7": ["a.delescaille@irsa.be"],
+      "CHE T6": ["cds.t6@irsa.be"],
+      "CHA T6": ["o.chenebon@irsa.be"],
+      "CJES T6": ["c.wierre@irsa.be"],
+      "CJES T7": ["j.piras@irsa.be", "j.abera@irsa.be"],
+      "CJES TSA": ["c.wierre@irsa.be"],
+      "CJENS T6": ["c.becarren@irsa.be"],
+      "CJENS T7": [], // no email provided in your data
+      "CJA T6": ["o.chenebon@irsa.be"],
+    },
+
+    ecoles: {
+      "Fondamentale T6 T2": ["c.tyteca@irsa.be"],
+      "Fondamentale T7": ["f.moral@irsa.be"],
+      "Secondaire": ["dirsec@irsa.be"],
+      "Crèche": ["creche_le_petit_prince@irsa.be"],
+      "Primaire T6 - 8 et secondaire": ["cpmss.1@cpmssu.be"],
+      "Primaire T7": ["cpmss.1@cpmssu.be"],
+    },
+
+    dons: {
+      "Dons / Fondation": ["fondation@irsa.be"],
+    },
+
+    autres: {
+      "Réception / Autre demande": ["reception.cds@irsa.be"],
+    },
+
+    services: {
+      "Ludo": ["ludo.oasis@irsa.be"],
+      "Château": ["v.leclercq@irsa.be"],
+      "Centre doc": ["communication@irsa.be"],
+      "Restaurant d'application": ["chefsdateliers@irsa.be"],
+      "Conférences et formations": ["formations@irsa.be"],
+    },
+  };
+
+  const $category = document.getElementById("category");
+  const $subcategory = document.getElementById("subcategory");
+  const $recipient = document.getElementById("recipient");
+  const $recipientLabel = document.getElementById("recipient_label");
+
+  if (!$category || !$subcategory || !$recipient || !$recipientLabel) return;
+
+  const resetSubcategory = (placeholderText) => {
+    $subcategory.innerHTML = "";
+    const opt = document.createElement("option");
+    opt.value = "";
+    opt.textContent = placeholderText;
+    $subcategory.appendChild(opt);
+    $subcategory.disabled = true;
+
+    $recipient.value = "";
+    $recipientLabel.value = "";
+  };
+
+const autoSelectIfSingle = () => {
+  // index 0 = placeholder; if only one real option, select it
+  const enabledOptions = Array.from($subcategory.options).filter(
+    (o) => o.value && !o.disabled
+  );
+
+  if (enabledOptions.length === 1) {
+    $subcategory.value = enabledOptions[0].value;
+    $subcategory.dispatchEvent(new Event("change", { bubbles: true }));
+  }
+};
+
+const populateSubcategory = (categoryKey) => {
+  const map = ROUTING[categoryKey];
+  if (!map) {
+    resetSubcategory("-- Choisissez d'abord une catégorie --");
+    return;
+  }
+
+  $subcategory.disabled = false;
+  $subcategory.innerHTML = "";
+
+  const placeholder = document.createElement("option");
+  placeholder.value = "";
+  placeholder.textContent = "-- Sélectionnez une sous-catégorie --";
+  $subcategory.appendChild(placeholder);
+
+  const labels = Object.keys(map).sort((a, b) => a.localeCompare(b, "fr"));
+
+  for (const label of labels) {
+    const emails = map[label] || [];
+    const opt = document.createElement("option");
+    opt.value = label;
+    opt.textContent = emails.length ? label : `${label} (contact indisponible)`;
+    opt.disabled = emails.length === 0;
+    $subcategory.appendChild(opt);
+  }
+
+  // Clear recipient when switching category
+  $recipient.value = "";
+  $recipientLabel.value = "";
+
+  // ✅ Auto-select if there’s only one valid subcategory
+  autoSelectIfSingle();
+};
+
+
+  $category.addEventListener("change", () => {
+    populateSubcategory($category.value);
+  });
+
+  $subcategory.addEventListener("change", () => {
+    const cat = $category.value;
+    const sub = $subcategory.value;
+
+    const emails = (ROUTING[cat] && ROUTING[cat][sub]) ? ROUTING[cat][sub] : [];
+    $recipient.value = emails.join(",");
+    $recipientLabel.value = sub || "";
+  });
+
+  // Initial state
+  resetSubcategory("-- Choisissez d'abord une catégorie --");
+})();
+</script>
 
 <?php
 return ['page-contact'];

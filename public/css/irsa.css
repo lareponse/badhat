@@ -125,7 +125,7 @@
     --color-accent-secondary-dark: #FFC727;
     --color-accent-secondary-light: #FFE7A1;
     --color-accent-secondary-soft: rgba(255, 229, 0, 0.5);
-
+    --color-warning: #D3121B;
     /* --- Buttons --- */
     --btn-primary-bg: var(--color-accent-secondary-dark);
     --btn-primary-color: var(--color-text);
@@ -562,4 +562,16 @@ html {
 .doc-nav {
     width: fit-content;
     margin-inline: auto;
+}
+
+abbr[title]{
+    text-decoration: none;
+    border-bottom: 1px dotted var(--color-text-secondary);
+}
+
+
+label:has(+[required])::after,
+label.required::after {
+    content: " *";
+    color: var(--color-warning);
 }

@@ -17,9 +17,10 @@
 .contact-grid dl dt{
     color: var(--color-accent-secondary-dark);
     text-align:center;
+    align-self: center;
 }
 .contact-grid dl dd {
-    min-height:3rem;
+    color: var(--color-text-secondary);
 }
 /* --------------------------
    Formulaire
@@ -28,7 +29,7 @@
 .contact-form label {
     display:block;
     font-weight: 700;
-    color: var(--color-text-primary);
+    color: var(--color-text-secondary);
     margin-bottom:0.8rem;
 }
 
