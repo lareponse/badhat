@@ -2,13 +2,14 @@
     <h1><span class="tight">Organe d’Administration</span></h1>
 </header>
 
-<section aria-labelledby="oa" class="tight">
-    <h2 id="oa">Les membres de l’Organe d’Administration sont :</h2>
-    <div>
+<section aria-labelledby="team" class="tight">
+    <h2 id="team">Les membres de l’Organe d’Administration sont :</h2>
+    <div class="team-section">
+
         <article>
             <figure>
                 <img src="/ui/pages/oa/CelineFremault cut mobile.webp" alt="Présidente">
-                                    <figcaption class="admin-caption">
+                 <figcaption class="admin-caption">
                     <strong>Présidente</strong><br />
                     Céline Fremault
                 </figcaption>

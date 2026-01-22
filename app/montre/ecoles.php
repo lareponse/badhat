@@ -39,7 +39,7 @@
 
     <article>
         <a href="/ecoles/t1-t7-t6">
-            <img src="/ui/pages/ecoles/ecole-secondaire.jpg" alt="Deux adolescentes en classe">
+            <img src="/ui/pages/ecoles/ecole-secondaire.webp" alt="Deux adolescentes en classe">
             <h2>École secondaire spécialisée</h2>
             <span class="cta">Découvrir le secondaire</span>
             <dl>

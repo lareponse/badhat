@@ -38,13 +38,14 @@
     </p>
 </section>
 
+
 <section class="tight" aria-labelledby="galerie-heading">
-    <h2 id="galerie-heading" class="visually-hidden">Galerie visuelle de l’école secondaire</h2>
+    <h2 id="galerie-heading" class="visually-hidden">Galerie visuelle de l'école</h2>
     <figure class="banner-gallery">
-        <img src="/ui/banners/accueil_1.webp" alt="">
-        <img src="/ui/banners/accueil_2.webp" alt="Enfant accompagné dans une activité de communication : gestes, supports visuels ou langue des signes">
-        <img src="/ui/banners/accueil_3.webp" alt="">
-        <img src="/ui/banners/accueil_4.webp" alt="">
+        <img src="/ui/pages/ecoles/banners/t1t6t7_1.webp" alt="">
+        <img src="/ui/pages/ecoles/banners/t1t6t7_2.webp" alt="">
+        <img src="/ui/pages/ecoles/banners/t1t6t7_3.webp" alt="">
+        <img src="/ui/pages/ecoles/banners/t1t6t7_4.webp" alt="">
     </figure>
 </section>
 
@@ -67,45 +68,46 @@
     </ul>
 </section>
 
-<section class="card-grid tight" aria-labelledby="metiers-heading">
-    <h2 id="metiers-heading">Secteurs & métiers</h2>
+<section  aria-labelledby="metiers-heading">
+    <h2  class="tight" id="metiers-heading">Secteurs & métiers</h2>
+    <div class="card-grid">
+        <article>
+            <h3>Forme 3 – Type 7 :</h3>
+            <ul>
+                <li>Agronomie</li>
+                <li>Construction (bois, électricité)</li>
+                <li>Hôtellerie/Alimentation</li>
+                <li>Économie</li>
+                <li>Service aux personnes</li>
+                <li>Arts appliqués</li>
+            </ul>
+        </article>
 
-    <article>
-        <h3>Forme 3 – Type 7 :</h3>
-        <ul>
-            <li>Agronomie</li>
-            <li>Construction (bois, électricité)</li>
-            <li>Hôtellerie/Alimentation</li>
-            <li>Économie</li>
-            <li>Service aux personnes</li>
-            <li>Arts appliqués</li>
-        </ul>
-    </article>
+        <article>
+            <h3>Forme 3 – Type 6 :</h3>
+            <ul>
+                <li>Construction (électricité)</li>
+                <li>Hôtellerie/Alimentation</li>
+                <li>Économie</li>
+                <li>Service aux personnes</li>
+                <li>Arts appliqués</li>
+                <li>Agronomie</li>
+            </ul>
+        </article>
 
-    <article>
-        <h3>Forme 3 – Type 6 :</h3>
-        <ul>
-            <li>Construction (électricité)</li>
-            <li>Hôtellerie/Alimentation</li>
-            <li>Économie</li>
-            <li>Service aux personnes</li>
-            <li>Arts appliqués</li>
-            <li>Agronomie</li>
-        </ul>
-    </article>
+        <article>
+            <h3>Forme 4 – Type 6 :</h3>
+            <ul>
+                <li>Construction (électricité)</li>
+                <li>Hôtellerie/Alimentation</li>
+                <li>Économie</li>
+                <li>Service aux personnes</li>
+                <li>Arts appliqués</li>
+            </ul>
+        </article>
+    </div>
 
-    <article>
-        <h3>Forme 4 – Type 6 :</h3>
-        <ul>
-            <li>Construction (électricité)</li>
-            <li>Hôtellerie/Alimentation</li>
-            <li>Économie</li>
-            <li>Service aux personnes</li>
-            <li>Arts appliqués</li>
-        </ul>
-    </article>
-
-    <footer><a href="#" class="btn btn-secondary">Découvrir tous les métiers</a></footer>
+    <footer class="tight"><a href="/contact/ecole/t1-t7-t6/decouvrir" class="btn btn-secondary">Découvrir tous les métiers</a></footer>
 </section>
 
 <section class="tight" aria-labelledby="services-heading">
@@ -127,9 +129,7 @@
         </li>
     </ul>
 
-    <p class="centered">
-        <a href="#" class="btn btn-secondary">Vers formulaire d’inscription</a>
-    </p>
+    <footer class="tight"><a href="/contact/ecole/t1-t7-t6/inscrire" class="btn btn-secondary">Vers formulaire d’inscription</a></footer>
 </section>
 
 <section class="tight" aria-labelledby="contact-heading">
@@ -147,7 +147,7 @@
         </article>
 
         <article class="button-cta">
-            <a href="/contact" class="btn btn-secondary">Vers le formulaire de contact</a>
+            <a href="/contact/ecole/t1-t7-t6" class="btn btn-secondary">Vers le formulaire de contact</a>
         </article>
     </div>
 </section>
@@ -156,9 +156,9 @@
     <h2 id="liens-heading">Liens utiles</h2>
 
     <div class="links-grid">
-        <a class="btn btn-tag" href="#">Projet pédagogique</a>
-        <a class="btn btn-tag" href="#">Règlement des études</a>
-        <a class="btn btn-tag" href="#">Brochure métiers</a>
+        <a class="btn btn-tag" href="/contact/ecole/t1-t7-t6/projet-pedagogique">Projet pédagogique</a>
+        <a class="btn btn-tag" href="/contact/ecole/t1-t7-t6/reglement-etudes">Règlement des études</a>
+        <a class="btn btn-tag" href="/contact/ecole/t1-t7-t6/brochure-metiers">Brochure métiers</a>
     </div>
     <nav class="doc-nav" aria-label="Documents">
         <a href="/documents/brochure/secondaire-brochure.pdf" class="btn btn-primary">
@@ -169,7 +169,4 @@
 
 
 <?php
-return function ($this_html, $args) {
-    [$ret, $page] = ob_ret_get('app/layout.php', ['main' => $this_html, 'css' => ['page-ecoles']], IO_EXTRACT);
-    return $page;
-};
+return ['page-ecoles'];

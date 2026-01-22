@@ -7,7 +7,7 @@ $conf = [];
 foreach (['SMTP_HOST','SMTP_PORT','SMTP_USER','SMTP_PASS'] as $k) {
     $raw = getenv($k);
     $v   = ($raw === false) ? '' : trim((string) $raw);
-    $conf[$k] = ($v !== '') ? $v : throw new RuntimeException("Missing ENV for mailer: $k", 0xACE);
+    $conf[$k] = ($v !== '') ? $v : throw new RuntimeException("Missing ENV for mailer: $k", 500);
 }
 
 use PHPMailer\PHPMailer\PHPMailer;

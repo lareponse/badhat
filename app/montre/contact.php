@@ -74,8 +74,7 @@
             <dd>Du lundi au vendredi<br>8h30 - 12h / 13h - 16h30</dd>
 
             <dt><img src="/ui/icon/contact/phone.svg" alt="" class="icon" /></dt>
-            <dd>+32 (0)2 343 22 27</dd>
-
+            <dd>+32 (0)2 882 69 00</dd>
             <dt></dt>
             <dd>
                 <h3 id="social-heading">Suivez nous</h3>

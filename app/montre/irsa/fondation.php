@@ -1,23 +1,26 @@
 <?php
 $president = [
-    'name' => 'Vanessa ISSI',
+    'name' => 'Vanessa Issi',
     'role' => 'Présidente'
 ];
 
 $board_members = [
-    ['name' => 'Christiane BERGHMANS - WAUCQUEZ', 'role' => 'Présidente'],
-    ['name' => 'Dominique COLLINET', 'role' => 'Président honoraire'],
-    ['name' => 'Reginald BEYAERT'],
-    ['name' => 'Jean-François van BOXMEER'],
-    ['name' => 'Marcel CROCHET'],
-    ['name' => 'Sœur Marie-Christiane GOSLAIN'],
-    ['name' => 'Patrice le HODEY'],
-    ['name' => 'Geoffroy de SCHREVEL'],
-    ['name' => 'Xavier SINECHAL'],
-    ['name' => 'Jean-Marie SOLVAY'],
-    ['name' => 'Brigitte ULLENS de SCHOOTEN'],
-    ['name' => 'Jos VANEYGEN'],
-    ['name' => 'Magdeleine WILLAME - BOONEN']
+    // Administrateurs
+    ['name' => 'Louis Berghmans', 'role' => 'Administrateur'],
+    ['name' => 'Réginald Beyaert', 'role' => 'Administrateur'],
+    ['name' => 'Marcel Crochet', 'role' => 'Administrateur'],
+    ['name' => 'Alexandra de Biolley', 'role' => 'Administratrice'],
+    ['name' => 'Alessandro De Cesco', 'role' => 'Administrateur'],
+    ['name' => 'Carlos de Meester de Betzenbroeck', 'role' => 'Administrateur'],
+    ['name' => 'Geoffroy de Schrevel', 'role' => 'Administrateur'],
+    ['name' => 'Jean-Nicolas Dutry', 'role' => 'Administrateur'],
+    ['name' => 'Renaud Festraets', 'role' => 'Administrateur'],
+    ['name' => 'Patrice le Hodey', 'role' => 'Administrateur'],
+    ['name' => 'Marie-Noël Paquot', 'role' => 'Administratrice'],
+    ['name' => 'Rose Romain', 'role' => 'Administratrice'],
+    ['name' => 'Pascale Simon', 'role' => 'Administratrice'],
+    ['name' => 'Xavier Sinéchal', 'role' => 'Administrateur'],
+    ['name' => 'Jean-Marie Solvay de La Hulpe', 'role' => 'Administrateur'],
 ];
 
 $contact = [
@@ -37,7 +40,7 @@ $contact = [
     <p>La Fondation œuvre en priorité pour l'aménagement des infrastructures destinées à l'hébergement et à la formation des bénéficiaires, ainsi que pour l'installation d'équipements spécifiques et adaptés à l'évolution des handicaps.</p>
 </section>
 
-<section class="tight">
+<section id="donateurs" class="tight">
     <h2>Réalisations grâce aux donateurs</h2>
     <div class="tight">
         <p>Grâce à la générosité des donateurs et mécènes, l'IRSA a pu concrétiser plusieurs projets majeurs :</p>
@@ -49,8 +52,16 @@ $contact = [
             <li>Achat de bus et minibus avec élévateur</li>
             <li>Renouvellement d'équipements spécialisés (sanitaires adaptés, barrettes braille, station debout…)</li>
         </ul>
+
+        <figure class="banner-gallery">
+            <img src="/ui/pages/irsa/banners/donateurs_1.webp" alt="">
+            <img src="/ui/pages/irsa/banners/donateurs_2.webp" alt="">
+            <img src="/ui/pages/irsa/banners/donateurs_3.webp" alt="">
+            <img src="/ui/pages/irsa/banners/donateurs_4.webp" alt="">
+        </figure>
     </div>
 </section>
+
 
 <section class="tight">
     <h2>Votre soutien compte</h2>
@@ -73,9 +84,9 @@ $contact = [
 </section>
 
 
-<section aria-labelledby="oa" class="tight">
-    <h2 id="oa">Conseil d'Administration :</h2>
-    <div>
+<section aria-labelledby="team" class="tight">
+    <h2 id="team">Les membres du Conseil d'Administration sont :</h2>
+    <div class="team-section">
         <article>
             <figure>
                 <img src="/ui/pages/oa/ISSI Vanessa Mobile.webp" alt="Présidente">

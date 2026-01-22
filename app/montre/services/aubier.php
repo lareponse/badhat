@@ -38,10 +38,10 @@
 <section class="tight" aria-labelledby="environnement-heading">
     <h2 id="environnement-heading" class="visually-hidden">Notre environnement</h2>
     <figure class="banner-gallery">
-        <img src="/ui/banners/accueil_1.webp" alt="">
-        <img src="/ui/banners/accueil_2.webp" alt="Enfant accompagné dans une activité de communication : gestes, supports visuels ou langue des signes">
-        <img src="/ui/banners/accueil_3.webp" alt="">
-        <img src="/ui/banners/accueil_4.webp" alt="">
+        <img src="/ui/pages/service/banners/aubier_1.webp" alt="">
+        <img src="/ui/pages/service/banners/aubier_2.webp" alt="">
+        <img src="/ui/pages/service/banners/aubier_3.webp" alt="">
+        <img src="/ui/pages/service/banners/aubier_4.webp" alt="">
     </figure>
 </section>
 

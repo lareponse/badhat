@@ -30,10 +30,10 @@
 <section class="tight" aria-labelledby="environnement-heading">
     <h2 id="environnement-heading" class="visually-hidden">Notre environnement</h2>
     <figure class="banner-gallery">
-        <img src="/ui/banners/accueil_1.webp" alt="">
-        <img src="/ui/banners/accueil_2.webp" alt="Enfant accompagné dans une activité de communication : gestes, supports visuels ou langue des signes">
-        <img src="/ui/banners/accueil_3.webp" alt="">
-        <img src="/ui/banners/accueil_4.webp" alt="">
+        <img src="/ui/pages/service/banners/che_surdite_1.webp" alt="">
+        <img src="/ui/pages/service/banners/che_surdite_2.webp" alt="">
+        <img src="/ui/pages/service/banners/che_surdite_3.webp" alt="">
+        <img src="/ui/pages/service/banners/che_surdite_4.webp" alt="">
     </figure>
 </section>
 
@@ -63,15 +63,6 @@
             <li>Âges accueillis : de 3 à 21 ans, selon le parcours et les dérogations scolaires</li>
         </ul>
     </article>
-</section>
-
-<section class="tight" aria-labelledby="environnement-heading">
-    <h2 id="environnement-heading" class="visually-hidden">Notre environnement</h2>
-    <figure>
-        <img src="" alt="Espace d’hébergement : chambre et repères visuels pour les routines du quotidien">
-        <img src="" alt="Temps de vie collective : repas et échanges en petits groupes, communication visuelle">
-        <img src="" alt="Activité du soir : jeux collaboratifs et rituels rassurants, accompagnement individualisé">
-    </figure>
 </section>
 
 <section class="tight" aria-labelledby="missions-heading">

@@ -269,5 +269,10 @@ WHERE NOT EXISTS (
 
 
 INSERT INTO `page` (`id`, `slug`, `label`, `content`, `created_at`, `updated_at`) VALUES (NULL, 'irsa-fondation-pro', 'La Fondation PRO-IRSA', '<p>L’IRSA bénéficie depuis 2006 de l’aide de la Fondation PRO-IRSA, fondation d’utilité publique dont la mission est de soutenir les projets éducatifs et d’infrastructure en faveur des personnes déficientes sensorielles, en priorité par l’aménagement des infrastructures destinées à leur hébergement et à leur formation et par l’installation d’équipements spécifiques et adaptés à l’évolution des handicaps.</p>', '2025-12-14 21:05:11', '2025-12-14 22:07:07');
+UPDATE `page`
+SET `content` = '<p>Depuis 2006, l’IRSA bénéficie du soutien de la Fondation PRO-IRSA, qui finance des projets éducatifs et d’infrastructure en faveur des personnes déficientes sensorielles. Grâce aux dons et au mécénat, de nombreux projets ont été réalisés, comme la nouvelle plaine de jeux inclusive, l’adaptation des infrastructures (ascenseur, équipements spécialisés), ainsi que la construction d’installations sportives et de formation. Pour maintenir la qualité des services et poursuivre l’adaptation aux handicaps et aux nouvelles technologies, l’IRSA fait appel à la solidarité de tous.</p>',
+    `updated_at` = '2026-01-22 00:59:07'
+WHERE `slug` = 'irsa-fondation-pro'
+LIMIT 1;
 
 COMMIT;

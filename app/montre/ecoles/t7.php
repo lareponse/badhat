@@ -38,10 +38,10 @@
 <section class="tight" aria-labelledby="environnement-heading">
     <h2 id="environnement-heading" class="visually-hidden">Notre environnement</h2>
     <figure class="banner-gallery">
-        <img src="/ui/banners/accueil_1.webp" alt="">
-        <img src="/ui/banners/accueil_2.webp" alt="Enfant accompagné dans une activité de communication : gestes, supports visuels ou langue des signes">
-        <img src="/ui/banners/accueil_3.webp" alt="">
-        <img src="/ui/banners/accueil_4.webp" alt="">
+        <img src="/ui/pages/ecoles/ecole-auditive.webp" alt="">
+        <img src="/ui/pages/ecoles/banners/t7_2.jpg" alt="">
+        <img src="/ui/pages/ecoles/banners/t7_3.webp" alt="">
+        <img src="/ui/pages/ecoles/banners/t7_4.webp" alt="">
     </figure>
 </section>
 
@@ -99,12 +99,15 @@
     <div class="triple-infos">
         <article>
             <h3>Numéro de téléphone</h3>
-            <span>02 882 69 07</span>
+            <span>02/375.92.69</span>
+            <span>0478/37.58.22</span>
+            
         </article>
 
         <article>
             <h3>Adresse mail</h3>
-            <a href="mailto:f.moral@irsa.be">f.moral@irsa.be</a>
+            <a href="mailto:g.gors@irsa.be">g.gors@irsa.be</a>
+            <a href="mailto:p.peeters@irsa.be">p.peeters@irsa.be</a>
         </article>
 
         <article>

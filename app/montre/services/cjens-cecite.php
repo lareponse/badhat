@@ -33,7 +33,7 @@
     <h2 id="environnement-heading" class="visually-hidden">Notre environnement</h2>
     <figure class="banner-gallery">
         <img src="/ui/banners/accueil_1.webp" alt="">
-        <img src="/ui/banners/accueil_2.webp" alt="Enfant accompagné dans une activité de communication : gestes, supports visuels ou langue des signes">
+        <img src="/ui/banners/accueil_2.webp" alt="">
         <img src="/ui/banners/accueil_3.webp" alt="">
         <img src="/ui/banners/accueil_4.webp" alt="">
     </figure>
@@ -132,9 +132,9 @@
     <div class="triple-infos">
         <article>
             <h3>Coordinateur de projet</h3>
-            <p>Emmanuel Languin</p>
+            <p>Emmanuel Lenguin</p>
             <a href="mailto:E.Lenguin@irsa.be">E.Lenguin@irsa.be</a>
-            <span>04&hellip;</span>
+            <span>0477/026.359</span>
         </article>
 
         <article>
@@ -143,7 +143,6 @@
             <a href="mailto:c.becarren@irsa.be">c.becarren@irsa.be</a>
             <a href="tel:+32477026341">0477/026.341</a>
         </article>
-
         <article>
             <a href="/contact" class="btn btn-primary">Vers le formulaire de contact</a>
         </article>

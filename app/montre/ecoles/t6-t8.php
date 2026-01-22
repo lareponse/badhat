@@ -40,10 +40,10 @@
 <section class="tight" aria-labelledby="galerie-heading">
     <h2 id="galerie-heading" class="visually-hidden">Galerie visuelle de l'école</h2>
     <figure class="banner-gallery">
-        <img src="/ui/banners/accueil_1.webp" alt="">
-        <img src="/ui/banners/accueil_2.webp" alt="Enfant accompagné dans une activité de communication : gestes, supports visuels ou langue des signes">
-        <img src="/ui/banners/accueil_3.webp" alt="">
-        <img src="/ui/banners/accueil_4.webp" alt="">
+        <img src="/ui/pages/ecoles/banners/t2t6t8_1.webp" alt="">
+        <img src="/ui/pages/ecoles/banners/t2t6t8_2.webp" alt="">
+        <img src="/ui/pages/ecoles/banners/t2t6t8_3.webp" alt="">
+        <img src="/ui/pages/ecoles/banners/t2t6t8_4.webp" alt="">
     </figure>
 </section>
 
@@ -95,12 +95,13 @@
     <div class="triple-infos">
         <article>
             <h3>Numéro de téléphone</h3>
-            <p>02 *** ** ** *</p>
+            <p>02 375 47 85</p>
+            <p>0476 90 34 30</p>
         </article>
 
         <article>
             <h3>Adresse mail</h3>
-            <p>fondat.t26t8@irsa.be</p>
+            <p>secretariat68@irsa.be</p>
         </article>
 
         <article class="button-cta">

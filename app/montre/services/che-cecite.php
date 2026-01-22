@@ -26,14 +26,13 @@
     </div>
 </section>
 
-
 <section class="tight" aria-labelledby="environnement-heading">
     <h2 id="environnement-heading" class="visually-hidden">Notre environnement</h2>
     <figure class="banner-gallery">
-        <img src="/ui/banners/accueil_1.webp" alt="">
-        <img src="/ui/banners/accueil_2.webp" alt="Enfant accompagné dans une activité de communication : gestes, supports visuels ou langue des signes">
-        <img src="/ui/banners/accueil_3.webp" alt="">
-        <img src="/ui/banners/accueil_4.webp" alt="">
+        <img src="/ui/pages/service/banners/che_cecite_1.webp" alt="">
+        <img src="/ui/pages/service/banners/che_cecite_2.webp" alt="">
+        <img src="/ui/pages/service/banners/che_cecite_3.webp" alt="">
+        <img src="/ui/pages/service/banners/che_cecite_4.webp" alt="">
     </figure>
 </section>
 
@@ -68,14 +67,6 @@
     </article>
 </section>
 
-<section class="tight" aria-labelledby="environnement-heading">
-    <h2 id="environnement-heading" class="visually-hidden">Notre environnement</h2>
-    <figure>
-        <img src="" alt="Espace d’hébergement : repères sensoriels et organisation claire pour sécuriser les routines">
-        <img src="" alt="Temps de vie collective : repas et échanges, accompagnement bienveillant et ambiance familiale">
-        <img src="" alt="Activité adaptée : atelier créatif et exploration sensorielle, matériel accessible et structuré">
-    </figure>
-</section>
 
 <section class="tight" aria-labelledby="missions-heading">
     <h2 id="missions-heading">Nos missions</h2>

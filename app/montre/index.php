@@ -395,7 +395,7 @@ $statistics = bad\db\qp('SELECT label, value FROM `statistics`')->fetchAll(PDO::
 
 <section class="tight" aria-labelledby="don-heading" lang="fr">
     <figure>
-        <img src="/ui/home/home_don_acteur.jpg" alt="Main tenant une tablette avec une icône de don en surimpression">
+        <img src="/ui/home/home_don_acteur.webp" alt="Main tenant une tablette avec une icône de don en surimpression">
     </figure>
 
     <div>

@@ -47,7 +47,7 @@
 
         <dt>Soutenir l'IRSA</dt>
         <dd><a href="/don">Faire un don</a></dd>
-        <dd><a href="/rejoindre">Rejoindre nos équipes</a></dd>
+        <dd><a href="/contact/rh@irsa.be">Rejoindre nos équipes</a></dd>
 
         <dt>Contact et informations</dt>
         <dd><a href="/contact">Nous contacter</a></dd>

@@ -35,10 +35,10 @@
 <section class="tight" aria-labelledby="environnement-heading">
     <h2 id="environnement-heading" class="visually-hidden">Notre environnement</h2>
     <figure class="banner-gallery">
-        <img src="/ui/banners/accueil_1.webp" alt="">
-        <img src="/ui/banners/accueil_2.webp" alt="Enfant accompagné dans une activité de communication : gestes, supports visuels ou langue des signes">
-        <img src="/ui/banners/accueil_3.webp" alt="">
-        <img src="/ui/banners/accueil_4.webp" alt="">
+        <img src="/ui/banners/accueil_2.webp" alt="">
+        <img src="/ui/pages/ecoles/banners/creche_1.webp" alt="">
+        <img src="/ui/pages/ecoles/creche.webp" alt="">
+        <img src="/ui/banners/accueil_2.webp" alt="">
     </figure>
 </section>
 
@@ -83,7 +83,7 @@
 
         <article>
             <h3>Adresse mail</h3>
-            <p>creche@irsa.be</p>
+            <p>creche_le_petit_prince@irsa.be</p>
         </article>
 
         <article class="button-cta">

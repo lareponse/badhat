@@ -1,38 +1,40 @@
-main.irsa h2{
-  margin-bottom:4rem;
-}
-
-main.irsa section > div {
+.team-section {
   display:flex;
   gap:4rem;
+  margin-top:4rem;
 }
 
-main.irsa article{
+.team-section article{
     background: var(--color-surface);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
-main.irsa article img{
+.team-section article img{
     border-top-left-radius: var(--size-card-radius);
     border-top-right-radius: var(--size-card-radius);
     width: 400px;
 
 }
 
-main.irsa section article figcaption{
+.team-section article figcaption{
   font-size:2rem;
   text-align:center;
 }
 
-main.irsa .admin-members{
+.team-section .admin-members{
   list-style-type:none;
 }
 
-main.irsa .admin-members>li{
+.team-section .admin-members>li{
   display:inline;
 }
 
-main.irsa .admin-members>li::after{
+.team-section .admin-members>li::after{
   content:'—';
   padding:0rem 0.4rem 0rem 0.4rem;
+}
+
+#donateurs figure{
+    margin-top:3rem;
+
 }

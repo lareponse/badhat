@@ -188,3 +188,5 @@
     color: #fff;
     font-weight: 700;
 }
+.chaire-logo { margin: 1rem; text-align: center; }
+.chaire-logo img { max-width: 260px; height: auto; }

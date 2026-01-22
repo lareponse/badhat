@@ -85,7 +85,7 @@
         </article>
 
         <article>
-            <a href="/services/documentation">
+            <a href="/contact/services/documentation">
                 <img src="/ui/pages/service/documentation.webp" alt="Centre de documentation">
                 <h3>Centre de documentation</h3>
                 <span class="cta">Horaires et Infos</span>
@@ -94,7 +94,7 @@
         </article>
 
         <article>
-            <a href="/services/restaurant-application">
+            <a href="/contact/services/restaurant-application">
                 <img src="/ui/pages/service/restaurant.webp" alt="Restaurant d'application">
                 <h3>Restaurant d'application</h3>
                 <span class="cta">Horaires et Infos</span>
@@ -103,7 +103,7 @@
         </article>
 
         <article>
-            <a href="/services/conference">
+            <a href="/contact/services/conference">
                 <img src="/ui/pages/service/conference.jpg" alt="Conférences">
                 <h3>Conférences</h3>
                 <span class="cta">Découvrir</span>
@@ -112,7 +112,7 @@
         </article>
 
         <article>
-            <a href="/services/formations">
+            <a href="/contact/services/formations">
                 <img src="/ui/pages/service/formations.jpg" alt="Formations">
                 <h3>Formations</h3>
                 <span class="cta">Découvrir</span>

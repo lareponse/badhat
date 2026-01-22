@@ -45,13 +45,12 @@
     </p>
 </section>
 
-<section class="tight" aria-labelledby="oasis-gallery">
-    <h2 id="oasis-gallery" class="visually-hidden">Galerie</h2>
-
+<section class="tight" aria-labelledby="environnement-heading">
+    <h2 id="environnement-heading" class="visually-hidden">Notre environnement</h2>
     <figure class="banner-gallery">
-        <img src="/ui/banners/accueil_1.webp" alt="">
-        <img src="/ui/banners/accueil_2.webp" alt="">
-        <img src="/ui/banners/accueil_3.webp" alt="">
+        <img src="/ui/pages/service/banners/oasis_1.webp" alt="">
+        <img src="/ui/pages/service/banners/oasis_2.webp" alt="">
+        <img src="/ui/pages/service/banners/oasis_3.webp" alt="">
     </figure>
 </section>
 

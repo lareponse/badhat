@@ -67,6 +67,18 @@ section[aria-labelledby="questionnaire-heading"] .btn {
     text-decoration: none;
     display: inline-block;
 }
+section[aria-labelledby="questionnaire-heading"] .multi-choice {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+}
+section[aria-labelledby="questionnaire-heading"] .multi-choice label {
+        padding: 0.75rem 1.5rem;
+}
+
+section[aria-labelledby="questionnaire-heading"] .multi-choice label input{
+    width:2rem;
+}
 
 
 /* Stats */
