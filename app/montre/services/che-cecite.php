@@ -153,7 +153,8 @@
     <div class="triple-infos">
         <article>
             <h3>Numéro de téléphone</h3>
-            <span>02 *** *** ***</span>
+            <em>Anne de l’Escaille</em><br>
+            <span>0477/02.63.31</span>
         </article>
 
         <article>

@@ -130,11 +130,23 @@
 </section>
 
 <section class="tight" aria-labelledby="contact-heading">
-    <h2 id="contact-heading" class="visually-hidden">Contact</h2>
-    <p>
-        <a href="/contact" class="btn btn-primary">Vers le formulaire de contact</a>
-    </p>
-</section>
+    <h2 id="contact-heading">Contact</h2>
 
+    <div class="triple-infos">
+        <article>
+            <h3>Numéro de téléphone</h3>
+            <p>02/882.69.00</p>
+        </article>
+
+        <article>
+            <h3>Adresse mail</h3>
+            <p>cds-type7@irsa.be</p>
+        </article>
+
+        <article class="button-cta">
+            <a href="/contact/centre/cjes-surdite" class="btn btn-secondary">Vers le formulaire de contact</a>
+        </article>
+    </div>
+</section>
 <?php 
 return ['page-ecole', 'page-services'];
