@@ -13,31 +13,35 @@ CONST H_FOLD = 32;                  // promote (SET to ADD/CSV)
 const CTRL_ASCII = "\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0A\x0B\x0C\x0D\x0E\x0F\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1A\x1B\x1C\x1D\x1E\x1F\x7F";
 const HTTP_TCHAR = "!#$%&'*+-.^_`|~0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 
-function headers(int $behave, ?string $name = null, $value = null): array
+function headers(int $behave, ?string $name = null, $value = null): ?string
 {
     static $headers = []; // [H_SET][name]=value, [H_ONE][name]=true, [H_ADD][name][]=value, [H_CSV][name][]=value
 
     if ($behave === H_OUT) {
-        foreach (($headers[H_SET] ?? []) as $n => $v)            header($n . ': ' . $v, false);
-        foreach (($headers[H_CSV] ?? []) as $n => $vals)         header($n . ': ' . implode(', ', $vals), false);
+        foreach (($headers[H_SET] ?? []) as $n => $v)               header($n . ': ' . $v, false);
+        foreach (($headers[H_CSV] ?? []) as $n => $vals)            header($n . ': ' . implode(', ', $vals), false);
         foreach (($headers[H_ADD] ?? []) as $n => $vals)
-            foreach ($vals as $v)                                header($n . ': ' . $v, false);
-
-        return $headers = [];
+            foreach ($vals as $v)                                   header($n . ': ' . $v, false);
+        
+        $headers = [];
+        return null;
     }
 
+    ((H_SET | H_ADD) & $behave) !== (H_SET | H_ADD)                 || throw new \BadFunctionCallException('H_SET XOR H_ADD');
+    (strpbrk((string)$value, CTRL_ASCII) === false)                 || throw new \InvalidArgumentException('invalid ASCII control char in header value');
     (isset($name) && $name !== '')                                  || throw new \InvalidArgumentException('header name required');
     (!isset($name[strspn($name, HTTP_TCHAR)]))                      || throw new \InvalidArgumentException('invalid T_CHAR header name');
-    (strpbrk((string)$value, CTRL_ASCII) === false)                 || throw new \InvalidArgumentException('invalid ASCII control char in header value');
-    (strcasecmp($name, 'Set-Cookie') !== 0 || $behave === H_ADD)    || throw new \BadFunctionCallException('Set-Cookie header must use H_ADD mode');
-    (($headers[H_LOCK][$name] ?? false) !== true)                   || throw new \BadFunctionCallException("header '{$name}' is locked (H_ONE)");
-    ((H_SET | H_ADD) & $behave) !== (H_SET | H_ADD)                 || throw new \BadFunctionCallException('H_SET XOR H_ADD');
 
-    $name = strtolower(trim($name));
+    $name = strtolower(trim($name))                                 ?: throw new \InvalidArgumentException('header name cannot be empty');
+
+    (($headers[H_LOCK][$name] ?? false) !== true)                   || throw new \BadFunctionCallException("header '{$name}' is locked (H_ONE)");
+
+    if ($name === 'set-cookie')
+        (($behave & ~(H_ADD | H_LOCK)) === 0) || (H_ADD & $behave)  || throw new \InvalidArgumentException('Set-Cookie only supports H_ADD and optionally H_LOCK');
+
     if (H_SET & $behave) 
         $headers[H_SET][$name] = $value;
 
-    
     if(H_ADD & $behave){
         $store = (H_CSV & $behave || isset($headers[H_CSV][$name])) ? H_CSV : H_ADD;
 
@@ -51,7 +55,7 @@ function headers(int $behave, ?string $name = null, $value = null): array
 
     (H_LOCK & $behave) && ($headers[H_LOCK][$name] = true);
 
-    return $headers;
+    return $name . ': ' . $value;   // returns current header as text for convenience
 }
 
 
@@ -69,11 +73,13 @@ function in($url): string
     return $url;
 }
 
-function out($code, $body = null, $headers = []): int
+function out($code, $body = null, $header = null): int
 {
     http_response_code($code);
     headers(H_OUT);
-
+    if ($header)
+        header($header);
+    
     if ($body !== null && $code >= 200 && $code !== 204 && $code !== 205 && $code !== 304) // RFC 7230: bodyless status codes
         echo $body;
 
