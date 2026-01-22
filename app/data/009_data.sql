@@ -78,7 +78,7 @@ FROM (
   UNION ALL SELECT 'ONE','one','https://www.one.be','one.png',NULL,NOW()
   UNION ALL SELECT 'SHC','shc','https://shc.health.belgium.be','shc.png',NULL,NOW()
   UNION ALL SELECT 'COCOF','cocof','https://ccf.brussels/','francophones_bruxelles.png',NULL,NOW()
-  UNION ALL SELECT 'Réseau Francophone','reseau-francophone','https://www.reseaudefrance.be','reseau_francophone.png',NULL,NOW()
+  UNION ALL SELECT 'Réseau Francophone','reseau-francophone','https://www.reseaudefrance.be','reseau_francophone-blue.png',NULL,NOW()
   UNION ALL SELECT 'Commune d’Uccle','commune-uccle','https://www.uccle.be','uccle.png',NULL,NOW()
   UNION ALL SELECT 'UCLouvain','uclouvain','https://uclouvain.be','uc_louvain.png',NULL,NOW()
 ) v

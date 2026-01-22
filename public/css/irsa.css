@@ -229,7 +229,6 @@ img {
 
 /* --- Partners carousel --- */
 #partners {
-    padding-block: 3rem;
     background: #fff;
 }
 
@@ -264,7 +263,7 @@ img {
 
     inline-size: 8rem;
     /* bigger presence */
-    block-size: 300px;
+    block-size: 200px;
     padding: 1rem;
     /* breathing room */
 

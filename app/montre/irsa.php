@@ -115,7 +115,7 @@ $fondation_pro_irsa = bad\db\qp('SELECT * FROM `page` WHERE `slug` = ?', ['irsa-
             <li><a href="https://www.one.be" target="_blank" rel="noopener"><img src="/ui/partners/one.png" alt="ONE - Office de la Naissance et de l’Enfance"></a></li>
             <li><a href="https://www.sensorial.be/" target="_blank" rel="noopener"><img src="/ui/partners/shc.png" alt="SHC - Service d’Hygiène Communale"></a></li>
             <li><a href="https://ccf.brussels/" target="_blank" rel="noopener"><img src="/ui/partners/francophones_bruxelles.png" alt="Francophones Bruxelles - COCOF"></a></li>
-            <li><a href="https://rfdsl.com/" target="_blank" rel="noopener"><img src="/ui/partners/reseau_francophone.png" alt="Réseau Francophone"></a></li>
+            <li><a href="https://rfdsl.com/" target="_blank" rel="noopener"><img src="/ui/partners/reseau_francophone-blue.png" alt="Réseau Francophone"></a></li>
             <li><a href="https://www.uccle.be" target="_blank" rel="noopener"><img src="/ui/partners/uccle.png" alt="Commune d’Uccle"></a></li>
             <li><a href="https://uclouvain.be" target="_blank" rel="noopener"><img src="/ui/partners/uc_louvain.png" alt="UC Louvain - Université catholique de Louvain"></a></li>
         </ul>
