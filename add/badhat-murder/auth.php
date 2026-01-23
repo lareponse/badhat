@@ -18,8 +18,9 @@ function checkin(int $behave = 0, ?string $u = null, $p = null): ?string
         return null;
     }
 
-    ($username_field && $password_query)        || throw new \BadFunctionCallException('AUTH not initialized (call with AUTH_SETUP first)', 500);
-    session_status() === PHP_SESSION_ACTIVE     || throw new \RuntimeException('no active session for auth', 500);
+    ($username_field && $password_query)                    || throw new \BadFunctionCallException('AUTH not initialized (call with AUTH_SETUP first)', 400);
+    session_status() === PHP_SESSION_ACTIVE                 || throw new \LogicException(__FUNCTION__.' requires an active session', 400);
+
 
     try {
         if(AUTH_LEAVE & $behave){
@@ -70,7 +71,7 @@ function auth_session_cookie_destroy()
 
 function auth_verify(\PDOStatement $password_query, string $user, string $pass): ?string
 {
-    $password_query->execute([$user]) || throw new \RuntimeException('Password query execution failed', 500);
+    $password_query->execute([$user]) || throw new \RuntimeException('Password query execution failed');
 
     $db_password = $password_query->fetchColumn() ?: AUTH_DUMMY_HASH;
     $password_query->closeCursor();
