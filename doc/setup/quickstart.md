@@ -9,7 +9,7 @@ Complete tutorial for starting a BADHAT project with the **current core**, pulle
 ```bash
 mkdir myproject && cd myproject
 git init
-mkdir -p app/io/{route,render} public scripts
+mkdir -p app/io/{route,render} public
 touch .gitignore
 ```
 
@@ -46,13 +46,14 @@ require 'add/badhat/http.php';
 require 'add/badhat/db.php';
 
 use function bad\io\{hook, seek, look};
-use function bad\http\{http_in, http_out};
+use function bad\http\{headers, out};
 use function bad\run\run;
 use function bad\db\db;
 
 use const bad\error\HND_ALL;
-use const bad\io\{IO_NEST};
-use const bad\run\{RUN_INVOKE, RUN_ABSORB, RUN_RETURN};
+use const bad\io\IO_NEST;
+use const bad\run\{INVOKE, ABSORB, RUN_RETURN};
+use const bad\http\H_SET;
 
 // --------------------------------------------------
 // Bootstrap
@@ -82,7 +83,7 @@ db($pdo);
 
 $io   = __DIR__ . '/../app/io';
 $base = realpath($io . '/route') . '/';
-$key  = bad\io\hook($base, $_SERVER['REQUEST_URI'], "\0");
+$key  = hook($base, $_SERVER['REQUEST_URI'], "\0");
 
 // --------------------------------------------------
 // Phase 1 — Route (logic)
@@ -93,7 +94,7 @@ $route = seek($base, $key, '.php');
 
 if ($route) {
     [$file, $args] = $route;
-    $loot = run([$file], $args, RUN_INVOKE);
+    $loot = run([$file], $args, INVOKE);
 }
 
 // --------------------------------------------------
@@ -103,18 +104,19 @@ if ($route) {
 $render = look($io . '/render/', $key, '.php', IO_NEST);
 
 if ($render) {
-    $loot = run([$render], $loot, RUN_ABSORB);
+    $loot = run([$render], $loot, ABSORB);
 }
 
 // --------------------------------------------------
 // Output
 // --------------------------------------------------
 
-isset($loot[RUN_RETURN]) && is_string($loot[RUN_RETURN])
-    ? http_out(200, $loot[RUN_RETURN], [
-        'Content-Type' => ['text/html; charset=utf-8']
-      ])
-    : http_out(404, 'Not Found');
+if (isset($loot[RUN_RETURN]) && is_string($loot[RUN_RETURN])) {
+    headers(H_SET, 'Content-Type', 'text/html; charset=utf-8');
+    exit(out(200, $loot[RUN_RETURN]));
+}
+
+exit(out(404, 'Not Found'));
 ```
 
 ---
@@ -147,13 +149,15 @@ EOF
 // app/io/route/users.php
 
 use function bad\db\qp;
-use function bad\http\http_out;
+use function bad\http\{headers, out};
+use const bad\http\H_SET;
 
 return function (array $args) {
 
     if ($_POST) {
         qp("INSERT INTO users (name) VALUES (?)", [$_POST['name']]);
-        http_out(302, null, ['Location' => ['/users']]);
+        headers(H_SET, 'Location', '/users');
+        exit(out(302));
     }
 
     return [
@@ -199,35 +203,7 @@ return function (array $args) {
 
 ---
 
-## 7. Database Init Script
-
-```php
-<?php
-// scripts/init-db.php
-
-require __DIR__ . '/../add/badhat/db.php';
-
-use function bad\db\db;
-
-$pdo = new PDO('sqlite:' . __DIR__ . '/../db.sqlite');
-$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-
-db($pdo);
-
-db()->exec("
-    CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    )
-");
-
-echo "Database initialized.\n";
-```
-
----
-
-## 8. First Commit
+## 7. First Commit
 
 ```bash
 git add .
@@ -236,7 +212,7 @@ git commit -m "Initial BADHAT project"
 
 ---
 
-## 9. Project Structure
+## 8. Project Structure
 
 ```
 myproject/
@@ -253,24 +229,23 @@ myproject/
 ├── app/io/
 │   ├── route/users.php
 │   └── render/users.php
-├── public/index.php
-├── scripts/init-db.php
-└── db.sqlite
+└── public/index.php
 ```
 
 ---
 
-## 10. Test
+## 9. Test
 
 ```bash
-php scripts/init-db.php
-cd public && php -S localhost:8000
-# visit http://localhost:8000/users
+cd public
+php -S localhost:8000
 ```
+
+Visit `http://localhost:8000/users`
 
 ---
 
-## 11. Update BADHAT Core (shallow + squashed)
+## 10. Update BADHAT Core (shallow + squashed)
 
 Same approach: shallow-fetch latest `main`, then subtree pull from `FETCH_HEAD`.
 

@@ -2,18 +2,17 @@
 
 namespace bad\io;
 
-const IO_NEST  = 1;                                                                                                     // enables nested path/filename/filename pattern fallback in look()
-const IO_GROW  = 2;                                                                                                     // forward scan in seek() instead of reverse (default shrinks from end)
+const IO_NEST  = 1;                                                 // enables nested path/filename/filename pattern fallback in look()
+const IO_GROW  = 2;                                                 // forward scan in seek() instead of reverse (default shrinks from end)
 
 function hook($base, $url, $forbidden = ''): string
 {// receive a request: extract and validate the path to navigate
-    (!$base || $base[-1] !== DIRECTORY_SEPARATOR)                   && throw new \InvalidArgumentException('base has no trailing separator to prevent directory name extension exploit', 400);
-    $base && ($base !== realpath($base) . DIRECTORY_SEPARATOR)      && throw new \InvalidArgumentException('base is not real, symlinks and relative paths would bypass boundary checks', 400);
+    ($base === realpath($base) . DIRECTORY_SEPARATOR )              || throw new \InvalidArgumentException('invalid base or path', 400);
 
-    $stop = strcspn($url, '?#');                                                                                        // query/fragment may contain slashes that aren't path separators
-    isset($url[$stop]) && ($url = substr($url, 0, $stop));                                                              // must strip before path operations to avoid misinterpretation
+    $eof = strcspn($url, '?#');                                     // query/fragment may contain slashes that aren't path separators, look for end of file path
+    isset($url[$eof]) && ($url = substr($url, 0, $eof));            // must strip before path operations to avoid misinterpretation
 
-    ($forbidden !== '' && isset($url[strcspn($url, $forbidden)]))   && throw new \InvalidArgumentException('request has explicitly forbidden chars that could exploit file system APIs', 400);
+    ($forbidden === '' || !isset($url[strcspn($url, $forbidden)]))  || throw new \InvalidArgumentException('request has explicitly forbidden chars', 400);
 
     return $url;                                                                                                        
 }// returns clean path ready for navigation

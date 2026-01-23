@@ -11,8 +11,9 @@ require 'add/badhat/db.php';
 require 'add/badhat/auth.php';
 require 'add/badhat/csrf.php';
 
-use const bad\io\{IO_NEST};
-use const bad\run\{RUN_INVOKE, RUN_ABSORB, RUN_RETURN};
+use const bad\io\IO_NEST;
+use const bad\run\{INVOKE, ABSORB, RUN_RETURN};
+use const bad\http\H_SET;
 
 // --------------------------------------------------
 // Bootstrap
@@ -21,8 +22,6 @@ use const bad\run\{RUN_INVOKE, RUN_ABSORB, RUN_RETURN};
 $restore = $install(bad\error\HND_ALL);
 
 session_start();
-
-bad\csrf\csrf(bad\csrf\CSRF_SETUP, '_csrf', 3600);
 
 $pdo = new PDO(
     getenv('DB_DSN')  ?: 'mysql:host=127.0.0.1;dbname=app;charset=utf8mb4',
@@ -35,9 +34,9 @@ $pdo = new PDO(
     ]
 );
 
-bad\db\db($pdo); // <- seed the static cache used by qp()
+bad\db\db($pdo);
 
-// auth example (unchanged, but now explicit)
+// auth setup (optional)
 $stmt = bad\db\qp("SELECT password FROM users WHERE username = ?", []);
 bad\auth\checkin(bad\auth\AUTH_SETUP, 'username', $stmt);
 
@@ -53,30 +52,31 @@ $key = bad\io\hook($base, $_SERVER['REQUEST_URI'], "\0");
 // Phase 1 — Route (logic)
 // --------------------------------------------------
 
-$route = seek($base, $key, '.php');
+$route = bad\io\seek($base, $key, '.php');
 $loot  = [];
 
 if ($route) {
     [$file, $args] = $route;
-    $loot = bad\run\run([$file], $args, RUN_INVOKE);
+    $loot = bad\run\run([$file], $args, INVOKE);
 }
 
 // --------------------------------------------------
 // Phase 2 — Render (presentation)
 // --------------------------------------------------
 
-$render = look($io_root . '/render/', $key, '.php', IO_NEST);
+$render = bad\io\look($io_root . '/render/', $key, '.php', IO_NEST);
 
 if ($render) {
-    $loot = bad\run\run([$render], $loot, RUN_ABSORB);
+    $loot = bad\run\run([$render], $loot, ABSORB);
 }
 
 // --------------------------------------------------
 // Output
 // --------------------------------------------------
 
-isset($loot[RUN_RETURN]) && is_string($loot[RUN_RETURN])
-    ? bad\http\out(200, $loot[RUN_RETURN], [
-        'Content-Type' => ['text/html; charset=utf-8']
-      ])
-    : bad\http\out(404, 'Not Found');
+if (isset($loot[RUN_RETURN]) && is_string($loot[RUN_RETURN])) {
+    bad\http\headers(H_SET, 'Content-Type', 'text/html; charset=utf-8');
+    exit(bad\http\out(200, $loot[RUN_RETURN]));
+}
+
+exit(bad\http\out(404, 'Not Found'));

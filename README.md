@@ -69,7 +69,7 @@ The old model was chaotic. The new model is bureaucratic. Both fail, differently
 
 badhat is a bet that there's space between chaos and bureaucracy.
 
-The filesystem is the router. You request `/admin/users`, badhat looks for `admin/users.php` or `admin/users/users.php` or walks back to `admin.php` with `['users']` as arguments. No routing table. No YAML. No annotations. Files are files.
+The filesystem is the router. You request `/admin/users`, badhat looks for `admin/users.php` or walks back to `admin.php` with `['users']` as arguments. No routing table. No YAML. No annotations. Files are files.
 
 Scripts are scripts. They run. They can return a callable — badhat will invoke it. They can echo output — badhat can buffer it. They can do both. badhat doesn't care.
 
@@ -84,15 +84,18 @@ No base controllers. No service providers. No config cascades. No interface cont
 ## The actual code
 
 ```php
-[$handler, $segments] = seek($scripts, $uri, 'php', IO_TAIL) 
-    ?? io_die(404, 'Not Found');
+headers(H_SET, 'Content-Type', 'text/html');
 
-$loot = run([$handler], $segments, RUN_BUFFER | RUN_INVOKE);
+[$handler, $segments] = seek($base, $uri, '.php') 
+    ?? exit(out(404, 'Not Found'));
 
-echo $loot[RUN_OUTPUT];
+$loot = run([$handler], $segments, BUFFER | INVOKE);
+
+exit(out(200, $loot[RUN_OUTPUT]));
+
 ```
 
-Three lines. Request to response. Add a boot script and a renderer if you want. Or don't.
+Four lines. Request to response. Add a boot script and a renderer if you want. Or don't.
 
 ## Who this is for
 
