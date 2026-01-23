@@ -43,7 +43,7 @@ You already know the handler file you want to exist. No guessing.
 $file = bad\io\look($base, $path, '.php');
 
 $file
-  ? run([$file], [], RUN_INVOKE)
+  ? run([$file], [], INVOKE)
   : bad\http\out(404, 'Not Found');
 ```
 
@@ -64,7 +64,7 @@ That's what `seek()` is for.
 [$file, $args] = bad\io\seek($base, $path, '.php')
   ?? out(404, 'Not Found');
 
-run([$file], $args, RUN_INVOKE);
+run([$file], $args, INVOKE);
 ```
 
 And here's the key default:
