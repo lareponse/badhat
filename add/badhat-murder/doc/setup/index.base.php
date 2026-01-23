@@ -12,7 +12,7 @@ require 'add/badhat/auth.php';
 require 'add/badhat/csrf.php';
 
 use const bad\io\IO_NEST;
-use const bad\run\{RUN_INVOKE, RUN_ABSORB, RUN_RETURN};
+use const bad\run\{INVOKE, ABSORB, RUN_RETURN};
 use const bad\http\H_SET;
 
 // --------------------------------------------------
@@ -57,7 +57,7 @@ $loot  = [];
 
 if ($route) {
     [$file, $args] = $route;
-    $loot = bad\run\run([$file], $args, RUN_INVOKE);
+    $loot = bad\run\run([$file], $args, INVOKE);
 }
 
 // --------------------------------------------------
@@ -67,7 +67,7 @@ if ($route) {
 $render = bad\io\look($io_root . '/render/', $key, '.php', IO_NEST);
 
 if ($render) {
-    $loot = bad\run\run([$render], $loot, RUN_ABSORB);
+    $loot = bad\run\run([$render], $loot, ABSORB);
 }
 
 // --------------------------------------------------

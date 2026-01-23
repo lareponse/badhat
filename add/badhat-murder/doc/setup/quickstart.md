@@ -52,7 +52,7 @@ use function bad\db\db;
 
 use const bad\error\HND_ALL;
 use const bad\io\IO_NEST;
-use const bad\run\{RUN_INVOKE, RUN_ABSORB, RUN_RETURN};
+use const bad\run\{INVOKE, ABSORB, RUN_RETURN};
 use const bad\http\H_SET;
 
 // --------------------------------------------------
@@ -94,7 +94,7 @@ $route = seek($base, $key, '.php');
 
 if ($route) {
     [$file, $args] = $route;
-    $loot = run([$file], $args, RUN_INVOKE);
+    $loot = run([$file], $args, INVOKE);
 }
 
 // --------------------------------------------------
@@ -104,7 +104,7 @@ if ($route) {
 $render = look($io . '/render/', $key, '.php', IO_NEST);
 
 if ($render) {
-    $loot = run([$render], $loot, RUN_ABSORB);
+    $loot = run([$render], $loot, ABSORB);
 }
 
 // --------------------------------------------------
