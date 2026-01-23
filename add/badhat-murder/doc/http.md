@@ -43,7 +43,7 @@ in('mailto:user@ex.com');     // "user@ex.com"
 
 ```php
 use function bad\http\headers;
-use const bad\http\{H_SET, H_ADD, H_CSV, H_OUT, H_LOCK, H_FOLD};
+use const bad\http\{H_SET, H_ADD, H_CSV, H_OUT, H_LOCK};
 
 // Single value (replaces any previous)
 headers(H_SET, 'Content-Type', 'application/json');
@@ -53,16 +53,15 @@ headers(H_ADD, 'Set-Cookie', 'a=1; Path=/');
 headers(H_ADD, 'Set-Cookie', 'b=2; Path=/');
 
 // Multiple values as CSV (combined into one line on flush)
-// NOTE: CSV mode is enabled via H_ADD | H_CSV
-headers(H_ADD | H_CSV, 'Vary', 'Accept');
-headers(H_ADD,           'Vary', 'Accept-Encoding'); // continues CSV mode once enabled
+headers(H_CSV, 'Vary', 'Accept');
+headers(H_CSV, 'Vary', 'Accept-Encoding');
 // emits: Vary: Accept, Accept-Encoding
 ```
 
 Headers accumulate in a static map until you flush:
 
 ```php
-headers(H_OUT);  // emits all accumulated headers, clears the map
+headers(H_OUT);  // emits all accumulated headers, clears the map, returns what was staged
 ```
 
 **Default story:**
@@ -72,35 +71,19 @@ headers(H_OUT);  // emits all accumulated headers, clears the map
 
 ## 3) Header modes
 
-| Flag     | Value | Effect                                                                                    |
-| -------- | ----- | ----------------------------------------------------------------------------------------- |
-| `H_SET`  | 1     | Single value, replaces previous                                                           |
-| `H_ADD`  | 2     | Append as separate header line                                                            |
-| `H_CSV`  | 4     | CSV mode (used with `H_ADD`): append values and emit as one comma-separated line on flush |
-| `H_OUT`  | 8     | Flush all headers, clear map                                                              |
-| `H_LOCK` | 16    | Prevent further changes to this header                                                    |
-| `H_FOLD` | 32    | Promote existing H_SET value to H_ADD/H_CSV                                               |
-
-Notes on CSV mode:
-
-* To add values in CSV mode, pass `H_ADD | H_CSV` at least once for that header name.
-* Once a header has any CSV values stored, subsequent `H_ADD` calls for that name keep appending to CSV.
+| Flag     | Value | Effect                                      |
+| -------- | ----- | ------------------------------------------- |
+| `H_SET`  | 1     | Single value, replaces previous             |
+| `H_ADD`  | 2     | Append as separate header line              |
+| `H_CSV`  | 4     | Append value, emit as comma-separated line  |
+| `H_OUT`  | 8     | Flush all headers, clear map                |
+| `H_LOCK` | 16    | Prevent further changes to this header      |
 
 ### Lock a header
 
 ```php
 headers(H_SET | H_LOCK, 'X-Frame-Options', 'DENY');
 headers(H_SET, 'X-Frame-Options', 'SAMEORIGIN');  // throws BadFunctionCallException
-```
-
-### Promote SET to ADD
-
-When you started with `H_SET` but later need multiple values:
-
-```php
-headers(H_SET, 'Cache-Control', 'no-cache');
-headers(H_ADD | H_FOLD, 'Cache-Control', 'no-store');
-// emits both as separate lines
 ```
 
 ### Set-Cookie requires H_ADD
@@ -110,7 +93,7 @@ headers(H_SET, 'Set-Cookie', 'x=1');  // throws InvalidArgumentException
 headers(H_ADD, 'Set-Cookie', 'x=1');  // correct
 ```
 
-`Set-Cookie` is restricted to `H_ADD` and optionally `H_LOCK` (no `H_SET`, no `H_CSV`, no other flags).
+`Set-Cookie` is restricted to `H_ADD` and optionally `H_LOCK` (no `H_SET`, no `H_CSV`).
 
 ---
 
@@ -137,7 +120,7 @@ Additional behavior:
 
 ## 5) Finally, you emit a response
 
-`out()` sets the status code, flushes accumulated headers, optionally emits one extra raw header line, outputs the body, and returns a process exit status.
+`out()` sets the status code, flushes accumulated headers, optionally emits one extra raw header line, and outputs the body.
 
 ```php
 use function bad\http\out;
@@ -191,25 +174,24 @@ exit(out(200, $html));
 
 ### Constants
 
-| Constant     | Description                                            |
-| ------------ | ------------------------------------------------------ |
-| `H_SET`      | Single value mode                                      |
-| `H_ADD`      | Append as separate lines                               |
-| `H_CSV`      | CSV mode flag (combine with `H_ADD` to add CSV values) |
-| `H_OUT`      | Flush and clear                                        |
-| `H_LOCK`     | Prevent changes                                        |
-| `H_FOLD`     | Promote SET to ADD/CSV                                 |
-| `CTRL_ASCII` | All ASCII control chars (forbidden in values)          |
-| `HTTP_TCHAR` | Allowed header name characters                         |
+| Constant     | Description                                   |
+| ------------ | --------------------------------------------- |
+| `H_SET`      | Single value mode                             |
+| `H_ADD`      | Append as separate lines                      |
+| `H_CSV`      | Append value, emit as comma-separated line    |
+| `H_OUT`      | Flush and clear                               |
+| `H_LOCK`     | Prevent changes                               |
+| `CTRL_ASCII` | All ASCII control chars (forbidden in values) |
+| `HTTP_TCHAR` | Allowed header name characters                |
 
 ### Functions
 
-| Function    | Signature                                                     | Purpose                                                                 |
-| ----------- | ------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| `in`        | `($url): string`                                              | Strip scheme/authority for routing                                      |
-| `headers`   | `(int $behave, ?string $name = null, $value = null): ?string` | Accumulate/flush headers (returns `"name: value"` or `null` on `H_OUT`) |
-| `out`       | `($code, $body = null, $header = null): int`                  | Emit response, return exit status                                       |
-| `csp_nonce` | `(): string`                                                  | Per-request CSP nonce                                                   |
+| Function    | Signature                                                     | Purpose                            |
+| ----------- | ------------------------------------------------------------- | ---------------------------------- |
+| `in`        | `($url = null): string`                                       | Strip scheme/authority for routing |
+| `headers`   | `(int $behave, ?string $name = null, $value = null): array`   | Accumulate/flush headers           |
+| `out`       | `($code, $body = null, $header = null): int`                  | Emit response, return exit status  |
+| `csp_nonce` | `($bytes = 16): string`                                       | Per-request CSP nonce              |
 
 ### Throws
 

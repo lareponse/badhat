@@ -203,18 +203,18 @@ Failures are swallowed. The last file's results end up in `$loot`.
 ```php
 use function bad\io\{hook, seek};
 use function bad\run\run;
-use function bad\http\http_out;
+use function bad\http\out;
 use const bad\run\{BUFFER, INVOKE, RUN_OUTPUT};
 
 $base = realpath(__DIR__ . '/routes') . '/';
 $path = hook($base, $_SERVER['REQUEST_URI']);
 
 [$file, $args] = seek($base, $path, '.php')
-    ?? http_out(404, 'Not Found');
+    ?? exit(out(404, 'Not Found'));
 
 $loot = run([$file], $args, BUFFER | INVOKE);
 
-http_out(200, $loot[RUN_OUTPUT]);
+exit(out(200, $loot[RUN_OUTPUT]));
 ```
 
 Five lines. Request to response.
@@ -230,9 +230,9 @@ Five lines. Request to response.
 | `BUFFER` | 1 | Capture output to `RUN_OUTPUT` |
 | `INVOKE` | 2 | Call returned callable |
 | `ABSORB` | 7 | Buffer + Invoke + append buffer to callable args |
-| `RESCUE_CALL` | 8 | Try invoke even if include threw |
-| `PIPE_ONWARD` | 16 | Suppress throws, continue to next file |
-| `RELOOT` | 256 | Pass loot bag (not original args) to each callable |
+| `RELOOT` | 8 | Pass loot bag (not original args) to each callable |
+| `RESCUE_CALL` | 16 | Try invoke even if include threw |
+| `PIPE_ONWARD` | 32 | Suppress throws, continue to next file |
 
 ### Constants (loot keys)
 
