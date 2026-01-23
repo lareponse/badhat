@@ -23,14 +23,14 @@ function headers(int $behave, ?string $name = null, $value = null): array
 
     ((H_SET | H_ADD) & $behave) !== (H_SET | H_ADD)                 || throw new \BadFunctionCallException('H_SET and H_ADD are mutually exclusive', 400);
     (strpbrk((string)$value, CTRL_ASCII) === false)                 || throw new \InvalidArgumentException('forbid ASCII controls in field-value (CR/LF/NUL etc.)', 400); //  (RFC 9110 field-value safety)
-    $name = strtolower(trim((string)$name))                         // field-name is case-insensitive; normalize to lowercase for map keys (RFC 9110)
+    $name = strtolower(trim((string)$name));                        // field-name is case-insensitive; normalize to lowercase for map keys (RFC 9110)
     $name                                                           || throw new \InvalidArgumentException('header name cannot be empty', 400);
     (!isset($name[strspn($name, HTTP_TCHAR)]))                      || throw new \InvalidArgumentException('field-name must be a token (tchar alphabet)', 400); //(RFC 9110 token / field-name)
     (($headers[H_LOCK][$name] ?? false) !== true)                   || throw new \BadFunctionCallException("header '{$name}' is locked, further writes are rejected", 400);
 
-    ($name === 'set-cookie')                                        // Set-Cookie must not be combined into a single CSV header line
-        && ($behave & H_ADD) && !($behave & (H_SET | H_CSV))        
-        && (($behave & ~(H_ADD | H_LOCK)) === 0)                    || throw new \InvalidArgumentException('Set-Cookie requires H_ADD and optionally H_LOCK', 400);
+    $name === 'set-cookie'
+        && !(($behave & H_ADD) && !($behave & (H_SET | H_CSV)) 
+        && (($behave & ~(H_ADD | H_LOCK)) === 0))                   && throw new \InvalidArgumentException('Set-Cookie requires H_ADD and optionally H_LOCK', 400);
 
     if (H_SET & $behave)
         $headers[H_SET][$name] = $value;                            // single-valued header (last write wins unless locked)

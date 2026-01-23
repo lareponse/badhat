@@ -41,7 +41,7 @@ function trans(callable $transaction, ?\PDO $pdo = null)
     return $res;
 }// return the callable result after successful commit
 
-function _ErrorInfoException(\PDO|\PDOStatement $source, $action, $exception_code, ?\Throwable $chain = null): \RuntimeException
+function _ErrorInfoException(\PDO|\PDOStatement $source, $action, $exception_code=null, ?\Throwable $chain = null): \RuntimeException
 {// creates rich, chainable runtime exception
     $error = $source->errorInfo() ?: ['NO_STATE', 'NO_CODE', 'errorInfo(): empty'];
     return new \RuntimeException("[STATE={$error[0]}, CODE={$error[1]}] PDO::{$action}() failed ({$error[2]})", $exception_code, $chain);
