@@ -136,7 +136,7 @@ And because `seek()` calls `look()` internally, `IO_NEST` works there too.
 
 ### Functions
 
-#### `hook(string $base, string $url, string $forbidden = '', int $behave = 0): string`
+#### `hook(string $base, string $url, string $forbidden = ''): string`
 
 Validates base directory and sanitizes URL path. Returns the cleaned path (query/fragment stripped).
 
@@ -144,12 +144,10 @@ Validates base directory and sanitizes URL path. Returns the cleaned path (query
 - `$base` — Must be a real path ending with directory separator
 - `$url` — Raw URL to sanitize
 - `$forbidden` — Optional string of characters to reject in path
-- `$behave` — Reserved for future use
 
 **Throws `\InvalidArgumentException` (code 400):**
-- `'base has no trailing separator...'` — Base must end with `/`
-- `'base is not real...'` — Base must equal its own `realpath()`
-- `'request has explicitly forbidden chars...'` — Path contains forbidden characters
+- `'invalid base or path'` — Base must equal `realpath($base) . DIRECTORY_SEPARATOR`
+- `'request has explicitly forbidden chars'` — Path contains forbidden characters
 
 #### `look(string $base, string $path, string $shim = '', int $behave = 0): ?string`
 
