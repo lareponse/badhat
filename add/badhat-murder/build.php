@@ -33,7 +33,7 @@ function vd(...$variad)
 
 function assert_that(bool $cond, string $label): void
 {
-    !$cond && throw new \RuntimeException("ASSERT FAILED: $label", 500);
+    $cond || throw new \RuntimeException("ASSERT FAILED: $label", 500);
     echo htmlspecialchars("ASSERT SUCCESS: $label") . PHP_EOL;
 }
 
