@@ -49,17 +49,17 @@ return function(array $args) {
 };
 ```
 
-Add `RUN_INVOKE`, and badhat calls the returned callable:
+Add `INVOKE`, and badhat calls the returned callable:
 
 ```php
-use const bad\run\RUN_INVOKE;
+use const bad\run\INVOKE;
 
-$loot = run(['/app/route/users.php'], ['view', '42'], RUN_INVOKE);
+$loot = run(['/app/route/users.php'], ['view', '42'], INVOKE);
 // $loot[RUN_RETURN] = the user row, not the function
 ```
 
 **Story:**
-"Files define handlers. `RUN_INVOKE` runs them."
+"Files define handlers. `INVOKE` runs them."
 
 ---
 
@@ -73,15 +73,15 @@ PHP files can echo. Sometimes you want that output captured, not streamed.
 ```
 
 ```php
-use const bad\run\RUN_BUFFER;
+use const bad\run\BUFFER;
 use const bad\run\RUN_OUTPUT;
 
-$loot = run(['/app/template.php'], ['name' => 'World'], RUN_BUFFER);
+$loot = run(['/app/template.php'], ['name' => 'World'], BUFFER);
 
 echo $loot[RUN_OUTPUT];  // "<h1>Hello, World</h1>"
 ```
 
-Without `RUN_BUFFER`, output goes straight to the browser. With it, output lands in `$loot[RUN_OUTPUT]`.
+Without `BUFFER`, output goes straight to the browser. With it, output lands in `$loot[RUN_OUTPUT]`.
 
 **Story:**
 "Sometimes you want to capture, not emit."
@@ -102,18 +102,18 @@ return function(array $args) {
 };
 ```
 
-`RUN_ABSORB` captures the output, then passes it as the last argument to the invoked callable:
+`ABSORB` captures the output, then passes it as the last argument to the invoked callable:
 
 ```php
-use const bad\run\RUN_ABSORB;
+use const bad\run\ABSORB;
 
-$loot = run(['/app/page.php'], ['content' => 'Hello'], RUN_ABSORB);
+$loot = run(['/app/page.php'], ['content' => 'Hello'], ABSORB);
 
 echo $loot[RUN_RETURN];
 // <!doctype html><html><body><article>Hello</article></body></html>
 ```
 
-`RUN_ABSORB` implies both `RUN_BUFFER` and `RUN_INVOKE`—it's the full pipeline.
+`ABSORB` implies both `BUFFER` and `INVOKE`—it's the full pipeline.
 
 **Story:**
 "Template outputs markup. Wrapper receives it. One file, two phases."
@@ -124,9 +124,9 @@ echo $loot[RUN_RETURN];
 
 One file is simple. But what about auth → handler → renderer?
 
-Without `RUN_CHAIN`, each callable gets the original `$args`.
+Without `RELOOT`, each callable gets the original `$args`.
 
-With `RUN_CHAIN`, each callable gets the **loot bag**—including whatever the previous step returned:
+With `RELOOT`, each callable gets the **loot bag**—including whatever the previous step returned:
 
 ```php
 // auth.php
@@ -145,14 +145,14 @@ return fn($args) => render('home', $args[RUN_RETURN]);
 ```
 
 ```php
-use const bad\run\RUN_INVOKE;
-use const bad\run\RUN_CHAIN;
+use const bad\run\INVOKE;
+use const bad\run\RELOOT;
 
 $loot = run([
     '/app/mw/auth.php',
     '/app/route/home.php',
     '/app/render/home.php',
-], [], RUN_INVOKE | RUN_CHAIN);
+], [], INVOKE | RELOOT);
 
 echo $loot[RUN_RETURN];
 ```
@@ -173,22 +173,22 @@ $loot = run(['/app/broken.php']);
 // RuntimeException("include:/app/broken.php", 0xC0D, $originalException)
 ```
 
-### RUN_RESCUE: invoke anyway
+### RESCUE_CALL: invoke anyway
 
 If the include throws but somehow left a callable in `RUN_RETURN`, try to invoke it anyway:
 
 ```php
-$loot = run(['/app/noisy.php'], [], RUN_INVOKE | RUN_RESCUE);
+$loot = run(['/app/noisy.php'], [], INVOKE | RESCUE_CALL);
 ```
 
 Rare. But sometimes a file does setup that throws, yet still defines a handler.
 
-### RUN_ONWARD: keep going
+### PIPE_ONWARD: keep going
 
 Multiple files, and you want to continue even if one fails:
 
 ```php
-$loot = run(['/app/a.php', '/app/b.php', '/app/c.php'], [], RUN_ONWARD);
+$loot = run(['/app/a.php', '/app/b.php', '/app/c.php'], [], PIPE_ONWARD);
 ```
 
 Failures are swallowed. The last file's results end up in `$loot`.
@@ -204,7 +204,7 @@ Failures are swallowed. The last file's results end up in `$loot`.
 use function bad\io\{hook, seek};
 use function bad\run\run;
 use function bad\http\http_out;
-use const bad\run\{RUN_BUFFER, RUN_INVOKE, RUN_OUTPUT};
+use const bad\run\{BUFFER, INVOKE, RUN_OUTPUT};
 
 $base = realpath(__DIR__ . '/routes') . '/';
 $path = hook($base, $_SERVER['REQUEST_URI']);
@@ -212,7 +212,7 @@ $path = hook($base, $_SERVER['REQUEST_URI']);
 [$file, $args] = seek($base, $path, '.php')
     ?? http_out(404, 'Not Found');
 
-$loot = run([$file], $args, RUN_BUFFER | RUN_INVOKE);
+$loot = run([$file], $args, BUFFER | INVOKE);
 
 http_out(200, $loot[RUN_OUTPUT]);
 ```
@@ -227,12 +227,12 @@ Five lines. Request to response.
 
 | Constant | Value | Effect |
 |----------|-------|--------|
-| `RUN_BUFFER` | 1 | Capture output to `RUN_OUTPUT` |
-| `RUN_INVOKE` | 2 | Call returned callable |
-| `RUN_ABSORB` | 7 | Buffer + Invoke + append buffer to callable args |
-| `RUN_RESCUE` | 8 | Try invoke even if include threw |
-| `RUN_ONWARD` | 16 | Suppress throws, continue to next file |
-| `RUN_CHAIN` | 256 | Pass loot bag (not original args) to each callable |
+| `BUFFER` | 1 | Capture output to `RUN_OUTPUT` |
+| `INVOKE` | 2 | Call returned callable |
+| `ABSORB` | 7 | Buffer + Invoke + append buffer to callable args |
+| `RESCUE_CALL` | 8 | Try invoke even if include threw |
+| `PIPE_ONWARD` | 16 | Suppress throws, continue to next file |
+| `RELOOT` | 256 | Pass loot bag (not original args) to each callable |
 
 ### Constants (loot keys)
 

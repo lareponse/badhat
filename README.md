@@ -89,7 +89,7 @@ headers(H_SET, 'Content-Type', 'text/html');
 [$handler, $segments] = seek($base, $uri, '.php') 
     ?? exit(out(404, 'Not Found'));
 
-$loot = run([$handler], $segments, RUN_BUFFER | RUN_INVOKE);
+$loot = run([$handler], $segments, BUFFER | INVOKE);
 
 exit(out(200, $loot[RUN_OUTPUT]));
 
