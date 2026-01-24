@@ -1,39 +1,46 @@
 <?php
+// vd(...) dumps values + a short backtrace and allow inline use: foo(vd($x))
+// Modes:
+//   vd($name)                    backtrace depth 1, dump $name
+//   vd($city, $zip, $street)     backtrace depth 1, dump each arg
+//   vd(0, $var, 'debug msg')     backtrace depth 0, dump args
+//   vd(2, $var1, $var2)          backtrace depth 2, dump args
+//
+// Death variants:
+//   vd(-1, ...)                  same as vd(1, ...), then die
+//   vd(-2, ...)                  same as vd(2, ...), then die
+//
+// Footgun:
+//   If the first argument is an int AND there is at least one more argument,
+//   that int is consumed as the backtrace depth and is NOT dumped.
+//   Example: vd(404, $body) dumps only $body (frames=404), not 404.
+//
+// Fix:
+//   If you need to dump an int first, pass the depth explicitly:
+//   vd(1, 404, $body) dumps 404 and $body with a 1-frame backtrace.
 
-// if build.php is included, then we are in dev mode
+function vd(...$v)
+{// provides a visual dump of variables with custom-depth backtrace
+    $frames = isset($v[1]) && is_int($v[0]) ? array_shift($v) : 1;  // debug_print_backtrace frame limit (0 => none)
 
-function is_dev(): void {} //    existence is the flag. define it, you're dev. remove it, production.
+    $frames && debug_print_backtrace(0, abs($frames));              // frame list: where vd() was called from
+    echo str_repeat('-', 80) . PHP_EOL;                             // visual separator
+    var_dump(...$v);                                                // payload dump
+    
+    $frames < 0 && die('bad\die');
 
-// vd($name):                    backtrace depth 1 with $name content var_dump()
-// vd($city, $zip, $street):     backtrace depth 1 with $city, $zip and $street content in separate var_dump calls
-// vd(0, $var, 'debug msg'):     backtrace depth 0 with $var and label
-// vd(2, $var1, $var2):          backtrace depth 2 with $var1 and $var2
-function vd(...$variad)
-{
-    $die = false;
-    $dpb_limit = 1;
+    return $v[0] ?? null;                                           // (only meaningful for 1st value)
+}// dies or returns the first value (for inline chaining).
 
-    if (isset($variad[1]) && is_int($variad[0])) {
-        $die = $variad[0] < 0;
-        $dpb_limit = $die ? 0 : array_shift($variad);
-    }
-
-    echo '<pre class="vd">';
-
-    debug_print_backtrace(0, $dpb_limit);
-    echo str_repeat('-', 80) . PHP_EOL;
-    var_dump(...$variad);
-
+function vdh(...$v): void
+{// HTML wrapper for readable dumps
+    echo '<pre class="vd">'; 
+    vd(...$v);
     echo '</pre>';
-
-    $die && die;
-
-    return $variad[0] ?? null; // allows chaining/inserting in incode without new line or rewrites (for single var only)
 }
 
 function assert_that(bool $cond, string $label): void
 {
-    $cond || throw new \RuntimeException("ASSERT FAILED: $label", 500);
-    echo htmlspecialchars("ASSERT SUCCESS: $label") . PHP_EOL;
+    $cond || throw new \RuntimeException("ASSERT FAILED: $label", 500); // crash fast: assertion is part of control flow
+    echo htmlspecialchars("ASSERT SUCCESS: $label") . PHP_EOL;          // echo only on success (safe for HTML contexts)
 }
-
