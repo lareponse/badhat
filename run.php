@@ -26,7 +26,7 @@ function run($file_paths, $args = [], int $behave = 0): array
         try {
             $loot[RUN_RETURN] = include $file;                                                 // execute file, store its return value
         } catch (\Throwable $t) {
-            $fault = new \RuntimeException("include:$file", 0xC0D, $t);                        // normalize include failure, preserve chain
+            $fault = new \Exception("include:$file", 0xC0D, $t);                        // normalize include failure, preserve chain
         }
 
         if ($fault === null || (RESCUE_CALL & $behave)) {                                      // proceed if no fault, or rescue policy says "continue"
@@ -39,7 +39,7 @@ function run($file_paths, $args = [], int $behave = 0): array
                 try {
                     $loot[RUN_RETURN] = $loot[RUN_RETURN]($call_args);                         // invoke callable, store its return value
                 } catch (\Throwable $t) {
-                    $fault = new \RuntimeException("invoke:$file", 0xC0D, $t);                 // normalize invoke failure, preserve chain
+                    $fault = new \Exception("invoke:$file", 0xC0D, $t);                 // normalize invoke failure, preserve chain
                 }
             }
         }
