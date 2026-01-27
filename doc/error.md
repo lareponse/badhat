@@ -208,7 +208,7 @@ Execution continues.
 ### Uncaught exception
 
 ```
-[req=1a2b3c] FATAL (exception:InvalidArgumentException) Bad Request in /app/lib/io.php:18 [3.41ms 2048KiB POST /api/user @192.168.1.50]
+[req=1a2b3c] FATAL (exception:InvalidArgumentException) Bad Request in /app/lib/map.php:18 [3.41ms 2048KiB POST /api/user @192.168.1.50]
 ```
 
 Hard exit.
@@ -233,7 +233,7 @@ Parse errors, compile errors—things that kill PHP before your code runs.
 
 ```
 [req=f00baa] ERR (errno=8) Undefined array key "name" in /app/lib/auth.php:55
-[req=f00baa] ERR (errno=2) file_get_contents(): Filename cannot be empty in /app/lib/io.php:89
+[req=f00baa] ERR (errno=2) file_get_contents(): Filename cannot be empty in /app/lib/map.php:89
 [req=f00baa] FATAL (exception:RuntimeException) include:/app/route/fail.php in /app/lib/run.php:47 [12.7ms 4096KiB GET /fail @-]
 ```
 
