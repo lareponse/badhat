@@ -1,4 +1,5 @@
 <?php
+
 namespace bad\auth;
 
 const AUTH_SETUP  = 1;
