@@ -15,7 +15,7 @@ You start with raw input. You want one thing back: a path you can trust.
 
 ```php
 $base = realpath(__DIR__ . '/routes') . '/';
-$path = bad\io\hook($base, $_SERVER['REQUEST_URI']);
+$path = bad\map\hook($base, $_SERVER['REQUEST_URI']);
 ```
 
 That single line quietly does what you used to have to ask for:
@@ -40,7 +40,7 @@ There are two common philosophies. BADHAT supports both.
 You already know the handler file you want to exist. No guessing.
 
 ```php
-$file = bad\io\look($base, $path, '.php');
+$file = bad\map\look($base, $path, '.php');
 
 $file
   ? run([$file], [], INVOKE)
@@ -61,7 +61,7 @@ Sometimes you want `/users/edit/42` to land on `users.php`, with `['edit','42']`
 That's what `seek()` is for.
 
 ```php
-[$file, $args] = bad\io\seek($base, $path, '.php')
+[$file, $args] = bad\map\seek($base, $path, '.php')
   ?? out(404, 'Not Found');
 
 run([$file], $args, INVOKE);
@@ -95,7 +95,7 @@ The flags read like plot twists: you use them when the story changes.
 Sometimes your app has entry points like `api.php` or `admin.php` that intentionally swallow everything underneath.
 
 ```php
-[$file, $args] = bad\io\seek($base, $path, '.php', bad\io\IO_GROW);
+[$file, $args] = bad\map\seek($base, $path, '.php', bad\map\IO_GROW);
 ```
 
 Now `/admin/users/edit` tries:
@@ -115,7 +115,7 @@ First match wins.
 When `admin.php` doesn't exist, you might want `admin/admin.php` to be the real entry point.
 
 ```php
-$file = bad\io\look($base, 'admin', '.php', bad\io\IO_NEST);
+$file = bad\map\look($base, 'admin', '.php', bad\map\IO_NEST);
 ```
 
 And because `seek()` calls `look()` internally, `IO_NEST` works there too.

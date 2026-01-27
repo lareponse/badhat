@@ -1,6 +1,6 @@
 <?php
 
-namespace bad\io;
+namespace bad\map;
 
 const IO_NEST  = 1;                                                 // enables nested path/filename/filename pattern fallback in look()
 const IO_GROW  = 2;                                                 // forward scan in seek() instead of reverse (default shrinks from end)
