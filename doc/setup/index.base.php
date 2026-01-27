@@ -4,14 +4,14 @@
 set_include_path(__DIR__ . '/..' . PATH_SEPARATOR . get_include_path());
 
 $install = require 'add/badhat/error.php';
-require 'add/badhat/io.php';
+require 'add/badhat/map.php';
 require 'add/badhat/run.php';
 require 'add/badhat/http.php';
 require 'add/badhat/db.php';
 require 'add/badhat/auth.php';
 require 'add/badhat/csrf.php';
 
-use const bad\io\IO_NEST;
+use const bad\map\IO_NEST;
 use const bad\run\{INVOKE, ABSORB, RUN_RETURN};
 use const bad\http\H_SET;
 
@@ -46,13 +46,13 @@ bad\auth\checkin(bad\auth\AUTH_SETUP, 'username', $stmt);
 
 $io_root = __DIR__ . '/../app/io';
 $base = realpath($io_root . '/route') . '/';
-$key = bad\io\hook($base, $_SERVER['REQUEST_URI'], "\0");
+$key = bad\map\hook($base, $_SERVER['REQUEST_URI'], "\0");
 
 // --------------------------------------------------
 // Phase 1 — Route (logic)
 // --------------------------------------------------
 
-$route = bad\io\seek($base, $key, '.php');
+$route = bad\map\seek($base, $key, '.php');
 $loot  = [];
 
 if ($route) {
@@ -64,7 +64,7 @@ if ($route) {
 // Phase 2 — Render (presentation)
 // --------------------------------------------------
 
-$render = bad\io\look($io_root . '/render/', $key, '.php', IO_NEST);
+$render = bad\map\look($io_root . '/render/', $key, '.php', IO_NEST);
 
 if ($render) {
     $loot = bad\run\run([$render], $loot, ABSORB);
