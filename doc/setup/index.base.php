@@ -7,7 +7,7 @@ $install = require 'add/badhat/error.php';
 require 'add/badhat/map.php';
 require 'add/badhat/run.php';
 require 'add/badhat/http.php';
-require 'add/badhat/db.php';
+require 'add/badhat/pdo.php';
 require 'add/badhat/auth.php';
 require 'add/badhat/csrf.php';
 
@@ -34,10 +34,10 @@ $pdo = new PDO(
     ]
 );
 
-bad\db\db($pdo);
+bad\pdo\db($pdo);
 
 // auth setup (optional)
-$stmt = bad\db\qp("SELECT password FROM users WHERE username = ?", []);
+$stmt = bad\pdo\qp("SELECT password FROM users WHERE username = ?", []);
 bad\auth\checkin(bad\auth\AUTH_SETUP, 'username', $stmt);
 
 // --------------------------------------------------
