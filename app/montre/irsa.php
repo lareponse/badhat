@@ -1,8 +1,8 @@
 <?php
-$events = bad\db\qp('SELECT * FROM `timeline` ORDER BY `event_year` ASC')->fetchAll(PDO::FETCH_ASSOC);
-$intro = bad\db\qp('SELECT * FROM `page` WHERE `slug` = ?', ['irsa-intro'])->fetch(PDO::FETCH_ASSOC);
-$oa = bad\db\qp('SELECT * FROM `page` WHERE `slug` = ?', ['irsa-oa'])->fetch(PDO::FETCH_ASSOC);
-$fondation_pro_irsa = bad\db\qp('SELECT * FROM `page` WHERE `slug` = ?', ['irsa-fondation-pro'])->fetch(PDO::FETCH_ASSOC);
+$events = bad\pdo\qp('SELECT * FROM `timeline` ORDER BY `event_year` ASC')->fetchAll(PDO::FETCH_ASSOC);
+$intro = bad\pdo\qp('SELECT * FROM `page` WHERE `slug` = ?', ['irsa-intro'])->fetch(PDO::FETCH_ASSOC);
+$oa = bad\pdo\qp('SELECT * FROM `page` WHERE `slug` = ?', ['irsa-oa'])->fetch(PDO::FETCH_ASSOC);
+$fondation_pro_irsa = bad\pdo\qp('SELECT * FROM `page` WHERE `slug` = ?', ['irsa-fondation-pro'])->fetch(PDO::FETCH_ASSOC);
 
 ?>
 <img src="/ui/blob/blob_ecoles_top_right.svg" alt="decorative blob shape" class="blob" id="blob_ecoles_top_right" aria-hidden="true">

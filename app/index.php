@@ -5,7 +5,7 @@ set_include_path(get_include_path() . PATH_SEPARATOR . __DIR__ . '/..');
 require 'add/badhat-murder/build.php';
 require 'add/badhat-murder/map.php';
 require 'add/badhat-murder/run.php';
-require 'add/badhat-murder/db.php';
+require 'add/badhat-murder/pdo.php';
 require 'add/badhat-murder/http.php';
 require 'add/badhat-murder/auth.php';
 
@@ -16,7 +16,7 @@ use const bad\run\{BUFFER, RUN_OUTPUT, RUN_RETURN};
 $register = require 'add/badhat-murder/error.php';
 $register(HND_ALL | FATAL_OB_FLUSH | MSG_WITH_TRACE);
 
-bad\db\db(require('PDO.php'));
+bad\pdo\db(require('PDO.php'));
 
 $re_quest   = bad\map\hook(__DIR__.'/', $_SERVER['REQUEST_URI']) ?: 'index';
 $pipeline = [];

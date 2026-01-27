@@ -1,5 +1,5 @@
 <?php
-$statistics = bad\db\qp('SELECT label, value FROM `statistics`')->fetchAll(PDO::FETCH_KEY_PAIR);
+$statistics = bad\pdo\qp('SELECT label, value FROM `statistics`')->fetchAll(PDO::FETCH_KEY_PAIR);
 ?>
 
 <img src="/ui/blob/blob_home_top_right.svg" alt="decorative blob shape" class="blob blob_home_top_right" aria-hidden="true">
