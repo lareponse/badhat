@@ -1,4 +1,5 @@
 <?php
+
 namespace bad\csrf;
 
 const SETUP = 1;

@@ -1,4 +1,4 @@
-<?php 
+<?php
 
 namespace bad\error;        // provides configurable, installable PHP error/exception/shutdown handlers with request-context logging, optional traces, and restoration
 
@@ -24,11 +24,11 @@ return function (int $behave = HND_ALL, ?string $request_id = null): callable {
         error_log("$log_prefix FATAL ($src:$type) $msg" . ($file ? " in $file:$line" : '') . " [$ctx]");                // log fatal error with context
         $trace && error_log("$log_prefix TRACE" . \PHP_EOL . $trace);                                                   // log trace if provided
 
-        ($behave & FATAL_HTTP_500) && !headers_sent() && http_response_code(500);                                       // set HTTP 500 if allowed and headers not yet sent
+        (FATAL_HTTP_500 & $behave) && !headers_sent() && http_response_code(500);                                       // set HTTP 500 if allowed and headers not yet sent
 
-        if ($behave & (FATAL_OB_FLUSH | FATAL_OB_CLEAN))                                                                // output buffering
+        if ((FATAL_OB_FLUSH | FATAL_OB_CLEAN) & $behave)                                                                // output buffering
             for ($max = ob_get_level(), $i = 0; $i < $max && ob_get_level(); ++$i)
-                ($behave & FATAL_OB_FLUSH) ? @ob_end_flush() : @ob_end_clean();
+                (FATAL_OB_FLUSH & $behave) ? @ob_end_flush() : @ob_end_clean();
     };
 
     $prev_err = $prev_exc = null;                                                                                       // space for previous error and exception handlers (for restoration)
