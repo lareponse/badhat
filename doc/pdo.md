@@ -13,7 +13,7 @@ Not an ORM or a query builder, just a way to run queries without repeating the s
 Somewhere in your bootstrap—index.php, init.php, wherever your app starts breathing—you hand badhat a PDO:
 
 ```php
-use function bad\db\{db, qp, trans};
+use function bad\pdo\{db, qp, trans};
 
 db(new PDO($dsn, $user, $pass, [
     PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
