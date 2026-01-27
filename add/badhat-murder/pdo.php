@@ -1,13 +1,11 @@
 <?php
 
-namespace bad\db;                                                   // lightweight PDO helpers with explicit failure semantics
+namespace bad\pdo;                                                   // lightweight PDO helpers with explicit failure semantics
 
 function db(?\PDO $pdo = null): \PDO
 {// get/set the shared PDO instance
     static $cache = null;                                           // request-scoped PDO cache
-
     ($pdo !== null) && ($cache = $pdo);                             // initialize / replace cached connection
-    
     return $cache                                                   ?? throw new \BadFunctionCallException(__FUNCTION__.':NO_CACHED_PDO', 400);
 }
 
@@ -23,11 +21,10 @@ function qp(string $query, ?array $params = null, array $prep_options = [], ?\PD
 function trans(callable $transaction, ?\PDO $pdo = null)
 {// execute callable inside a single atomic transaction
     $pdo ??= db();                                                  // resolve PDO lazily from cache
-    $res = null;                                                    // capture callable result for return
     !$pdo->inTransaction()                                          || throw new \LogicException('PDO does not support real nested transactions', 400);
+    $res = null;                                                    // capture callable result for return
     try {                                                           // outer try/catch to manage transaction atomicity
         $pdo->beginTransaction()                                    || throw _ErrorInfoException($pdo, 'beginTransaction', 500);
-
         try {
             $res = $transaction($pdo);
         } catch (\Throwable $t) {
