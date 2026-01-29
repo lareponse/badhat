@@ -43,10 +43,10 @@ in('mailto:user@ex.com');     // "user@ex.com"
 
 ```php
 use function bad\http\headers;
-use const bad\http\{H_SET, H_ADD, H_CSV, H_OUT, H_LOCK};
+use const bad\http\{SET, ADD, CSV, EMIT, LOCK};
 
 // Single value (replaces any previous)
-headers(H_SET, 'Content-Type', 'application/json');
+headers(SET, 'Content-Type', 'application/json');
 
 // Multiple values as separate header lines
 headers(H_ADD, 'Set-Cookie', 'a=1; Path=/');
@@ -61,7 +61,7 @@ headers(H_CSV, 'Vary', 'Accept-Encoding');
 Headers accumulate in a static map until you flush:
 
 ```php
-headers(H_OUT);  // emits all accumulated headers, clears the map, returns what was staged
+headers(H_EMIT);  // emits all accumulated headers, clears the map, returns what was staged
 ```
 
 **Default story:**
@@ -73,27 +73,27 @@ headers(H_OUT);  // emits all accumulated headers, clears the map, returns what 
 
 | Flag     | Value | Effect                                      |
 | -------- | ----- | ------------------------------------------- |
-| `H_SET`  | 1     | Single value, replaces previous             |
+| `SET`  | 1     | Single value, replaces previous             |
 | `H_ADD`  | 2     | Append as separate header line              |
 | `H_CSV`  | 4     | Append value, emit as comma-separated line  |
-| `H_OUT`  | 8     | Flush all headers, clear map                |
+| `H_EMIT`  | 8     | Flush all headers, clear map                |
 | `H_LOCK` | 16    | Prevent further changes to this header      |
 
 ### Lock a header
 
 ```php
-headers(H_SET | H_LOCK, 'X-Frame-Options', 'DENY');
-headers(H_SET, 'X-Frame-Options', 'SAMEORIGIN');  // throws BadFunctionCallException
+headers(SET | LOCK, 'X-Frame-Options', 'DENY');
+headers(SET, 'X-Frame-Options', 'SAMEORIGIN');  // throws BadFunctionCallException
 ```
 
-### Set-Cookie requires H_ADD
+### Set-Cookie requires ADD
 
 ```php
-headers(H_SET, 'Set-Cookie', 'x=1');  // throws InvalidArgumentException
+headers(SET, 'Set-Cookie', 'x=1');  // throws InvalidArgumentException
 headers(H_ADD, 'Set-Cookie', 'x=1');  // correct
 ```
 
-`Set-Cookie` is restricted to `H_ADD` and optionally `H_LOCK` (no `H_SET`, no `H_CSV`).
+`Set-Cookie` is restricted to `H_ADD` and optionally `H_LOCK` (no `SET`, no `H_CSV`).
 
 ---
 
@@ -108,9 +108,9 @@ headers(H_ADD, 'Set-Cookie', 'x=1');  // correct
 | `InvalidArgumentException` | Value contains ASCII control characters                                     |
 | `InvalidArgumentException` | `Set-Cookie` used without `H_ADD` (or combined with other disallowed flags) |
 | `BadFunctionCallException` | Header is locked                                                            |
-| `BadFunctionCallException` | `H_SET` and `H_ADD` both set                                                |
+| `BadFunctionCallException` | `SET` and `H_ADD` both set                                                |
 
-Token characters (`HTTP_TCHAR`): ``!#$%&'*+-.^_`|~`` plus alphanumerics.
+Token characters (`RFC_TCHAR`): ``!#$%&'*+-.^_`|~`` plus alphanumerics.
 
 Additional behavior:
 
@@ -125,14 +125,14 @@ Additional behavior:
 ```php
 use function bad\http\out;
 
-headers(H_SET, 'Content-Type', 'text/plain; charset=utf-8');
+headers(SET, 'Content-Type', 'text/plain; charset=utf-8');
 exit(out(404, 'Not found'));
 ```
 
 What it does:
 
 1. `http_response_code($code)`
-2. `headers(H_OUT)` — flushes accumulated headers
+2. `headers(H_EMIT)` — flushes accumulated headers
 3. if `$header` is provided, calls `header($header)` (unvalidated, emitted after the flush)
 4. echoes `$body` only when appropriate (no body for `<200`, `204`, `205`, `304`)
 5. returns an exit status derived from the HTTP code
@@ -160,8 +160,8 @@ use function bad\http\csp_nonce;
 
 $nonce = csp_nonce();
 
-headers(H_SET, 'Content-Security-Policy', "script-src 'nonce-$nonce'");
-headers(H_SET, 'Content-Type', 'text/html; charset=utf-8');
+headers(SET, 'Content-Security-Policy', "script-src 'nonce-$nonce'");
+headers(SET, 'Content-Type', 'text/html; charset=utf-8');
 exit(out(200, $html));
 ```
 
@@ -176,13 +176,13 @@ exit(out(200, $html));
 
 | Constant     | Description                                   |
 | ------------ | --------------------------------------------- |
-| `H_SET`      | Single value mode                             |
+| `SET`      | Single value mode                             |
 | `H_ADD`      | Append as separate lines                      |
 | `H_CSV`      | Append value, emit as comma-separated line    |
-| `H_OUT`      | Flush and clear                               |
+| `H_EMIT`      | Flush and clear                               |
 | `H_LOCK`     | Prevent changes                               |
-| `CTRL_ASCII` | All ASCII control chars (forbidden in values) |
-| `HTTP_TCHAR` | Allowed header name characters                |
+| `RFC_CTL` | All ASCII control chars (forbidden in values) |
+| `RFC_TCHAR` | Allowed header name characters                |
 
 ### Functions
 
