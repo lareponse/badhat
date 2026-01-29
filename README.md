@@ -91,7 +91,7 @@ headers(H_SET, 'Content-Type', 'text/html');
 
 $loot = run([$handler], $segments, BUFFER | INVOKE);
 
-exit(out(200, $loot[RUN_OUTPUT]));
+exit(out(200, $loot[INC_BUFFER]));
 
 ```
 

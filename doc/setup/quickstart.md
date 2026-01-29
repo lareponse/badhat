@@ -40,18 +40,18 @@ Why this method:
 set_include_path(__DIR__ . '/..' . PATH_SEPARATOR . get_include_path());
 
 $install = require 'add/badhat/error.php';
-require 'add/badhat/io.php';
+require 'add/badhat/map.php';
 require 'add/badhat/run.php';
 require 'add/badhat/http.php';
-require 'add/badhat/db.php';
+require 'add/badhat/pdo.php';
 
-use function bad\io\{hook, seek, look};
+use function bad\map\{hook, seek, look};
 use function bad\http\{headers, out};
 use function bad\run\run;
-use function bad\db\db;
+use function bad\pdo\db;
 
 use const bad\error\HND_ALL;
-use const bad\io\IO_NEST;
+use const bad\map\IO_NEST;
 use const bad\run\{INVOKE, ABSORB, RUN_RETURN};
 use const bad\http\H_SET;
 
@@ -148,7 +148,7 @@ EOF
 <?php
 // app/io/route/users.php
 
-use function bad\db\qp;
+use function bad\pdo\qp;
 use function bad\http\{headers, out};
 use const bad\http\H_SET;
 
@@ -221,10 +221,10 @@ myproject/
 ├── add/badhat/
 │   ├── auth.php
 │   ├── csrf.php
-│   ├── db.php
+│   ├── pdo.php
 │   ├── error.php
 │   ├── http.php
-│   ├── io.php
+│   ├── map.php
 │   └── run.php
 ├── app/io/
 │   ├── route/users.php
