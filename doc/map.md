@@ -90,12 +90,12 @@ Because that matches how people usually think about intent:
 
 The flags read like plot twists: you use them when the story changes.
 
-### `IO_GROW`: you want a gateway at the top
+### `ASCEND`: you want a gateway at the top
 
 Sometimes your app has entry points like `api.php` or `admin.php` that intentionally swallow everything underneath.
 
 ```php
-[$file, $args] = bad\map\seek($base, $path, '.php', bad\map\IO_GROW);
+[$file, $args] = bad\map\seek($base, $path, '.php', bad\map\ASCEND);
 ```
 
 Now `/admin/users/edit` tries:
@@ -110,15 +110,15 @@ First match wins.
 
 ---
 
-### `IO_NEST`: folders get their own "index handler"
+### `REBASE`: folders get their own "index handler"
 
 When `admin.php` doesn't exist, you might want `admin/admin.php` to be the real entry point.
 
 ```php
-$file = bad\map\look($base, 'admin', '.php', bad\map\IO_NEST);
+$file = bad\map\look($base, 'admin', '.php', bad\map\REBASE);
 ```
 
-And because `seek()` calls `look()` internally, `IO_NEST` works there too.
+And because `seek()` calls `look()` internally, `REBASE` works there too.
 
 **Story:**
 "If a section is a directory, let it own itself."
@@ -131,8 +131,8 @@ And because `seek()` calls `look()` internally, `IO_NEST` works there too.
 
 | Constant | Value | Effect |
 |----------|-------|--------|
-| `IO_NEST` | 1 | Fallback: `base/x.shim` missing → try `base/x/x.shim` |
-| `IO_GROW` | 2 | Reverse search: shallowest match first, not deepest |
+| `REBASE` | 1 | Fallback: `base/x.shim` missing → try `base/x/x.shim` |
+| `ASCEND` | 2 | Reverse search: shallowest match first, not deepest |
 
 ### Functions
 
@@ -157,7 +157,7 @@ Direct file lookup. Returns canonical path if file exists within base, `null` ot
 - `$base` — Directory to search within
 - `$path` — Relative path to look up
 - `$shim` — File extension or suffix to append
-- `$behave` — Behavior flags (`IO_NEST`)
+- `$behave` — Behavior flags (`REBASE`)
 
 #### `seek(string $base, string $path, string $shim = '', int $behave = 0): ?array`
 
@@ -167,4 +167,4 @@ Progressive segment search. Returns `[file, args]` on match, `null` otherwise.
 - `$base` — Directory to search within
 - `$path` — Relative path to search
 - `$shim` — File extension or suffix to append
-- `$behave` — Behavior flags (`IO_NEST`, `IO_GROW`)
+- `$behave` — Behavior flags (`REBASE`, `ASCEND`)

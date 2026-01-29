@@ -14,10 +14,10 @@ At its simplest, `run()` is just `include` with structure:
 
 ```php
 use function bad\run\run;
-use const bad\run\RUN_RETURN;
+use const bad\run\INC_RETURN;
 
 $loot = run(['/app/boot.php']);
-// $loot[RUN_RETURN] = whatever boot.php returned
+// $loot[INC_RETURN] = whatever boot.php returned
 ```
 
 Pass arguments, and they're visible inside the file as `$args`:
@@ -55,7 +55,7 @@ Add `INVOKE`, and badhat calls the returned callable:
 use const bad\run\INVOKE;
 
 $loot = run(['/app/route/users.php'], ['view', '42'], INVOKE);
-// $loot[RUN_RETURN] = the user row, not the function
+// $loot[INC_RETURN] = the user row, not the function
 ```
 
 **Story:**
@@ -74,14 +74,14 @@ PHP files can echo. Sometimes you want that output captured, not streamed.
 
 ```php
 use const bad\run\BUFFER;
-use const bad\run\RUN_OUTPUT;
+use const bad\run\INC_BUFFER;
 
 $loot = run(['/app/template.php'], ['name' => 'World'], BUFFER);
 
-echo $loot[RUN_OUTPUT];  // "<h1>Hello, World</h1>"
+echo $loot[INC_BUFFER];  // "<h1>Hello, World</h1>"
 ```
 
-Without `BUFFER`, output goes straight to the browser. With it, output lands in `$loot[RUN_OUTPUT]`.
+Without `BUFFER`, output goes straight to the browser. With it, output lands in `$loot[INC_BUFFER]`.
 
 **Story:**
 "Sometimes you want to capture, not emit."
@@ -109,7 +109,7 @@ use const bad\run\ABSORB;
 
 $loot = run(['/app/page.php'], ['content' => 'Hello'], ABSORB);
 
-echo $loot[RUN_RETURN];
+echo $loot[INC_RETURN];
 // <!doctype html><html><body><article>Hello</article></body></html>
 ```
 
@@ -133,15 +133,15 @@ With `RELOOT`, each callable gets the **loot bag**—including whatever the prev
 return fn($args) => get_current_user();  // returns user or null
 
 // handler.php
-use const bad\run\RUN_RETURN;
+use const bad\run\INC_RETURN;
 return fn($args) => [
-    'user'  => $args[RUN_RETURN],        // from auth.php
+    'user'  => $args[INC_RETURN],        // from auth.php
     'posts' => load_posts(),
 ];
 
 // render.php
-use const bad\run\RUN_RETURN;
-return fn($args) => render('home', $args[RUN_RETURN]);
+use const bad\run\INC_RETURN;
+return fn($args) => render('home', $args[INC_RETURN]);
 ```
 
 ```php
@@ -154,7 +154,7 @@ $loot = run([
     '/app/render/home.php',
 ], [], INVOKE | RELOOT);
 
-echo $loot[RUN_RETURN];
+echo $loot[INC_RETURN];
 ```
 
 Each step sees what came before. No globals. No shared state objects. Just the loot bag flowing forward.
@@ -175,7 +175,7 @@ $loot = run(['/app/broken.php']);
 
 ### RESCUE_CALL: invoke anyway
 
-If the include throws but somehow left a callable in `RUN_RETURN`, try to invoke it anyway:
+If the include throws but somehow left a callable in `INC_RETURN`, try to invoke it anyway:
 
 ```php
 $loot = run(['/app/noisy.php'], [], INVOKE | RESCUE_CALL);
@@ -204,7 +204,7 @@ Failures are swallowed. The last file's results end up in `$loot`.
 use function bad\map\{hook, seek};
 use function bad\run\run;
 use function bad\http\out;
-use const bad\run\{BUFFER, INVOKE, RUN_OUTPUT};
+use const bad\run\{BUFFER, INVOKE, INC_BUFFER};
 
 $base = realpath(__DIR__ . '/routes') . '/';
 $path = hook($base, $_SERVER['REQUEST_URI']);
@@ -214,7 +214,7 @@ $path = hook($base, $_SERVER['REQUEST_URI']);
 
 $loot = run([$file], $args, BUFFER | INVOKE);
 
-exit(out(200, $loot[RUN_OUTPUT]));
+exit(out(200, $loot[INC_BUFFER]));
 ```
 
 Five lines. Request to response.
@@ -227,7 +227,7 @@ Five lines. Request to response.
 
 | Constant | Value | Effect |
 |----------|-------|--------|
-| `BUFFER` | 1 | Capture output to `RUN_OUTPUT` |
+| `BUFFER` | 1 | Capture output to `INC_BUFFER` |
 | `INVOKE` | 2 | Call returned callable |
 | `ABSORB` | 7 | Buffer + Invoke + append buffer to callable args |
 | `RELOOT` | 8 | Pass loot bag (not original args) to each callable |
@@ -238,8 +238,8 @@ Five lines. Request to response.
 
 | Constant | Value | Contains |
 |----------|-------|----------|
-| `RUN_RETURN` | -1 | Return value from include or invoke |
-| `RUN_OUTPUT` | -2 | Captured output buffer |
+| `INC_RETURN` | -1 | Return value from include or invoke |
+| `INC_BUFFER` | -2 | Captured output buffer |
 
 ### Throws
 
