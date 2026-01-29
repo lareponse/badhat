@@ -77,10 +77,10 @@ function headers(int $code_behave, ?string $field = null, ?string $token = null)
 {// stage, validate, and manage HTTP headers (set/add/CSV/readonly) with optional status-code tracking, and emit/clear them when requested
     static $headers = [];
 
-    $code   = $code_behave &  HTTP_CODE_MASK;                       // response code (0 => "do not set")
-    $behave = $code_behave & ~HTTP_CODE_MASK;                       // behavior only
+    $code   = $code_behave &  HTTP_CODE_MASK;                                                  // response code (0 => "do not set")
+    $behave = $code_behave & ~HTTP_CODE_MASK;                                                  // behavior only
 
-    if (EMIT & $behave) {                                           // emit mode: yield all staged headers and clear
+    if (EMIT & $behave) {                                                                      // emit mode: yield all staged headers and clear
         $backups = $headers;
         $headers = [LAST_CODE => ($backups[LAST_CODE] ?? 0)];
         return _emit_headers($backups);
@@ -98,17 +98,17 @@ function headers(int $code_behave, ?string $field = null, ?string $token = null)
         throw new \LogicException("header '{$field}' is read only");
 
     if (strtolower($canon) === 'set-cookie')
-         $behave = ($behave | ADD | NO_REPLACE) & ~(SET | CSV);                         // set-cookie is always multi-valued append-only
+         $behave = ($behave | ADD | NO_REPLACE) & ~(SET | CSV);                                // set-cookie is always multi-valued append-only
 
-    (READ_ONLY & $behave) && ($headers[READ_ONLY][$canon] = true);                           // lock field-name after this write
+    (READ_ONLY & $behave) && ($headers[READ_ONLY][$canon] = true);                             // lock field-name after this write
 
     $code && ($headers[LAST_CODE] = $code);
-    $header_param = ["$canon: $token", !(NO_REPLACE & $behave), $code];                // header(...$header_param)
+    $header_param = ["$canon: $token", !(NO_REPLACE & $behave), $code];                        // header(...$header_param)
 
-    (SET & $behave) && ($headers[SET][$canon] = $header_param);                              // single-valued header
-    (ADD & $behave) && ($headers[ADD][$canon][] = $header_param);                            // multi-line header
+    (SET & $behave) && ($headers[SET][$canon] = $header_param);                                // single-valued header
+    (ADD & $behave) && ($headers[ADD][$canon][] = $header_param);                              // multi-line header
 
-    if (CSV & $behave) {                                                                     // merge values on emit
+    if (CSV & $behave) {                                                                       // merge values on emit
         $replace = !(NO_REPLACE & $behave);
 
         if (!isset($headers[CSV][$canon]))
@@ -122,20 +122,20 @@ function headers(int $code_behave, ?string $field = null, ?string $token = null)
             $headers[CSV][$canon][3] = $code;
         }
     }
-    return $headers;                                                // convenience: inspect current staged headers
+    return $headers;
 }// returns an iterable of staged headers (and, in emit mode, an iterable yielding the staged headers while clearing them)
 
 function _rfc_compliance($behave, $code, $field, $token): string
 {// called from headers() only, use at own risk
     $canon = trim((string)$field);
     try{
-        $canon === $field                                           || throw new \InvalidArgumentException('field name must not include leading/trailing whitespace');
-        $canon !== ''                                               || throw new \InvalidArgumentException('field name is empty');
-        (!isset($canon[strspn($canon, RFC_TCHAR)]))                 || throw new \InvalidArgumentException('field name must be a token (tchar alphabet)');
-        (!isset($token[strspn($token, HTTP_VALUE_SAFE_BYTES)]))     || throw new \InvalidArgumentException('field value must be VCHAR/obs-text plus SP/HTAB (OWS)');
-        (strpbrk($token, RFC_CTL_NO_HTAB) === false)                || throw new \InvalidArgumentException('field value forbids CR/LF/NUL and other CTL');
+        $canon === $field                                                                      || throw new \InvalidArgumentException('field name must not include leading/trailing whitespace');
+        $canon !== ''                                                                          || throw new \InvalidArgumentException('field name is empty');
+        (!isset($canon[strspn($canon, RFC_TCHAR)]))                                            || throw new \InvalidArgumentException('field name must be a token (tchar alphabet)');
+        (!isset($token[strspn($token, HTTP_VALUE_SAFE_BYTES)]))                                || throw new \InvalidArgumentException('field value must be VCHAR/obs-text plus SP/HTAB (OWS)');
+        (strpbrk($token, RFC_CTL_NO_HTAB) === false)                                           || throw new \InvalidArgumentException('field value forbids CR/LF/NUL and other CTL');
 
-        ($code === 0 || ($code >= 100 && $code <= 599))             || throw new \InvalidArgumentException("invalid http status {$code}");
+        ($code === 0 || ($code >= 100 && $code <= 599))                                        || throw new \InvalidArgumentException("invalid http status {$code}");
     }
     catch(\InvalidArgumentException $e){
         if((E_NOTICE | E_WARNING) & $behave)
@@ -158,4 +158,4 @@ function _emit_headers(array $backups): iterable
     foreach (($backups[ADD] ?? []) as $header_param_list)
         foreach ($header_param_list as $header_param)
             yield $header_param;
-}// yields an array of header() call params, ready for header(...params)
+}// yields header() call params as array, ready for header(...params)
