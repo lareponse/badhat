@@ -1,4 +1,4 @@
-<?php 
+<?php
 
 namespace bad\error;        // provides configurable, installable PHP error/exception/shutdown handlers with request-context logging, optional traces, and restoration
 
@@ -24,14 +24,14 @@ return function (int $behave = HND_ALL, ?string $request_id = null): callable {
         error_log("$log_prefix FATAL ($src:$type) $msg" . ($file ? " in $file:$line" : '') . " [$ctx]");                // log fatal error with context
         $trace && error_log("$log_prefix TRACE" . \PHP_EOL . $trace);                                                   // log trace if provided
 
-        ($behave & FATAL_HTTP_500) && !headers_sent() && http_response_code(500);                                       // set HTTP 500 if allowed and headers not yet sent
+        (FATAL_HTTP_500 & $behave) && !headers_sent() && http_response_code(500);                                       // set HTTP 500 if allowed and headers not yet sent
 
-        if ($behave & (FATAL_OB_FLUSH | FATAL_OB_CLEAN))                                                                // output buffering
+        if ((FATAL_OB_FLUSH | FATAL_OB_CLEAN) & $behave)                                                                // output buffering
             for ($max = ob_get_level(), $i = 0; $i < $max && ob_get_level(); ++$i)
-                ($behave & FATAL_OB_FLUSH) ? @ob_end_flush() : @ob_end_clean();
+                (FATAL_OB_FLUSH & $behave) ? @ob_end_flush() : @ob_end_clean();
     };
 
-    $prev_err = $prev_exc = null;                                                                                       // space for previous error and exception handlers (for restoration)
+    $prev_err = $prev_exc = false;                                                                                      // sentinel: false=we did not install; null=installed with no previous handler (restore would wrongly pop someone else if we never installed)
 
     (HND_ERR & $behave) && $prev_err = set_error_handler(static function (int $code, string $msg, string $file, int $line) use ($behave, $log_prefix): bool {
         if (!(error_reporting() & $code)) return false;                                                                 // respect current error_reporting level
@@ -67,8 +67,8 @@ return function (int $behave = HND_ALL, ?string $request_id = null): callable {
             $fatal('shutdown', "type={$err['type']}", $err['message'], $err['file'], (int)$err['line'], '');            // report via fatal handler
     });
 
-    return static function () use ($prev_err, $prev_exc): void {  
-        $prev_err !== null ? set_error_handler($prev_err) : restore_error_handler();                                    // restore previous error handler
-        $prev_exc !== null ? set_exception_handler($prev_exc) : restore_exception_handler();                            // restore previous exception handler           
+    return static function () use ($prev_err, $prev_exc): void {
+        ($prev_err !== false) && ($prev_err !== null ? set_error_handler($prev_err) : restore_error_handler());         // restore previous error handler
+        ($prev_exc !== false) && ($prev_exc !== null ? set_exception_handler($prev_exc) : restore_exception_handler()); // restore previous exception handler  
     };
 };

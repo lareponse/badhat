@@ -12,7 +12,7 @@ Real projects. Real constraints. Real solutions.
 
 use function bad\auth\checkin;
 use function bad\csrf\csrf;
-use function bad\db\qp;
+use function bad\pdo\qp;
 use function bad\http\{headers, out};
 use const bad\csrf\CHECK;
 use const bad\http\H_SET;
@@ -48,7 +48,7 @@ return function($args) {
 // app/io/route/admin/orders.php
 
 use function bad\auth\checkin;
-use function bad\db\qp;
+use function bad\pdo\qp;
 use function bad\http\{headers, out};
 use const bad\http\H_SET;
 
@@ -83,7 +83,7 @@ return function($args) {
 <?php
 // app/io/route/api/users.php
 
-use function bad\db\qp;
+use function bad\pdo\qp;
 use function bad\http\{headers, out};
 use const bad\http\H_SET;
 
@@ -112,7 +112,7 @@ return function($args) {
 <?php
 // app/io/route/dashboard/metrics.php
 
-use function bad\db\qp;
+use function bad\pdo\qp;
 
 return function($args) {
     $range = $args[0] ?? '24h';
@@ -143,7 +143,7 @@ return function($args) {
 
 use function bad\auth\checkin;
 use function bad\csrf\csrf;
-use function bad\db\qp;
+use function bad\pdo\qp;
 use function bad\http\{headers, out};
 use const bad\csrf\CHECK;
 use const bad\http\H_SET;
@@ -181,7 +181,7 @@ return function($args) {
 <?php
 // app/io/route/api/sensors.php
 
-use function bad\db\qp;
+use function bad\pdo\qp;
 use function bad\http\{headers, out};
 use const bad\http\H_SET;
 
@@ -214,7 +214,7 @@ return function($args) {
 <?php
 // app/io/route/app/projects.php
 
-use function bad\db\{db, qp};
+use function bad\pdo\{db, qp};
 
 return function($args) {
     $tenant = resolve_tenant($_SERVER['HTTP_HOST']);
@@ -251,7 +251,7 @@ return function($args) {
 
 use function bad\auth\checkin;
 use function bad\csrf\csrf;
-use function bad\db\{qp, trans};
+use function bad\pdo\{qp, trans};
 use function bad\http\{headers, out};
 use const bad\csrf\CHECK;
 use const bad\http\H_SET;
