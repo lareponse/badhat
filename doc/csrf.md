@@ -1,16 +1,14 @@
 # badhat\csrf
 
-Your forms need CSRF protection.
-
-Just tokens that expire and validate.
+Tokens that expire and validate.
 
 > One function, three behaviors. Bitwise flags control what it does.
 
 ---
 
-## 1) First, you set up a token
+## 1) Setup a token
 
-Somewhere you're rendering a form—the page where the user sees inputs and a submit button:
+Rendering a form:
 
 ```php
 use function bad\csrf\csrf;
@@ -19,26 +17,23 @@ use const bad\csrf\{SETUP, CHECK, FORCE};
 $token = csrf('checkout', 900, SETUP);  // 15 minutes
 ```
 
-That's it. Token created, stored in session, returned for embedding.
+Token created, stored in session, returned for embedding.
 
 ```html
 <input type="hidden" name="checkout" value="<?= htmlspecialchars($token) ?>">
 ```
 
-If a valid token already exists for that key, it throws. You probably have a bug—why are you setting up twice? Unless you meant to:
+If a valid token already exists for that key, it throws. Unless:
 
 ```php
 $token = csrf('checkout', 900, SETUP | FORCE);  // overwrite existing
 ```
 
-**Default story:**
-"I need a token for this form. Warn me if I'm clobbering one accidentally."
-
 ---
 
-## 2) Then, you check it
+## 2) Check it
 
-When the form submits—POST handler, controller, wherever:
+Form submission handler:
 
 ```php
 $valid = csrf('checkout', null, CHECK);
@@ -48,22 +43,19 @@ if (!$valid) {
 }
 ```
 
-`CHECK` pulls the submitted value from `$_POST[$key]` automatically. Or pass it explicitly:
+`CHECK` pulls from `$_POST[$key]` automatically. Or pass explicitly:
 
 ```php
 $valid = csrf('checkout', $_SERVER['HTTP_X_CSRF_TOKEN'], CHECK);
 ```
 
-Returns `true` if valid, `false` if expired. Throws if the token is missing entirely—that's not "invalid," that's "your form is broken."
-
-**Default story:**
-"Validate the submission. Tell me if it's good, bad, or missing."
+Returns `true` if valid, `false` if expired. Throws if token missing entirely.
 
 ---
 
-## 3) Just need the token?
+## 3) Retrieve token
 
-Sometimes you need the token value without setup or check. Rendering a second form on the same page. Passing it to JavaScript.
+Need the value without setup or check:
 
 ```php
 $token = csrf('checkout');  // returns existing token, or throws if not initialized
@@ -71,15 +63,12 @@ $token = csrf('checkout');  // returns existing token, or throws if not initiali
 
 Returns `false` if expired.
 
-**Default story:**
-"I already set this up. Just give me the value."
-
 ---
 
-## 4) Flags control behavior
+## 4) Flags
 
-| Flag | What it does |
-|------|--------------|
+| Flag | Effect |
+|------|--------|
 | `SETUP` | Create new token with TTL (second param, seconds) |
 | `CHECK` | Validate submitted token |
 | `FORCE` | With SETUP: overwrite unexpired token |
@@ -92,20 +81,18 @@ csrf('key', null, CHECK);          // validate
 csrf('key', 600, SETUP | FORCE);   // recreate even if active
 ```
 
-`SETUP | CHECK` throws. Pick one.
+`SETUP | CHECK` throws.
 
 ---
 
 ## 5) Requirements
 
-Active session. That's it.
+Active session.
 
 ```php
 session_start();
 // now csrf() works
 ```
-
-No session? It throws. This isn't optional—CSRF tokens without sessions don't make sense.
 
 ---
 
@@ -113,11 +100,11 @@ No session? It throws. This isn't optional—CSRF tokens without sessions don't 
 
 ### Constants
 
-| Constant | Value | Use |
-|----------|-------|-----|
-| `SETUP` | 1 | Create token |
-| `CHECK` | 2 | Validate token |
-| `FORCE` | 4 | Allow overwrite |
+| Constant | Value |
+|----------|-------|
+| `SETUP` | 1 |
+| `CHECK` | 2 |
+| `FORCE` | 4 |
 
 ### Function
 
@@ -135,9 +122,14 @@ csrf(string $key, $param = null, int $behave = 0): string|bool
 
 | Exception | When |
 |-----------|------|
-| `InvalidArgumentException` | Empty key, invalid TTL, `SETUP\|CHECK` combined, missing token on CHECK |
-| `BadFunctionCallException` | No session, token not initialized, overwriting without FORCE |
+| `InvalidArgumentException` | Empty key |
+| `InvalidArgumentException` | TTL not a positive integer |
+| `InvalidArgumentException` | Token required on CHECK but missing |
+| `LogicException` | No active session |
+| `LogicException` | Overwriting unexpired token without FORCE |
+| `BadFunctionCallException` | `SETUP \| CHECK` combined |
+| `BadFunctionCallException` | Token not initialized (retrieve or CHECK before SETUP) |
 
 ### Storage
 
-Tokens live in `$_SESSION['bad\csrf']['csrf'][$key]`. They're cleaned up on access when expired. Abandoned tokens persist until session expiry—use bounded key names or short sessions.
+Tokens live in `$_SESSION['bad\csrf']['csrf'][$key]`. Expired tokens cleaned on access.

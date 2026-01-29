@@ -29,11 +29,11 @@ That's it. From this point forward:
 - Uncaught exceptions go through your handler  
 - Fatal shutdowns go through your handler
 
-Every log line gets a request ID: `[req=a1b2c3]`. When something breaks at 3am, you can grep.
+Every log line gets a request ID: `[req=1a2b3c4d-1234]`. When something breaks at 3am, you can grep.
 
-**Request ID**
-- If you pass `$request_id`, it is used as-is.
-- Otherwise it is generated as: `dechex((int)($start * 10000) ^ getmypid())`
+**Request ID format:**
+- If you pass `$request_id`, it's used as-is
+- Otherwise: `dechex($hrtime_ns) . '-' . getmypid()` — hex nanosecond timestamp plus process ID
 
 **Default story:**
 "One request, one ID. Everything that goes wrong is tagged."
@@ -75,13 +75,13 @@ $restore = $install(HND_ALL | MSG_WITH_TRACE);
 
 Without trace:
 ```
-[req=1a2b3c] FATAL (exception:InvalidArgumentException) Bad input in /app/route/api.php:18 [3.4ms 2048KiB POST /api @192.168.1.50]
+[req=1a2b3c4d-1234] FATAL (exception:InvalidArgumentException) Bad input in /app/route/api.php:18 [3.41ms 2048KiB POST /api @192.168.1.50]
 ```
 
 With trace:
 ```
-[req=1a2b3c] FATAL (exception:InvalidArgumentException) Bad input in /app/route/api.php:18 [3.4ms 2048KiB POST /api @192.168.1.50]
-[req=1a2b3c] TRACE
+[req=1a2b3c4d-1234] FATAL (exception:InvalidArgumentException) Bad input in /app/route/api.php:18 [3.41ms 2048KiB POST /api @192.168.1.50]
+[req=1a2b3c4d-1234] TRACE
 #0 /app/route/api.php:23 validate()
 #1 /app/index.php:45 include()
 ```
@@ -115,7 +115,7 @@ use const bad\error\FATAL_HTTP_500;
 $restore = $install(HND_ALL | FATAL_HTTP_500 | FATAL_OB_CLEAN);
 ```
 
-`FATAL_HTTP_500` sends the status code before the process dies. Without it, the client might get a 200 with garbage.
+`FATAL_HTTP_500` sends the status code before the process dies (if headers not already sent). Without it, the client might get a 200 with garbage.
 
 **Story:**
 "Prod hides the mess. Dev shows you everything."
@@ -141,13 +141,15 @@ Your handler logs. PHP's handler prints. You see both.
 
 ## 6) Restore when you're done 
 
-The installer returns a restore function. Call it to put **MOST** things back:
+The installer returns a restore function. Call it to put things back:
 
 ```php
 $restore = $install(HND_ALL);
 // ... app runs ...
-$restore();  // previous handlers restored, except for shutdown
+$restore();  // previous handlers restored
 ```
+
+**Note:** Shutdown handlers cannot be unregistered. `HND_SHUT` installs permanently for the request lifetime.
 
 Order matters. If you nest installs, restore in reverse order (LIFO).
 
@@ -200,7 +202,7 @@ Behavior is baked at install time. No runtime conditionals inside handlers.
 ### Runtime error (non-fatal)
 
 ```
-[req=1a2b3c] ERR (errno=2) Undefined variable $foo in /app/route/user.php:42
+[req=1a2b3c4d-1234] ERR (errno=2) Undefined variable $foo in /app/route/user.php:42
 ```
 
 Execution continues.
@@ -208,15 +210,15 @@ Execution continues.
 ### Uncaught exception
 
 ```
-[req=1a2b3c] FATAL (exception:InvalidArgumentException) Bad Request in /app/lib/map.php:18 [3.41ms 2048KiB POST /api/user @192.168.1.50]
+[req=1a2b3c4d-1234] FATAL (exception:InvalidArgumentException) Bad Request in /app/lib/map.php:18 [3.41ms 2048KiB POST /api/user @192.168.1.50]
 ```
 
-Hard exit.
+Exits with code 1.
 
 ### Chained exceptions
 
 ```
-[req=deadbe] FATAL (exception:RuntimeException) include:/app/route/fail.php <- PDOException:SQLSTATE[23000]: Integrity constraint violation in /app/lib/run.php:27 [12.7ms 4096KiB GET /fail @10.0.0.1]
+[req=deadbeef-5678] FATAL (exception:RuntimeException) include:/app/route/fail.php <- PDOException:SQLSTATE[23000]: Integrity constraint violation in /app/lib/run.php:27 [12.70ms 4096KiB GET /fail @10.0.0.1]
 ```
 
 The chain is visible. You see what caused what.
@@ -224,7 +226,7 @@ The chain is visible. You see what caused what.
 ### Fatal shutdown
 
 ```
-[req=deadbe] FATAL (shutdown:type=4) syntax error, unexpected '}' in /app/route/broken.php:17 [0.81ms 512KiB GET /broken @127.0.0.1]
+[req=deadbeef-5678] FATAL (shutdown:type=4) syntax error, unexpected '}' in /app/route/broken.php:17 [0.81ms 512KiB GET /broken @127.0.0.1]
 ```
 
 Parse errors, compile errors—things that kill PHP before your code runs.
@@ -232,12 +234,28 @@ Parse errors, compile errors—things that kill PHP before your code runs.
 ### Multiple issues, same request
 
 ```
-[req=f00baa] ERR (errno=8) Undefined array key "name" in /app/lib/auth.php:55
-[req=f00baa] ERR (errno=2) file_get_contents(): Filename cannot be empty in /app/lib/map.php:89
-[req=f00baa] FATAL (exception:RuntimeException) include:/app/route/fail.php in /app/lib/run.php:47 [12.7ms 4096KiB GET /fail @-]
+[req=f00baa12-9999] ERR (errno=8) Undefined array key "name" in /app/lib/auth.php:55
+[req=f00baa12-9999] ERR (errno=2) file_get_contents(): Filename cannot be empty in /app/lib/map.php:89
+[req=f00baa12-9999] FATAL (exception:RuntimeException) include:/app/route/fail.php in /app/lib/run.php:47 [12.70ms 4096KiB GET /fail @-]
 ```
 
 Same `req=` prefix. One grep finds all of it.
+
+---
+
+## Log context format
+
+Fatal logs include request context:
+
+```
+[{elapsed}ms {peak_mem}KiB {method} {uri} @{remote_addr}]
+```
+
+- `elapsed`: milliseconds since install (2 decimal places)
+- `peak_mem`: peak memory in KiB
+- `method`: `$_SERVER['REQUEST_METHOD']` or `CLI`
+- `uri`: `$_SERVER['REQUEST_URI']` or `-`
+- `remote_addr`: `$_SERVER['REMOTE_ADDR']` or `-`
 
 ---
 
@@ -260,15 +278,21 @@ Same `req=` prefix. One grep finds all of it.
 | `ALLOW_INTERNAL` | 16 | Let PHP's native handler run too |
 | `FATAL_OB_FLUSH` | 32 | Flush output buffers on fatal |
 | `FATAL_OB_CLEAN` | 64 | Discard output buffers on fatal |
-| `FATAL_HTTP_500` | 128 | Send HTTP 500 on fatal |
+| `FATAL_HTTP_500` | 128 | Send HTTP 500 on fatal (if headers not sent) |
 
-### Special codes
+### Installer signature
 
-| Constant | Value | Meaning |
-|----------|-------|---------|
-| `CODE_ACE` | 0xACE | (reserved) |
-| `CODE_BAD` | 0xBAD | (reserved) |
-| `CODE_COD` | 0xC0D | Exception code for wrapped errors |
+```php
+function (int $behave = HND_ALL, ?string $request_id = null): callable
+```
+
+Returns a restore callable.
+
+### Restore behavior
+
+- `HND_ERR`: restores previous error handler (or calls `restore_error_handler()` if none)
+- `HND_EXC`: restores previous exception handler (or calls `restore_exception_handler()` if none)
+- `HND_SHUT`: **cannot be restored** — shutdown functions persist for request lifetime
 
 ---
 
@@ -278,3 +302,5 @@ Same `req=` prefix. One grep finds all of it.
 - **No screen mode.** This logs to `error_log()`. If you want pretty errors in the browser, that's a different tool.
 - **Request data hits logs.** URI, method, remote IP—all logged. Don't put secrets in URLs.
 - **Restore is your job.** If you install, you restore. Especially in tests.
+- **Shutdown is permanent.** Once registered, the shutdown handler runs regardless of restore.
+- **Exception handler exits.** Uncaught exceptions call `exit(1)` after logging.
