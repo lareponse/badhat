@@ -1,93 +1,137 @@
-# Authentication in BADHAT
+# badhat\auth
 
-Session-based auth via `checkin()`. Bitmask-driven, no classes.
+Your app needs login.
 
-## Constants
+Session-based, bitmask-driven. No classes, no middleware, no "authentication guards."
 
-```php
-const AUTH_SETUP  = 1;    // Configure username field + password query
-const AUTH_ENTER  = 2;    // Login attempt via POST
-const AUTH_LEAVE  = 4;    // Destroy session
-
-const AUTH_DUMMY_HASH = '$2y$12$...';  // Timing-safe comparison fallback
-```
+> One function, three behaviors. Configure once, then enter, check, or leave.
 
 ---
 
-## Function
+## 1) First, you configure
+
+Somewhere in bootstrap—before any login attempts:
 
 ```php
-function checkin(int $behave = 0, ?string $u = null, $p = null): ?string
-```
+use function bad\auth\checkin;
+use const bad\auth\AUTH_SETUP;
 
-**Returns:** username string or `null`
-
----
-
-## Usage Patterns
-
-### 1. Setup (once, at bootstrap)
-
-```php
 $stmt = qp("SELECT password FROM users WHERE username = ?", []);
 checkin(AUTH_SETUP, 'username', $stmt);
 ```
 
-- `$u` = session key for username storage
-- `$p` = prepared PDOStatement (expects single `?` for username)
+Two things stored:
+- `'username'` — the session key where authenticated usernames live
+- `$stmt` — a prepared statement expecting one `?` for username, returning the password hash
 
-### 2. Login Route
+No connection happens. No query runs. Just setup.
 
-```php
-// app/io/route/login.php
-return function($args) {
-    if ($_POST) {
-        $user = checkin(AUTH_ENTER, 'username', 'password');
-        $user && header('Location: /dashboard') && exit;
-        // login failed, fall through to form
-    }
-    return ['error' => $_POST ? 'Invalid credentials' : null];
-};
-```
+---
 
-- Reads `$_POST[$u]` and `$_POST[$p]`
-- Verifies against DB hash
-- Regenerates session ID on success
+## 2) Then, you authenticate
 
-### 3. Get Current User
+When the login form submits:
 
 ```php
-$user = checkin();  // returns username or null
+use const bad\auth\AUTH_ENTER;
+
+$user = checkin(AUTH_ENTER, 'username', 'password');
+
+if ($user) {
+    header('Location: /dashboard');
+    exit;
+}
+// login failed
 ```
 
-### 4. Protected Route
+Parameters are POST field names. Reads `$_POST['username']` and `$_POST['password']`, verifies against the DB hash.
+
+On success:
+- Session ID regenerated (fixation defense)
+- Username stored in session
+- Returns the username
+
+On failure:
+- Returns `null`
+- Timing remains constant (dummy hash comparison when user missing)
+
+---
+
+## 3) Check who's logged in
+
+```php
+$user = checkin();  // username string or null
+```
+
+No flags, no parameters. Returns whatever's in the session, or `null`.
+
+---
+
+## 4) Protected routes
 
 ```php
 // app/io/route/admin/dashboard.php
 return function($args) {
-    checkin() ?? out(302, null, ['Location' => ['/login']]);
+    checkin() ?? (header('Location: /login') && exit);
     return ['user' => checkin()];
 };
 ```
 
-### 5. Logout
+---
+
+## 5) Logout
 
 ```php
-// app/io/route/logout.php
-return function($args) {
-    checkin(AUTH_LEAVE);
-    header('Location: /');
-    exit;
-};
+use const bad\auth\AUTH_LEAVE;
+
+checkin(AUTH_LEAVE);
+header('Location: /');
+exit;
 ```
 
-- Clears `$_SESSION`
-- Destroys session cookie
-- Calls `session_destroy()`
+What happens:
+- `$_SESSION` cleared
+- Session cookie destroyed (if `session.use_cookies` enabled)
+- `session_destroy()` called
+
+Returns `null`.
 
 ---
 
-## Internal Functions
+## Reference
+
+### Constants
+
+| Constant | Value | Behavior |
+|----------|-------|----------|
+| `AUTH_SETUP` | 1 | Store username field + password query |
+| `AUTH_ENTER` | 2 | Authenticate via POST |
+| `AUTH_LEAVE` | 4 | Destroy session |
+| `AUTH_DUMMY_HASH` | bcrypt string | Timing-safe fallback |
+
+### Function
+
+```php
+checkin(int $behave = 0, ?string $u = null, $p = null): ?string
+```
+
+| `$behave` | `$u` | `$p` | Returns |
+|-----------|------|------|---------|
+| `0` | ignored | ignored | Username from session, or `null` |
+| `AUTH_SETUP` | Session key for username | PDOStatement | `null` |
+| `AUTH_ENTER` | POST field: username | POST field: password | Username on success, `null` on failure |
+| `AUTH_LEAVE` | ignored | ignored | `null` |
+
+### Throws
+
+| Exception | Code | When |
+|-----------|------|------|
+| `BadFunctionCallException` | 400 | `checkin()` called before `AUTH_SETUP` |
+| `BadFunctionCallException` | 400 | Invalid parameters for action |
+| `LogicException` | 400 | No active session |
+| `RuntimeException` | — | Password query execution failed |
+
+### Internal Functions
 
 ```php
 auth_login(string $username_field, PDOStatement $password_query, string $u, string $p): ?string
@@ -95,24 +139,15 @@ auth_session_cookie_destroy(): void
 auth_verify(PDOStatement $password_query, string $user, string $pass): ?string
 ```
 
----
+### Session Storage
 
-## Security Notes
-
-- **Timing-safe:** Uses `AUTH_DUMMY_HASH` when user not found (always runs `password_verify`)
-- **Session fixation:** Regenerates ID on successful login
-- **No plaintext:** Expects `password_hash()` in DB
-- **Requires active session:** Throws `RuntimeException` if `session_status() !== PHP_SESSION_ACTIVE`
+Authenticated username stored at `$_SESSION['bad\auth'][$username_field]`.
 
 ---
 
-## Requirements
+## Security
 
-- Session must be started before calling `checkin()`
-- `AUTH_SETUP` must be called before `AUTH_ENTER` or bare `checkin()`
-
-```php
-session_start();
-$stmt = qp("SELECT password FROM users WHERE username = ?", []);
-checkin(AUTH_SETUP, 'username', $stmt);
-```
+- **Timing-safe:** `AUTH_DUMMY_HASH` ensures `password_verify` always runs, even for nonexistent users
+- **Session fixation:** ID regenerated on successful login
+- **No plaintext:** Expects `password_hash()` output in DB
+- **Cookie cleanup:** Session cookie explicitly destroyed on logout with proper params
