@@ -13,7 +13,7 @@ require 'add/badhat/csrf.php';
 
 use const bad\map\REBASE;
 use const bad\run\{INVOKE, ABSORB, INC_RETURN};
-use const bad\http\H_SET;
+use const bad\http\SET;
 
 // --------------------------------------------------
 // Bootstrap
@@ -75,7 +75,7 @@ if ($render) {
 // --------------------------------------------------
 
 if (isset($loot[INC_RETURN]) && is_string($loot[INC_RETURN])) {
-    bad\http\headers(H_SET, 'Content-Type', 'text/html; charset=utf-8');
+    bad\http\headers(SET, 'Content-Type', 'text/html; charset=utf-8');
     exit(bad\http\out(200, $loot[INC_RETURN]));
 }
 

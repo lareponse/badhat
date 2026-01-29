@@ -20,11 +20,11 @@ $loot = run(['/app/boot.php']);
 // $loot[INC_RETURN] = whatever boot.php returned
 ```
 
-Pass arguments, and they're visible inside the file as `$args`:
+Pass arguments via the second parameter. They land in `$loot` inside the file (not `$args`—the loot bag is the only scope leakage):
 
 ```php
 // users.php
-$id = $args[0];  // '42'
+$id = $loot[0];  // positional arg
 return load_user($id);
 ```
 
@@ -49,7 +49,7 @@ return function(array $args) {
 };
 ```
 
-Add `INVOKE`, and badhat calls the returned callable:
+Add `INVOKE`, and badhat calls the returned callable with the original args:
 
 ```php
 use const bad\run\INVOKE;
@@ -69,7 +69,7 @@ PHP files can echo. Sometimes you want that output captured, not streamed.
 
 ```php
 // template.php
-<h1>Hello, <?= htmlspecialchars($args['name']) ?></h1>
+<h1>Hello, <?= htmlspecialchars($loot['name']) ?></h1>
 ```
 
 ```php
@@ -94,7 +94,7 @@ Here's where it gets interesting. What if your file outputs HTML *and* returns a
 
 ```php
 // page.php
-<article><?= $args['content'] ?></article>
+<article><?= $loot['content'] ?></article>
 <?php
 return function(array $args) {
     $body = end($args);  // the buffered output, appended
@@ -113,7 +113,7 @@ echo $loot[INC_RETURN];
 // <!doctype html><html><body><article>Hello</article></body></html>
 ```
 
-`ABSORB` implies both `BUFFER` and `INVOKE`—it's the full pipeline.
+`ABSORB` implies both `BUFFER` and `INVOKE`—it's `4 | BUFFER | INVOKE`.
 
 **Story:**
 "Template outputs markup. Wrapper receives it. One file, two phases."
@@ -170,7 +170,7 @@ By default, `run()` throws on failure. The exception wraps the original:
 
 ```php
 $loot = run(['/app/broken.php']);
-// RuntimeException("include:/app/broken.php", 0xC0D, $originalException)
+// Exception("include:/app/broken.php", 0xC0D, $originalThrowable)
 ```
 
 ### RESCUE_CALL: invoke anyway
@@ -229,7 +229,7 @@ Five lines. Request to response.
 |----------|-------|--------|
 | `BUFFER` | 1 | Capture output to `INC_BUFFER` |
 | `INVOKE` | 2 | Call returned callable |
-| `ABSORB` | 7 | Buffer + Invoke + append buffer to callable args |
+| `ABSORB` | 7 | `4 \| BUFFER \| INVOKE` — buffer + invoke + append buffer to callable args |
 | `RELOOT` | 8 | Pass loot bag (not original args) to each callable |
 | `RESCUE_CALL` | 16 | Try invoke even if include threw |
 | `PIPE_ONWARD` | 32 | Suppress throws, continue to next file |
@@ -243,11 +243,17 @@ Five lines. Request to response.
 
 ### Throws
 
-Failures wrap as `RuntimeException` with code `0xC0D`:
+Failures wrap as `Exception` with code `0xC0D`:
 
 ```
-RuntimeException("include:/path/to/file.php", 0xC0D, $original)
-RuntimeException("invoke:/path/to/file.php", 0xC0D, $original)
+Exception("include:/path/to/file.php", 0xC0D, $original)
+Exception("invoke:/path/to/file.php", 0xC0D, $original)
 ```
 
 The message tells you which phase failed. The previous exception tells you why.
+
+---
+
+## Buffer cleanup
+
+`run()` tracks `ob_get_level()` before each file. After include/invoke, it cleans any nested buffers the file may have opened (but not closed), preserving the baseline. Your code can use output buffering internally without leaking.

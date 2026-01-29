@@ -1,17 +1,12 @@
 # badhat\http
 
-Your app needs to speak HTTP.
+HTTP in, HTTP out. One nonce, cached. Headers that accumulate safely and flush on demand.
 
-Just a few sharp helpers to normalize an incoming URL, collect headers safely, and emit a response without repeating the same `header()` / `http_response_code()` ceremony everywhere.
-
-> One nonce, cached. One output function that returns an exit status.
-> HTTP in, HTTP out and one header helper that refuses bad input and accumulates until flush. That's it.
+> Bitmask-driven. Status codes in the low 10 bits, behavior flags above. Combine them freely.
 
 ---
 
-## 1) First, you normalize the incoming URL
-
-Whether you get a raw path, a full URL, or something in between, `in()` strips the parts you don't route on.
+## 1) Normalize the incoming URL
 
 ```php
 use function bad\http\in;
@@ -19,11 +14,7 @@ use function bad\http\in;
 $path = in($_SERVER['REQUEST_URI'] ?? '/');
 ```
 
-What it does:
-
-* removes a leading scheme when `:` appears before any `/`, `?`, or `#`
-* removes an authority when the string starts with `//` (or becomes `//` after scheme removal)
-* returns whatever remains (path + optional query/fragment), or `''` if nothing remains
+Strips scheme and authority, returns the routing-relevant portion:
 
 ```php
 in('/a/b?x=1');               // "/a/b?x=1"
@@ -32,141 +23,151 @@ in('//ex.com/a/b?x=1');       // "/a/b?x=1"
 in('mailto:user@ex.com');     // "user@ex.com"
 ```
 
-**Default story:**
-"I want one routing input, no matter what shape the URL came in."
-
 ---
 
-## 2) Then, you collect headers
+## 2) Accumulate headers
 
-`headers()` validates, accumulates, and eventually flushes headers. Bitmask-driven.
+`headers()` validates, stages, and flushes. First argument combines behavior flags and optional status code.
 
 ```php
 use function bad\http\headers;
-use const bad\http\{SET, ADD, CSV, EMIT, LOCK};
+use const bad\http\{SET, ADD, CSV, EMIT};
 
-// Single value (replaces any previous)
+// Single value (replaces previous)
 headers(SET, 'Content-Type', 'application/json');
 
-// Multiple values as separate header lines
-headers(H_ADD, 'Set-Cookie', 'a=1; Path=/');
-headers(H_ADD, 'Set-Cookie', 'b=2; Path=/');
+// Multiple lines
+headers(ADD, 'Set-Cookie', 'a=1; Path=/');
+headers(ADD, 'Set-Cookie', 'b=2; Path=/');
 
-// Multiple values as CSV (combined into one line on flush)
-headers(H_CSV, 'Vary', 'Accept');
-headers(H_CSV, 'Vary', 'Accept-Encoding');
-// emits: Vary: Accept, Accept-Encoding
+// CSV accumulation (emits as one line)
+headers(CSV, 'Vary', 'Accept');
+headers(CSV, 'Vary', 'Accept-Encoding');
+// → Vary: Accept, Accept-Encoding
 ```
 
-Headers accumulate in a static map until you flush:
+Flush and clear:
 
 ```php
-headers(H_EMIT);  // emits all accumulated headers, clears the map, returns what was staged
+foreach (headers(EMIT) as $params)
+    header(...$params);
 ```
-
-**Default story:**
-"Accumulate headers safely. Flush when ready."
 
 ---
 
-## 3) Header modes
+## 3) Mode flags
 
-| Flag     | Value | Effect                                      |
-| -------- | ----- | ------------------------------------------- |
-| `SET`  | 1     | Single value, replaces previous             |
-| `H_ADD`  | 2     | Append as separate header line              |
-| `H_CSV`  | 4     | Append value, emit as comma-separated line  |
-| `H_EMIT`  | 8     | Flush all headers, clear map                |
-| `H_LOCK` | 16    | Prevent further changes to this header      |
+Exactly one required per call (except EMIT):
 
-### Lock a header
-
-```php
-headers(SET | LOCK, 'X-Frame-Options', 'DENY');
-headers(SET, 'X-Frame-Options', 'SAMEORIGIN');  // throws BadFunctionCallException
-```
-
-### Set-Cookie requires ADD
-
-```php
-headers(SET, 'Set-Cookie', 'x=1');  // throws InvalidArgumentException
-headers(H_ADD, 'Set-Cookie', 'x=1');  // correct
-```
-
-`Set-Cookie` is restricted to `H_ADD` and optionally `H_LOCK` (no `SET`, no `H_CSV`).
+| Flag | Effect |
+|------|--------|
+| `SET` | Single value, replaces previous |
+| `ADD` | Append as separate header line |
+| `CSV` | Accumulate, emit comma-separated |
+| `EMIT` | Yield all staged headers, clear storage |
 
 ---
 
-## 4) Validation
+## 4) Modifier flags
 
-`headers()` throws on invalid input:
+Combine with mode via bitwise OR:
 
-| Exception                  | Condition                                                                   |
-| -------------------------- | --------------------------------------------------------------------------- |
-| `InvalidArgumentException` | Empty or missing name                                                       |
-| `InvalidArgumentException` | Name contains non-token characters                                          |
-| `InvalidArgumentException` | Value contains ASCII control characters                                     |
-| `InvalidArgumentException` | `Set-Cookie` used without `H_ADD` (or combined with other disallowed flags) |
-| `BadFunctionCallException` | Header is locked                                                            |
-| `BadFunctionCallException` | `SET` and `H_ADD` both set                                                |
+| Flag | Effect |
+|------|--------|
+| `READ_ONLY` | Lock header after this write |
+| `KEEP_CASE` | Preserve field name casing (default: lowercase) |
+| `KEEP_FIRST` | In CSV mode, keep first call's metadata |
+| `NO_REPLACE` | Pass `false` to `header()` third arg |
 
-Token characters (`RFC_TCHAR`): ``!#$%&'*+-.^_`|~`` plus alphanumerics.
-
-Additional behavior:
-
-* Header names are normalized to lowercase internally (and emitted in lowercase on flush).
+```php
+headers(SET | READ_ONLY, 'X-Frame-Options', 'DENY');
+headers(SET, 'X-Frame-Options', 'SAMEORIGIN');  // throws LogicException
+```
 
 ---
 
-## 5) Finally, you emit a response
+## 5) Status codes with headers
 
-`out()` sets the status code, flushes accumulated headers, optionally emits one extra raw header line, and outputs the body.
+The low 10 bits carry an HTTP status code. When present, it's passed to `header()` on emit:
+
+```php
+headers(302 | SET, 'Location', '/dashboard');
+```
+
+The last non-zero code is tracked and available via `headers(EMIT)`.
+
+---
+
+## 6) Error handling flags
+
+Control validation failure behavior:
+
+| Flag | Effect |
+|------|--------|
+| `E_IGNORE` | Swallow validation errors |
+| `E_WARNING` | `trigger_error(..., E_USER_WARNING)` then throw |
+| `E_NOTICE` | `trigger_error(..., E_USER_NOTICE)` then throw |
+
+Default: throw `InvalidArgumentException` immediately.
+
+```php
+headers(SET | E_WARNING, 'Bad Name!', 'value');  // warns, then throws
+headers(SET | E_IGNORE, 'Bad Name!', 'value');   // silently ignored
+```
+
+---
+
+## 7) Validation rules
+
+RFC 9110 compliance:
+
+- Field names: token characters only (`!#$%&'*+-.^_`|~` plus alphanumerics)
+- Field values: VCHAR, obs-text, SP, HTAB allowed; CR/LF/NUL forbidden
+- No leading/trailing whitespace in field names
+
+`Set-Cookie` auto-converts to `ADD | NO_REPLACE` regardless of specified mode.
+
+---
+
+## 8) Emit a response
+
+`out()` flushes headers, sets status, outputs body:
 
 ```php
 use function bad\http\out;
 
-headers(SET, 'Content-Type', 'text/plain; charset=utf-8');
-exit(out(404, 'Not found'));
+headers(SET, 'Content-Type', 'text/plain');
+out(404, 'Not found');
 ```
 
-What it does:
+Sequence:
+1. `headers(EMIT)` → flush all staged headers
+2. If `$ignored_header` provided with `HEADER_RAW` flag, emit it raw
+3. `http_response_code($code)` if non-zero
+4. Echo body (suppressed for `<200`, `204`, `205`, `304`)
 
-1. `http_response_code($code)`
-2. `headers(H_EMIT)` — flushes accumulated headers
-3. if `$header` is provided, calls `header($header)` (unvalidated, emitted after the flush)
-4. echoes `$body` only when appropriate (no body for `<200`, `204`, `205`, `304`)
-5. returns an exit status derived from the HTTP code
+```php
+use const bad\http\{HEADER_RAW, NO_REPLACE};
 
-Exit status mapping:
+// Raw header injection (use sparingly)
+out(200 | HEADER_RAW, $body, 'X-Custom: value');
 
-| HTTP code | Exit |
-| --------- | ---- |
-| `< 400`   | `0`  |
-| `400–499` | `4`  |
-| `500–599` | `5`  |
-| other     | `1`  |
-
-**Default story:**
-"Emit the response. Give me an exit code. Don't make me remember the rules."
+// With NO_REPLACE
+out(200 | HEADER_RAW | NO_REPLACE, $body, 'X-Multi: first');
+```
 
 ---
 
-## 6) CSP nonce, when you need it
+## 9) CSP nonce
 
-`csp_nonce()` gives you a per-request nonce, cached after the first call.
+Per-request cached nonce:
 
 ```php
 use function bad\http\csp_nonce;
 
 $nonce = csp_nonce();
-
 headers(SET, 'Content-Security-Policy', "script-src 'nonce-$nonce'");
-headers(SET, 'Content-Type', 'text/html; charset=utf-8');
-exit(out(200, $html));
 ```
-
-**Default story:**
-"I need a nonce once. Don't generate it twice."
 
 ---
 
@@ -174,25 +175,69 @@ exit(out(200, $html));
 
 ### Constants
 
-| Constant     | Description                                   |
-| ------------ | --------------------------------------------- |
-| `SET`      | Single value mode                             |
-| `H_ADD`      | Append as separate lines                      |
-| `H_CSV`      | Append value, emit as comma-separated line    |
-| `H_EMIT`      | Flush and clear                               |
-| `H_LOCK`     | Prevent changes                               |
-| `RFC_CTL` | All ASCII control chars (forbidden in values) |
-| `RFC_TCHAR` | Allowed header name characters                |
+**Modes** (bit 10+):
+
+| Constant | Value | Purpose |
+|----------|-------|---------|
+| `SET` | `1 << 10` | Single value |
+| `ADD` | `2 << 10` | Multi-line append |
+| `CSV` | `4 << 10` | Comma-separated accumulation |
+| `EMIT` | `1048576 << 10` | Flush and clear |
+
+**Modifiers** (bit 10+):
+
+| Constant | Value | Purpose |
+|----------|-------|---------|
+| `KEEP_CASE` | `8 << 10` | Preserve casing |
+| `READ_ONLY` | `16 << 10` | Lock header |
+| `KEEP_FIRST` | `32 << 10` | CSV: retain first call's metadata |
+| `NO_REPLACE` | `128 << 10` | `header(..., false)` |
+| `HEADER_RAW` | `2048 << 10` | Raw header in `out()` |
+
+**Error handling** (bit 10+):
+
+| Constant | Value | Purpose |
+|----------|-------|---------|
+| `E_IGNORE` | `256 << 10` | Swallow errors |
+| `E_WARNING` | `512 << 10` | Warn then throw |
+| `E_NOTICE` | `1024 << 10` | Notice then throw |
+
+**Masks**:
+
+| Constant | Purpose |
+|----------|---------|
+| `HTTP_CODE_MASK` | Extract status code (low 10 bits) |
+| `MODE_MASK` | Extract mode flags |
 
 ### Functions
 
-| Function    | Signature                                                     | Purpose                            |
-| ----------- | ------------------------------------------------------------- | ---------------------------------- |
-| `in`        | `($url = null): string`                                       | Strip scheme/authority for routing |
-| `headers`   | `(int $behave, ?string $name = null, $value = null): array`   | Accumulate/flush headers           |
-| `out`       | `($code, $body = null, $header = null): int`                  | Emit response, return exit status  |
-| `csp_nonce` | `($bytes = 16): string`                                       | Per-request CSP nonce              |
+```php
+in(?string $url = null): string
+```
+Normalize URL to origin-form request-target.
+
+```php
+headers(int $code_behave, ?string $field = null, ?string $token = null): iterable
+```
+Stage/emit headers. Returns staged map normally, yields `[header_line, replace, code]` tuples in EMIT mode.
+
+```php
+out(int $code_behave, $body = null, $ignored_header = null): void
+```
+Flush headers, set status, output body.
+
+```php
+csp_nonce(int $bytes = 16): string
+```
+Per-request hex nonce.
 
 ### Throws
 
-`headers()` throws `InvalidArgumentException` for validation failures and `BadFunctionCallException` for usage violations. `out()` does not validate the optional `$header` string — use `headers()` for validated accumulation.
+| Exception | Condition |
+|-----------|-----------|
+| `InvalidArgumentException` | Empty field name |
+| `InvalidArgumentException` | Non-token chars in field name |
+| `InvalidArgumentException` | Control chars in field value |
+| `InvalidArgumentException` | Invalid HTTP status code |
+| `BadFunctionCallException` | Multiple modes combined |
+| `LogicException` | Writing to locked header |

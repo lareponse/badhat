@@ -15,11 +15,11 @@ use function bad\csrf\csrf;
 use function bad\pdo\qp;
 use function bad\http\{headers, out};
 use const bad\csrf\CHECK;
-use const bad\http\H_SET;
+use const bad\http\SET;
 
 return function($args) {
     if (!checkin()) {
-        headers(H_SET, 'Location', '/login');
+        headers(SET, 'Location', '/login');
         exit(out(302));
     }
     
@@ -29,7 +29,7 @@ return function($args) {
         csrf('_csrf', null, CHECK) || exit(out(403, 'Invalid token'));
         qp("UPDATE posts SET title=?, body=? WHERE id=?", 
             [$_POST['title'], $_POST['body'], $id]);
-        headers(H_SET, 'Location', "/posts/$id");
+        headers(SET, 'Location', "/posts/$id");
         exit(out(302));
     }
     
@@ -50,11 +50,11 @@ return function($args) {
 use function bad\auth\checkin;
 use function bad\pdo\qp;
 use function bad\http\{headers, out};
-use const bad\http\H_SET;
+use const bad\http\SET;
 
 return function($args) {
     if (!checkin()) {
-        headers(H_SET, 'Location', '/login');
+        headers(SET, 'Location', '/login');
         exit(out(302));
     }
     
@@ -85,7 +85,7 @@ return function($args) {
 
 use function bad\pdo\qp;
 use function bad\http\{headers, out};
-use const bad\http\H_SET;
+use const bad\http\SET;
 
 return function($args) {
     $action = $args[0] ?? 'list';
@@ -97,7 +97,7 @@ return function($args) {
         default => throw new \InvalidArgumentException('Unknown action', 400)
     };
     
-    headers(H_SET, 'Content-Type', 'application/json');
+    headers(SET, 'Content-Type', 'application/json');
     exit(out(200, json_encode($data)));
 };
 ```
@@ -146,11 +146,11 @@ use function bad\csrf\csrf;
 use function bad\pdo\qp;
 use function bad\http\{headers, out};
 use const bad\csrf\CHECK;
-use const bad\http\H_SET;
+use const bad\http\SET;
 
 return function($args) {
     if (!checkin()) {
-        headers(H_SET, 'Location', '/login');
+        headers(SET, 'Location', '/login');
         exit(out(302));
     }
     
@@ -168,7 +168,7 @@ return function($args) {
     qp("INSERT INTO files (name, path, size, user_id) VALUES (?, ?, ?, ?)", 
         [$file['name'], $path, $file['size'], checkin()]);
     
-    headers(H_SET, 'Location', '/files');
+    headers(SET, 'Location', '/files');
     exit(out(302));
 };
 ```
@@ -183,10 +183,10 @@ return function($args) {
 
 use function bad\pdo\qp;
 use function bad\http\{headers, out};
-use const bad\http\H_SET;
+use const bad\http\SET;
 
 return function($args) {
-    headers(H_SET, 'Content-Type', 'application/json');
+    headers(SET, 'Content-Type', 'application/json');
     
     $device_id = $args[0] ?? exit(out(400, '{"error":"Device ID required"}'));
     
@@ -254,11 +254,11 @@ use function bad\csrf\csrf;
 use function bad\pdo\{qp, trans};
 use function bad\http\{headers, out};
 use const bad\csrf\CHECK;
-use const bad\http\H_SET;
+use const bad\http\SET;
 
 return function($args) {
     if (!checkin()) {
-        headers(H_SET, 'Location', '/login');
+        headers(SET, 'Location', '/login');
         exit(out(302));
     }
     
@@ -297,13 +297,3 @@ return function($args) {
 - Up to 50,000 LOC
 - High-traffic read-heavy
 - Integration-heavy
-
-**Consider alternatives:**
-- 100+ developers
-- Complex authorization
-- Enterprise compliance
-
-**Wrong tool:**
-- Marketing sites → static generators
-- Simple CRUD → Rails/Laravel
-- Distributed systems → proper frameworks
