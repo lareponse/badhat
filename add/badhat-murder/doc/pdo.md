@@ -1,16 +1,14 @@
-# badhat\db
+# badhat\pdo
 
-Your app needs one database, use it everywhere without passing it anywhere.
-Not an ORM or a query builder, just a way to run queries without repeating the same PDO boilerplate in every file.
+One PDO connection, cached. App-wide access without DI or globals.
 
-> One PDO connection, cached. App-wide access without DI or globals. 
 > Two helpers that throw on failure. That's it.
 
 ---
 
 ## 1) First, you connect once
 
-Somewhere in your bootstrap—index.php, init.php, wherever your app starts breathing—you hand badhat a PDO:
+Bootstrap hands badhat a PDO:
 
 ```php
 use function bad\pdo\{db, qp, trans};
@@ -21,53 +19,38 @@ db(new PDO($dsn, $user, $pass, [
 ]));
 ```
 
-That's the setup. One line. The connection is now cached.
-
-Every subsequent call to `db()` returns that same connection. No containers. No service providers. No "resolving dependencies." You made a PDO, you stored it, you're done.
+Connection cached. Every subsequent `db()` returns it.
 
 ---
 
 ## 2) Then, you query
 
-Most database work is one of three things:
-
-* Run a query, get results
-* Run a query with parameters
-* Prepare a statement for repeated use
-
-`qp()` handles all three, depending on what you pass for `$params`:
+`qp()` behavior depends on `$params`:
 
 ```php
-// null params → raw query (no prepare)
+// null → raw query (no prepare)
 $users = qp("SELECT * FROM users")->fetchAll();
 
-// array params → prepare + execute
+// array → prepare + execute
 $user = qp("SELECT * FROM users WHERE id = ?", [$id])->fetch();
 
-// empty array → prepare only, execute later
+// empty array → prepare only
 $insert = qp("INSERT INTO logs(msg) VALUES(?)", []);
 $insert->execute(['first']);
 $insert->execute(['second']);
 ```
 
-The difference is the second argument:
-
-| `$params` | What happens |
-|-----------|--------------|
+| `$params` | Behavior |
+|-----------|----------|
 | `null` | `$pdo->query()` |
 | `[]` | `$pdo->prepare()` only |
 | `[...]` | `$pdo->prepare()` + `execute($params)` |
 
-No booleans to check. No `false` returns. If something fails, it throws. Your code either gets a statement or an exception.
-
-**Default story:**
-"I want to write SQL. Handle the ceremony for me."
+Throws on failure. No booleans to check.
 
 ---
 
-## 3) Transactions, when you need them
-
-Sometimes you need multiple queries to succeed together or fail together.
+## 3) Transactions
 
 ```php
 $orderId = trans(function(\PDO $pdo) use ($cart, $userId) {
@@ -83,54 +66,25 @@ $orderId = trans(function(\PDO $pdo) use ($cart, $userId) {
 });
 ```
 
-`trans()` wraps the dance:
+`trans()` wraps `beginTransaction()` / `commit()` / `rollBack()`. Callable receives `$pdo`. Return value passes through.
 
-1. `beginTransaction()`
-2. Run your callable
-3. `commit()` if it returns cleanly
-4. `rollBack()` if anything throws
-
-The callable receives `$pdo` so you can pass it explicitly to `qp()` calls inside. You return whatever you want—`trans()` passes it through.
-
-**Note:** Nested transactions throw `LogicException`. PDO doesn't support real nested transactions.
-
-**Default story:**
-"I need atomicity. Don't make me remember the try/catch/rollback pattern."
+Nested transactions throw `LogicException`.
 
 ---
 
-## 4) Only when you need it, you escape the cache
+## 4) Explicit connection
 
-The cached connection is the default. But sometimes you have a second database. A read replica. A different connection for a specific job.
-
-Every function accepts an explicit `$pdo` as the last argument:
+Every function accepts `$pdo` as last argument:
 
 ```php
 $archive = new PDO($archiveDsn, $user, $pass);
 
-// Use specific connection, ignore cache
 $old = qp("SELECT * FROM logs WHERE year < 2020", null, [], $archive)->fetchAll();
 
-// Transaction on specific connection
 trans(function($pdo) {
     qp("DELETE FROM temp", null, [], $pdo);
 }, $archive);
 ```
-
-**Story:**
-"Usually I want the default. Sometimes I don't. Let me choose per-call."
-
----
-
-## 5) Replacing the connection
-
-To swap the cached connection, just call `db()` with a new PDO:
-
-```php
-db($newPdo);  // replaces the cached connection
-```
-
-There is no explicit "clear cache" operation. The cache persists for the request lifetime.
 
 ---
 
@@ -138,30 +92,20 @@ There is no explicit "clear cache" operation. The cache persists for the request
 
 ### Functions
 
-| Function | Signature | Purpose |
-|----------|-----------|---------|
-| `db` | `(?\PDO $pdo = null, int $behave = 0): \PDO` | Get/set cached connection |
-| `qp` | `(string $query, ?array $params = null, array $prep_options = [], ?\PDO $pdo = null): \PDOStatement` | Query/prepare/execute |
-| `trans` | `(callable $transaction, ?\PDO $pdo = null): mixed` | Wrapped transaction |
-
-### db()
+```php
+db(?\PDO $pdo = null): \PDO
+```
+Get/set cached connection. Throws `BadFunctionCallException` if not set.
 
 ```php
-db($pdo);   // cache this connection
-db();       // retrieve cached connection (throws if not set)
+qp(string $query, ?array $params = null, array $prep_options = [], ?\PDO $pdo = null): \PDOStatement
 ```
+Query/prepare/execute. Returns statement or throws.
 
-### qp()
-
-| `$params` | Behavior |
-|-----------|----------|
-| `null` | `$pdo->query($sql)` — direct execution |
-| `[]` | `$pdo->prepare($sql)` — returns unexecuted statement |
-| `[...]` | `$pdo->prepare($sql)` + `$stmt->execute($params)` |
-
-### trans()
-
-Executes callable inside `beginTransaction()` / `commit()`. Rolls back on any exception. Returns whatever the callable returns.
+```php
+trans(callable $transaction, ?\PDO $pdo = null): mixed
+```
+Atomic transaction wrapper. Returns callable result.
 
 ### Throws
 
@@ -169,12 +113,10 @@ Executes callable inside `beginTransaction()` / `commit()`. Rolls back on any ex
 |-----------|-----------|
 | `BadFunctionCallException` | `db()` called before connection cached |
 | `LogicException` | `trans()` called while already in transaction |
-| `RuntimeException` | PDO operation failed (message includes `[STATE=..., CODE=...]`) |
+| `RuntimeException` | PDO operation failed |
 
-Error info from PDO is embedded in the message:
+Error info embedded in message:
 
 ```
 [STATE=23000, CODE=1062] PDO::execute() failed (Duplicate entry '5' for key 'PRIMARY')
 ```
-
-No silent failures. No checking return values. It works or it explodes.
