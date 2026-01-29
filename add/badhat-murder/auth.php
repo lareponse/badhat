@@ -19,9 +19,8 @@ function checkin(int $behave = 0, ?string $u = null, $p = null): ?string
         return null;
     }
 
-    ($username_field && $password_query)                    || throw new \BadFunctionCallException('AUTH not initialized (call with AUTH_SETUP first)', 400);
-    session_status() === PHP_SESSION_ACTIVE                 || throw new \LogicException(__FUNCTION__.' requires an active session', 400);
-
+    ($username_field && $password_query)                    || throw new \BadFunctionCallException(__FUNCTION__.':not initialized (call with AUTH_SETUP first)');
+    session_status() === PHP_SESSION_ACTIVE                 || throw new \LogicException(__FUNCTION__.':requires an active session');
 
     try {
         if(AUTH_LEAVE & $behave){
@@ -37,7 +36,7 @@ function checkin(int $behave = 0, ?string $u = null, $p = null): ?string
         return $_SESSION[__NAMESPACE__][$username_field] ?? null;
 
     } catch (\Error $e) {
-        throw new \BadFunctionCallException('Invalid parameters for AUTH action', 400, $e);
+        throw new \BadFunctionCallException('Invalid parameters for AUTH action', 0xC0D, $e);
     }
 }
 
