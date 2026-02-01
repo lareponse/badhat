@@ -23,7 +23,7 @@ return function($args) {
         exit(out(302));
     }
     
-    $id = $args[0] ?? throw new \InvalidArgumentException('Post ID required', 400);
+    $id = $args[0] ?? throw new \InvalidArgumentException('Post ID required');
     
     if ($_POST) {
         csrf('_csrf', null, CHECK) || exit(out(403, 'Invalid token'));
@@ -94,7 +94,7 @@ return function($args) {
     $data = match($action) {
         'list' => qp("SELECT id, name FROM users")->fetchAll(),
         'get'  => qp("SELECT * FROM users WHERE id = ?", [$id])->fetch(),
-        default => throw new \InvalidArgumentException('Unknown action', 400)
+        default => throw new \InvalidArgumentException('Unknown action')
     };
     
     headers(SET, 'Content-Type', 'application/json');
