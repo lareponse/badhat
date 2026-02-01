@@ -41,3 +41,10 @@ function field_value(string $value, bool $allow_blank = false): string
     \strpbrk($value, RFC_H_CTL_NO_HTAB) === false                   || throw new \InvalidArgumentException('field value forbids CR/LF/NUL and other CTL');
     return $value;
 }
+
+function url_path($string $path): string
+{
+    \strpbrk($path, RFC_H_CTL_NO_HTAB . RFC_H_OWS) === false        || throw new \InvalidArgumentException('path forbids CTL/SP/HTAB');
+    \strpos($path, "\\") === false                                  || throw new \InvalidArgumentException('path forbids backslash');
+
+}
