@@ -44,7 +44,7 @@ function seek($base, $path, $shim = '', $behave = 0): ?array
              : $pos;                                                                           // reverse: at current position
 
         $test = ($end === $len) ? $path : substr($path, 0, $end);                              // isolate the segment to test for existence
-        if ($file = look($base, $test, $shim, $behave)) {                                      // check if this segment resolves to a file
+        if ($file = look($base, $test, $shim, $behave)) {  
             $args = ($end + 1 < $len) ? explode('/', substr($path, $end + 1)) : [];            // collect remaining path parts as arguments
             return [$file, $args];                                                                                      
         }
