@@ -1,8 +1,37 @@
-# badhat\run
+# bad\run
 
 You've resolved a path to a file. Now what?
 
-PHP's `include` is powerful but raw. You get the file's return value, but output streams immediately. Errors are messy. Chaining files means writing the same try/catch/buffer dance every time.
+PHP's `include` is powerful but raw. It can *return* a value, but output streams immediately. Errors are messy. Chaining files means writing the same try/catch/buffer dance every time.
+
+Buried in the manual, almost as an aside:
+
+> Also, it's possible to return values from included files
+
+That single fact flips the meaning of a “file”. A file can be a producer.
+
+Push one step further: a file can return a **closure**. Now the file defines behavior without adding names to the global namespace. No registry. No collisions. The call-site just receives a callable.
+
+Closures also carry local context with `use()`. So a file can compute something once (paths, regexes, maps, formatters), capture it, and return a callable that remembers. No globals. Captured on purpose.
+
+Then you hit the second truth: a PHP file can also **output**. So `include` has two results in practice: what the file returns, and what it prints.
+
+`run()` names and controls those results:
+
+- `INC_RETURN` is the returned value (from include or invoke)
+- `INC_BUFFER` is captured output when you BUFFER
+
+From there the moves are straightforward.
+
+If the file returns a callable, you can INVOKE it.
+If the file prints, you can BUFFER it.
+If the file prints HTML *and* returns a callable, you get a two-phase template: buffer the skeleton, return a function that wraps it.
+ABSORB is that handshake: output becomes input after include-time.
+
+Finally, you want composition: run many files, keep args, pass loot forward.
+That’s RELOOT. And real pipelines need real failure rules:
+PIPE_ONWARD for “secondary steps must not veto”, and RESCUE_CALL for
+“even if include failed, still run the callable we already have”.
 
 > `run()` executes files and collects what they produce—return values, output, or both.
 
@@ -18,48 +47,51 @@ use const bad\run\INC_RETURN;
 
 $loot = run(['/app/boot.php']);
 // $loot[INC_RETURN] = whatever boot.php returned
-```
+````
 
-Pass arguments via the second parameter. They land in `$loot` inside the file (not `$args`—the loot bag is the only scope leakage):
-
-```php
-// users.php
-$id = $loot[0];  // positional arg
-return load_user($id);
-```
+Pass arguments via the second parameter. They become the initial loot bag.
+Because `include` shares scope, the included file sees a `$loot` variable already populated.
 
 ```php
-$loot = run(['/app/route/users.php'], ['42']);
+// /app/route/user.php  (included)
+$id = $loot[0];                          // positional arg
+return ['id' => $id, 'name' => 'Ada'];   // producer file
 ```
 
-**Default story:**
-"Include a file. Get back what it returned."
+```php
+$loot = run(['/app/route/user.php'], ['42']);
+// $loot[INC_RETURN] = ['id'=>'42','name'=>'Ada']
+```
+
+Default story: include a file, get back what it returned.
 
 ---
 
 ## 2) Then, you invoke
 
-Most handlers don't just return data—they return a function that *processes* data. The file defines behavior; execution happens when you're ready.
+Most “route files” don’t want to return data yet. They want to return a handler.
+So the file returns a closure, often capturing some local context with `use()`.
 
 ```php
-// users.php
-return function(array $args) {
-    [$action, $id] = $args;
-    return qp("SELECT * FROM users WHERE id = ?", [$id])->fetch();
+// /app/route/user.php
+$query = 'SELECT * FROM users WHERE id = ?';      // computed once, captured
+
+return function(array $bag) use ($query) {
+    $id = $bag[1] ?? null;                        // original args by default
+    return [$query, [$id]];                       // stand-in for "execute query"
 };
 ```
 
-Add `INVOKE`, and badhat calls the returned callable with the original args:
+Add `INVOKE`, and badhat calls the returned callable right away.
 
 ```php
 use const bad\run\INVOKE;
 
-$loot = run(['/app/route/users.php'], ['view', '42'], INVOKE);
-// $loot[INC_RETURN] = the user row, not the function
+$loot = run(['/app/route/user.php'], ['view', '42'], INVOKE);
+// $loot[INC_RETURN] = [$query, ['42']]
 ```
 
-**Story:**
-"Files define handlers. `INVOKE` runs them."
+Story: files define handlers; `INVOKE` runs them.
 
 ---
 
@@ -68,37 +100,38 @@ $loot = run(['/app/route/users.php'], ['view', '42'], INVOKE);
 PHP files can echo. Sometimes you want that output captured, not streamed.
 
 ```php
-// template.php
-<h1>Hello, <?= htmlspecialchars($loot['name']) ?></h1>
+// /app/view/hello.php
+?><h1>Hello, <?= htmlspecialchars($loot['name']) ?></h1><?php
 ```
 
 ```php
 use const bad\run\BUFFER;
 use const bad\run\INC_BUFFER;
 
-$loot = run(['/app/template.php'], ['name' => 'World'], BUFFER);
+$loot = run(['/app/view/hello.php'], ['name' => 'World'], BUFFER);
 
 echo $loot[INC_BUFFER];  // "<h1>Hello, World</h1>"
 ```
 
-Without `BUFFER`, output goes straight to the browser. With it, output lands in `$loot[INC_BUFFER]`.
+Without `BUFFER`, output goes straight to the browser. With it, output lands in `INC_BUFFER`.
 
-**Story:**
-"Sometimes you want to capture, not emit."
+Story: sometimes you capture, you don’t emit.
 
 ---
 
 ## 4) Absorb: when output feeds into the callable
 
-Here's where it gets interesting. What if your file outputs HTML *and* returns a wrapper function?
+Here’s the two-phase template: the file prints markup *and* returns a wrapper.
 
 ```php
-// page.php
-<article><?= $loot['content'] ?></article>
-<?php
-return function(array $args) {
-    $body = end($args);  // the buffered output, appended
-    return "<!doctype html><html><body>$body</body></html>";
+// /app/view/page.php
+?><article><?= htmlspecialchars($loot['content']) ?></article><?php
+
+$doctype = '<!doctype html>';                     // local context, captured
+
+return function(array $bag) use ($doctype) {
+    $body = end($bag);                            // last arg is buffered output
+    return $doctype . "<html><body>$body</body></html>";
 };
 ```
 
@@ -106,17 +139,17 @@ return function(array $args) {
 
 ```php
 use const bad\run\ABSORB;
+use const bad\run\INC_RETURN;
 
-$loot = run(['/app/page.php'], ['content' => 'Hello'], ABSORB);
+$loot = run(['/app/view/page.php'], ['content' => 'Hello'], ABSORB);
 
 echo $loot[INC_RETURN];
 // <!doctype html><html><body><article>Hello</article></body></html>
 ```
 
-`ABSORB` implies both `BUFFER` and `INVOKE`—it's `4 | BUFFER | INVOKE`.
+`ABSORB` implies both `BUFFER` and `INVOKE`. It also appends the captured buffer to the callable’s args.
 
-**Story:**
-"Template outputs markup. Wrapper receives it. One file, two phases."
+Story: template outputs structure; wrapper receives it. One file, two phases.
 
 ---
 
@@ -124,43 +157,56 @@ echo $loot[INC_RETURN];
 
 One file is simple. But what about auth → handler → renderer?
 
-Without `RELOOT`, each callable gets the original `$args`.
-
-With `RELOOT`, each callable gets the **loot bag**—including whatever the previous step returned:
+Without `RELOOT`, each invoked callable receives the original args.
+With `RELOOT`, each invoked callable receives the *current loot bag* (including `INC_RETURN` from the previous step).
 
 ```php
-// auth.php
-return fn($args) => get_current_user();  // returns user or null
+// /app/mw/auth.php
+$realm = 'members';                               // captured policy
 
-// handler.php
-use const bad\run\INC_RETURN;
-return fn($args) => [
-    'user'  => $args[INC_RETURN],        // from auth.php
-    'posts' => load_posts(),
-];
-
-// render.php
-use const bad\run\INC_RETURN;
-return fn($args) => render('home', $args[INC_RETURN]);
+return function(array $bag) use ($realm) {
+    $token = $bag['token'] ?? null;               // comes from original args (first step)
+    return $token ? ['user' => 'Ada', 'realm' => $realm] : null;
+};
 ```
 
 ```php
-use const bad\run\INVOKE;
-use const bad\run\RELOOT;
+// /app/route/home.php
+use const bad\run\INC_RETURN;
 
-$loot = run([
-    '/app/mw/auth.php',
-    '/app/route/home.php',
-    '/app/render/home.php',
-], [], INVOKE | RELOOT);
+return function(array $bag) {
+    $user = $bag[INC_RETURN];                     // from auth.php
+    return ['user' => $user, 'posts' => [1, 2, 3]];
+};
+```
+
+```php
+// /app/render/home.php
+use const bad\run\INC_RETURN;
+
+$layout = 'home';                                 // captured choice
+
+return function(array $bag) use ($layout) {
+    $model = $bag[INC_RETURN];                    // from home.php
+    return "render:$layout:" . json_encode($model);
+};
+```
+
+```php
+use function bad\run\run;
+use const bad\run\{INVOKE, RELOOT, INC_RETURN};
+
+$loot = run(
+    ['/app/mw/auth.php', '/app/route/home.php', '/app/render/home.php'],
+    ['token' => 'ok'],
+    INVOKE | RELOOT
+);
 
 echo $loot[INC_RETURN];
+// render:home:{"user":{"user":"Ada","realm":"members"},"posts":[1,2,3]}
 ```
 
-Each step sees what came before. No globals. No shared state objects. Just the loot bag flowing forward.
-
-**Story:**
-"Middleware isn't magic. It's files that return values to the next file."
+Story: middleware isn’t magic. It’s files returning values to the next file.
 
 ---
 
@@ -170,31 +216,38 @@ By default, `run()` throws on failure. The exception wraps the original:
 
 ```php
 $loot = run(['/app/broken.php']);
-// Exception("include:/app/broken.php", 0xC0D, $originalThrowable)
+// Exception("include:/app/broken.php", 0xBADC0DE, $originalThrowable)
 ```
 
 ### RESCUE_CALL: invoke anyway
 
-If the include throws but somehow left a callable in `INC_RETURN`, try to invoke it anyway:
+If include fails, `INC_RETURN` might still contain a callable from a previous step (or from your initial args if you seeded it that way). `RESCUE_CALL` lets `run()` attempt the invoke phase anyway.
 
 ```php
-$loot = run(['/app/noisy.php'], [], INVOKE | RESCUE_CALL);
+use const bad\run\{INVOKE, RESCUE_CALL};
+
+$loot = run(
+    ['/app/noisy_include.php'],
+    [],
+    INVOKE | RESCUE_CALL
+);
 ```
 
-Rare. But sometimes a file does setup that throws, yet still defines a handler.
+Rare. It exists for “salvage what we can” flows.
 
 ### PIPE_ONWARD: keep going
 
-Multiple files, and you want to continue even if one fails:
+Multiple files, and you want to continue even if one fails (logging, metrics, optional sidecars):
 
 ```php
-$loot = run(['/app/a.php', '/app/b.php', '/app/c.php'], [], PIPE_ONWARD);
+use const bad\run\PIPE_ONWARD;
+
+$loot = run(['/app/a.php', '/app/logger.php', '/app/c.php'], [], PIPE_ONWARD);
 ```
 
-Failures are swallowed. The last file's results end up in `$loot`.
+Failures are suppressed and the pipeline continues.
 
-**Story:**
-"Usually, fail fast. Sometimes, fail forward."
+Story: usually fail fast. Sometimes fail forward.
 
 ---
 
@@ -217,7 +270,7 @@ $loot = run([$file], $args, BUFFER | INVOKE);
 exit(out(200, $loot[INC_BUFFER]));
 ```
 
-Five lines. Request to response.
+Request to response: include → maybe invoke → maybe buffer.
 
 ---
 
@@ -225,29 +278,29 @@ Five lines. Request to response.
 
 ### Constants (behavior)
 
-| Constant | Value | Effect |
-|----------|-------|--------|
-| `BUFFER` | 1 | Capture output to `INC_BUFFER` |
-| `INVOKE` | 2 | Call returned callable |
-| `ABSORB` | 7 | `4 \| BUFFER \| INVOKE` — buffer + invoke + append buffer to callable args |
-| `RELOOT` | 8 | Pass loot bag (not original args) to each callable |
-| `RESCUE_CALL` | 16 | Try invoke even if include threw |
-| `PIPE_ONWARD` | 32 | Suppress throws, continue to next file |
+| Constant      | Value | Effect                                                                     |
+| ------------- | ----- | -------------------------------------------------------------------------- |
+| `BUFFER`      | 1     | Capture output to `INC_BUFFER` (per step)                                  |
+| `INVOKE`      | 2     | Call returned callable (per step, if callable)                             |
+| `ABSORB`      | 7     | `4 \| BUFFER \| INVOKE` — buffer + invoke + append buffer to callable args |
+| `RELOOT`      | 8     | Invoke with the current loot bag (instead of original args)                |
+| `RESCUE_CALL` | 16    | Attempt invoke even if include failed                                      |
+| `PIPE_ONWARD` | 32    | Suppress throws, continue to next file                                     |
 
 ### Constants (loot keys)
 
-| Constant | Value | Contains |
-|----------|-------|----------|
-| `INC_RETURN` | -1 | Return value from include or invoke |
-| `INC_BUFFER` | -2 | Captured output buffer |
+| Constant     | Value | Contains                            |
+| ------------ | ----- | ----------------------------------- |
+| `INC_RETURN` | -1    | Return value from include or invoke |
+| `INC_BUFFER` | -2    | Captured output buffer (string)     |
 
 ### Throws
 
-Failures wrap as `Exception` with code `0xC0D`:
+Failures wrap as `Exception` with code `0xBADC0DE`:
 
 ```
-Exception("include:/path/to/file.php", 0xC0D, $original)
-Exception("invoke:/path/to/file.php", 0xC0D, $original)
+Exception("include:/path/to/file.php", 0xBADC0DE, $original)
+Exception("invoke:/path/to/file.php", 0xBADC0DE, $original)
 ```
 
 The message tells you which phase failed. The previous exception tells you why.
@@ -256,4 +309,9 @@ The message tells you which phase failed. The previous exception tells you why.
 
 ## Buffer cleanup
 
-`run()` tracks `ob_get_level()` before each file. After include/invoke, it cleans any nested buffers the file may have opened (but not closed), preserving the baseline. Your code can use output buffering internally without leaking.
+`run()` snapshots `ob_get_level()` before each file and tries to restore the expected level after the step. If a file opens extra output buffers and forgets to close them, `run()` discards deeper levels so your request doesn’t leak buffer state across steps.
+
+```
+
+If you want it even more “story-forward”, the only place I’d tighten further is section 6: keep `RESCUE_CALL` as a paragraph + one example, and drop the “rare” commentary.
+::contentReference[oaicite:0]{index=0}
