@@ -5,8 +5,6 @@ namespace bad\map;
 const REBASE = 1;                                                   // enables nested path/filename/filename pattern fallback in look()
 const ASCEND = 2;                                                   // forward scan in seek() instead of reverse (default shrinks from end)
 
-                                                                 // returns clean rootless-path ready for navigation
-
 function look($base, $path, $shim = '', $behave = 0): ?string
 {                                                                   // direct lookup: does a file exist at this exact location? or in that nested location (with REBASE) ?
     (DIRECTORY_SEPARATOR === '/')                                   || throw new \RuntimeException(__NAMESPACE__.':requires a POSIX environment (Linux/macOS/WSL)');
