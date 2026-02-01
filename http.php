@@ -144,9 +144,6 @@ function path($url, $reject = ''): string                           // receive a
     }
     // now checking url as rootless path
     $path = \trim($url, '/');                                                                                                        
-    \strpbrk($path, RFC_H_CTL_NO_HTAB . RFC_H_OWS) === false            || throw new \InvalidArgumentException('path forbids CTL/SP/HTAB');
-    \strpos($path, "\\") === false                                  || throw new \InvalidArgumentException('path forbids backslash');
     ($reject === '' || !isset($path[\strcspn($path, $reject)]))     || throw new \InvalidArgumentException('path has explicitly forbidden chars');
-
     return $path;
 } // returns a rootless path extracted from url (can be empty string)
