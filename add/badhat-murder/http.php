@@ -2,13 +2,13 @@
 
 namespace bad\http;
 
-const HTTP_CODE_MASK = 0x3FF;                                       // low 10 bits: 0..1023 (as of 2026, we use http code between 100..511, so 9 bits suffice, but lets not Y2K this)
+const HTTP_CODE_MASK = 0x3FF;                                       // low 10 bits: 0..1023 (status code payload)
 
-const ADD           = 1         << 10;                              // multivalue in multiline 
-const CSV           = 2         << 10;                              // multivalue in csv
+const ADD           = 1         << 10;                              // multivalue in multiline (append; disables replace)
+const CSV           = 2         << 10;                              // multivalue staged for later comma-join on EMIT
 const LOCK          = 4         << 10;                              // prevents further emission and csv alteration (disables DROP)
 const DROP          = 8         << 10;                              // drops all value(s) of a field-name (unset for csv or header_remove)
-const BLANK         = 16        << 10;                              // allow empty field-value (explicit RFC-compatible)
+const BLANK         = 16        << 10;                              // (for callers/wrappers) allow empty field-value (no validation performed here)
 const RESET         = 32        << 10;                              // reset all static variables
 
 const E_TRIGGER     = 256       << 10;                              // dont change, it is deprecation poetry, and prevents E_USER_ERROR usage
@@ -18,137 +18,102 @@ const E_NOTICE      = 1024      << 10;                              // dont chan
 const AUTO          = 524288    << 10;                              // use header_register_callback to call headers('','', EMIT);
 const EMIT          = 1048576   << 10;                              // output + clear (BADHAT supports 32-bit PHP. Flags MUST NOT use bit 31. EMIT uses bit 30 and is reserved as the last flag)
 
-const RFC_H_TCHAR     = "!#$%&'*+-.^_`|~0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";                                                                      // RFC 9110 5.1.  Field Names
-const RFC_H_VCHAR     = "!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~";                                                   // RFC 9110 5.5.  Field Values
-const RFC_H_OBS_TEXT  = "\x80\x81\x82\x83\x84\x85\x86\x87\x88\x89\x8A\x8B\x8C\x8D\x8E\x8F\x90\x91\x92\x93\x94\x95\x96\x97\x98\x99\x9A\x9B\x9C\x9D\x9E\x9F\xA0\xA1\xA2\xA3\xA4\xA5\xA6\xA7\xA8\xA9\xAA\xAB\xAC\xAD\xAE\xAF\xB0\xB1\xB2\xB3\xB4\xB5\xB6\xB7\xB8\xB9\xBA\xBB\xBC\xBD\xBE\xBF\xC0\xC1\xC2\xC3\xC4\xC5\xC6\xC7\xC8\xC9\xCA\xCB\xCC\xCD\xCE\xCF\xD0\xD1\xD2\xD3\xD4\xD5\xD6\xD7\xD8\xD9\xDA\xDB\xDC\xDD\xDE\xDF\xE0\xE1\xE2\xE3\xE4\xE5\xE6\xE7\xE8\xE9\xEA\xEB\xEC\xED\xEE\xEF\xF0\xF1\xF2\xF3\xF4\xF5\xF6\xF7\xF8\xF9\xFA\xFB\xFC\xFD\xFE\xFF";
-const RFC_H_OWS       = " \t";                                      // SP and HTAB
-
-const RFC_H_VALUE_SAFE_BYTES = RFC_H_VCHAR . RFC_H_OBS_TEXT . RFC_H_OWS;
-
-const RFC_H_CTL_NO_HTAB  = "\x00\x01\x02\x03\x04\x05\x06\x07\x08\x0A\x0B\x0C\x0D\x0E\x0F\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1A\x1B\x1C\x1D\x1E\x1F\x7F";               // RFC 9110 §5.5; RFC 5234 App B.1
-
-// RFC 3986 (URI) alphabets (ASCII only)
-const RFC_U_HEX        = "0123456789ABCDEFabcdef";
-const RFC_U_UNRESERVED = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~";
-const RFC_U_SUBDELIMS  = "!$&'()*+,;=";
-
-const RFC_U_PCHAR      = RFC_U_UNRESERVED . RFC_U_SUBDELIMS . ":@"; // pchar = unreserved / pct-encoded / sub-delims / ":" / "@"
-const RFC_U_PATH_SAFE  = RFC_U_PCHAR . "/%";                        // path = *( "/" segment ) ; segment = *pchar
-
-
 function csp_nonce(int $bytes = 16): ?string
 {// generate (once per request) and return a cached random hex nonce for CSP
 
     static $nonce = null;
     if ($bytes < 0) {                                               // reset sentinel
         $nonce = null;
-        $bytes = -1 * $bytes;
+        $bytes = -$bytes;
     }
     return $nonce ??= \bin2hex(\random_bytes($bytes ?: 16));
 }// returns a per-request cached random hex nonce string
 
 
-function headers(string $field, string $value='', int $status_behave = 0): bool
-{
+function headers(string $field, string $value = '', int $status_behave = 0): bool
+{// Emit/manage HTTP headers. IMPORTANT: $field and $value are assumed SAFE (already validated/canonicalized elsewhere).
     static $read_only = null;
     static $cs_values = null;
     static $last_code = null;
-    static $auto_emit = null;
+    static $auto_emit = false;                                      
 
     $status = $status_behave & HTTP_CODE_MASK;
     $behave = $status_behave & ~HTTP_CODE_MASK;
-
+    $throw_on_sent = static fn (): bool => !\headers_sent($f, $l) ? true  : throw new \InvalidArgumentException("headers already sent ({$f}:{$l})");
+    
     try {
-        if ((RESET & $behave) || !isset($read_only)) {
-            !isset($read_only) && ($read_only = []);
+        if ((RESET & $behave) || $read_only === null) {
+            $read_only ??= [];
             $cs_values = [];
             $last_code = 0;
             if(RESET & $behave){
-                headers_sent() && ($read_only = []);
+                \headers_sent() && ($read_only = []);               // if headers were already sent, locks cannot matter anymore; clear them
                 return true;
             }
         }
 
+        // status sanity (HTTP concern, not RFC concern)
         ($status === 0 || ($status >= 100 && $status <= 599))       || throw new \InvalidArgumentException("http status invalid: `{$status}`");
-        
-        $canon = \trim($field);                                     // $field comes from header(?string $field), so null or string, so string given _rfc_compliance signature
-        ($canon === $field)                                         || \trigger_error('field name has leading/trailing whitespace', \E_USER_NOTICE);
-        ($canon !== '' || (EMIT & $behave) || (AUTO & $behave))     || throw new \InvalidArgumentException('field name is empty');
-        
+
         if (EMIT & $behave) {
-            !\headers_sent($file, $line)                            || throw new \InvalidArgumentException("headers already sent ({$file}:{$line})");
+            $throw_on_sent();
             foreach ($cs_values as [$name, $values])
                 \header($name . ': ' . \implode(', ', $values), true);
-            
-            $cs_values = [];
 
+            $cs_values = [];
             $last_code && \http_response_code($last_code);
             return true;
         }
 
+        // control: AUTO register callback once
         if (AUTO & $behave) {
-            ($canon === '') || throw new \InvalidArgumentException('AUTO is control-only; use headers("", "", AUTO)');
+            ($field === '' && $value === '')                        || throw new \BadFunctionCallException('AUTO is control-only; use headers("", "", AUTO)');
 
             if ($auto_emit !== true) {
-                $auto_emit = \header_register_callback(function () {
+                $auto_emit = \header_register_callback(static function (): void {
                     try {
                         headers('', '', EMIT | E_TRIGGER);
                         headers('', '', RESET | E_TRIGGER);
-                    } catch (\Throwable) {}
-                }) || throw new \RuntimeException(__FUNCTION__ . ':header_register_callback');
+                    } catch (\Throwable) {}                         // swallow: shutdown-time best effort
+                })                                                  || throw new \RuntimeException(__FUNCTION__ . ': header_register_callback');
             }
-
             return $auto_emit === true;
         }
 
-        !isset($canon[\strspn($canon, RFC_H_TCHAR)])                  || throw new \InvalidArgumentException('field name must be a token (tchar alphabet)');
-        $key = \strtolower($canon);
+        ($field !== '')                                             || throw new \InvalidArgumentException('field name is empty');
+        $key = \strtolower($field);
 
-        !($read_only[$key] ?? false)                                || throw new \InvalidArgumentException("header locked: `{$key}`");
+        if(!($read_only[$key] ?? false))
+            return false;
 
         if ((DROP & $behave) && !(LOCK & $behave)) {
-            !\headers_sent($file, $line)                            || throw new \InvalidArgumentException("headers already sent ({$file}:{$line})");
-            \header_remove($canon);                                 // external op first (now known-possible)
-            unset($cs_values[$key]);                                // commit internal changes after guard/op
-            unset($read_only[$key]);
+            $throw_on_sent();
+            \header_remove($field);// external op first (now known-possible)
+            unset($cs_values[$key], $read_only[$key]);// internal state commit
             return true;
         }
+        
+        if ($key === 'set-cookie')
+            $behave = ($behave | ADD) & ~(CSV);                     // HTTP semantics: Set-Cookie is append-only and not comma-joinable
 
-
-        $len = \strlen($value);
-        if (!(BLANK & $behave)) {
-            // must contain at least one byte that is not OWS (SP/HTAB)
-            ($len !== 0 && \strspn($value, RFC_H_OWS) !== $len) || throw new \InvalidArgumentException('field value is empty/OWS-only (use BLANK to allow)');
-        }
-
-
-
-
-        ($value !== '' || (BLANK & $behave))                        || throw new \InvalidArgumentException('field value is empty (use BLANK flag to allow)');
-        !isset($value[\strspn($value, RFC_H_VALUE_SAFE_BYTES)])     || throw new \InvalidArgumentException('field value must be VCHAR/obs-text plus SP/HTAB (OWS)');
-        \strpbrk($value, RFC_H_CTL_NO_HTAB) === false               || throw new \InvalidArgumentException('field value forbids CR/LF/NUL and other CTL');
-
-        if($key === 'set-cookie')
-            $behave = ($behave | ADD) & ~(CSV);                     // set-cookie is always multi-valued append-only
-
-        if (CSV & $behave) {
-            $cs_values[$key] ??= [$canon, []];
+        if (CSV & $behave) {                                        // CSV staging (emitted later on EMIT)
+            $cs_values[$key] ??= [$field, []];
             $cs_values[$key][1][] = $value;
             (LOCK & $behave) && ($read_only[$key] = true);
             return true;
         }
 
-        !\headers_sent($file, $line)                                || throw new \InvalidArgumentException("headers already sent ({$file}:{$line})");
-        \header($canon . ': ' . $value, !($behave & ADD), $status);
-        unset($cs_values[$key]); 
-        ($status !== 0 && ($last_code = $status));
+        $throw_on_sent();
+        \header($field . ': ' . $value, !($behave & ADD), $status);
+        unset($cs_values[$key]);                                    // if this key was previously staged in CSV, immediate emission wins
+        ($status !== 0) && ($last_code = $status);
 
         (LOCK & $behave) && ($read_only[$key] = true);
         return true;
-     } 
-     catch (\InvalidArgumentException $e) {
+    }
+    catch (\InvalidArgumentException $e) {
         if ((E_NOTICE | E_WARNING | E_TRIGGER) & $behave){
-            \trigger_error($e->getMessage(), E_WARNING & $behave ? \E_USER_WARNING : \E_USER_NOTICE);
+            \trigger_error($e->getMessage(), (E_WARNING & $behave) ? \E_USER_WARNING : \E_USER_NOTICE);
             return false;
         }
         throw $e;
