@@ -26,9 +26,8 @@ function run($file_paths, $args = [], $behave = 0): array
         try {
             $loot[INC_RETURN] = include $file;                                                 // execute file, store its return value
         } catch (\Throwable $t) {
-            $fault = new \Exception("include:$file", 0xC0D, $t);                               // normalize include failure, preserve chain
+            $fault = new \Exception("include:$file", 0xBADC0DE, $t);                           // normalize include failure, preserve chain
         }
-
         if ($fault === null || (RESCUE_CALL & $behave)) {                                      // proceed if no fault, or rescue policy says "continue"
                 
             if ((INVOKE & $behave) && is_callable($loot[INC_RETURN])) {                        // invoke only when enabled + callable
@@ -39,7 +38,7 @@ function run($file_paths, $args = [], $behave = 0): array
                 try {
                     $loot[INC_RETURN] = $loot[INC_RETURN]($call_args);                         // invoke callable, store its return value
                 } catch (\Throwable $t) {
-                    $fault = new \Exception("invoke:$file", 0xC0D, $t);                        // normalize invoke failure, preserve chain
+                    $fault = new \Exception("invoke:$file", 0xBADC0DE, $t);                    // normalize invoke failure, preserve chain
                 }
             }
 
@@ -53,6 +52,5 @@ function run($file_paths, $args = [], $behave = 0): array
 
         $fault === null || (PIPE_ONWARD & $behave) || throw $fault;                            // default: stop on fault unless ONWARD allows continuation
     }
-
     return $loot;                                                                              // final loot contains args + RUN_* slots
 }
