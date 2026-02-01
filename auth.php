@@ -36,7 +36,7 @@ function checkin(int $behave = 0, ?string $u = null, $p = null): ?string
         return $_SESSION[__NAMESPACE__][$username_field] ?? null;
 
     } catch (\Error $e) {
-        throw new \BadFunctionCallException('Invalid parameters for AUTH action', 0xC0D, $e);
+        throw new \BadFunctionCallException('Invalid parameters for AUTH action', 0xBADC0DE, $e);
     }
 }
 
