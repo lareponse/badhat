@@ -1,31 +1,101 @@
-# IRSA.be
+# BADHAT
 
-Ce document regroupe divers éléments d'analyse et de recommandations pour le site IRSA. Vous trouverez ci-dessous des ressources détaillées, chacune apportant un éclairage particulier sur différents aspects du site, allant de la revue rapide à l'analyse technique, en passant par les technologies assistives et les protocoles d'entretien.
+```
+Bits As Decision
+HTTP As Terminal
+```
 
-1. **Aperçu de l'IRSA et de son Site Web**  
-   Ce document offre une vue d'ensemble du site IRSA, ses forces, ses points faibles et les axes d'amélioration envisagés.  
-   - **Fichier :** [quick_review.md](analysis/quick_review.md)
+~200 lines of PHP. Files are routes. Bitmasks are config. That's it.
 
-2. **irsa.be**  
-   Cette section regroupe plusieurs validations et contrôles techniques indispensables pour garantir la conformité et l'optimisation du site.
-   - **Validation HTML :**  
-     Analyse de la conformité du code HTML via des outils comme le W3C Nu HTML Checker pour s'assurer que le site respecte les normes du web.  
-     - **Fichier :** [HTML-Validator.md](analysis/HTML-Validator.md)
-   - **Validation WAVE :**  
-     Évaluation de l'accessibilité du site à l'aide de l'outil WAVE, afin d'identifier et de corriger les problèmes qui pourraient empêcher certains utilisateurs d'accéder pleinement au contenu.  
-     - **Fichier :** [WAVE-validation.md](analysis/WAVE-validation.md)
-   - **Validation Technique :**  
-     Revue des ressources existantes et de l'architecture technique du site pour détecter d'éventuelles redondances ou des points d'optimisation.  
-     - **Fichier :** [resources-existing.md](analysis/resources-existing.md)
+---
 
-3. **Un site idéal ?**  
-   Ce document explore les caractéristiques d'un site web exemplaire, en termes d'accessibilité, de performance et d'ergonomie. Il propose des pistes pour transformer le site IRSA en une référence dans son domaine.  
-   - **Fichier :** [ideal_features.md](ideal_features.md)
+## What it does
 
-4. **Technologies assistives**  
-   Présentation des outils et des technologies pouvant être intégrés au site pour améliorer l'accessibilité pour tous les utilisateurs, notamment ceux en situation de handicap. Il aborde les lecteurs d'écran, les solutions de navigation alternative et d'autres aides technologiques.  
-   - **Fichier :** [assistive_technologies.md](assistive_technologies.md)
+```php
+[$file, $args] = seek($base, '/users/42', '.php');  // find handler
+$loot = run([$file], $args, INVOKE);                 // execute it
+out(200, $loot[INC_RETURN]);                         // respond
+```
 
-5. **Protocole d'entretien**  
-   Guide détaillé pour la conduite d'entretiens avec les utilisateurs. Ce protocole permet de recueillir des retours précieux sur l'expérience utilisateur et l'accessibilité du site, afin d'orienter les améliorations futures.  
-   - **Fichier :** [interview_protocol.md](interview/protocol.md)
+Three lines. Request to response.
+
+---
+
+## Core modules
+
+| Module | Purpose |
+|--------|---------|
+| `map.php` | URL → file resolution |
+| `run.php` | Include + invoke + buffer |
+| `http.php` | Headers + output |
+| `pdo.php` | Query helper, no ORM |
+| `auth.php` | Session login |
+| `csrf.php` | Token management |
+| `error.php` | Handler installation |
+
+Each under 150 lines. No inheritance. No interfaces. No magic.
+
+---
+
+## Philosophy
+
+**Files decide.** `/admin/users` looks for `admin/users.php` or walks back to `admin.php` with `['users']`.
+
+**Bitmasks configure.** `run([$file], $args, BUFFER | INVOKE)` — behavior is explicit, composable, fits in one int.
+
+**Failures explode.** No silent `false` returns. Exceptions with context.
+
+---
+
+## Quick taste
+
+```php
+// app/io/route/api/users.php
+use function bad\pdo\qp;
+use function bad\http\{headers, out};
+use const bad\http\SET;
+
+return function($args) {
+    headers(SET, 'Content-Type', 'application/json');
+    exit(out(200, json_encode(
+        qp("SELECT id, name FROM users")->fetchAll()
+    )));
+};
+```
+
+---
+
+## Install
+
+```bash
+git fetch --depth=1 git@github.com:lareponse/BADHAT.git main
+git subtree add --prefix=add/badhat FETCH_HEAD --squash
+```
+
+See `doc/setup/quickstart.md` for full bootstrap.
+
+---
+
+## You'll like this if
+
+- You miss when `index.php` *was* the architecture diagram
+- You think RAM is for your app, not your framework
+- Loading 400 files to serve one request feels excessive
+- You think flags should fit in an int, not a YAML file
+- You understand the chain: fewer cycles, fewer servers, fewer cooling fans
+- You'd rather pay for users than for framework overhead
+
+## You won't like this if
+
+- Abstractions are comfort, not overhead
+- Your team needs a framework to enforce what meetings couldn't
+- `$user->posts()->where()->with()->get()` sparks joy
+- Autoloading 400 files feels like progress
+- You find comfort in not knowing what happens
+- "Explicit" sounds like a content warning
+
+---
+
+## License
+
+MIT. No warranty. Ship it.
