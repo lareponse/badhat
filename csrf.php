@@ -2,18 +2,16 @@
 
 namespace bad\csrf;
 
-const TTL_BITS   = 20;                                              // max ttl: 
+const TTL_BITS   = 28;                                              // max ttl: 
 const TTL_MASK   = (1 << TTL_BITS) - 1;
 
 const SETUP      = 1 << TTL_BITS;
 const CHECK      = 2 << TTL_BITS;
 
-const FLAGS_MASK = SETUP | CHECK | TOKEN;
-
 function csrf(int $ttl_behave, string $key, $param = null)
 {
-    $behave = $ttl_behave & FLAGS_MASK;
-    $ttl   = $ttl_behave & TTL_MASK;
+    $ttl    = $ttl_behave & TTL_MASK;
+    $behave = $ttl_behave & ~TTL_MASK;
 
     $key !== ''                                                     || throw new \InvalidArgumentException('key is empty');
     session_status() === PHP_SESSION_ACTIVE                         || throw new \LogicException('missing active session');
