@@ -13,21 +13,21 @@ function csrf(int $ttl_behave, string $key, $param = null)
     $ttl    = $ttl_behave & TTL_MASK;
     $behave = $ttl_behave & ~TTL_MASK;
 
-    $key !== ''                                                     || throw new \InvalidArgumentException('key is empty');
-    session_status() === PHP_SESSION_ACTIVE                         || throw new \LogicException('missing active session');
+    $key !== ''                                                     || throw new \InvalidArgumentException(__FUNCTION__.':key empty');
+    session_status() === PHP_SESSION_ACTIVE                         || throw new \LogicException(__FUNCTION__.':session not active');
 
     $_SESSION[__FUNCTION__] ??= [];
     $session = &$_SESSION[__FUNCTION__];
 
     $now = time();                                                  // current timestamp for expiry checks
     if (SETUP & $behave && !isset($session[$key][1])) {
-        ($ttl > 0)                                                  || throw new \InvalidArgumentException("'{$key}' TTL must be encoded in behave low bits");
+        ($ttl > 0)                                                  || throw new \InvalidArgumentException(__FUNCTION__.":{$key}:ttl missing in behave");
         $token = bin2hex(random_bytes(32));
         $session[$key] = [$token, $now + $ttl];                     // [token, expiry]
         return $token;
     }
 
-    [$expect, $expire] = ($session[$key]                            ?? throw new \BadFunctionCallException("'{$key}' not initialized"));
+    [$expect, $expire] = ($session[$key]                            ?? throw new \BadFunctionCallException(__FUNCTION__.":{$key}:not initialized"));
 
     if ($now > $expire) {                                           // expired: cleanup and fail
         unset($session[$key]);
@@ -36,7 +36,7 @@ function csrf(int $ttl_behave, string $key, $param = null)
 
     if (CHECK & $behave) {
         $actual = is_string($param) ? $param : ($_POST[$key] ?? null);
-        $actual                                                     || throw new \InvalidArgumentException("'{$key}' token required");
+        $actual                                                     || throw new \InvalidArgumentException(__FUNCTION__.":{$key}:token required");
 
         return hash_equals($expect, $actual);                       // timing-safe comparison
     }
