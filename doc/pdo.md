@@ -1,122 +1,186 @@
-# badhat\pdo
+# bad\pdo
 
-One PDO connection, cached. App-wide access without DI or globals.
+Tiny PDO helpers with explicit failure semantics.
 
-> Two helpers that throw on failure. That's it.
+- `db()` caches one shared `\PDO` (request-scoped).
+- `qp()` gives you a `\PDOStatement` in three call-site modes.
+- `trans()` runs a callable atomically and returns whatever it returns.
 
 ---
 
-## 1) First, you connect once
+## 1) Connect once
 
-Bootstrap hands badhat a PDO:
+Bootstrap your app by caching a `\PDO`:
 
 ```php
 use function bad\pdo\{db, qp, trans};
 
-db(new PDO($dsn, $user, $pass, [
-    PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
-    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-]));
+$pdo = new \PDO($dsn, $user, $pass, [
+    // Recommended for consistent RuntimeException + E_USER_WARNING behavior.
+    \PDO::ATTR_ERRMODE            => \PDO::ERRMODE_SILENT,
+    \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC,
+]);
+
+db($pdo);
+````
+
+Later, anywhere in your app:
+
+```php
+$pdo = db();
 ```
 
-Connection cached. Every subsequent `db()` returns it.
+If you call `db()` before caching a connection, it throws `\BadFunctionCallException`.
 
 ---
 
-## 2) Then, you query
+## 2) Query with `qp()`
 
-`qp()` behavior depends on `$params`:
+`qp()` always returns a `\PDOStatement`. The difference is whether it’s already executed.
+
+### A) No parameters: execute immediately
 
 ```php
-// null → raw query (no prepare)
-$users = qp("SELECT * FROM users")->fetchAll();
+$users = qp("SELECT * FROM users ORDER BY id")
+    ->fetchAll();
+```
 
-// array → prepare + execute
-$user = qp("SELECT * FROM users WHERE id = ?", [$id])->fetch();
+### B) Parameters: execute immediately
 
-// empty array → prepare only
+```php
+$user = qp("SELECT * FROM users WHERE id = ?", [42])
+    ->fetch();
+```
+
+### C) Empty array: prepare only (execute later)
+
+Use this when you want to reuse one prepared statement:
+
+```php
 $insert = qp("INSERT INTO logs(msg) VALUES(?)", []);
+
 $insert->execute(['first']);
 $insert->execute(['second']);
 ```
 
-| `$params` | Behavior |
-|-----------|----------|
-| `null` | `$pdo->query()` |
-| `[]` | `$pdo->prepare()` only |
-| `[...]` | `$pdo->prepare()` + `execute($params)` |
+### Quick rule of thumb
 
-Throws on failure. No booleans to check.
+| What you type                  | What you get back                 |
+| ------------------------------ | --------------------------------- |
+| `qp($sql)` or `qp($sql, null)` | executed statement                |
+| `qp($sql, [])`                 | prepared statement (not executed) |
+| `qp($sql, [...])`              | executed statement                |
+
+### Optional: prepare options
+
+If you need driver-specific prepare options, pass them as the 3rd argument:
+
+```php
+$stmt = qp(
+    "SELECT * FROM users WHERE email = ?",
+    ['a@b.test'],
+    [\PDO::ATTR_CURSOR => \PDO::CURSOR_FWDONLY]
+);
+```
 
 ---
 
-## 3) Transactions
+## 3) Transactions with `trans()`
+
+Use `trans()` for “all-or-nothing” multi-step writes. Your callable receives the `\PDO` and can return a value.
 
 ```php
-$orderId = trans(function(\PDO $pdo) use ($cart, $userId) {
-    qp("INSERT INTO orders(user_id) VALUES(?)", [$userId], [], $pdo);
-    $id = $pdo->lastInsertId();
-    
+$orderId = trans(function(\PDO $pdo) use ($userId, $cart) {
+    qp("INSERT INTO orders(user_id) VALUES(?)", [$userId], pdo: $pdo);
+    $id = (int)$pdo->lastInsertId();
+
+    $add = qp(
+        "INSERT INTO order_items(order_id, sku, qty) VALUES(?, ?, ?)",
+        [],
+        pdo: $pdo
+    );
+
     foreach ($cart as $item) {
-        qp("INSERT INTO order_items(order_id, sku, qty) VALUES(?, ?, ?)",
-           [$id, $item['sku'], $item['qty']], [], $pdo);
+        $add->execute([$id, $item['sku'], $item['qty']]);
     }
-    
+
     return $id;
 });
 ```
 
-`trans()` wraps `beginTransaction()` / `commit()` / `rollBack()`. Callable receives `$pdo`. Return value passes through.
+### Nested transactions
 
-Nested transactions throw `LogicException`.
+If you call `trans()` while already inside a transaction, it throws `\LogicException`.
 
 ---
 
-## 4) Explicit connection
+## 4) Using an explicit connection
 
-Every function accepts `$pdo` as last argument:
+All helpers accept an optional `pdo:` argument.
 
 ```php
-$archive = new PDO($archiveDsn, $user, $pass);
+$archive = new \PDO($archiveDsn, $user, $pass, [
+    \PDO::ATTR_ERRMODE            => \PDO::ERRMODE_SILENT,
+    \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC,
+]);
 
-$old = qp("SELECT * FROM logs WHERE year < 2020", null, [], $archive)->fetchAll();
+$old = qp(
+    "SELECT * FROM logs WHERE year < 2020",
+    null,
+    pdo: $archive
+)->fetchAll();
 
-trans(function($pdo) {
-    qp("DELETE FROM temp", null, [], $pdo);
-}, $archive);
+trans(function(\PDO $pdo) {
+    qp("DELETE FROM temp", null, pdo: $pdo);
+}, pdo: $archive);
 ```
+
+---
+
+## Errors & logging
+
+These helpers do not return `false`.
+
+* `db()` throws `\BadFunctionCallException` if no cached connection exists.
+* `qp()` throws `\RuntimeException` on database failure.
+* `trans()` throws:
+
+  * `\LogicException` if called while already in a transaction
+  * `\RuntimeException` on database failure
+  * `\RuntimeException` with code **`0xBADC0D`** if **your callable throws**
+
+On failures that originate from database operations, a warning is also emitted via `trigger_error(..., E_USER_WARNING)`.
+
+* The **exception message is sanitized** (safe-ish to show to users).
+* The **warning contains driver details** (and may include sensitive information).
+
+```php
+try {
+    trans(function(\PDO $pdo) {
+        throw new \DomainException("bad input");
+    });
+} catch (\RuntimeException $e) {
+    if ($e->getCode() === 0xBADC0D) {
+        // Your callable threw (details are in the E_USER_WARNING log).
+    }
+}
+```
+
+> Note: if you configure PDO to throw (`ERRMODE_EXCEPTION`), you may see `\PDOException` directly.
 
 ---
 
 ## Reference
 
-### Functions
-
 ```php
 db(?\PDO $pdo = null): \PDO
-```
-Get/set cached connection. Throws `BadFunctionCallException` if not set.
 
-```php
-qp(string $query, ?array $params = null, array $prep_options = [], ?\PDO $pdo = null): \PDOStatement
-```
-Query/prepare/execute. Returns statement or throws.
+qp(
+    string $query,
+    ?array $params = null,
+    array $prep_options = [],
+    ?\PDO $pdo = null
+): \PDOStatement
 
-```php
-trans(callable $transaction, ?\PDO $pdo = null): mixed
-```
-Atomic transaction wrapper. Returns callable result.
-
-### Throws
-
-| Exception | Condition |
-|-----------|-----------|
-| `BadFunctionCallException` | `db()` called before connection cached |
-| `LogicException` | `trans()` called while already in transaction |
-| `RuntimeException` | PDO operation failed |
-
-Error info embedded in message:
-
-```
-[STATE=23000, CODE=1062] PDO::execute() failed (Duplicate entry '5' for key 'PRIMARY')
+trans(callable $transaction, ?\PDO $pdo = null)
 ```
