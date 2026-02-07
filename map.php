@@ -7,9 +7,9 @@ const ASCEND = 2;                                                   // forward s
 
 function look($base, $path, $shim = '', $behave = 0): ?string
 {                                                                   // direct lookup: does a file exist at this exact location? or in that nested location (with REBASE) ?
-    (DIRECTORY_SEPARATOR === '/')                                   || throw new \RuntimeException(__NAMESPACE__.':requires a POSIX environment (Linux/macOS/WSL)');
-    (isset($base[0]) && $base[\strlen($base) - 1] === '/')          || throw new \InvalidArgumentException('base must end with "/"');
-
+    if(isset($base[0]) && $base[\strlen($base) - 1] !== '/')
+        $base .= '/';
+    
     $file = null;                                                   // not file found, unless proven otherwise
     $leaf = $base . $path . $shim;                                  // form the primary candidate path
     if ((REBASE & $behave) && !\is_file($leaf))                     // if nesting allowed and primary doesn't exist
@@ -26,8 +26,8 @@ function look($base, $path, $shim = '', $behave = 0): ?string
 
 function seek($base, $path, $shim = '', $behave = 0): ?array
 {                                                                   // progressive search: test path segments to find executable file
-    (DIRECTORY_SEPARATOR === '/')                                   || throw new \RuntimeException(__NAMESPACE__.':requires a POSIX environment (Linux/macOS/WSL)');
-    (isset($base[0]) && $base[\strlen($base) - 1] === '/')          || throw new \InvalidArgumentException('base must end with "/"');
+    if(isset($base[0]) && $base[\strlen($base) - 1] !== '/')
+        $base .= '/';
 
     $len = \strlen($path);
     $pos  = (ASCEND & $behave) ? 0 : $len;                          // begin at start for forward scan, at end for reverse
