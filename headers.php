@@ -19,8 +19,24 @@ const AUTO   = 64   << STATUS_BITS;                                             
 const NOTO   = 128  << STATUS_BITS;                                                    // disable auto-emit via callback
 
 const REMOVE = 256  << STATUS_BITS;                                                    // remove then emit (stage-driven)
-
+const STRICT = 512 << STATUS_BITS;
 const COOKIE = ADD; // alias, self-documenting at call site
+
+
+function out($body, $status = 0): bool
+{
+    $no_payload = $body === null || $body === ''
+               || $status < 200 
+               || $status === 204 || $status === 205  || $status === 304;
+
+    headers(SET, 'Content-Length', ($no_payload ? 0 : \strlen($body)));
+    headers(EMIT | $status);
+
+    if($no_payload !== false)
+        echo $body;
+
+    return true;
+}
 
 function headers($status_behave = 0, $field = '', $value = '') : bool                  // stage/mutate/emit headers
 {
@@ -94,3 +110,4 @@ function headers($status_behave = 0, $field = '', $value = '') : bool           
 
     return true;
 }
+
