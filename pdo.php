@@ -28,7 +28,7 @@ function trans(callable $transaction, ?\PDO $pdo = null)
         try {
             $res = $transaction($pdo);
         } catch (\Throwable $t) {
-            throw new \RuntimeException(_ErrorInfoMessage($pdo, 'callable', $t), 0xBADC0D);
+            throw new \RuntimeException(_ErrorInfoMessage($pdo, 'callable', $t), 0xBADC0DE);
         }
         $pdo->commit()                                              || throw new \RuntimeException(_ErrorInfoMessage($pdo, 'commit'));
     } catch (\Throwable $t) {
