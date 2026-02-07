@@ -310,8 +310,3 @@ The message tells you which phase failed. The previous exception tells you why.
 ## Buffer cleanup
 
 `run()` snapshots `ob_get_level()` before each file and tries to restore the expected level after the step. If a file opens extra output buffers and forgets to close them, `run()` discards deeper levels so your request doesn’t leak buffer state across steps.
-
-```
-
-If you want it even more “story-forward”, the only place I’d tighten further is section 6: keep `RESCUE_CALL` as a paragraph + one example, and drop the “rare” commentary.
-::contentReference[oaicite:0]{index=0}
