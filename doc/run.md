@@ -30,7 +30,7 @@ ABSORB is that handshake: output becomes input after include-time.
 
 Finally, you want composition: run many files, keep args, pass loot forward.
 That’s RELOOT. And real pipelines need real failure rules:
-PIPE_ONWARD for “secondary steps must not veto”, and RESCUE_CALL for
+FAULT_AHEAD for “secondary steps must not veto”, and RESCUE_CALL for
 “even if include failed, still run the callable we already have”.
 
 > `run()` executes files and collects what they produce—return values, output, or both.
@@ -235,14 +235,14 @@ $loot = run(
 
 Rare. It exists for “salvage what we can” flows.
 
-### PIPE_ONWARD: keep going
+### FAULT_AHEAD: keep going
 
 Multiple files, and you want to continue even if one fails (logging, metrics, optional sidecars):
 
 ```php
-use const bad\run\PIPE_ONWARD;
+use const bad\run\FAULT_AHEAD;
 
-$loot = run(['/app/a.php', '/app/logger.php', '/app/c.php'], [], PIPE_ONWARD);
+$loot = run(['/app/a.php', '/app/logger.php', '/app/c.php'], [], FAULT_AHEAD);
 ```
 
 Failures are suppressed and the pipeline continues.
@@ -285,7 +285,7 @@ Request to response: include → maybe invoke → maybe buffer.
 | `ABSORB`      | 7     | `4 \| BUFFER \| INVOKE` — buffer + invoke + append buffer to callable args |
 | `RELOOT`      | 8     | Invoke with the current loot bag (instead of original args)                |
 | `RESCUE_CALL` | 16    | Attempt invoke even if include failed                                      |
-| `PIPE_ONWARD` | 32    | Suppress throws, continue to next file                                     |
+| `FAULT_AHEAD` | 32    | Suppress throws, continue to next file                                     |
 
 ### Constants (loot keys)
 
