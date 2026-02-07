@@ -1,71 +1,101 @@
-# badhat\error
+# bad\error
 
-PHP has three failure modes: errors, exceptions, and fatals. Errors warn and continue. Exceptions and fatals kill the request. Each has its own handler. None of them tell you which request caused the problem.
+PHP fails in three ways:
 
-You've seen the logs. A hundred requests per second, and somewhere in there:
+- **errors** (warnings, notices): noisy, but execution continues
+- **exceptions**: execution stops
+- **fatals**: execution stops hard
+
+None of them tell you *which request* caused the problem.
+
+So your logs look like this:
 
 ```
+
 PHP Fatal error: Uncaught TypeError: ...
-```
+
+````
 
 Which request? Which user? Good luck.
 
-> `bad\error` takes over PHP's error channel, tags everything with a request ID, and gives you one place to decide what happens when things break.
+> `bad\error` takes over PHP’s error channel, tags everything with a request ID,
+> and gives you one place to decide what happens when things break.
 
 ---
 
-## 1) First, you install
-
-The file returns an installer. Call it, and you own the error channel:
+## 1) Install
 
 ```php
 $install = require __DIR__ . '/bad/error.php';
 $restore = $install();
+````
+
+That’s it.
+
+From this point on:
+
+* runtime errors go through your handler
+* uncaught exceptions go through your handler
+* fatal shutdowns go through your handler
+
+Every log line is tagged:
+
+```
+[req=1a2b3c4d-1234] ...
 ```
 
-That's it. From this point forward:
-
-- Runtime errors go through your handler
-- Uncaught exceptions go through your handler  
-- Fatal shutdowns go through your handler
-
-Every log line gets a request ID: `[req=1a2b3c4d-1234]`. When something breaks at 3am, you can grep.
-
-**Request ID format:**
-- If you pass `$request_id`, it's used as-is
-- Otherwise: `dechex($hrtime_ns) . '-' . getmypid()` — hex nanosecond timestamp plus process ID
-
-**Default story:**
-"One request, one ID. Everything that goes wrong is tagged."
+One request. One ID. Grep works again.
 
 ---
 
-## 2) Then, you choose what to catch
+## 2) Request ID
 
-Not every app wants every hook. The first argument is a bitmask:
+```php
+use const bad\error\HND_ALL;
+
+// custom ID (used as-is)
+$restore = $install(HND_ALL, 'my-request-id');
+```
+
+If you don’t pass one, `bad\error` generates:
+
+```
+dechex(start_time) . '-' . getmypid()
+```
+
+Default time source is microtime-based.
+Add `MONOTONIC_TIME` if you want `hrtime()` when available.
+
+---
+
+## 3) What to catch
+
+The first argument is a bitmask of **handler flags**.
 
 ```php
 use const bad\error\{HND_ERR, HND_EXC, HND_SHUT, HND_ALL};
 
-$restore = $install(HND_ERR | HND_EXC);  // errors + exceptions, not shutdown
-$restore = $install(HND_ALL);             // everything (default)
+$restore = $install(HND_ERR | HND_EXC); // errors + exceptions
+$restore = $install(HND_ALL);           // everything (default)
 ```
 
-| Flag | Catches |
-|------|---------|
-| `HND_ERR` | Runtime errors (warnings, notices, deprecations) |
-| `HND_EXC` | Uncaught exceptions |
-| `HND_SHUT` | Parse errors, compile errors, core fatals |
-| `HND_ALL` | All of the above |
+| Flag       | Catches               |
+| ---------- | --------------------- |
+| `HND_ERR`  | Runtime errors        |
+| `HND_EXC`  | Uncaught exceptions   |
+| `HND_SHUT` | Fatal shutdown errors |
+| `HND_ALL`  | All of the above      |
 
 **Story:**
-"Claim the hooks you want. Leave the rest alone."
+Claim the hooks you want. Leave the rest alone.
 
 ---
 
-## 3) Decide what gets logged
+## 4) How much to log
 
-By default, you get one-line messages. Add `MSG_WITH_TRACE` for stack traces:
+By default, logs are one line per failure.
+
+Add traces when you need them:
 
 ```php
 use const bad\error\MSG_WITH_TRACE;
@@ -73,41 +103,37 @@ use const bad\error\MSG_WITH_TRACE;
 $restore = $install(HND_ALL | MSG_WITH_TRACE);
 ```
 
-Without trace:
-```
-[req=1a2b3c4d-1234] FATAL (exception:InvalidArgumentException) Bad input in /app/route/api.php:18 [3.41ms 2048KiB POST /api @192.168.1.50]
-```
+Example:
 
-With trace:
 ```
-[req=1a2b3c4d-1234] FATAL (exception:InvalidArgumentException) Bad input in /app/route/api.php:18 [3.41ms 2048KiB POST /api @192.168.1.50]
+[req=1a2b3c4d-1234] FATAL (exception:InvalidArgumentException) Bad input in /app/api.php:18
 [req=1a2b3c4d-1234] TRACE
-#0 /app/route/api.php:23 validate()
+#0 /app/api.php:23 validate()
 #1 /app/index.php:45 include()
 ```
 
-Traces are expensive. Use them in dev. Think twice in prod.
-
-**Story:**
-"Logs should be greppable first, debuggable second."
+Traces are expensive.
+Use them in dev. Think twice in prod.
 
 ---
 
-## 4) Decide what happens to output
+## 5) What happens to output on fatal
 
-When a fatal hits, you probably have partial output buffered. Two choices:
+When execution dies, you probably have buffered output.
+
+Choose what to do with it:
 
 ```php
 use const bad\error\{FATAL_OB_FLUSH, FATAL_OB_CLEAN};
 
-// Dev: flush what you have (helps debugging)
+// Dev: show what you have
 $restore = $install(HND_ALL | FATAL_OB_FLUSH);
 
-// Prod: discard everything (cleaner failure)
+// Prod: discard everything
 $restore = $install(HND_ALL | FATAL_OB_CLEAN);
 ```
 
-And if you want the browser to know something went wrong:
+If you want the client to know something went wrong:
 
 ```php
 use const bad\error\FATAL_HTTP_500;
@@ -115,47 +141,45 @@ use const bad\error\FATAL_HTTP_500;
 $restore = $install(HND_ALL | FATAL_HTTP_500 | FATAL_OB_CLEAN);
 ```
 
-`FATAL_HTTP_500` sends the status code before the process dies (if headers not already sent). Without it, the client might get a 200 with garbage.
-
 **Story:**
-"Prod hides the mess. Dev shows you everything."
+Prod hides the mess. Dev shows you everything.
 
 ---
 
-## 5) Let PHP's handler run too
+## 6) Let PHP talk too (optional)
 
-Sometimes you want both: your logging *and* PHP's native output. Dev mode, usually:
+Sometimes you want your logs **and** PHP’s native output:
 
 ```php
 use const bad\error\ALLOW_INTERNAL;
 
-$restore = $install(HND_ALL | MSG_WITH_TRACE | ALLOW_INTERNAL);
+$restore = $install(HND_ERR | ALLOW_INTERNAL);
 ```
 
-Your handler logs. PHP's handler prints. You see both.
+Your handler logs. PHP’s handler runs too.
 
-**Story:**
-"You own the channel, but you can share it."
+Runtime errors only.
 
 ---
 
-## 6) Restore when you're done 
+## 7) Restore
 
-The installer returns a restore function. Call it to put things back:
+The installer returns a restore callable:
 
 ```php
-$restore = $install(HND_ALL);
-// ... app runs ...
-$restore();  // previous handlers restored
+$restore = $install();
+// ...
+$restore();
 ```
 
-**Note:** Shutdown handlers cannot be unregistered. `HND_SHUT` installs permanently for the request lifetime.
+* error + exception handlers are restored
+* shutdown handlers **cannot** be removed
 
-Order matters. If you nest installs, restore in reverse order (LIFO).
+If you nest installs, restore in reverse order.
 
 ---
 
-## Environment profiles
+## Typical profiles
 
 ### Production
 
@@ -163,99 +187,29 @@ Order matters. If you nest installs, restore in reverse order (LIFO).
 $restore = $install(HND_ALL | FATAL_HTTP_500 | FATAL_OB_CLEAN);
 ```
 
-- Logs only (no screen output)
-- Clean failure (buffers discarded)
-- HTTP 500 on fatal
-- No stack traces in logs
+Clean failure. No traces. Proper status code.
 
 ### Development
 
 ```php
-$restore = $install(HND_ALL | MSG_WITH_TRACE | FATAL_OB_FLUSH | ALLOW_INTERNAL);
+$restore = $install(
+    HND_ALL |
+    MSG_WITH_TRACE |
+    FATAL_OB_FLUSH |
+    ALLOW_INTERNAL
+);
 ```
 
-- Stack traces in logs
-- PHP's native output too
-- Partial output preserved
-- See everything
-
-### Toggle via environment
-
-```php
-use const bad\error\{HND_ALL, MSG_WITH_TRACE, FATAL_OB_FLUSH, FATAL_OB_CLEAN, FATAL_HTTP_500, ALLOW_INTERNAL};
-
-$behave = HND_ALL;
-
-getenv('DEV')
-    ? $behave |= MSG_WITH_TRACE | FATAL_OB_FLUSH | ALLOW_INTERNAL
-    : $behave |= FATAL_HTTP_500 | FATAL_OB_CLEAN;
-
-$restore = $install($behave);
-```
-
-Behavior is baked at install time. No runtime conditionals inside handlers.
+See everything. Logs + output + traces.
 
 ---
 
-## What the logs look like
+## Sharp edges
 
-### Runtime error (non-fatal)
-
-```
-[req=1a2b3c4d-1234] ERR (errno=2) Undefined variable $foo in /app/route/user.php:42
-```
-
-Execution continues.
-
-### Uncaught exception
-
-```
-[req=1a2b3c4d-1234] FATAL (exception:InvalidArgumentException) Bad Request in /app/lib/map.php:18 [3.41ms 2048KiB POST /api/user @192.168.1.50]
-```
-
-Exits with code 1.
-
-### Chained exceptions
-
-```
-[req=deadbeef-5678] FATAL (exception:RuntimeException) include:/app/route/fail.php <- PDOException:SQLSTATE[23000]: Integrity constraint violation in /app/lib/run.php:27 [12.70ms 4096KiB GET /fail @10.0.0.1]
-```
-
-The chain is visible. You see what caused what.
-
-### Fatal shutdown
-
-```
-[req=deadbeef-5678] FATAL (shutdown:type=4) syntax error, unexpected '}' in /app/route/broken.php:17 [0.81ms 512KiB GET /broken @127.0.0.1]
-```
-
-Parse errors, compile errors—things that kill PHP before your code runs.
-
-### Multiple issues, same request
-
-```
-[req=f00baa12-9999] ERR (errno=8) Undefined array key "name" in /app/lib/auth.php:55
-[req=f00baa12-9999] ERR (errno=2) file_get_contents(): Filename cannot be empty in /app/lib/map.php:89
-[req=f00baa12-9999] FATAL (exception:RuntimeException) include:/app/route/fail.php in /app/lib/run.php:47 [12.70ms 4096KiB GET /fail @-]
-```
-
-Same `req=` prefix. One grep finds all of it.
-
----
-
-## Log context format
-
-Fatal logs include request context:
-
-```
-[{elapsed}ms {peak_mem}KiB {method} {uri} @{remote_addr}]
-```
-
-- `elapsed`: milliseconds since install (2 decimal places)
-- `peak_mem`: peak memory in KiB
-- `method`: `$_SERVER['REQUEST_METHOD']` or `CLI`
-- `uri`: `$_SERVER['REQUEST_URI']` or `-`
-- `remote_addr`: `$_SERVER['REMOTE_ADDR']` or `-`
+* **You own the channel.** Nothing is shown unless you allow it.
+* **Traces are loud.** They double log volume.
+* **Shutdown sticks.** Once installed, it stays for the request lifetime.
+* **Restore is on you.** Especially in tests.
 
 ---
 
@@ -263,44 +217,20 @@ Fatal logs include request context:
 
 ### Handler flags
 
-| Flag | Value | PHP hook |
-|------|-------|----------|
-| `HND_ERR` | 1 | `set_error_handler` |
-| `HND_EXC` | 2 | `set_exception_handler` |
-| `HND_SHUT` | 4 | `register_shutdown_function` |
-| `HND_ALL` | 7 | All of the above |
+| Flag       | Value |
+| ---------- | ----: |
+| `HND_ERR`  |     1 |
+| `HND_EXC`  |     2 |
+| `HND_SHUT` |     4 |
+| `HND_ALL`  |     7 |
 
 ### Behavior flags
 
-| Flag | Value | Effect |
-|------|-------|--------|
-| `MSG_WITH_TRACE` | 8 | Include stack trace in logs |
-| `ALLOW_INTERNAL` | 16 | Let PHP's native handler run too |
-| `FATAL_OB_FLUSH` | 32 | Flush output buffers on fatal |
-| `FATAL_OB_CLEAN` | 64 | Discard output buffers on fatal |
-| `FATAL_HTTP_500` | 128 | Send HTTP 500 on fatal (if headers not sent) |
-
-### Installer signature
-
-```php
-function (int $behave = HND_ALL, ?string $request_id = null): callable
-```
-
-Returns a restore callable.
-
-### Restore behavior
-
-- `HND_ERR`: restores previous error handler (or calls `restore_error_handler()` if none)
-- `HND_EXC`: restores previous exception handler (or calls `restore_exception_handler()` if none)
-- `HND_SHUT`: **cannot be restored** — shutdown functions persist for request lifetime
-
----
-
-## Sharp edges
-
-- **You own the channel.** PHP's default output is suppressed unless you opt in with `ALLOW_INTERNAL`.
-- **No screen mode.** This logs to `error_log()`. If you want pretty errors in the browser, that's a different tool.
-- **Request data hits logs.** URI, method, remote IP—all logged. Don't put secrets in URLs.
-- **Restore is your job.** If you install, you restore. Especially in tests.
-- **Shutdown is permanent.** Once registered, the shutdown handler runs regardless of restore.
-- **Exception handler exits.** Uncaught exceptions call `exit(1)` after logging.
+| Flag             | Value |
+| ---------------- | ----: |
+| `MSG_WITH_TRACE` |     8 |
+| `ALLOW_INTERNAL` |    16 |
+| `FATAL_OB_FLUSH` |    32 |
+| `FATAL_OB_CLEAN` |    64 |
+| `FATAL_HTTP_500` |   128 |
+| `MONOTONIC_TIME` |   256 |

@@ -2,41 +2,55 @@
 
 A request hits your server.
 
-It's messy: query strings, fragments, maybe a full URL from somewhere unexpected. What you actually want is simple:
+It’s messy: query strings, fragments, maybe a full URL from somewhere unexpected.  
+What you actually want is simple:
 
-> a stable **routing key** you can trust, and a safe way to turn that key into an **executable file inside your app**.
+> a stable **routing key** you can trust, and a safe way to turn that key into an  
+> **executable file inside your app**.
+
+That’s the job of `bad\map`.
 
 ---
 
-## 1) First, validate your base and clean the path
+## 1) First, decide what you consider a “path”
 
-You start with raw input. You want one thing back: a path you can trust.
+`bad\map` does **not** parse URLs, `bad\http` does.
+It assumes you already decided what part of the request represents intent.
+
+A typical call-site looks like this:
 
 ```php
-$base = realpath(__DIR__ . '/routes') . '/';
-$path = bad\map\hook($base, $_SERVER['REQUEST_URI']);
-```
+$base = __DIR__ . '/routes';   // trailing slash optional
 
-That single line quietly does what you used to have to ask for:
+$path = trim(
+    parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH),
+    '/'
+);
 
-* drops `?query` and `#fragment`
-* validates the base is real and slash-terminated
-* rejects anything containing forbidden characters
-
-The base validation matters: it prevents `/var/www` from matching `/var/www-evil`. The trailing slash isn't pedantry—it's a security boundary.
+// Decide what "/" means in *your* app
+$path = ($path === '') ? 'index' : $path;
+````
 
 **Default story:**
-"Give me a clean path, and prove the base is trustworthy first."
+“Give me a relative path that represents intent. I’ll take it from there.”
+
+What you can rely on:
+
+* `$base` may be passed **with or without** a trailing `/`
+* `$path` must be **relative** (no leading `/`)
+* If nothing matches, you get `null` — not an exception
 
 ---
 
-## 2) Then, decide what kind of router you're building
+## 2) Then, decide what kind of router you’re building
 
 Two common philosophies. BADHAT supports both.
 
-### A) "A route *is* a file" (strict routing)
+---
 
-You already know the handler file you want to exist. No guessing.
+### A) “A route *is* a file” (strict routing)
+
+You already know what file must exist. No guessing.
 
 ```php
 $file = bad\map\look($base, $path, '.php');
@@ -46,81 +60,133 @@ $file
   : bad\http\out(404, 'Not Found');
 ```
 
-**Story:**
-"I only run exactly what exists. If it's not there, it's not a route."
+If the file exists under `$base`, you get its absolute path.
+If not, you get `null`.
 
-That's the default posture of `look()`—direct, boring, predictable.
+**Story:**
+“I only run exactly what exists. If it’s not there, it’s not a route.”
+
+That’s the posture of `look()` — direct, boring, predictable.
 
 ---
 
-### B) "A route is a controller + remaining segments" (parameterized routing)
+### B) “A route is a controller + remaining intent” (parameterized routing)
 
-Sometimes you want `/users/edit/42` to land on `users.php`, with `['edit','42']` handed to it.
+Sometimes `/users/edit/42` should land on `users.php`,
+with `['edit', '42']` handed to it.
 
-That's what `seek()` is for.
+That’s what `seek()` is for.
 
 ```php
-[$file, $args] = bad\map\seek($base, $path, '.php')
-  ?? out(404, 'Not Found');
+$hit = bad\map\seek($base, $path, '.php');
+if ($hit === null) {
+    bad\http\out(404, 'Not Found');
+    return;
+}
 
+[$file, $args] = $hit;
 run([$file], $args, INVOKE);
 ```
 
-Key default:
+Default behavior:
 
 > `seek()` assumes **tail-seeking** (deepest-first).
 
 Because that matches how people usually think about intent:
 
-* "Try the most specific handler first"
-* then gracefully fall back to the broader controller
+* “Try the most specific handler first”
+* then gracefully fall back to something broader
 
-`/users/edit/42` tries:
+`users/edit/42` tries, in order:
+
 1. `users/edit/42.php`
-2. `users/edit.php` → args: `['42']`
-3. `users.php` → args: `['edit', '42']`
+2. `users/edit.php` → `['42']`
+3. `users.php` → `['edit', '42']`
 
 **Story:**
-"Find the tightest matching handler. Hand the leftover intent to something that can."
+“Find the tightest matching handler. Hand the leftover meaning to something that can.”
+
+On success:
+
+* you always get `[$file, $args]`
+* `$args` is always an array (possibly empty)
 
 ---
 
 ## 3) Only when you need it, you opt in
 
-Flags read like plot twists: you use them when the story changes.
+Flags read like plot twists.
+You use them when the story changes.
 
-### `ASCEND`: you want a gateway at the top
+Combine them with `|`.
 
-Sometimes your app has entry points like `api.php` or `admin.php` that intentionally swallow everything underneath.
+---
+
+### `ASCEND` — you want a gateway at the top
+
+Some apps have intentional entry points like `api.php` or `admin.php`
+that are meant to swallow everything underneath.
 
 ```php
-[$file, $args] = bad\map\seek($base, $path, '.php', bad\map\ASCEND);
+[$file, $args] = bad\map\seek(
+    $base,
+    $path,
+    '.php',
+    bad\map\ASCEND
+);
 ```
 
-Now `/admin/users/edit` tries:
-1. `admin.php` → args: `['users', 'edit']`
-2. `admin/users.php` → args: `['edit']`
+Now `admin/users/edit` tries:
+
+1. `admin.php` → `['users', 'edit']`
+2. `admin/users.php` → `['edit']`
 3. `admin/users/edit.php`
 
 First match wins.
 
 **Story:**
-"Start at the front door. Let the gateway decide what the rest means."
+“Start at the front door. Let the gateway decide what the rest means.”
 
 ---
 
-### `REBASE`: folders get their own "index handler"
+### `REBASE` — a section owns itself
 
-When `admin.php` doesn't exist, you might want `admin/admin.php` to be the real entry point.
+Sometimes a section is a directory with its own entry file.
 
 ```php
-$file = bad\map\look($base, 'admin', '.php', bad\map\REBASE);
+$file = bad\map\look(
+    $base,
+    'admin',
+    '.php',
+    bad\map\REBASE
+);
 ```
 
-Because `seek()` calls `look()` internally, `REBASE` works there too.
+This allows:
+
+* `admin.php`, or
+* `admin/admin.php` if the flat file doesn’t exist
+
+The same idea applies when `REBASE` is used with `seek()`.
 
 **Story:**
-"If a section is a directory, let it own itself."
+“If a section is a directory, let it own itself.”
+
+---
+
+## 4) Practical guardrails
+
+What `bad\map` guarantees:
+
+* Returned files are **inside** `$base`
+* Missing routes return `null`
+* No guessing, no side effects
+
+What you decide at the call-site:
+
+* how to normalize the request path
+* what `/` means
+* when a route is “not found”
 
 ---
 
@@ -128,54 +194,34 @@ Because `seek()` calls `look()` internally, `REBASE` works there too.
 
 ### Constants
 
-| Constant | Value | Effect |
-|----------|-------|--------|
-| `REBASE` | 1 | Fallback: `base/x.shim` missing → try `base/x/x.shim` |
-| `ASCEND` | 2 | Forward search: shallowest match first, not deepest |
+| Constant | Value | Meaning                                 |
+| -------: | ----: | --------------------------------------- |
+| `REBASE` |   `1` | Allow `x/x.php` when `x.php` is missing |
+| `ASCEND` |   `2` | Search from the front, not the tail     |
+
+---
 
 ### Functions
 
-#### `hook(string $base, string $url, string $forbidden = ''): string`
+#### `look($base, $path, $shim = '', $behave = 0): ?string`
 
-Validates base directory and sanitizes URL path. Returns the cleaned path (query/fragment stripped).
+Strict lookup.
 
-**Parameters:**
-- `$base` — Must equal `realpath($base) . '/'`
-- `$url` — Raw URL to sanitize
-- `$forbidden` — Optional string of characters to reject in path
+Returns the absolute path of a matching file under `$base`,
+or `null` if nothing matches.
 
-**Throws:**
-- `RuntimeException` — Non-POSIX environment (requires `/` as directory separator)
-- `InvalidArgumentException` — `'request has explicitly forbidden chars'`
-- `InvalidArgumentException` — `'invalid base or path'`
+---
 
-#### `look(string $base, string $path, string $shim = '', int $behave = 0): ?string`
+#### `seek($base, $path, $shim = '', $behave = 0): ?array`
 
-Direct file lookup. Returns canonical path if file exists within base, `null` otherwise.
+Progressive lookup.
 
-**Parameters:**
-- `$base` — Directory to search within
-- `$path` — Relative path to look up
-- `$shim` — File extension or suffix to append
-- `$behave` — Behavior flags (`REBASE`)
+Returns:
 
-**Behavior:**
-1. Forms candidate: `$base . $path . $shim`
-2. If `REBASE` and candidate not a file: tries `$base . $path . '/' . basename($path) . $shim`
-3. Validates file exists, resolves via `realpath()`, confirms result starts with `$base`
+```php
+[$file, $args]
+```
 
-#### `seek(string $base, string $path, string $shim = '', int $behave = 0): ?array`
+or `null` if nothing matches.
 
-Progressive segment search. Returns `[$file, $args]` on match, `null` otherwise.
-
-**Parameters:**
-- `$base` — Directory to search within
-- `$path` — Relative path to search
-- `$shim` — File extension or suffix to append
-- `$behave` — Behavior flags (`REBASE`, `ASCEND`)
-
-**Behavior:**
-- Default (no `ASCEND`): reverse scan from end, deepest match first
-- With `ASCEND`: forward scan from start, shallowest match first
-- Calls `look()` for each segment candidate
-- Remaining path segments become `$args` array
+`$args` contains the remaining path segments.
