@@ -2,12 +2,11 @@
 
 namespace bad\csrf;
 
-const TTL_BITS   = 20;
+const TTL_BITS   = 20;                                              // max ttl: 
 const TTL_MASK   = (1 << TTL_BITS) - 1;
 
 const SETUP      = 1 << TTL_BITS;
 const CHECK      = 2 << TTL_BITS;
-const TOKEN      = 4 << TTL_BITS;
 
 const FLAGS_MASK = SETUP | CHECK | TOKEN;
 
