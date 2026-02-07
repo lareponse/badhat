@@ -26,7 +26,7 @@ function checkin(int $behave = 0, ?string $u = null, $p = null): ?string
         if(AUTH_LEAVE & $behave){
             $_SESSION = [];
             ini_get('session.use_cookies') && auth_session_cookie_destroy();
-            session_destroy() || trigger_error('session_destroy failed', E_USER_WARNING);
+            session_destroy()                               || throw new \RuntimeException(__FUNCTION__.':session_destroy failed');
             return null;
         }
 
@@ -47,7 +47,7 @@ function auth_login(string $username_field, \PDOStatement $password_query, strin
         : null;
 
     if ($user !== null) {
-        session_regenerate_id(true) || trigger_error('Session ID regeneration failed - fixation risk', E_USER_WARNING);
+        session_regenerate_id(true)                         || throw new \RuntimeException(__FUNCTION__.':session_regenerate_id failed - fixation risk');
         $_SESSION[__NAMESPACE__][$username_field] = $user;
     }
 
@@ -76,7 +76,7 @@ function auth_verify(\PDOStatement $password_query, string $user, string $pass):
     $db_password = $password_query->fetchColumn() ?: AUTH_DUMMY_HASH;
     $password_query->closeCursor();
 
-    return (password_verify($pass, $db_password) && AUTH_DUMMY_HASH !== $db_password) // verify ran, but reject if it was against dummy
+    return (password_verify($pass, $db_password) && AUTH_DUMMY_HASH !== $db_password)
         ? $user
         : null;
 }
