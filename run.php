@@ -22,27 +22,26 @@ function run($file_paths, $args = [], $behave = 0): array
 
     foreach ($file_paths as $file) {                                                           // pipeline: include (optional invoke) for each file
         $level = ob_get_level();                                                               // snapshot output-buffer depth for cleanup/restore
-        $fault = null;                                                                         // capture failure to rethrow under policy
+        $fault = null;                                                                         // capture failure to for FAULT_AHEAD
 
         (BUFFER & $behave) && ob_start();                                                      // start capture for this step (if enabled)
 
         try {
             $loot[INC_RETURN] = include $file;                                                 // execute file, store its return value
         } catch (\Throwable $t) {
-            $fault = new \Exception("include:$file", 0xBADC0DE, $t);                           // normalize include failure, preserve chain
+            $fault = new \Exception(__FUNCTION__.":include:{$file}", 0xBADC0DE, $t);           // normalize include failure, preserve chain
         }
         if ((INVOKE & $behave) && ($fault === null || (RESCUE_CALL & $behave))) {              // proceed if no fault, or rescue policy says "continue"
-            if ($loot[INC_RETURN] instanceof \Closure) {                                       // invoke only when enabled + callable
+            if ($loot[INC_RETURN] instanceof \Closure || ((CALLABLE & $behave) && \is_callable($loot[INC_RETURN]))) {
                 $invoke = $loot[INC_RETURN];
                 (RELOOT & $behave) ?  ($call_args = $loot) : ($call_args = $args);             // args source: chained loot or original args
                 (ABSORB & $behave) && ($call_args []= ob_get_contents());                      // append current captured output as extra arg
-                
                 try {
                     $loot[INC_RETURN] = (SPREAD & $behave) 
                                       ? $invoke(...$call_args)
                                       : $invoke($call_args);                                   // invoke callable, store its return value
                 } catch (\Throwable $t) {
-                    $fault = new \Exception("invoke:$file", 0xBADC0DE, $t);                    // normalize invoke failure, preserve chain
+                    $fault = new \Exception(__FUNCTION__.":invoke:{$file}", 0xBADC0DE, $t);    // normalize invoke failure, preserve chain
                 }
             }
         }
