@@ -19,7 +19,7 @@ function checkin(int $behave = 0, ?string $u = null, $p = null): ?string
         return null;
     }
 
-    ($username_field && $password_query)                    || throw new \BadFunctionCallException(__FUNCTION__.':not initialized (call with AUTH_SETUP first)');
+    ($username_field && $password_query)                    || throw new \BadFunctionCallException(__FUNCTION__.':not initialized');
     session_status() === PHP_SESSION_ACTIVE                 || throw new \LogicException(__FUNCTION__.':requires an active session');
 
     try {
