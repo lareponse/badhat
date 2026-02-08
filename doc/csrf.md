@@ -23,7 +23,7 @@ Token created, stored in session, returned for embedding.
 <input type="hidden" name="checkout" value="<?= htmlspecialchars($token) ?>">
 ```
 
-If a valid token already exists for that key, it throws.
+If a valid token already exists for that key, setup is skipped and the existing token is returned.
 
 ---
 
@@ -47,7 +47,7 @@ if (!$valid) {
 $valid = csrf(CHECK, 'checkout', $_SERVER['HTTP_X_CSRF_TOKEN']);
 ```
 
-Returns `true` if valid, `false` if expired or mismatched. Throws if token missing entirely.
+Returns `true` if valid, `false` if mismatched. Returns `null` if expired (and cleans up). Throws if token missing entirely.
 
 ---
 
@@ -65,29 +65,26 @@ Returns `null` if expired.
 
 ## 4) Encoding
 
-The first parameter packs **TTL** (low 20 bits) and **flags** (high bits):
+The first parameter packs **TTL** (low 28 bits) and **flags** (high bits):
 
 ```
 [ behavior flags | TTL in seconds ]
-    bits 20+          bits 0-19
+    bits 28+          bits 0-27
 ```
 
 | Flag | Value | Effect |
 |------|--------|--------|
-| `SETUP` | `1 << 20` | Create new token |
-| `CHECK` | `2 << 20` | Validate submitted token |
+| `SETUP` | `1 << 28` | Create new token |
+| `CHECK` | `2 << 28` | Validate submitted token |
 
-**Maximum TTL:** `(1 << 20) - 1` = 1,048,575 seconds (~12 days)
+**Maximum TTL:** `(1 << 28) - 1` = 268,435,455 seconds (~8.5 years)
 
 Combine with bitwise OR:
 
 ```php
 csrf(SETUP | 300, 'key');     // create, 5 min TTL
 csrf(CHECK, 'key');           // validate
-csrf(SETUP | 600, 'key');     // recreate (throws if active token exists)
 ```
-
-`SETUP | CHECK` is invalid and throws.
 
 ---
 
@@ -108,11 +105,10 @@ session_start();
 
 | Constant | Value |
 |----------|-------|
-| `SETUP` | `1 << 20` |
-| `CHECK` | `2 << 20` |
-| `TTL_BITS` | 20 |
-| `TTL_MASK` | `(1 << 20) - 1` |
-| `FLAGS_MASK` | `SETUP \| CHECK` |
+| `TTL_BITS` | 28 |
+| `TTL_MASK` | `(1 << 28) - 1` |
+| `SETUP` | `1 << 28` |
+| `CHECK` | `2 << 28` |
 
 ### Function
 
@@ -138,7 +134,7 @@ csrf(int $ttl_behave, string $key, $param = null): string|bool|null
 
 ### Storage
 
-Tokens live in `$_SESSION['bad\csrf'][$key]` as `[$token, $expiry]`. Expired tokens return `null` on access.
+Tokens live in `$_SESSION['bad\csrf\csrf'][$key]` as `[$token, $expiry]`. Expired tokens return `null` on access.
 
 ---
 
