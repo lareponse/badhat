@@ -10,6 +10,8 @@ HTTP As Terminal.
 ~100 lines of PHP to hook, map and run php.
 **Maps**, not routes. **Loops**, not controllers. **Bitmasks**, not config files.
 
+> requires POSIX and PHP >= 8.0
+
 ---
 
 ## What it does
