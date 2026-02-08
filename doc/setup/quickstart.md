@@ -50,7 +50,7 @@ use function bad\http\{headers, out};
 use function bad\run\run;
 use function bad\pdo\db;
 
-use const bad\error\HND_ALL;
+use const bad\trap\HND_ALL;
 use const bad\map\REBASE;
 use const bad\run\{INVOKE, ABSORB, INC_RETURN};
 use const bad\http\ONE;

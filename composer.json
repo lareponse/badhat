@@ -1,9 +1,0 @@
-{
-    "name": "bad/hat",
-    "description": "Bitmask-driven PHP composition engine (Linux/macOS/WSL)",
-    "license": "MIT",
-    "require": {
-        "php": ">=8.0",
-        "php-os": "Linux|Darwin"
-    }
-}
