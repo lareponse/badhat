@@ -15,11 +15,11 @@ use function bad\csrf\csrf;
 use function bad\pdo\qp;
 use function bad\http\{headers, out};
 use const bad\csrf\CHECK;
-use const bad\http\SET;
+use const bad\http\ONE;
 
 return function($args) {
     if (!checkin()) {
-        headers(SET, 'Location', '/login');
+        headers(ONE, 'Location', '/login');
         exit(out(302));
     }
     
@@ -29,7 +29,7 @@ return function($args) {
         csrf('_csrf', null, CHECK) || exit(out(403, 'Invalid token'));
         qp("UPDATE posts SET title=?, body=? WHERE id=?", 
             [$_POST['title'], $_POST['body'], $id]);
-        headers(SET, 'Location', "/posts/$id");
+        headers(ONE, 'Location', "/posts/$id");
         exit(out(302));
     }
     
@@ -50,11 +50,11 @@ return function($args) {
 use function bad\auth\checkin;
 use function bad\pdo\qp;
 use function bad\http\{headers, out};
-use const bad\http\SET;
+use const bad\http\ONE;
 
 return function($args) {
     if (!checkin()) {
-        headers(SET, 'Location', '/login');
+        headers(ONE, 'Location', '/login');
         exit(out(302));
     }
     
@@ -85,7 +85,7 @@ return function($args) {
 
 use function bad\pdo\qp;
 use function bad\http\{headers, out};
-use const bad\http\SET;
+use const bad\http\ONE;
 
 return function($args) {
     $action = $args[0] ?? 'list';
@@ -97,7 +97,7 @@ return function($args) {
         default => throw new \InvalidArgumentException('Unknown action')
     };
     
-    headers(SET, 'Content-Type', 'application/json');
+    headers(ONE, 'Content-Type', 'application/json');
     exit(out(200, json_encode($data)));
 };
 ```
@@ -146,11 +146,11 @@ use function bad\csrf\csrf;
 use function bad\pdo\qp;
 use function bad\http\{headers, out};
 use const bad\csrf\CHECK;
-use const bad\http\SET;
+use const bad\http\ONE;
 
 return function($args) {
     if (!checkin()) {
-        headers(SET, 'Location', '/login');
+        headers(ONE, 'Location', '/login');
         exit(out(302));
     }
     
@@ -168,7 +168,7 @@ return function($args) {
     qp("INSERT INTO files (name, path, size, user_id) VALUES (?, ?, ?, ?)", 
         [$file['name'], $path, $file['size'], checkin()]);
     
-    headers(SET, 'Location', '/files');
+    headers(ONE, 'Location', '/files');
     exit(out(302));
 };
 ```
@@ -183,10 +183,10 @@ return function($args) {
 
 use function bad\pdo\qp;
 use function bad\http\{headers, out};
-use const bad\http\SET;
+use const bad\http\ONE;
 
 return function($args) {
-    headers(SET, 'Content-Type', 'application/json');
+    headers(ONE, 'Content-Type', 'application/json');
     
     $device_id = $args[0] ?? exit(out(400, '{"error":"Device ID required"}'));
     
@@ -254,11 +254,11 @@ use function bad\csrf\csrf;
 use function bad\pdo\{qp, trans};
 use function bad\http\{headers, out};
 use const bad\csrf\CHECK;
-use const bad\http\SET;
+use const bad\http\ONE;
 
 return function($args) {
     if (!checkin()) {
-        headers(SET, 'Location', '/login');
+        headers(ONE, 'Location', '/login');
         exit(out(302));
     }
     

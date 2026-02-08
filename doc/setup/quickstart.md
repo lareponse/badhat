@@ -53,7 +53,7 @@ use function bad\pdo\db;
 use const bad\error\HND_ALL;
 use const bad\map\REBASE;
 use const bad\run\{INVOKE, ABSORB, INC_RETURN};
-use const bad\http\SET;
+use const bad\http\ONE;
 
 // --------------------------------------------------
 // Bootstrap
@@ -83,7 +83,7 @@ db($pdo);
 
 $io   = __DIR__ . '/../app/io';
 $base = realpath($io . '/route') . '/';
-$key  = hook($base, $_SERVER['REQUEST_URI'], "\0");
+$key  = hook($_SERVER['REQUEST_URI'], "\0");
 
 // --------------------------------------------------
 // Phase 1 — Route (logic)
@@ -112,7 +112,7 @@ if ($render) {
 // --------------------------------------------------
 
 if (isset($loot[INC_RETURN]) && is_string($loot[INC_RETURN])) {
-    headers(SET, 'Content-Type', 'text/html; charset=utf-8');
+    headers(ONE, 'Content-Type', 'text/html; charset=utf-8');
     exit(out(200, $loot[INC_RETURN]));
 }
 
@@ -150,13 +150,13 @@ EOF
 
 use function bad\pdo\qp;
 use function bad\http\{headers, out};
-use const bad\http\SET;
+use const bad\http\ONE;
 
 return function (array $args) {
 
     if ($_POST) {
         qp("INSERT INTO users (name) VALUES (?)", [$_POST['name']]);
-        headers(SET, 'Location', '/users');
+        headers(ONE, 'Location', '/users');
         exit(out(302));
     }
 

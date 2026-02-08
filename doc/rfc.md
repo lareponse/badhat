@@ -2,7 +2,7 @@
 
 You accept input from the outside world.
 
-Sometimes it *looks* like HTTP — a header name, a header value, a “path”.  
+Sometimes it *looks* like HTTP — a header name, a header value, a "path".  
 Sometimes it *is* HTTP. Sometimes it's a proxy, a framework, or a config file
 pretending to be HTTP.
 
@@ -28,9 +28,9 @@ It does not:
 It *does*:
 - constrain inputs to RFC-shaped byte sets
 - block control bytes that cause injection bugs
-- give you a clear “valid / invalid” decision with optional exceptions
+- give you a clear "valid / invalid" decision with optional exceptions
 
-“Keep the bytes boring. Let the higher layer decide meaning.”
+"Keep the bytes boring. Let the higher layer decide meaning."
 
 ---
 
@@ -44,8 +44,8 @@ So `field_name()` is strict and simple:
 use bad\rfc;
 
 $name = rfc\field_name('Content-Type');     // ok
-$name = rfc\field_name('Bad Name');         // false (space)
-$name = rfc\field_name('', rfc\STRICT);     // throws
+$name = rfc\field_name('Bad Name');         // DomainException (space)
+$name = rfc\field_name('', rfc\E_THROW);   // throws
 ````
 
 What you can rely on:
@@ -54,8 +54,11 @@ What you can rely on:
 * every byte must be RFC `tchar` (RFC 9110)
 * valid input is returned unchanged
 
+On invalid input, the return value is a `\DomainException` instance (not thrown).
+With `E_THROW`, it throws instead.
+
 **Story:**
-“If it can't be a token, it can't be a header name.”
+"If it can't be a token, it can't be a header name."
 
 ---
 
@@ -68,15 +71,15 @@ RFC 9110 allows a wide range of bytes in field-values, including `obs-text`
 
 So `field_value()` applies two guardrails:
 
-1. allow-list “normal” bytes (`VCHAR`, `obs-text`, and OWS)
+1. allow-list "normal" bytes (`VCHAR`, `obs-text`, and OWS)
 2. reject forbidden control bytes (`CTL` excluding HTAB)
 
 ```php
 use bad\rfc;
 
-$v = rfc\field_value('text/plain');                 // ok
-$v = rfc\field_value("hello\r\nx: y");              // false (CTL)
-$v = rfc\field_value("hello\r\nx: y", rfc\STRICT);  // throws
+$v = rfc\field_value('text/plain');                  // ok
+$v = rfc\field_value("hello\r\nx: y");               // DomainException (CTL)
+$v = rfc\field_value("hello\r\nx: y", rfc\E_THROW);  // throws
 ```
 
 ### Empty values are OK (RFC-compatible)
@@ -96,13 +99,13 @@ rfc\field_value("   \t");   // ok
 ```
 
 **Story:**
-“Empty is a real value. Don't invent rules for the network.”
+"Empty is a real value. Don't invent rules for the network."
 
 ---
 
 ## 4) Only when you need it, you opt in
 
-Sometimes you're not validating “wire HTTP”.
+Sometimes you're not validating "wire HTTP".
 You're validating *your* configuration, or an internal policy.
 
 That's why flags exist.
@@ -111,14 +114,17 @@ Combine them with `|`.
 
 ---
 
-### `STRICT` — make invalid input loud
+### `E_THROW` — make invalid input loud
 
 ```php
-rfc\field_value("\n", rfc\STRICT); // throws InvalidArgumentException
+rfc\field_value("\n", rfc\E_THROW); // throws DomainException
 ```
 
+Without `E_THROW`, invalid input returns a `\DomainException` object.
+The caller decides: inspect, log, or ignore.
+
 **Story:**
-“I'd rather crash here than chase bugs downstream.”
+"I'd rather crash here than chase bugs downstream."
 
 ---
 
@@ -134,13 +140,13 @@ It rejects:
 ```php
 use bad\rfc;
 
-rfc\field_value('', rfc\APP_REQUIRE_VALUE);          // false
-rfc\field_value(" \t", rfc\APP_REQUIRE_VALUE);       // false
+rfc\field_value('', rfc\APP_REQUIRE_VALUE);          // DomainException
+rfc\field_value(" \t", rfc\APP_REQUIRE_VALUE);       // DomainException
 rfc\field_value("ok", rfc\APP_REQUIRE_VALUE);        // ok
 ```
 
 **Story:**
-“HTTP allows it, but my app doesn't.”
+"HTTP allows it, but my app doesn't."
 
 ---
 
@@ -157,14 +163,14 @@ That's what `url_path()` enforces.
 ```php
 use bad\rfc;
 
-p = rfc\url_path('/a/b%20c');              // ok
-p = rfc\url_path('/a/%2G');                // false (bad hex)
-p = rfc\url_path("/a/\tb");                // false (HTAB)
-p = rfc\url_path('/a\\b');                 // false (backslash)
+$p = rfc\url_path('/a/b%20c');              // ok
+$p = rfc\url_path('/a/%2G');                // DomainException (bad hex)
+$p = rfc\url_path("/a/\tb");               // DomainException (HTAB)
+$p = rfc\url_path('/a\\b');                 // DomainException (backslash)
 ```
 
 **Story:**
-“If it looks like a URI path, it should behave like one.”
+"If it looks like a URI path, it should behave like one."
 
 ---
 
@@ -175,7 +181,7 @@ What `bad\rfc` guarantees:
 * No CR/LF and no forbidden control bytes in header values
 * Header names are token-only (`tchar`)
 * URL paths contain no CTL/SP/HTAB and only valid `%HH` escapes
-* Invalid inputs either return `false` or throw (with `STRICT`)
+* Invalid inputs return a `\DomainException` instance, or throw (with `E_THROW`)
 
 What you decide at the call-site:
 
@@ -191,22 +197,22 @@ What you decide at the call-site:
 
 |            Constant | Value | Meaning                                                    |
 | ------------------: | ----: | ---------------------------------------------------------- |
-|            `STRICT` |   `1` | Throw `InvalidArgumentException` on invalid input          |
+|          `E_THROW`  |   `1` | Throw `DomainException` on invalid input                   |
 | `APP_REQUIRE_VALUE` |   `2` | Reject empty / OWS-only header values (application policy) |
 
 ---
 
 ### Functions
 
-#### `field_name(string $canon, int $behave = 0): string|false`
+#### `field_name(string $canon, int $behave = 0): string|DomainException`
 
 Validates a header field-name.
 
-Returns the input unchanged if valid, otherwise `false` (or throws with `STRICT`).
+Returns the input unchanged if valid, otherwise a `\DomainException` (or throws with `E_THROW`).
 
 ---
 
-#### `field_value(string $value, int $behave = 0): string|false`
+#### `field_value(string $value, int $behave = 0): string|DomainException`
 
 Validates a header field-value as a byte string.
 
@@ -214,11 +220,11 @@ Validates a header field-value as a byte string.
 * Optionally rejects them via `APP_REQUIRE_VALUE`
 * Rejects forbidden control bytes and bytes outside the configured safe sets
 
-Returns the input unchanged if valid, otherwise `false` (or throws with `STRICT`).
+Returns the input unchanged if valid, otherwise a `\DomainException` (or throws with `E_THROW`).
 
 ---
 
-#### `url_path(string $path, int $behave = 0): string|false`
+#### `url_path(string $path, int $behave = 0): string|DomainException`
 
 Validates a URI path string (RFC 3986 shape).
 
@@ -226,4 +232,4 @@ Validates a URI path string (RFC 3986 shape).
 * Rejects backslash
 * Requires `%` to appear only as `%HH` with hex digits
 
-Returns the input unchanged if valid, otherwise `false` (or throws with `STRICT`).
+Returns the input unchanged if valid, otherwise a `\DomainException` (or throws with `E_THROW`).

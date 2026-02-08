@@ -8,7 +8,7 @@ Buried in the manual, almost as an aside:
 
 > Also, it's possible to return values from included files
 
-That single fact flips the meaning of a “file”. A file can be a producer.
+That single fact flips the meaning of a "file". A file can be a producer.
 
 Push one step further: a file can return a **closure**. Now the file defines behavior without adding names to the global namespace. No registry. No collisions. The call-site just receives a callable.
 
@@ -29,9 +29,9 @@ If the file prints HTML *and* returns a callable, you get a two-phase template: 
 ABSORB is that handshake: output becomes input after include-time.
 
 Finally, you want composition: run many files, keep args, pass loot forward.
-That’s RELOOT. And real pipelines need real failure rules:
-FAULT_AHEAD for “secondary steps must not veto”, and RESCUE_CALL for
-“even if include failed, still run the callable we already have”.
+That's RELOOT. And real pipelines need real failure rules:
+FAULT_AHEAD for "secondary steps must not veto", and RESCUE_CALL for
+"even if include failed, still run the callable we already have".
 
 > `run()` executes files and collects what they produce—return values, output, or both.
 
@@ -69,7 +69,7 @@ Default story: include a file, get back what it returned.
 
 ## 2) Then, you invoke
 
-Most “route files” don’t want to return data yet. They want to return a handler.
+Most "route files" don't want to return data yet. They want to return a handler.
 So the file returns a closure, often capturing some local context with `use()`.
 
 ```php
@@ -90,6 +90,8 @@ use const bad\run\INVOKE;
 $loot = run(['/app/route/user.php'], ['view', '42'], INVOKE);
 // $loot[INC_RETURN] = [$query, ['42']]
 ```
+
+By default, `INVOKE` only accepts `\Closure` returns. Add `CALLABLE` to accept any `is_callable()` value.
 
 Story: files define handlers; `INVOKE` runs them.
 
@@ -115,13 +117,13 @@ echo $loot[INC_BUFFER];  // "<h1>Hello, World</h1>"
 
 Without `BUFFER`, output goes straight to the browser. With it, output lands in `INC_BUFFER`.
 
-Story: sometimes you capture, you don’t emit.
+Story: sometimes you capture, you don't emit.
 
 ---
 
 ## 4) Absorb: when output feeds into the callable
 
-Here’s the two-phase template: the file prints markup *and* returns a wrapper.
+Here's the two-phase template: the file prints markup *and* returns a wrapper.
 
 ```php
 // /app/view/page.php
@@ -147,13 +149,35 @@ echo $loot[INC_RETURN];
 // <!doctype html><html><body><article>Hello</article></body></html>
 ```
 
-`ABSORB` implies both `BUFFER` and `INVOKE`. It also appends the captured buffer to the callable’s args.
+`ABSORB` implies both `BUFFER` and `INVOKE`. It also appends the captured buffer to the callable's args.
 
 Story: template outputs structure; wrapper receives it. One file, two phases.
 
 ---
 
-## 5) Chain: pipelines across files
+## 5) Spread: positional invocation
+
+By default, the callable receives one array argument. With `SPREAD`, the args are unpacked as positional parameters:
+
+```php
+// /app/route/user.php
+return function(string $action, string $id) {
+    return ['action' => $action, 'id' => $id];
+};
+```
+
+```php
+use const bad\run\{INVOKE, SPREAD};
+
+$loot = run(['/app/route/user.php'], ['edit', '42'], INVOKE | SPREAD);
+// callable receives ('edit', '42') instead of (['edit', '42'])
+```
+
+Story: when your handler has named parameters, spread the args.
+
+---
+
+## 6) Chain: pipelines across files
 
 One file is simple. But what about auth → handler → renderer?
 
@@ -206,17 +230,17 @@ echo $loot[INC_RETURN];
 // render:home:{"user":{"user":"Ada","realm":"members"},"posts":[1,2,3]}
 ```
 
-Story: middleware isn’t magic. It’s files returning values to the next file.
+Story: middleware isn't magic. It's files returning values to the next file.
 
 ---
 
-## 6) When things break
+## 7) When things break
 
 By default, `run()` throws on failure. The exception wraps the original:
 
 ```php
 $loot = run(['/app/broken.php']);
-// Exception("include:/app/broken.php", 0xBADC0DE, $originalThrowable)
+// Exception("run:include:/app/broken.php", 0xBADC0DE, $originalThrowable)
 ```
 
 ### RESCUE_CALL: invoke anyway
@@ -233,7 +257,7 @@ $loot = run(
 );
 ```
 
-Rare. It exists for “salvage what we can” flows.
+Rare. It exists for "salvage what we can" flows.
 
 ### FAULT_AHEAD: keep going
 
@@ -284,8 +308,10 @@ Request to response: include → maybe invoke → maybe buffer.
 | `INVOKE`      | 2     | Call returned callable (per step, if callable)                             |
 | `ABSORB`      | 7     | `4 \| BUFFER \| INVOKE` — buffer + invoke + append buffer to callable args |
 | `RELOOT`      | 8     | Invoke with the current loot bag (instead of original args)                |
-| `RESCUE_CALL` | 16    | Attempt invoke even if include failed                                      |
-| `FAULT_AHEAD` | 32    | Suppress throws, continue to next file                                     |
+| `SPREAD`      | 16    | Invoke callable with positional args (`...$args`) instead of one array     |
+| `RESCUE_CALL` | 32    | Attempt invoke even if include failed                                      |
+| `FAULT_AHEAD` | 64    | Suppress throws, continue to next file                                     |
+| `CALLABLE`    | 128   | Accept any `is_callable()` return, not just `\Closure`                     |
 
 ### Constants (loot keys)
 
@@ -299,8 +325,8 @@ Request to response: include → maybe invoke → maybe buffer.
 Failures wrap as `Exception` with code `0xBADC0DE`:
 
 ```
-Exception("include:/path/to/file.php", 0xBADC0DE, $original)
-Exception("invoke:/path/to/file.php", 0xBADC0DE, $original)
+Exception("run:include:/path/to/file.php", 0xBADC0DE, $original)
+Exception("run:invoke:/path/to/file.php", 0xBADC0DE, $original)
 ```
 
 The message tells you which phase failed. The previous exception tells you why.
@@ -309,4 +335,4 @@ The message tells you which phase failed. The previous exception tells you why.
 
 ## Buffer cleanup
 
-`run()` snapshots `ob_get_level()` before each file and tries to restore the expected level after the step. If a file opens extra output buffers and forgets to close them, `run()` discards deeper levels so your request doesn’t leak buffer state across steps.
+`run()` snapshots `ob_get_level()` before each file and tries to restore the expected level after the step. If a file opens extra output buffers and forgets to close them, `run()` discards deeper levels so your request doesn't leak buffer state across steps.

@@ -16,8 +16,7 @@ Bootstrap your app by caching a `\PDO`:
 use function bad\pdo\{db, qp, trans};
 
 $pdo = new \PDO($dsn, $user, $pass, [
-    // Recommended for consistent RuntimeException + E_USER_WARNING behavior.
-    \PDO::ATTR_ERRMODE            => \PDO::ERRMODE_SILENT,
+    \PDO::ATTR_ERRMODE            => \PDO::ERRMODE_EXCEPTION,
     \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC,
 ]);
 
@@ -36,7 +35,7 @@ If you call `db()` before caching a connection, it throws `\BadFunctionCallExcep
 
 ## 2) Query with `qp()`
 
-`qp()` always returns a `\PDOStatement`. The difference is whether it’s already executed.
+`qp()` always returns a `\PDOStatement`. The difference is whether it's already executed.
 
 ### A) No parameters: execute immediately
 
@@ -87,17 +86,18 @@ $stmt = qp(
 
 ## 3) Transactions with `trans()`
 
-Use `trans()` for “all-or-nothing” multi-step writes. Your callable receives the `\PDO` and can return a value.
+Use `trans()` for "all-or-nothing" multi-step writes. Your callable receives the `\PDO` and can return a value.
 
 ```php
 $orderId = trans(function(\PDO $pdo) use ($userId, $cart) {
-    qp("INSERT INTO orders(user_id) VALUES(?)", [$userId], pdo: $pdo);
+    qp("INSERT INTO orders(user_id) VALUES(?)", [$userId], [], $pdo);
     $id = (int)$pdo->lastInsertId();
 
     $add = qp(
         "INSERT INTO order_items(order_id, sku, qty) VALUES(?, ?, ?)",
         [],
-        pdo: $pdo
+        [],
+        $pdo
     );
 
     foreach ($cart as $item) {
@@ -116,23 +116,24 @@ If you call `trans()` while already inside a transaction, it throws `\LogicExcep
 
 ## 4) Using an explicit connection
 
-All helpers accept an optional `pdo:` argument.
+All helpers accept an optional `$pdo` argument (4th for `qp()`, 2nd for `trans()`).
 
 ```php
 $archive = new \PDO($archiveDsn, $user, $pass, [
-    \PDO::ATTR_ERRMODE            => \PDO::ERRMODE_SILENT,
+    \PDO::ATTR_ERRMODE            => \PDO::ERRMODE_EXCEPTION,
     \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC,
 ]);
 
 $old = qp(
     "SELECT * FROM logs WHERE year < 2020",
     null,
-    pdo: $archive
+    [],
+    $archive
 )->fetchAll();
 
 trans(function(\PDO $pdo) {
-    qp("DELETE FROM temp", null, pdo: $pdo);
-}, pdo: $archive);
+    qp("DELETE FROM temp", null, [], $pdo);
+}, $archive);
 ```
 
 ---
@@ -147,7 +148,7 @@ These helpers do not return `false`.
 
   * `\LogicException` if called while already in a transaction
   * `\RuntimeException` on database failure
-  * `\RuntimeException` with code **`0xBADC0D`** if **your callable throws**
+  * `\RuntimeException` with code **`0xBADC0DE`** if **your callable throws**
 
 On failures that originate from database operations, a warning is also emitted via `trigger_error(..., E_USER_WARNING)`.
 
@@ -160,7 +161,7 @@ try {
         throw new \DomainException("bad input");
     });
 } catch (\RuntimeException $e) {
-    if ($e->getCode() === 0xBADC0D) {
+    if ($e->getCode() === 0xBADC0DE) {
         // Your callable threw (details are in the E_USER_WARNING log).
     }
 }
