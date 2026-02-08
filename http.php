@@ -17,7 +17,7 @@ const RESET     = 64    << STATUS_BITS;                             //   [65536]
 const REMOVE    = 128   << STATUS_BITS;                             //  [131072]       // on EMIT: header_remove(name) before sending staged value(s)
 
 const EMIT      = 256   << STATUS_BITS;                             //  [262144]       // send staged headers + status (fails if headers_sent)
-const EXIT      = 512   << STATUS_BITS;                             //  [524288]       // out() only: emit then exit
+const QUIT      = 512   << STATUS_BITS;                             //  [524288]       // out() only: emit then exit
 
 const META_MASK = CSV | SSV | LOCK;                                                    // meta persisted per entry (not per call)
 
@@ -31,12 +31,12 @@ function out(int $behave, $body = null): int
     $len = ($body === null || $body === '' || ($status >= 100 && $status < 200) || $status === 204 || $status === 205  || $status === 304) ? 0 : \strlen($body);
 
     headers(ONE, 'Content-Length', $len);
-    $res = headers(EMIT | ($behave & ~EXIT));
+    $res = headers(EMIT | ($behave & ~QUIT));
 
     if($len)
         echo $body;
 
-    if (EXIT & $behave)                                                                exit($res < 0 ? 1 : 0);
+    if (QUIT & $behave)                                                                exit($res < 0 ? 1 : 0);
 
     return $res;
 }

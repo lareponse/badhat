@@ -2,7 +2,7 @@
 
 You accept input from the outside world.
 
-Sometimes it *looks* like HTTP — a header name, a header value, a "path".  
+Sometimes it *looks* like HTTP - a header name, a header value, a "path".  
 Sometimes it *is* HTTP. Sometimes it's a proxy, a framework, or a config file
 pretending to be HTTP.
 
@@ -114,7 +114,7 @@ Combine them with `|`.
 
 ---
 
-### `E_THROW` — make invalid input loud
+### `E_THROW` - make invalid input loud
 
 ```php
 rfc\field_value("\n", rfc\E_THROW); // throws DomainException
@@ -128,7 +128,7 @@ The caller decides: inspect, log, or ignore.
 
 ---
 
-### `APP_REQUIRE_VALUE` — your app wants non-empty
+### `APP_REQUIRE_VALUE` - your app wants non-empty
 
 This is an *application policy* flag.
 

@@ -37,7 +37,7 @@ Nothing is sent to the client until you **EMIT**.
 
 ```php
 use function bad\http\{headers, out, csp_nonce};
-use const bad\http\{ONE, ADD, CSV, SSV, CSP, COOKIE, LOCK, EMIT, EXIT};
+use const bad\http\{ONE, ADD, CSV, SSV, CSP, COOKIE, LOCK, EMIT, QUIT};
 
 // content type (scalar)
 headers(ONE, 'Content-Type', 'text/html; charset=utf-8');
@@ -54,7 +54,7 @@ headers(CSP, 'Content-Security-Policy', "script-src 'nonce-$nonce' 'strict-dynam
 headers(LOCK, 'X-Frame-Options', 'DENY');
 
 // done thinking → emit + body + exit
-out(EXIT | 200, "<h1>Hello</h1>");
+out(QUIT | 200, "<h1>Hello</h1>");
 ```
 
 ---
@@ -208,15 +208,15 @@ What it does, in order:
 3. stages `Content-Length`
 4. `headers(EMIT | status)`
 5. echoes body (only if length > 0)
-6. if `EXIT` is set, exits with code `0` on success, `1` on failure
+6. if `QUIT` is set, exits with code `0` on success, `1` on failure
 
 ### Example: simplest response
 
 ```php
 use function bad\http\out;
-use const bad\http\EXIT;
+use const bad\http\QUIT;
 
-out(EXIT | 200, "ok");
+out(QUIT | 200, "ok");
 ```
 
 ### Body suppression rules
@@ -274,7 +274,7 @@ $nonce = csp_nonce(-24);  // reset + new 24-byte nonce (48 hex chars)
 * `RESET` — clear stage + staged status
 * `REMOVE` — on EMIT, `header_remove(name)` for staged names first
 * `EMIT` — send staged headers + staged status
-* `EXIT` — `out()` only: emit then exit
+* `QUIT` — `out()` only: emit then exit
 
 ### Aliases
 
