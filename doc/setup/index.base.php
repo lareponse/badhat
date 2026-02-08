@@ -19,7 +19,7 @@ use const bad\http\ONE;
 // Bootstrap
 // --------------------------------------------------
 
-$restore = $install(bad\error\HND_ALL);
+$restore = $install(bad\trap\HND_ALL);
 
 session_start();
 
