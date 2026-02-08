@@ -2,34 +2,21 @@
 
 HTTP is the last mile.
 
-You’ve already mapped a request to a file and run it. Now you need to do two boring-but-critical things reliably:
+`bad\map` gives you a file.
+`bad\run` executes it.
+Now you need to do the boring part reliably:
 
-1. **Stage** headers (and a status) while your code is still thinking.
-2. **Emit once**, when you’re ready.
+1. stage headers while your code is still thinking
+2. emit once, when you’re ready
 
-`bad\http` gives you a tiny staging buffer for headers + status, a single `out()` convenience for response bodies, and a cached `csp_nonce()` for CSP.
+`bad\http` is three tools:
 
-No policy. No validation. No opinions about your app.
+- **headers()** — stage/mutate/emit headers + status
+- **out()** — compute Content-Length, emit, optionally echo, optionally exit
+- **csp_nonce()** — per-request cached nonce for CSP
+
+No policy. No router. No framework voice.
 Just a controlled exit ramp to the network.
-
----
-
-## The two moves
-
-### 1) Stage and mutate: `headers()`
-
-You can stage headers in any order, overwrite scalars, append to list headers, lock entries, drop entries, reset the whole stage.
-
-Nothing is sent to the client until you **EMIT**.
-
-### 2) Respond: `out()`
-
-`out()` is the “final move” helper:
-
-* computes and stages `Content-Length`
-* emits staged headers + status
-* echoes the body (only when it makes sense)
-* optionally exits
 
 ---
 
@@ -37,31 +24,29 @@ Nothing is sent to the client until you **EMIT**.
 
 ```php
 use function bad\http\{headers, out, csp_nonce};
-use const bad\http\{ONE, ADD, CSV, SSV, CSP, COOKIE, LOCK, EMIT, QUIT};
+use const bad\http\{ONE, COOKIE, CSP, LOCK, QUIT};
 
-// content type (scalar)
 headers(ONE, 'Content-Type', 'text/html; charset=utf-8');
 
-// cookies must be list-mode
+// Set-Cookie must be multi-line.
 headers(COOKIE, 'Set-Cookie', 'a=1; Path=/; HttpOnly');
 headers(COOKIE, 'Set-Cookie', 'b=2; Path=/; HttpOnly');
 
-// CSP is commonly a directive list (semicolon-separated)
+// CSP is commonly a directive list.
 $nonce = csp_nonce();
 headers(CSP, 'Content-Security-Policy', "script-src 'nonce-$nonce' 'strict-dynamic'");
 
-// lock something you never want overwritten later
+// Lock something you never want overwritten later.
 headers(LOCK, 'X-Frame-Options', 'DENY');
 
-// done thinking → emit + body + exit
-out(QUIT | 200, "<h1>Hello</h1>");
-```
+out(QUIT | 200, '<h1>Hello</h1>');
+````
 
 ---
 
 ## Status + flags live in one int
 
-Every call uses a single integer that packs:
+Every call packs:
 
 * **low 10 bits**: status code (0..1023)
 * **high bits**: behavior flags
@@ -69,6 +54,8 @@ Every call uses a single integer that packs:
 So these are the same idea:
 
 ```php
+use const bad\http\EMIT;
+
 headers(200);           // stage status only
 headers(EMIT | 200);    // stage status, then emit
 ```
@@ -85,24 +72,22 @@ Status `0` means “don’t change”.
 headers(int $status_behave = 0, string $field = '', mixed $value = ''): int
 ```
 
-### Return value
+### Return values
 
-* `0` = staging/mutation happened (or no-op)
-* `200..599` = status emitted (when you EMIT)
+* `0` = staged/mutated (or no-op)
+* `200..599` = emitted status (when you EMIT)
 * **negative** = refused (a “why” code)
 
-Think of negative values as: “you asked for something that violates the staging rules”.
-
-### 1) Stage a scalar header (overwrite)
+### Scalar headers (overwrite)
 
 ```php
 headers(ONE, 'Content-Type', 'application/json');
 headers(ONE, 'Content-Type', 'text/plain'); // overwrites
 ```
 
-### 2) Stage a list header (append)
+### List headers (append)
 
-Use list-mode flags on the *first* call. That chooses the “shape” for that header.
+The **first call sets the shape**.
 
 * `ADD` → multiple header lines
 * `CSV` → one line, values joined with `, `
@@ -110,81 +95,51 @@ Use list-mode flags on the *first* call. That chooses the “shape” for that h
 
 ```php
 headers(ADD, 'X-Tag', 'a');
-headers(ADD, 'X-Tag', 'b');   // emits as two header lines on EMIT
+headers(ADD, 'X-Tag', 'b');
 ```
 
 ```php
 headers(CSV, 'Vary', 'Accept');
-headers(CSV, 'Vary', 'Origin'); // emits: "Vary: Accept, Origin"
+headers(CSV, 'Vary', 'Origin'); // "Vary: Accept, Origin"
 ```
 
 ```php
 headers(SSV, 'Cache-Control', 'no-store');
-headers(SSV, 'Cache-Control', 'private');  // emits: "Cache-Control: no-store; private"
+headers(SSV, 'Cache-Control', 'private'); // "Cache-Control: no-store; private"
 ```
 
-### 3) `Set-Cookie` is special (and strict)
+### Set-Cookie is strict
 
-`Set-Cookie` **must** be list-mode, and specifically **ADD-mode** (multi header lines).
-
-That means: always use `COOKIE` (alias of `ADD`) for it.
+`Set-Cookie` must be list-mode, and specifically **ADD-mode**.
+Use `COOKIE` (alias of `ADD`).
 
 ```php
 headers(COOKIE, 'Set-Cookie', 'a=1');
 headers(COOKIE, 'Set-Cookie', 'b=2');
 ```
 
-Trying to set `Set-Cookie` as a scalar or CSV/SSV list is refused.
-
-### 4) Lock an entry
-
-`LOCK` freezes the staged entry against later mutation.
+### Lock / drop / reset
 
 ```php
-headers(LOCK, 'X-Frame-Options', 'DENY'); // set + lock
-headers(ONE,  'X-Frame-Options', 'SAMEORIGIN'); // refused (locked)
-```
-
-### 5) Drop one staged header
-
-```php
+headers(LOCK, 'X-Frame-Options', 'DENY');
 headers(DROP, 'X-Tag');
+headers(RESET); // clear staged headers + staged status
 ```
 
-If headers haven’t been emitted yet, dropping also removes it from PHP’s pending header list.
-If the entry is locked, drop is refused.
+Locked entries refuse mutation (including DROP).
 
-### 6) Stage a status (without emitting)
-
-```php
-headers(404);   // “remember 404”
-```
-
-The last non-zero staged status wins, until you reset it.
-
-### 7) Reset the stage
-
-`RESET` clears staged headers and the staged status.
-You can reset without emitting, or use it as a “clear after sending” pattern.
+### Emit
 
 ```php
-headers(RESET);
-```
-
-### 8) Emit
-
-This is the only moment PHP headers are actually sent.
-
-```php
-headers(EMIT | 200);
+headers(EMIT | 204);
 ```
 
 If `headers_sent()` is already true, EMIT is refused (negative return).
 
-### 9) Remove previously set headers on emit
+### Remove-on-emit
 
-Sometimes something elsewhere already called `header('X: old')` and you want to neutralize it.
-`REMOVE` calls `header_remove($name)` for each staged name *just before* sending the staged values.
+If something else already set a header and you want to neutralize it, use `REMOVE`.
+It calls `header_remove(name)` for each staged name just before sending staged values.
 
 ```php
 headers(ONE, 'X-Legacy', 'clean');
@@ -201,33 +156,33 @@ headers(REMOVE | EMIT | 200);
 out(int $behave, mixed $body = null): int
 ```
 
-What it does, in order:
+`out()`:
 
-1. extracts status from `$behave`
-2. decides whether the response is allowed to have a body
+1. derives status from `$behave`
+2. decides whether a body is allowed
 3. stages `Content-Length`
 4. `headers(EMIT | status)`
-5. echoes body (only if length > 0)
-6. if `QUIT` is set, exits with code `0` on success, `1` on failure
+5. echoes body only when length > 0
+6. exits when `QUIT` is set (0 on success, 1 on failure)
 
-### Example: simplest response
+### Simplest response
 
 ```php
 use function bad\http\out;
 use const bad\http\QUIT;
 
-out(QUIT | 200, "ok");
+out(QUIT | 200, 'ok');
 ```
 
-### Body suppression rules
+### Body suppression
 
-A body is considered “no payload” when:
+No payload when:
 
-* body is `null` or `''`, **or**
-* status is informational (1xx), **or**
-* status is `204`, `205`, or `304`
+* body is `null` or `''`, or
+* status is 1xx, or
+* status is `204`, `205`, `304`
 
-In these cases `Content-Length` becomes `0` and nothing is echoed.
+In those cases, `Content-Length` becomes `0` and nothing is echoed.
 
 ---
 
@@ -239,25 +194,16 @@ In these cases `Content-Length` becomes `0` and nothing is echoed.
 csp_nonce(int $bytes = 16): string
 ```
 
-* first call generates a random nonce and caches it for the request
-* later calls return the same nonce (even if you pass a different size)
-* passing a **negative** value resets the cache and regenerates using `abs($bytes)`
+* first call generates and caches a nonce for the request
+* later calls return the same cached value
+* pass a **negative** value to reset and regenerate using `abs($bytes)`
 
 ```php
-$nonce = csp_nonce();     // default: 16 bytes → 32 hex chars
-$nonce = csp_nonce(24);   // same cached value (still the first one)
+$nonce = csp_nonce();     // 16 bytes → 32 hex chars
+$nonce = csp_nonce(24);   // same cached value
 
-$nonce = csp_nonce(-24);  // reset + new 24-byte nonce (48 hex chars)
+$nonce = csp_nonce(-24);  // reset + new 24-byte nonce
 ```
-
----
-
-## Sharp edges (by design)
-
-* **No validation.** If you need “RFC-shaped bytes”, validate at the call-site (e.g. via `bad\rfc`) before staging. 
-* **First call sets the header shape.** Start a header as scalar vs list, and that shape sticks. Trying to “change shape” later is refused. 
-* **`Set-Cookie` must be `COOKIE`/`ADD`.** Always. 
-* **EMIT can fail late.** If something already sent output and PHP committed headers, `headers(EMIT …)` is refused. 
 
 ---
 
@@ -273,10 +219,10 @@ $nonce = csp_nonce(-24);  // reset + new 24-byte nonce (48 hex chars)
 * `DROP` — remove a staged entry by name
 * `RESET` — clear stage + staged status
 * `REMOVE` — on EMIT, `header_remove(name)` for staged names first
-* `EMIT` — send staged headers + staged status
+* `EMIT` — send staged headers + status
 * `QUIT` — `out()` only: emit then exit
 
 ### Aliases
 
 * `COOKIE` — alias for `ADD` (required shape for `Set-Cookie`)
-* `CSP` — alias for `ADD | SSV` (handy for CSP directive lists)
+* `CSP` — alias for `ADD | SSV` (handy for directive lists)
