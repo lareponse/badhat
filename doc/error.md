@@ -1,4 +1,4 @@
-# bad\error
+# bad\trap
 
 PHP fails in three ways:
 
@@ -18,7 +18,7 @@ PHP Fatal error: Uncaught TypeError: ...
 
 Which request? Which user? Good luck.
 
-> `bad\error` takes over PHP’s error channel, tags everything with a request ID,
+> `bad\trap` takes over PHP’s error channel, tags everything with a request ID,
 > and gives you one place to decide what happens when things break.
 
 ---
@@ -51,13 +51,13 @@ One request. One ID. Grep works again.
 ## 2) Request ID
 
 ```php
-use const bad\error\HND_ALL;
+use const bad\trap\HND_ALL;
 
 // custom ID (used as-is)
 $restore = $install(HND_ALL, 'my-request-id');
 ```
 
-If you don’t pass one, `bad\error` generates:
+If you don’t pass one, `bad\trap` generates:
 
 ```
 dechex(start_time) . '-' . getmypid()
@@ -73,7 +73,7 @@ Add `MONOTONIC_TIME` if you want `hrtime()` when available.
 The first argument is a bitmask of **handler flags**.
 
 ```php
-use const bad\error\{HND_ERR, HND_EXC, HND_SHUT, HND_ALL};
+use const bad\trap\{HND_ERR, HND_EXC, HND_SHUT, HND_ALL};
 
 $restore = $install(HND_ERR | HND_EXC); // errors + exceptions
 $restore = $install(HND_ALL);           // everything (default)
@@ -98,7 +98,7 @@ By default, logs are one line per failure.
 Add traces when you need them:
 
 ```php
-use const bad\error\MSG_WITH_TRACE;
+use const bad\trap\MSG_WITH_TRACE;
 
 $restore = $install(HND_ALL | MSG_WITH_TRACE);
 ```
@@ -124,7 +124,7 @@ When execution dies, you probably have buffered output.
 Choose what to do with it:
 
 ```php
-use const bad\error\{FATAL_OB_FLUSH, FATAL_OB_CLEAN};
+use const bad\trap\{FATAL_OB_FLUSH, FATAL_OB_CLEAN};
 
 // Dev: show what you have
 $restore = $install(HND_ALL | FATAL_OB_FLUSH);
@@ -136,7 +136,7 @@ $restore = $install(HND_ALL | FATAL_OB_CLEAN);
 If you want the client to know something went wrong:
 
 ```php
-use const bad\error\FATAL_HTTP_500;
+use const bad\trap\FATAL_HTTP_500;
 
 $restore = $install(HND_ALL | FATAL_HTTP_500 | FATAL_OB_CLEAN);
 ```
@@ -151,7 +151,7 @@ Prod hides the mess. Dev shows you everything.
 Sometimes you want your logs **and** PHP’s native output:
 
 ```php
-use const bad\error\ALLOW_INTERNAL;
+use const bad\trap\ALLOW_INTERNAL;
 
 $restore = $install(HND_ERR | ALLOW_INTERNAL);
 ```

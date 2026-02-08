@@ -1,6 +1,6 @@
 <?php
 
-namespace bad\error;                                                // provides configurable, installable PHP error/exception/shutdown handlers with request-context logging, optional traces, and restoration
+namespace bad\trap;                                                // provides configurable, installable PHP error/exception/shutdown handlers with request-context logging, optional traces, and restoration
 
 const HND_ERR  = 1;                                                 // handle runtime PHP errors
 const HND_EXC  = 2;                                                 // handle uncaught exceptions
