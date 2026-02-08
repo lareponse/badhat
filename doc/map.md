@@ -2,53 +2,55 @@
 
 A request hits your server.
 
-It’s messy: query strings, fragments, maybe a full URL from somewhere unexpected.  
+It's messy: query strings, fragments, maybe a full URL from somewhere unexpected.  
 What you actually want is simple:
 
 > a stable **routing key** you can trust, and a safe way to turn that key into an  
 > **executable file inside your app**.
 
-That’s the job of `bad\map`.
+That's the job of `bad\map`.
 
 ---
 
-## 1) First, decide what you consider a “path”
+## 1) First, extract a path from the request
 
-`bad\map` does **not** parse URLs, `bad\http` does.
-It assumes you already decided what part of the request represents intent.
+`hook()` takes a raw URL (or `REQUEST_URI`) and returns a rootless path.
 
-A typical call-site looks like this:
+It strips scheme, authority, query string, and fragment. It validates percent-encoding.
+Optionally rejects forbidden characters via `$reject`.
 
 ```php
-$base = __DIR__ . '/routes';   // trailing slash optional
-
-$path = trim(
-    parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH),
-    '/'
-);
-
-// Decide what "/" means in *your* app
-$path = ($path === '') ? 'index' : $path;
-````
-
-**Default story:**
-“Give me a relative path that represents intent. I’ll take it from there.”
+$path = bad\map\hook($_SERVER['REQUEST_URI'], "\0");
+// "/users/42?page=3" → "users/42"
+// "https://example.com/api/v1#top" → "api/v1"
+```
 
 What you can rely on:
 
-* `$base` may be passed **with or without** a trailing `/`
-* `$path` must be **relative** (no leading `/`)
-* If nothing matches, you get `null` — not an exception
+* scheme, authority, query, and fragment are stripped
+* percent-escapes are validated syntactically (not decoded)
+* result is trimmed of leading/trailing `/`
+* result can be empty string (root request)
+
+On invalid input (bad percent-encoding, forbidden chars), returns an `\InvalidArgumentException` instance. With `E_THROW`, it throws instead.
+
+```php
+$path = bad\map\hook('/a/%2G');       // InvalidArgumentException (bad hex)
+$path = bad\map\hook("/a/\0b", "\0"); // InvalidArgumentException (forbidden)
+```
+
+**Story:**
+"Give me the raw request. I'll give you a clean, rootless path."
 
 ---
 
-## 2) Then, decide what kind of router you’re building
+## 2) Then, decide what kind of router you're building
 
 Two common philosophies. BADHAT supports both.
 
 ---
 
-### A) “A route *is* a file” (strict routing)
+### A) "A route *is* a file" (strict routing)
 
 You already know what file must exist. No guessing.
 
@@ -64,18 +66,18 @@ If the file exists under `$base`, you get its absolute path.
 If not, you get `null`.
 
 **Story:**
-“I only run exactly what exists. If it’s not there, it’s not a route.”
+"I only run exactly what exists. If it's not there, it's not a route."
 
-That’s the posture of `look()` — direct, boring, predictable.
+That's the posture of `look()` — direct, boring, predictable.
 
 ---
 
-### B) “A route is a controller + remaining intent” (parameterized routing)
+### B) "A route is a controller + remaining intent" (parameterized routing)
 
 Sometimes `/users/edit/42` should land on `users.php`,
 with `['edit', '42']` handed to it.
 
-That’s what `seek()` is for.
+That's what `seek()` is for.
 
 ```php
 $hit = bad\map\seek($base, $path, '.php');
@@ -94,7 +96,7 @@ Default behavior:
 
 Because that matches how people usually think about intent:
 
-* “Try the most specific handler first”
+* "Try the most specific handler first"
 * then gracefully fall back to something broader
 
 `users/edit/42` tries, in order:
@@ -104,7 +106,7 @@ Because that matches how people usually think about intent:
 3. `users.php` → `['edit', '42']`
 
 **Story:**
-“Find the tightest matching handler. Hand the leftover meaning to something that can.”
+"Find the tightest matching handler. Hand the leftover meaning to something that can."
 
 On success:
 
@@ -145,7 +147,7 @@ Now `admin/users/edit` tries:
 First match wins.
 
 **Story:**
-“Start at the front door. Let the gateway decide what the rest means.”
+"Start at the front door. Let the gateway decide what the rest means."
 
 ---
 
@@ -165,12 +167,12 @@ $file = bad\map\look(
 This allows:
 
 * `admin.php`, or
-* `admin/admin.php` if the flat file doesn’t exist
+* `admin/admin.php` if the flat file doesn't exist
 
 The same idea applies when `REBASE` is used with `seek()`.
 
 **Story:**
-“If a section is a directory, let it own itself.”
+"If a section is a directory, let it own itself."
 
 ---
 
@@ -184,9 +186,8 @@ What `bad\map` guarantees:
 
 What you decide at the call-site:
 
-* how to normalize the request path
 * what `/` means
-* when a route is “not found”
+* when a route is "not found"
 
 ---
 
@@ -194,14 +195,27 @@ What you decide at the call-site:
 
 ### Constants
 
-| Constant | Value | Meaning                                 |
-| -------: | ----: | --------------------------------------- |
-| `REBASE` |   `1` | Allow `x/x.php` when `x.php` is missing |
-| `ASCEND` |   `2` | Search from the front, not the tail     |
+| Constant  | Value | Meaning                                          |
+| --------: | ----: | ------------------------------------------------ |
+| `REBASE`  |   `1` | Allow `x/x.php` when `x.php` is missing          |
+| `ASCEND`  |   `2` | Search from the front, not the tail              |
+| `E_THROW` | `256` | Throw on invalid input instead of returning error |
 
 ---
 
 ### Functions
+
+#### `hook($url, $reject = '', int $behave = 0): string|InvalidArgumentException`
+
+Extracts a rootless path from a URL or `REQUEST_URI`.
+
+Strips scheme, authority, query, fragment. Validates percent-encoding.
+Rejects characters present in `$reject`.
+
+Returns the path string if valid, otherwise an `\InvalidArgumentException`
+(or throws with `E_THROW`).
+
+---
 
 #### `look($base, $path, $shim = '', $behave = 0): ?string`
 
@@ -225,3 +239,6 @@ Returns:
 or `null` if nothing matches.
 
 `$args` contains the remaining path segments.
+
+Note: `$base` must have a trailing `/` for `seek()` to operate.
+`look()` appends one if missing.

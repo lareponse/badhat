@@ -13,7 +13,7 @@ require 'add/badhat/csrf.php';
 
 use const bad\map\REBASE;
 use const bad\run\{INVOKE, ABSORB, INC_RETURN};
-use const bad\http\SET;
+use const bad\http\ONE;
 
 // --------------------------------------------------
 // Bootstrap
@@ -46,7 +46,7 @@ bad\auth\checkin(bad\auth\AUTH_SETUP, 'username', $stmt);
 
 $io_root = __DIR__ . '/../app/io';
 $base = realpath($io_root . '/route') . '/';
-$key = bad\map\hook($base, $_SERVER['REQUEST_URI'], "\0");
+$key = bad\map\hook($_SERVER['REQUEST_URI'], "\0");
 
 // --------------------------------------------------
 // Phase 1 — Route (logic)
@@ -75,7 +75,7 @@ if ($render) {
 // --------------------------------------------------
 
 if (isset($loot[INC_RETURN]) && is_string($loot[INC_RETURN])) {
-    bad\http\headers(SET, 'Content-Type', 'text/html; charset=utf-8');
+    bad\http\headers(ONE, 'Content-Type', 'text/html; charset=utf-8');
     exit(bad\http\out(200, $loot[INC_RETURN]));
 }
 
