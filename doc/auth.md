@@ -124,12 +124,16 @@ checkin(int $behave = 0, ?string $u = null, $p = null): ?string
 
 ### Throws
 
+### Throws
+
 | Exception | Code | When |
 |-----------|------|------|
-| `BadFunctionCallException` | 400 | `checkin()` called before `AUTH_SETUP` |
-| `BadFunctionCallException` | 400 | Invalid parameters for action |
-| `LogicException` | 400 | No active session |
-| `RuntimeException` | — | Password query execution failed |
+| `BadFunctionCallException` | `0` | `checkin()` called before `AUTH_SETUP` |
+| `BadFunctionCallException` | `0xBADC0DE` | Invalid parameters for action (caught Error wrapped) |
+| `LogicException` | `0` | No active session |
+| `RuntimeException` | `0` | Password query execution failed |
+| `RuntimeException` | `0` | session_regenerate_id failed (fixation risk) |
+| `RuntimeException` | `0` | session_destroy failed |
 
 ### Internal Functions
 
