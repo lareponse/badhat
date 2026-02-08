@@ -1,338 +1,233 @@
+
 # bad\run
 
-You've resolved a path to a file. Now what?
+You mapped a request to a file.
+Now you need to execute that file — without turning your call-site into a ritual of `include`, output buffers, and exception plumbing.
 
-PHP's `include` is powerful but raw. It can *return* a value, but output streams immediately. Errors are messy. Chaining files means writing the same try/catch/buffer dance every time.
+`bad\run` is three verbs:
 
-Buried in the manual, almost as an aside:
+- **loop()** — run many files in order
+- **loot()** — run one step (include + optional buffer + optional invoke)
+- **boot()** — invoke what the file returned
 
-> Also, it's possible to return values from included files
+A file can do two things:
 
-That single fact flips the meaning of a "file". A file can be a producer.
+1. **return** a value (data, a closure, a string, anything)
+2. **print** output (echo / templates)
 
-Push one step further: a file can return a **closure**. Now the file defines behavior without adding names to the global namespace. No registry. No collisions. The call-site just receives a callable.
+`bad\run` collects both into a single bag called **loot**.
 
-Closures also carry local context with `use()`. So a file can compute something once (paths, regexes, maps, formatters), capture it, and return a callable that remembers. No globals. Captured on purpose.
-
-Then you hit the second truth: a PHP file can also **output**. So `include` has two results in practice: what the file returns, and what it prints.
-
-`run()` names and controls those results:
-
-- `INC_RETURN` is the returned value (from include or invoke)
-- `INC_BUFFER` is captured output when you BUFFER
-
-From there the moves are straightforward.
-
-If the file returns a callable, you can INVOKE it.
-If the file prints, you can BUFFER it.
-If the file prints HTML *and* returns a callable, you get a two-phase template: buffer the skeleton, return a function that wraps it.
-ABSORB is that handshake: output becomes input after include-time.
-
-Finally, you want composition: run many files, keep args, pass loot forward.
-That's RELOOT. And real pipelines need real failure rules:
-FAULT_AHEAD for "secondary steps must not veto", and RESCUE_CALL for
-"even if include failed, still run the callable we already have".
-
-> `run()` executes files and collects what they produce—return values, output, or both.
+- `INC_RETURN` is the last return value (from include or invoke)
+- `INC_BUFFER` is the last captured output (when you BUFFER)
 
 ---
 
-## 1) First, you include
-
-At its simplest, `run()` is just `include` with structure:
+## 1) loop(): the call-site primitive
 
 ```php
-use function bad\run\run;
-use const bad\run\INC_RETURN;
+use function bad\run\loop;
+use const bad\run\{INVOKE, INC_RETURN};
 
-$loot = run(['/app/boot.php']);
-// $loot[INC_RETURN] = whatever boot.php returned
+$loot = loop([
+    __DIR__ . '/mw/auth.php',
+    __DIR__ . '/routes/home.php',
+], ['token' => 'ok'], INVOKE);
+
+$result = $loot[INC_RETURN] ?? null;
 ````
 
-Pass arguments via the second parameter. They become the initial loot bag.
-Because `include` shares scope, the included file sees a `$loot` variable already populated.
+`loop()` returns the final loot bag.
+By default, each step receives the original `$args` you passed.
+
+If you want a real pipeline, add `RELOOT`: each next step receives the previous step’s loot bag.
 
 ```php
-// /app/route/user.php  (included)
-$id = $loot[0];                          // positional arg
-return ['id' => $id, 'name' => 'Ada'];   // producer file
-```
-
-```php
-$loot = run(['/app/route/user.php'], ['42']);
-// $loot[INC_RETURN] = ['id'=>'42','name'=>'Ada']
-```
-
-Default story: include a file, get back what it returned.
-
----
-
-## 2) Then, you invoke
-
-Most "route files" don't want to return data yet. They want to return a handler.
-So the file returns a closure, often capturing some local context with `use()`.
-
-```php
-// /app/route/user.php
-$query = 'SELECT * FROM users WHERE id = ?';      // computed once, captured
-
-return function(array $bag) use ($query) {
-    $id = $bag[1] ?? null;                        // original args by default
-    return [$query, [$id]];                       // stand-in for "execute query"
-};
-```
-
-Add `INVOKE`, and badhat calls the returned callable right away.
-
-```php
-use const bad\run\INVOKE;
-
-$loot = run(['/app/route/user.php'], ['view', '42'], INVOKE);
-// $loot[INC_RETURN] = [$query, ['42']]
-```
-
-By default, `INVOKE` only accepts `\Closure` returns. Add `CALLABLE` to accept any `is_callable()` value.
-
-Story: files define handlers; `INVOKE` runs them.
-
----
-
-## 3) Buffer when you need the output
-
-PHP files can echo. Sometimes you want that output captured, not streamed.
-
-```php
-// /app/view/hello.php
-?><h1>Hello, <?= htmlspecialchars($loot['name']) ?></h1><?php
-```
-
-```php
-use const bad\run\BUFFER;
-use const bad\run\INC_BUFFER;
-
-$loot = run(['/app/view/hello.php'], ['name' => 'World'], BUFFER);
-
-echo $loot[INC_BUFFER];  // "<h1>Hello, World</h1>"
-```
-
-Without `BUFFER`, output goes straight to the browser. With it, output lands in `INC_BUFFER`.
-
-Story: sometimes you capture, you don't emit.
-
----
-
-## 4) Absorb: when output feeds into the callable
-
-Here's the two-phase template: the file prints markup *and* returns a wrapper.
-
-```php
-// /app/view/page.php
-?><article><?= htmlspecialchars($loot['content']) ?></article><?php
-
-$doctype = '<!doctype html>';                     // local context, captured
-
-return function(array $bag) use ($doctype) {
-    $body = end($bag);                            // last arg is buffered output
-    return $doctype . "<html><body>$body</body></html>";
-};
-```
-
-`ABSORB` captures the output, then passes it as the last argument to the invoked callable:
-
-```php
-use const bad\run\ABSORB;
-use const bad\run\INC_RETURN;
-
-$loot = run(['/app/view/page.php'], ['content' => 'Hello'], ABSORB);
-
-echo $loot[INC_RETURN];
-// <!doctype html><html><body><article>Hello</article></body></html>
-```
-
-`ABSORB` implies both `BUFFER` and `INVOKE`. It also appends the captured buffer to the callable's args.
-
-Story: template outputs structure; wrapper receives it. One file, two phases.
-
----
-
-## 5) Spread: positional invocation
-
-By default, the callable receives one array argument. With `SPREAD`, the args are unpacked as positional parameters:
-
-```php
-// /app/route/user.php
-return function(string $action, string $id) {
-    return ['action' => $action, 'id' => $id];
-};
-```
-
-```php
-use const bad\run\{INVOKE, SPREAD};
-
-$loot = run(['/app/route/user.php'], ['edit', '42'], INVOKE | SPREAD);
-// callable receives ('edit', '42') instead of (['edit', '42'])
-```
-
-Story: when your handler has named parameters, spread the args.
-
----
-
-## 6) Chain: pipelines across files
-
-One file is simple. But what about auth → handler → renderer?
-
-Without `RELOOT`, each invoked callable receives the original args.
-With `RELOOT`, each invoked callable receives the *current loot bag* (including `INC_RETURN` from the previous step).
-
-```php
-// /app/mw/auth.php
-$realm = 'members';                               // captured policy
-
-return function(array $bag) use ($realm) {
-    $token = $bag['token'] ?? null;               // comes from original args (first step)
-    return $token ? ['user' => 'Ada', 'realm' => $realm] : null;
-};
-```
-
-```php
-// /app/route/home.php
-use const bad\run\INC_RETURN;
-
-return function(array $bag) {
-    $user = $bag[INC_RETURN];                     // from auth.php
-    return ['user' => $user, 'posts' => [1, 2, 3]];
-};
-```
-
-```php
-// /app/render/home.php
-use const bad\run\INC_RETURN;
-
-$layout = 'home';                                 // captured choice
-
-return function(array $bag) use ($layout) {
-    $model = $bag[INC_RETURN];                    // from home.php
-    return "render:$layout:" . json_encode($model);
-};
-```
-
-```php
-use function bad\run\run;
 use const bad\run\{INVOKE, RELOOT, INC_RETURN};
 
-$loot = run(
-    ['/app/mw/auth.php', '/app/route/home.php', '/app/render/home.php'],
-    ['token' => 'ok'],
-    INVOKE | RELOOT
-);
+$loot = loop([
+    __DIR__ . '/mw/auth.php',
+    __DIR__ . '/routes/home.php',
+    __DIR__ . '/views/home.php',
+], ['token' => 'ok'], INVOKE | RELOOT);
 
+echo (string)($loot[INC_RETURN] ?? '');
+```
+
+---
+
+## 2) loot(): one step (include + maybe invoke + maybe buffer)
+
+`loot()` is what `loop()` does internally, exposed for the rare case where you want to run a single file and still get a fault latch.
+
+```php
+use function bad\run\loot;
+use const bad\run\{BUFFER, INVOKE, INC_BUFFER, INC_RETURN};
+
+$fault = null;
+$loot  = loot(__DIR__ . '/views/hello.php', ['name' => 'World'], BUFFER, $fault);
+
+if ($fault) throw $fault;
+
+echo $loot[INC_BUFFER];
+```
+
+### Include-time input
+
+The included file sees a `$loot` variable (the input bag).
+That’s the contract: files consume the bag, return something, and/or print.
+
+Example file:
+
+```php
+// views/hello.php
+?><h1>Hello, <?= htmlspecialchars($loot['name'] ?? '...') ?></h1><?php
+```
+
+---
+
+## 3) boot(): invoke what the file returned
+
+Most “handler files” return a closure.
+With `INVOKE`, `bad\run` invokes the returned value if it’s acceptable.
+
+Default policy is strict: **Closure-only**.
+If you want “any callable”, add `ANYCALL`.
+
+```php
+use function bad\run\loop;
+use const bad\run\{INVOKE, ANYCALL, INC_RETURN};
+
+$loot = loop([__DIR__ . '/routes/users.php'], ['42'], INVOKE);
+// invokes only if routes/users.php returned a \Closure
+
+$loot = loop([__DIR__ . '/routes/users.php'], ['42'], INVOKE | ANYCALL);
+// invokes if it returned anything is_callable()
+```
+
+### Callable input shape
+
+By default, the callable receives **one argument**: the bag (array).
+
+```php
+// routes/users.php
+return function(array $bag) {
+    $id = $bag[0] ?? null;
+    return "user:$id";
+};
+```
+
+If you want positional parameters, add `SPREAD`.
+
+```php
+// routes/users.php
+return function(string $id) {
+    return "user:$id";
+};
+```
+
+```php
+use const bad\run\{INVOKE, SPREAD, INC_RETURN};
+
+$loot = loop([__DIR__ . '/routes/users.php'], ['42'], INVOKE | SPREAD);
 echo $loot[INC_RETURN];
-// render:home:{"user":{"user":"Ada","realm":"members"},"posts":[1,2,3]}
 ```
-
-Story: middleware isn't magic. It's files returning values to the next file.
 
 ---
 
-## 7) When things break
+## 4) Buffering: capture output when you need it
 
-By default, `run()` throws on failure. The exception wraps the original:
-
-```php
-$loot = run(['/app/broken.php']);
-// Exception("run:include:/app/broken.php", 0xBADC0DE, $originalThrowable)
-```
-
-### RESCUE_CALL: invoke anyway
-
-If include fails, `INC_RETURN` might still contain a callable from a previous step (or from your initial args if you seeded it that way). `RESCUE_CALL` lets `run()` attempt the invoke phase anyway.
+Without `BUFFER`, output streams immediately.
+With it, output is captured per step into `INC_BUFFER`.
 
 ```php
-use const bad\run\{INVOKE, RESCUE_CALL};
+use function bad\run\loop;
+use const bad\run\{BUFFER, INC_BUFFER};
 
-$loot = run(
-    ['/app/noisy_include.php'],
-    [],
-    INVOKE | RESCUE_CALL
-);
+$loot = loop([__DIR__ . '/views/hello.php'], ['name' => 'World'], BUFFER);
+echo $loot[INC_BUFFER];
 ```
 
-Rare. It exists for "salvage what we can" flows.
+### ABSORB: when output feeds the callable
 
-### FAULT_AHEAD: keep going
-
-Multiple files, and you want to continue even if one fails (logging, metrics, optional sidecars):
+`ABSORB` is a handshake: buffer output, then invoke, and append the current capture to the callable’s input.
 
 ```php
-use const bad\run\FAULT_AHEAD;
+// views/page.php
+?><article><?= htmlspecialchars($loot['content'] ?? '') ?></article><?php
 
-$loot = run(['/app/a.php', '/app/logger.php', '/app/c.php'], [], FAULT_AHEAD);
+return function(array $bag) {
+    $html = $bag[array_key_last($bag)] ?? '';
+    return "<!doctype html><html><body>$html</body></html>";
+};
 ```
 
-Failures are suppressed and the pipeline continues.
+```php
+use function bad\run\loop;
+use const bad\run\{ABSORB, INC_RETURN};
 
-Story: usually fail fast. Sometimes fail forward.
+$loot = loop([__DIR__ . '/views/page.php'], ['content' => 'Hello'], ABSORB);
+echo $loot[INC_RETURN];
+```
 
 ---
 
-## Putting it together
+## 5) Fault rules (when things break)
+
+A step can fault on include or invoke.
+`loop()` stops on the first fault and throws.
+
+If you want “continue anyway”, add `FAULT_AHEAD`.
 
 ```php
-use function bad\map\{hook, seek};
-use function bad\run\run;
-use function bad\http\out;
-use const bad\run\{BUFFER, INVOKE, INC_BUFFER};
+use const bad\run\{INVOKE, FAULT_AHEAD};
 
-$base = realpath(__DIR__ . '/routes') . '/';
-$path = hook($base, $_SERVER['REQUEST_URI']);
-
-[$file, $args] = seek($base, $path, '.php')
-    ?? exit(out(404, 'Not Found'));
-
-$loot = run([$file], $args, BUFFER | INVOKE);
-
-exit(out(200, $loot[INC_BUFFER]));
+$loot = loop([
+    __DIR__ . '/a.php',
+    __DIR__ . '/optional_metrics.php',
+    __DIR__ . '/b.php',
+], [], INVOKE | FAULT_AHEAD);
 ```
 
-Request to response: include → maybe invoke → maybe buffer.
+If include faulted, invoke is normally vetoed.
+If you want “try invoke anyway”, add `RESCUE_CALL`.
 
 ---
 
 ## Reference
 
-### Constants (behavior)
+### Behavior flags
 
-| Constant      | Value | Effect                                                                     |
-| ------------- | ----- | -------------------------------------------------------------------------- |
-| `BUFFER`      | 1     | Capture output to `INC_BUFFER` (per step)                                  |
-| `INVOKE`      | 2     | Call returned callable (per step, if callable)                             |
-| `ABSORB`      | 7     | `4 \| BUFFER \| INVOKE` — buffer + invoke + append buffer to callable args |
-| `RELOOT`      | 8     | Invoke with the current loot bag (instead of original args)                |
-| `SPREAD`      | 16    | Invoke callable with positional args (`...$args`) instead of one array     |
-| `RESCUE_CALL` | 32    | Attempt invoke even if include failed                                      |
-| `FAULT_AHEAD` | 64    | Suppress throws, continue to next file                                     |
-| `CALLABLE`    | 128   | Accept any `is_callable()` return, not just `\Closure`                     |
+| Constant      | Value | Meaning                                                    |
+| ------------- | ----: | ---------------------------------------------------------- |
+| `BUFFER`      |   `1` | capture output per step into `INC_BUFFER`                  |
+| `INVOKE`      |   `2` | invoke returned value per step (if acceptable)             |
+| `ABSORB`      |   `7` | buffer + invoke + append current capture to callable input |
+| `SPREAD`      |   `8` | invoke callable with positional args (`...$args`)          |
+| `RESCUE_CALL` |  `16` | try invoke even if include faulted                         |
+| `ANYCALL`     |  `32` | accept any `is_callable()` (default: `\Closure` only)      |
+| `RELOOT`      |  `64` | pipe: next step input = previous step loot                 |
+| `FAULT_AHEAD` | `128` | pipe: keep going on fault (else: throw)                    |
 
-### Constants (loot keys)
+### Loot keys
 
-| Constant     | Value | Contains                            |
-| ------------ | ----- | ----------------------------------- |
-| `INC_RETURN` | -1    | Return value from include or invoke |
-| `INC_BUFFER` | -2    | Captured output buffer (string)     |
+| Constant     | Value | Contains                              |
+| ------------ | ----: | ------------------------------------- |
+| `INC_RETURN` |  `-1` | last return value (include or invoke) |
+| `INC_BUFFER` |  `-2` | last captured output (string)         |
 
-### Throws
+### Fault shape
 
-Failures wrap as `Exception` with code `0xBADC0DE`:
+When a fault occurs, `bad\run` normalizes it as `Exception` with code `0xBADC0DE`.
+The message tells you the phase and the file:
 
-```
-Exception("run:include:/path/to/file.php", 0xBADC0DE, $original)
-Exception("run:invoke:/path/to/file.php", 0xBADC0DE, $original)
-```
+* `loot:include:/path/to/file.php`
+* `boot:invoke:/path/to/file.php`
 
-The message tells you which phase failed. The previous exception tells you why.
+The original throwable is kept as the previous exception.
 
 ---
 
 ## Buffer cleanup
 
-`run()` snapshots `ob_get_level()` before each file and tries to restore the expected level after the step. If a file opens extra output buffers and forgets to close them, `run()` discards deeper levels so your request doesn't leak buffer state across steps.
+Each step snapshots `ob_get_level()` and cleans up buffers opened inside the file/callable.
+If a step leaks nested buffers, they’re dropped so the rest of the request doesn’t inherit broken buffer state.
