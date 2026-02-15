@@ -22,10 +22,29 @@ function loop($file_paths, $args = [], $behave = 0): array
     $loot = $seed;                                                                            // last produced bag
 
     foreach ($file_paths as $file) {
-        $in = (RELOOT & $behave) ? $loot : $seed;                                             // pick next step input (pipe policy)
+        $in   = (RELOOT & $behave) ? $loot : $seed;                                           // pick next step input (pipe policy)
+        $loot = $in;                                                                          // IMPORTANT: included file consumes `$loot`
 
         $fault = null;                                                                        // per-step fault latch
-        $loot  = loot($file, $in, $behave, $fault);                                           // execute one step
+
+        $base = \ob_get_level();                                                              // snapshot buffer depth for cleanup/restore
+        (BUFFER & $behave) && \ob_start();                                                    // start capture for this step (if enabled)
+
+        try {
+            $loot[INC_RETURN] = include $file;                                                // include runs file, stores its return value
+        } catch (\Throwable $t) {
+            $fault = new \Exception(__FUNCTION__ . ":include:$file", 0xBADC0DE, $t);          // normalize include fault, preserve chain
+        }
+
+        if (INVOKE & $behave)                                                                 // optional invoke stage
+            $loot[INC_RETURN] = boot($file, $loot[INC_RETURN] ?? null, $args, $behave, $fault);  // may update fault, may no-op
+
+
+        $keep = $base + ((BUFFER & $behave) ? 1 : 0);                                         // expected level after step (baseline + our capture)
+        for ($n = \ob_get_level(); $n > $keep; --$n) \ob_end_clean();                         // drop nested buffers opened inside file/callable
+
+        if (BUFFER & $behave)                                                                 // finalize capture for this step
+            $loot[INC_BUFFER] = (\ob_get_level() > $base) ? (string)\ob_get_clean() : '';     // pop ours if still present, else empty
 
         if ($fault !== null && !(FAULT_AHEAD & $behave)) throw $fault;                        // default: stop on fault
     }
@@ -33,16 +52,17 @@ function loop($file_paths, $args = [], $behave = 0): array
     return $loot;                                                                             // final bag (args + INC_* slots)
 }
 
+
 function loot(string $file, array $args, int $behave, ?\Throwable &$fault = null): array
 {
     $fault = null;                                                                            // clear by default
-    $loot  = $args;                                                                           // step output starts as input
+    $loot = $args;                                                                           // step output starts as input
 
     $base = \ob_get_level();                                                                  // snapshot buffer depth for cleanup/restore
     (BUFFER & $behave) && \ob_start();                                                        // start capture for this step (if enabled)
-
+    
     try {
-        $loot[INC_RETURN] = include $file;                                                    // include executes file, stores its return value
+        $loot[INC_RETURN] = include $file;                                                    // include runs file, stores its return value
     } catch (\Throwable $t) {
         $fault = new \Exception(__FUNCTION__ . ":include:$file", 0xBADC0DE, $t);                // normalize include fault, preserve chain
     }
