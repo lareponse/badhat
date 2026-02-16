@@ -1,16 +1,46 @@
 # BADHAT
 
 ```
-
 Bits As Decision.
 HTTP As Terminal.
+```
 
-````
+Emergent programming for PHP.
+
+Architecture that emerges from the language and the filesystem, not from a framework's ontology.
+The request is reality. Structure arises from execution, not doctrine.
+No registry, no lifecycle, no hive — just path → file → chain → bytes.
+
+> BADHAT provides conditions. What grows is yours.
+
+---
+
+## What it is
+
+BADHAT is not a framework. It is a climate.
+
+It doesn't tell you what the application should be. It ensures that whatever you build remains in contact with reality: every transformation can be traced, every responsibility has an address, every effect has a cause you can point to.
 
 ~100 lines of PHP to hook, map and run php.
 **Maps**, not routes. **Loops**, not controllers. **Bitmasks**, not config files.
 
 > requires POSIX and PHP >= 8.0
+
+---
+
+## The physics
+
+An organism doesn't start with a blueprint. It starts with a physics:
+
+- **Boundaries** — request in, response out
+- **Medium** — filesystem, PHP execution
+- **Metabolism** — map → run → emit
+- **Constraints** — flags, failure semantics, header rules
+- **Feedback** — loot, buffers, codified faults
+
+Nothing in BADHAT exists to *replace* something PHP already does. Everything exists to make what PHP already does *safer to rely on*.
+
+The filesystem is the router. Output buffering is the template engine. Bitmasks are the configuration language. PHP is the config file. `if` is the validation framework.
 
 ---
 
@@ -33,22 +63,22 @@ $path = hook($_SERVER['REQUEST_URI'], "\0");
 $loot = loop([$file], $args, INVOKE);
 
 exit(out(QUIT | 200, (string)($loot[INC_RETURN] ?? '')));
-````
+```
 
 Three moves:
 
-1. **hook**: turn a URL into a rootless path you can trust
-2. **seek**: map that path to an executable file (and leftover intent)
-3. **loop**: include + (optionally) invoke what the file returns
+1. **hook** — turn a URL into a rootless path you can trust
+2. **seek** — map that path to an executable file (and leftover intent)
+3. **loop** — include + (optionally) invoke what the file returns
 
 ---
 
 ## Kernel
 
-BADHAT’s kernel is two files:
+Two files:
 
-* `map.php` — URL → path → file (+ args)
-* `run.php` — loop / loot / boot (include + invoke + buffer)
+- `map.php` — URL → path → file (+ args)
+- `run.php` — loop / loot / boot (include + invoke + buffer)
 
 Everything else is plumbing.
 
@@ -60,7 +90,7 @@ Everything else is plumbing.
 | ----------- | -------------------------------- |
 | `map.php`   | URL → path → file (+ args)       |
 | `run.php`   | loop / loot / boot               |
-| `error.php` | handler installation             |
+| `trap.php`  | handler installation             |
 | `pdo.php`   | query helper (no ORM)            |
 | `http.php`  | header staging + response output |
 | `auth.php`  | session login                    |
@@ -70,6 +100,8 @@ Everything else is plumbing.
 ---
 
 ## Philosophy
+
+**Emergent, not imposed.** Frameworks define a world and require you to inhabit it. BADHAT observes what PHP and HTTP already do and formalizes the minimum needed to work with that reality reliably.
 
 **Maps resolve depth.** A single map can represent infinite routes with O(depth) resolution.
 
@@ -84,8 +116,6 @@ Everything else is plumbing.
 ---
 
 ## Quick taste
-
-A handler file can do the whole response (no framework ceremony required):
 
 ```php
 // routes/api/users.php
@@ -112,6 +142,19 @@ loop([__DIR__ . '/routes/api/users.php'], [], INVOKE);
 
 ---
 
+## What BADHAT will never implement
+
+Six concerns that belong to infrastructure, external tools, or standalone libraries — not to a request lifecycle toolkit:
+
+1. **Infrastructure** — compression, TLS, rate limiting, static file serving, process management, log rotation. Your web server and OS handle this.
+2. **Data abstraction** — ORM, cache wrappers, storage engine facades. Use PDO, APCu, phpredis directly.
+3. **External I/O** — HTTP client, mail, queues, sockets. Use cURL, PHPMailer, AMQP directly.
+4. **Rendering** — template engines, Markdown, PDF, image processing. Use PHP itself, league/commonmark, dompdf, GD directly.
+5. **Tooling** — testing, linting, asset compilation, CLI scaffolding. Use PHPUnit, PHPStan, php-cs-fixer directly.
+6. **Policy orchestration** — DI containers, event buses, middleware stacks, config DSLs, validation frameworks, global state stores. Call the constructor. Call the function. Write the `if`.
+
+The rule: if a mature, standalone tool already does it, BADHAT will not re-skin it behind a `bad\` namespace.
+
 ## Install
 
 ```bash
@@ -120,7 +163,7 @@ git subtree add --prefix=add/badhat FETCH_HEAD --squash
 ```
 
 ---
-
+    
 ## License
 
 MIT. No warranty. Ship it.

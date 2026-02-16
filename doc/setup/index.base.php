@@ -3,7 +3,7 @@
 
 set_include_path(__DIR__ . '/..' . PATH_SEPARATOR . get_include_path());
 
-$install = require 'add/badhat/error.php';
+$install = require 'add/badhat/trap.php';
 require 'add/badhat/map.php';
 require 'add/badhat/run.php';
 require 'add/badhat/http.php';
