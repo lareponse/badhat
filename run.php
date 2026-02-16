@@ -16,80 +16,94 @@ const FAULT_AHEAD = 128;                                                        
 const INC_RETURN  = -1;                                                                       // loot slot: last return value (include or invoke)
 const INC_BUFFER  = -2;                                                                       // loot slot: last captured output (string)
 
-function loop($file_paths, $args = [], $behave = 0): array
+// named handler so we can detect replacement via ob_get_status()['name']
+function ob_fence(string $buf, int $phase = 0): string { return $buf; }
+
+function ob_trim(int $min, string $where = ''): void
 {
-    $seed = $args;                                                                            // immutable input unless RELOOT
-    $loot = $seed;                                                                            // last produced bag
+    for ($n = \ob_get_level(); $n > $min; --$n)
+        (\ob_end_clean() !== false) || throw new \RuntimeException(__FUNCTION__ . ":ob_end_clean:FAIL:$where:level=$n:min=$min");
+}
 
-    $base   = 0;                                                                              // buffer baseline (only meaningful if BUFFER)
-    $keep   = 0;                                                                              // expected level (only meaningful if BUFFER)
-    $cursor = 0;                                                                              // per-step cursor (only meaningful if BUFFER)
+function ob_guard_begin(string $tag = ''): array
+{
+    $base = \ob_get_level();                                                                  // baseline before step
+    \ob_start(__NAMESPACE__ . '\\ob_fence');                                                  // fence at base+1
+    return ['base' => $base, 'tag' => $tag];
+}
 
-    if (BUFFER & $behave) {
-        $base = \ob_get_level();
-        \ob_start();
-        $keep = $base + 1;
-
-        $ob_trim = static function (int $max, string $where = ''): void {
-            for ($n = \ob_get_level(); $n > $max; --$n)
-                \ob_end_clean()
-                    || throw new \RuntimeException(__FUNCTION__ . ":ob_end_clean:FAIL:$where:level=$n:max=$max");
-        };
-
-        $buf_mark = static function () use ($keep, $ob_trim): int {
-            $ob_trim($keep, 'buf_mark');
-            $len = \ob_get_length();
-            return ($len === false) ? 0 : $len;
-        };
-
-        $buf_take = static function () use (&$cursor, $keep, $ob_trim): string {
-            $ob_trim($keep, 'buf_take');
-
-            $len = \ob_get_length();
-            $len = ($len === false) ? 0 : $len;
-
-            if ($len <= $cursor) {
-                $cursor = $len;
-                return '';
-            }
-
-            $buf = (string)\ob_get_contents();
-            $out = (string)\substr($buf, $cursor);
-
-            $cursor = $len;                                                                   // advance AFTER slicing
-            return $out;
-        };
-    }
+function ob_guard_end(array $tok, ?\Throwable &$fault, string $phase, string $file): string
+{
+    $base = (int)($tok['base'] ?? 0);
+    $tag  = (string)($tok['tag']  ?? ($phase . ':' . $file));
 
     try {
-        foreach ($file_paths as $file) {
-            $in   = (RELOOT & $behave) ? $loot : $seed;                                       // pick next step input (pipe policy)
-            $loot = $in;                                                                      // IMPORTANT: included file consumes `$loot`
+        $lvl = \ob_get_level();
 
-            $fault = null;                                                                    // per-step fault latch
+        if ($lvl <= $base) {                                                                  // fence popped (or lower)
+            $fault = new \Exception(__FUNCTION__ . ":ob:BREACH:$phase:$file", 0xBADC0DE, $fault);
+            return '';
+        }
 
-            (BUFFER & $behave) && ($cursor = $buf_mark());
+        if ($lvl > $base + 1) ob_trim($base + 1, "leak:$tag");                                // drop leaks above fence
+
+        $st = \ob_get_status();
+        if (($st['name'] ?? '') !== __NAMESPACE__ . '\\ob_fence') {                           // handler replaced
+            $fault = new \Exception(__FUNCTION__ . ":ob:HOP:$phase:$file", 0xBADC0DE, $fault);
+            (\ob_end_clean() !== false) || throw new \RuntimeException(__FUNCTION__ . ":ob_end_clean:FAIL:fence:$tag");
+            return '';
+        }
+
+        return (string)\ob_get_clean();                                                       // harvest fence, close it
+    } finally {
+        ob_trim($base, "finally:$tag");                                                       // ALWAYS restore baseline
+    }
+}
+
+
+function loop($file_paths, $args = [], $behave = 0): array
+{
+    $seed = $args;
+    $loot = $seed;
+
+    foreach ($file_paths as $file) {
+
+        $in   = (RELOOT & $behave) ? $loot : $seed;
+        $loot = $in;                                                                          // shared include space: $loot is consumed by include
+
+        $fault = null;
+
+        // ---- include ----------------------------------------------------
+        $tok = null;
+        (BUFFER & $behave) && ($tok = ob_guard_begin("include:$file"));
+
+        try {
+            $loot[INC_RETURN] = include $file;                                                // stays HERE: shared scope preserved
+        } catch (\Throwable $t) {
+            $fault = new \Exception(__FUNCTION__ . ":include:$file", 0xBADC0DE, $t);
+        }
+
+        (BUFFER & $behave) && ($loot[INC_BUFFER] = ob_guard_end($tok, $fault, 'include', (string)$file));
+
+        // ---- invoke -----------------------------------------------------
+        if (INVOKE & $behave) {
+            // optional: guard invoke leaks without capturing (still uses same fence,
+            // but you can decide to keep it or not — here I keep it symmetrical)
+            $itok = null;
+            (BUFFER & $behave) && ($itok = ob_guard_begin("invoke:$file"));
 
             try {
-                $loot[INC_RETURN] = include $file;                                            // include runs file, stores its return value
-            } catch (\Throwable $t) {
-                $fault = new \Exception(__FUNCTION__ . ":include:$file", 0xBADC0DE, $t);      // normalize include fault, preserve chain
-            }
-
-            // IMPORTANT: capture per-step delta BEFORE invoke so ABSORB can use it.
-            (BUFFER & $behave) && ($loot[INC_BUFFER] = $buf_take());
-
-            if (INVOKE & $behave) {                                                           // optional invoke stage
                 $loot[INC_RETURN] = boot($file, $loot[INC_RETURN] ?? null, $loot, $behave, $fault);
+            } finally {
+                // we do NOT overwrite INC_BUFFER: include output keeps its meaning
+                (BUFFER & $behave) && ob_guard_end($itok, $fault, 'invoke', (string)$file);
             }
-
-            if ($fault !== null && !(FAULT_AHEAD & $behave)) throw $fault;                    // default: stop on fault
         }
-    } finally {
-        (BUFFER & $behave) && $ob_trim($base);                                                // close root capture (and any strays)
+
+        if ($fault !== null && !(FAULT_AHEAD & $behave)) throw $fault;
     }
 
-    return $loot;                                                                             // final bag (args + INC_* slots)
+    return $loot;
 }
 
 function boot(string $file, $callable, array $args, int $behave, ?\Throwable &$fault = null)
@@ -102,7 +116,9 @@ function boot(string $file, $callable, array $args, int $behave, ?\Throwable &$f
     if (!$ok) return $callable;                                                               // not callable => no-op, keep original value
 
     $call_args = $args;                                                                       // callable input bag = this step bag
-    (ABSORB & $behave) && ($call_args[] = (string)($args[INC_BUFFER] ?? ''));                 // append per-step delta (not whole transcript)
+
+    if (($behave & ABSORB) === ABSORB)                                                        // ABSORB handshake requires BUFFER+INVOKE
+        $call_args[] = (string)($args[INC_BUFFER] ?? '');                                     // append include capture only
 
     try {
         return (SPREAD & $behave) ? $callable(...$call_args) : $callable($call_args);         // invoke callable, return its result
