@@ -83,7 +83,7 @@ function seek($base, $path, $shim = '', $behave = 0): ?array        // progressi
         if($cut !== false)                                          // if separator was found
             $pos = (ASCEND & $behave) ? $cut + 1 : $cut;            // move to next segment
 
-    } while ($cut !== false);                                       // keep searching while separators remain
+    } while ($cut !== false);                                       // keep seek until no segments left to cut
 
     return null;
 }

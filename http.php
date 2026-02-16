@@ -36,7 +36,8 @@ function out(int $behave, $body = null): int
     if($len)
         echo $body;
 
-    if (QUIT & $behave)                                                                exit($res < 0 ? 1 : 0);
+    if (QUIT & $behave)
+        exit($res < 0 ? 1 : 0);
 
     return $res;
 }
