@@ -4,11 +4,11 @@ namespace bad\ob;
 
 const CLEAN = 1;                                                    // Discard all buffers above fence (don't throw on HOP)
 
-function guard(): \Closure
+function guard(int $behave = 0): \Closure
 {
     $stack = [];
 
-    return static function (int $behave = 0, $fence = null) use (&$stack): \Closure {
+    return static function ($fence = null) use (&$stack, $behave): \Closure {
 
         $base  = \ob_get_level();
         $depth = \array_push($stack, true);                         // claim slot

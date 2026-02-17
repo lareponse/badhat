@@ -28,7 +28,7 @@ function loop($file_paths, $args = [], int $behave = 0, ?\Closure $ob = null): a
 
         $fault = null;
 
-        $include_ob_guard = $ob ? $ob(\bad\ob\CLEAN) : null;
+        $include_ob_guard = $ob ? $ob() : null;
 
         (BUFFER & $behave) && \ob_start();
 
@@ -51,7 +51,7 @@ function loop($file_paths, $args = [], int $behave = 0, ?\Closure $ob = null): a
 
         if (INVOKE & $behave) {
 
-            $invoke_ob_guard = $ob ? $ob(\bad\ob\CLEAN) : null;
+            $invoke_ob_guard = $ob ? $ob() : null;
 
             try {
                 $loot[INC_RETURN] = boot((string)$file, $loot[INC_RETURN] ?? null, $loot, $behave, $fault);
