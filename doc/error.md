@@ -26,7 +26,7 @@ Which request? Which user? Good luck.
 ## 1) Install
 
 ```php
-$install = require __DIR__ . '/bad/error.php';
+$install = require '/add/badhat/trap.php';
 $restore = $install();
 ````
 
