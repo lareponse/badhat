@@ -2,48 +2,44 @@
 
 namespace bad\ob;
 
-const CLEAN = 1;  // Discard all buffers above fence (don't throw on HOP)
+const CLEAN = 1;                                                    // Discard all buffers above fence (don't throw on HOP)
 
-function _ob_fence(string $buf, int $phase = 0): string { return $buf; }
-
-function seal(int $behave = 0): \Closure
+function guard(): \Closure
 {
-    $want = __NAMESPACE__ . '\\_ob_fence';
+    $stack = [];
 
-    return static function () use ($behave, $want): \Closure {
-        $base = \ob_get_level();
-        \ob_start($want)                                            || throw new \RuntimeException('ob:ob_start');
-        
-        $unsealed = false;
-        $cleanup = static function() use (&$unsealed, $base, $want) {
-            if (!$unsealed && \ob_get_level() > $base)
-                if ((\ob_get_status()['name'] ?? null) === $want) 
-                    @\ob_end_clean();
-        };
-        \register_shutdown_function($cleanup);
+    return static function (int $behave = 0, $fence = null) use (&$stack): \Closure {
 
-        return static function () use (&$unsealed, $base, $behave, $want): string {
-            !$unsealed                                              || throw new \LogicException('ob:ALREADY_UNSEALED');
-            $unsealed = true;
+        $base  = \ob_get_level();
+        $depth = \array_push($stack, true);                         // claim slot
 
-            $level = \ob_get_level();
-            ($level > $base)                                        || throw new \UnexpectedValueException("ob:BREACH:base=$base:level=$level", 0xBADC0DE);
+        return static function () use (&$stack, $behave, $fence, $base, $depth): int {
 
-            if ($level > $base + 1) {
-                (CLEAN & $behave)                                   || throw new \UnexpectedValueException("ob:HOP:found=".(\ob_get_status()['name'] ?? null), 0xBADC0DE);
-                while (($level = \ob_get_level()) > $base + 1) {
-                    @\ob_end_clean();
+            $current = \count($stack);
+            $current > 0                                            || throw new \LogicException('ob:EMPTY_STACK');
+            $depth === $current                                     || throw new \LogicException("ob:OUT_OF_ORDER:expected=$current:got=$depth");
+
+            $level  = \ob_get_level();
+            $target = ($fence !== null) ? $base + 1 : $base;
+
+            if ($level > $target) {
+                (CLEAN & $behave)                                   || throw new \UnexpectedValueException("ob:LEAK:base=$base:level=$level", 0xBADC0DE);
+                while (($level = \ob_get_level()) > $target) {
+                    @\ob_end_clean()                                || throw new \RuntimeException('ob:ob_end_clean');
                     (\ob_get_level() < $level)                      || throw new \RuntimeException('ob:CLEAN_STUCK');
                 }
             }
 
-            $name = \ob_get_status()['name'] ?? null;
-            ($name === $want)                                       || throw new \UnexpectedValueException("ob:WRONG_FENCE:expected=$want:found=$name", 0xBADC0DE);
+            if ($fence !== null) {
+                (\ob_get_level() === $base + 1)                     || throw new \UnexpectedValueException("ob:FENCE_MISSING:base=$base:level=" . \ob_get_level(), 0xBADC0DE);
+                $name = \ob_get_status()['name'] ?? null;
+                ($name === $fence)                                  || throw new \UnexpectedValueException("ob:WRONG_FENCE:expected=$fence:found=$name", 0xBADC0DE);
+            } else {
+                (\ob_get_level() === $base)                         || throw new \UnexpectedValueException("ob:BREACH:base=$base:level=" . \ob_get_level(), 0xBADC0DE);
+            }
 
-            ($buffer = \ob_get_clean()) !== false                   || throw new \RuntimeException('ob:ob_get_clean');
-            (\ob_get_level() === $base)                             || throw new \UnexpectedValueException("ob:BREACH:base=$base:level=" . \ob_get_level(), 0xBADC0DE);
-
-            return $buffer;
+            \array_pop($stack);
+            return $base;
         };
     };
 }
