@@ -16,12 +16,10 @@ const FAULT_AHEAD = 128;                                            // pipe: kee
 const INC_RETURN  = -1;                                             // loot slot: last return value (include or invoke)
 const INC_BUFFER  = -2;                                             // loot slot: last captured output (string)
 
-
-function loop($file_paths, $args = [], int $behave = 0, ?\Closure $seal = null): array
+function loop($file_paths, $args = [], int $behave = 0, ?\Closure $ob = null): array
 {
-    $seed  = $args;
-    $loot  = $seed;
-    $seal = $seal ?? static function ($token = null) {return ($token === null) ? 0 : '';};                                    // default: no buffering
+    $seed = $args;
+    $loot = $seed;
 
     foreach ($file_paths as $file) {
 
@@ -30,35 +28,40 @@ function loop($file_paths, $args = [], int $behave = 0, ?\Closure $seal = null):
 
         $fault = null;
 
-        $tok = $seal();                                            // begin
+        $include_ob_guard = $ob ? $ob(\bad\ob\CLEAN) : null;
+
+        (BUFFER & $behave) && \ob_start();
 
         try {
             $loot[INC_RETURN] = include $file;
         } catch (\Throwable $t) {
             $fault = new \Exception(__FUNCTION__ . ":include:$file", 0xBADC0DE, $t);
         } finally {
-            try {
-                if (BUFFER & $behave)
-                    $loot[INC_BUFFER] = $seal($tok);               // end + store
-                else
-                    $seal($tok);                                   // end only, ignore capture
-            } catch (\Throwable $t) {
-                $ob_fault = new \Exception(__FUNCTION__ . ":seal:include:$file", 0xBADC0DE, $t);
-                $fault = $fault ? new \Exception(__FUNCTION__ . ":include+seal:$file", 0xBADC0DE, $fault) : $ob_fault;
+            if (BUFFER & $behave)
+                $loot[INC_BUFFER] = (string)\ob_get_clean();
+
+            if ($include_ob_guard) {
+                try { $include_ob_guard(); }
+                catch (\Throwable $t) {
+                    $ob_fault = new \Exception(__FUNCTION__ . ":ob:include:$file", 0xBADC0DE, $t);
+                    $fault = $fault ? new \Exception(__FUNCTION__ . ":include+ob:$file", 0xBADC0DE, $fault) : $ob_fault;
+                }
             }
         }
 
         if (INVOKE & $behave) {
 
-            $itok = $seal();                                       // begin (invoke fence)
+            $invoke_ob_guard = $ob ? $ob(\bad\ob\CLEAN) : null;
 
             try {
                 $loot[INC_RETURN] = boot((string)$file, $loot[INC_RETURN] ?? null, $loot, $behave, $fault);
             } finally {
-                try { $seal($itok); }                              // end
-                catch (\Throwable $t) {
-                    $ob_fault = new \Exception(__FUNCTION__ . ":seal:invoke:$file", 0xBADC0DE, $t);
-                    $fault = $fault ? new \Exception(__FUNCTION__ . ":invoke+seal:$file", 0xBADC0DE, $fault) : $ob_fault;
+                if ($invoke_ob_guard) {
+                    try { $invoke_ob_guard(); }
+                    catch (\Throwable $t) {
+                        $ob_fault = new \Exception(__FUNCTION__ . ":ob:invoke:$file", 0xBADC0DE, $t);
+                        $fault = $fault ? new \Exception(__FUNCTION__ . ":invoke+ob:$file", 0xBADC0DE, $fault) : $ob_fault;
+                    }
                 }
             }
         }
@@ -71,22 +74,22 @@ function loop($file_paths, $args = [], int $behave = 0, ?\Closure $seal = null):
 
 function boot(string $file, $callable, array $args, int $behave, ?\Throwable &$fault = null)
 {
-    if ($fault !== null && !(RESCUE_CALL & $behave)) return $callable;                        // include fault vetoes invoke (unless rescued)
+    if ($fault !== null && !(RESCUE_CALL & $behave)) return $callable;
 
-    $ok = ($callable instanceof \Closure)                                                     // default: Closure-only (deterministic)
-       || ((ANYCALL & $behave) && \is_callable($callable));                                   // opt-in: accept any callable
+    $ok = ($callable instanceof \Closure)
+       || ((ANYCALL & $behave) && \is_callable($callable));
 
-    if (!$ok) return $callable;                                                               // not callable => no-op, keep original value
+    if (!$ok) return $callable;
 
-    $call_args = $args;                                                                       // callable input bag = this step bag
+    $call_args = $args;
 
-    if (($behave & ABSORB) === ABSORB)                                                        // ABSORB handshake requires BUFFER+INVOKE
-        $call_args[] = (string)($args[INC_BUFFER] ?? '');                                     // append include capture only
+    if (($behave & ABSORB) === ABSORB)
+        $call_args[] = (string)($args[INC_BUFFER] ?? '');
 
     try {
-        return (SPREAD & $behave) ? $callable(...$call_args) : $callable($call_args);         // invoke callable, return its result
+        return (SPREAD & $behave) ? $callable(...$call_args) : $callable($call_args);
     } catch (\Throwable $t) {
-        $fault = new \Exception(__FUNCTION__ . ":invoke:$file", 0xBADC0DE, $t);               // normalize invoke fault, preserve chain
-        return $callable;                                                                     // keep original callable in INC_RETURN on failure
+        $fault = new \Exception(__FUNCTION__ . ":invoke:$file", 0xBADC0DE, $t);
+        return $callable;
     }
 }
