@@ -14,10 +14,10 @@ Somewhere in bootstrap—before any login attempts:
 
 ```php
 use function bad\auth\checkin;
-use const bad\auth\AUTH_SETUP;
+use const bad\auth\SETUP;
 
 $stmt = qp("SELECT password FROM users WHERE username = ?", []);
-checkin(AUTH_SETUP, 'username', $stmt);
+checkin(SETUP, 'username', $stmt);
 ```
 
 Two things stored:
@@ -33,9 +33,9 @@ No connection happens. No query runs. Just setup.
 When the login form submits:
 
 ```php
-use const bad\auth\AUTH_ENTER;
+use const bad\auth\ENTER;
 
-$user = checkin(AUTH_ENTER, 'username', 'password');
+$user = checkin(ENTER, 'username', 'password');
 
 if ($user) {
     header('Location: /dashboard');
@@ -82,9 +82,9 @@ return function($args) {
 ## 5) Logout
 
 ```php
-use const bad\auth\AUTH_LEAVE;
+use const bad\auth\LEAVE;
 
-checkin(AUTH_LEAVE);
+checkin(LEAVE);
 header('Location: /');
 exit;
 ```
@@ -104,10 +104,10 @@ Returns `null`.
 
 | Constant | Value | Behavior |
 |----------|-------|----------|
-| `AUTH_SETUP` | 1 | Store username field + password query |
-| `AUTH_ENTER` | 2 | Authenticate via POST |
-| `AUTH_LEAVE` | 4 | Destroy session |
-| `AUTH_DUMMY_HASH` | bcrypt string | Timing-safe fallback |
+| `SETUP` | 1 | Store username field + password query |
+| `ENTER` | 2 | Authenticate via POST |
+| `LEAVE` | 4 | Destroy session |
+| `DUMMY_HASH` | bcrypt string | Timing-safe fallback |
 
 ### Function
 
@@ -118,9 +118,9 @@ checkin(int $behave = 0, ?string $u = null, $p = null): ?string
 | `$behave` | `$u` | `$p` | Returns |
 |-----------|------|------|---------|
 | `0` | ignored | ignored | Username from session, or `null` |
-| `AUTH_SETUP` | Session key for username | PDOStatement | `null` |
-| `AUTH_ENTER` | POST field: username | POST field: password | Username on success, `null` on failure |
-| `AUTH_LEAVE` | ignored | ignored | `null` |
+| `SETUP` | Session key for username | PDOStatement | `null` |
+| `ENTER` | POST field: username | POST field: password | Username on success, `null` on failure |
+| `LEAVE` | ignored | ignored | `null` |
 
 ### Throws
 
@@ -128,7 +128,7 @@ checkin(int $behave = 0, ?string $u = null, $p = null): ?string
 
 | Exception | Code | When |
 |-----------|------|------|
-| `BadFunctionCallException` | `0` | `checkin()` called before `AUTH_SETUP` |
+| `BadFunctionCallException` | `0` | `checkin()` called before `SETUP` |
 | `BadFunctionCallException` | `0xBADC0DE` | Invalid parameters for action (caught Error wrapped) |
 | `LogicException` | `0` | No active session |
 | `RuntimeException` | `0` | Password query execution failed |
@@ -151,7 +151,7 @@ Authenticated username stored at `$_SESSION['bad\auth'][$username_field]`.
 
 ## Security
 
-- **Timing-safe:** `AUTH_DUMMY_HASH` ensures `password_verify` always runs, even for nonexistent users
+- **Timing-safe:** `DUMMY_HASH` ensures `password_verify` always runs, even for nonexistent users
 - **Session fixation:** ID regenerated on successful login
 - **No plaintext:** Expects `password_hash()` output in DB
 - **Cookie cleanup:** Session cookie explicitly destroyed on logout with proper params

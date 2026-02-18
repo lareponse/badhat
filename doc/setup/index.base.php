@@ -38,7 +38,7 @@ bad\pdo\db($pdo);
 
 // auth setup (optional)
 $stmt = bad\pdo\qp("SELECT password FROM users WHERE username = ?", []);
-bad\auth\checkin(bad\auth\AUTH_SETUP, 'username', $stmt);
+bad\auth\checkin(bad\auth\SETUP, 'username', $stmt);
 
 // --------------------------------------------------
 // Normalize request path
@@ -57,7 +57,7 @@ $loot  = [];
 
 if ($route) {
     [$file, $args] = $route;
-    $loot = bad\run\run([$file], $args, INVOKE);
+    $loot = bad\run\loop([$file], $args, INVOKE);
 }
 
 // --------------------------------------------------
@@ -67,7 +67,7 @@ if ($route) {
 $render = bad\map\look($io_root . '/render/', $key, '.php', REBASE);
 
 if ($render) {
-    $loot = bad\run\run([$render], $loot, ABSORB);
+    $loot = bad\run\loop([$render], $loot, ABSORB);
 }
 
 // --------------------------------------------------

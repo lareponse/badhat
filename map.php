@@ -57,8 +57,9 @@ function look($base, $path, $shim = '', $behave = 0): ?string
 
 function seek($base, $path, $shim = '', $behave = 0): ?array        // progressive search: test path segments to find executable file
 {                                                                   
-    if (!isset($base[0]) || $base[-1] !== '/') return null;
-
+    if (isset($base[0]) && $base[-1] !== '/')
+        $base .= '/';
+    
     $len = \strlen($path);
     $pos  = (ASCEND & $behave) ? 0 : $len;                          // begin at start for forward scan, at end for reverse
 

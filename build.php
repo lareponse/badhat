@@ -39,8 +39,3 @@ function vdh(...$v): void
     echo '</pre>';
 }
 
-function assert_that(bool $cond, string $label): void
-{
-    $cond || throw new \RuntimeException("ASSERT FAILED: $label"); // crash fast: assertion is part of control flow
-    echo htmlspecialchars("ASSERT SUCCESS: $label") . PHP_EOL;          // echo only on success (safe for HTML contexts)
-}
