@@ -23,7 +23,7 @@ Token created, stored in session, returned for embedding.
 <input type="hidden" name="checkout" value="<?= htmlspecialchars($token) ?>">
 ```
 
-If a valid token already exists for that key, setup is skipped and the existing token is returned.
+If a token already exists for that key (not yet expired), setup is skipped and the existing token is returned.
 
 ---
 
@@ -48,6 +48,8 @@ $valid = csrf(CHECK, 'checkout', $_SERVER['HTTP_X_CSRF_TOKEN']);
 ```
 
 Returns `true` if valid, `false` if mismatched. Returns `null` if expired (and cleans up). Throws if token missing entirely.
+
+Tokens are **single-use**: a successful `CHECK` removes the token from the session. Replay attempts will throw (not initialized).
 
 ---
 

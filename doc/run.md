@@ -3,7 +3,7 @@
 You mapped a request to a file.
 Now you need to execute that file — without turning your call-site into a ritual of `include`, output buffers, and exception plumbing.
 
-`bad\run` is three verbs:
+`bad\run` is two verbs:
 
 - **loop()** — run many files in order, sharing execution space
 - **boot()** — invoke what the file returned
@@ -32,12 +32,12 @@ $loot = loop([
 ], ['token' => 'ok'], INVOKE);
 
 $result = $loot[INC_RETURN] ?? null;
-````
+```
 
 `loop()` returns the final loot bag.
 By default, each step receives the original `$args` you passed.
 
-If you want a real pipeline, add `RELOOT`: each next step receives the previous step’s loot bag.
+If you want a real pipeline, add `RELOOT`: each next step receives the previous step's loot bag.
 
 ```php
 use const bad\run\{INVOKE, RELOOT, INC_RETURN};
@@ -51,45 +51,23 @@ $loot = loop([
 echo (string)($loot[INC_RETURN] ?? '');
 ```
 
----
-
-## 2) loot(): one step (include + maybe invoke + maybe buffer)
-
-`loot()` is what `loop()` does internally, exposed for the rare case where you want to run a single file and still get a fault latch.
+### Signature
 
 ```php
-use function bad\run\loot;
-use const bad\run\{BUFFER, INVOKE, INC_BUFFER, INC_RETURN};
-
-$fault = null;
-$loot  = loot(__DIR__ . '/views/hello.php', ['name' => 'World'], BUFFER, $fault);
-
-if ($fault) throw $fault;
-
-echo $loot[INC_BUFFER];
+loop(array $file_paths, array $args = [], int $behave = 0, ?\Closure $ob = null): array
 ```
 
-### Include-time input
-
-The included file sees a `$loot` variable (the input bag).
-That’s the contract: files consume the bag, return something, and/or print.
-
-Example file:
-
-```php
-// views/hello.php
-?><h1>Hello, <?= htmlspecialchars($loot['name'] ?? '...') ?></h1><?php
-```
+The optional `$ob` closure is a factory for output buffer guards — used internally and in advanced pipeline setups where you need custom buffer lifecycle management per step.
 
 ---
 
-## 3) boot(): invoke what the file returned
+## 2) boot(): invoke what the file returned
 
-Most “handler files” return a closure.
-With `INVOKE`, `bad\run` invokes the returned value if it’s acceptable.
+Most "handler files" return a closure.
+With `INVOKE`, `bad\run` invokes the returned value if it's acceptable.
 
 Default policy is strict: **Closure-only**.
-If you want “any callable”, add `ANYCALL`.
+If you want "any callable", add `ANYCALL`.
 
 ```php
 use function bad\run\loop;
@@ -132,7 +110,7 @@ echo $loot[INC_RETURN];
 
 ---
 
-## 4) Buffering: capture output when you need it
+## 3) Buffering: capture output when you need it
 
 Without `BUFFER`, output streams immediately.
 With it, output is captured per step into `INC_BUFFER`.
@@ -147,7 +125,7 @@ echo $loot[INC_BUFFER];
 
 ### ABSORB: when output feeds the callable
 
-`ABSORB` is a handshake: buffer output, then invoke, and append the current capture to the callable’s input.
+`ABSORB` is a handshake: buffer output, then invoke, and append the current capture to the callable's input.
 
 ```php
 // views/page.php
@@ -169,12 +147,12 @@ echo $loot[INC_RETURN];
 
 ---
 
-## 5) Fault rules (when things break)
+## 4) Fault rules (when things break)
 
 A step can fault on include or invoke.
 `loop()` stops on the first fault and throws.
 
-If you want “continue anyway”, add `FAULT_AHEAD`.
+If you want "continue anyway", add `FAULT_AHEAD`.
 
 ```php
 use const bad\run\{INVOKE, FAULT_AHEAD};
@@ -187,7 +165,7 @@ $loot = loop([
 ```
 
 If include faulted, invoke is normally vetoed.
-If you want “try invoke anyway”, add `RESCUE_CALL`.
+If you want "try invoke anyway", add `RESCUE_CALL`.
 
 ---
 
@@ -218,7 +196,7 @@ If you want “try invoke anyway”, add `RESCUE_CALL`.
 When a fault occurs, `bad\run` normalizes it as `Exception` with code `0xBADC0DE`.
 The message tells you the phase and the file:
 
-* `loot:include:/path/to/file.php`
+* `loop:include:/path/to/file.php`
 * `boot:invoke:/path/to/file.php`
 
 The original throwable is kept as the previous exception.
@@ -228,4 +206,4 @@ The original throwable is kept as the previous exception.
 ## Buffer cleanup
 
 Each step snapshots `ob_get_level()` and cleans up buffers opened inside the file/callable.
-If a step leaks nested buffers, they’re dropped so the rest of the request doesn’t inherit broken buffer state.
+If a step leaks nested buffers, they're dropped so the rest of the request doesn't inherit broken buffer state.

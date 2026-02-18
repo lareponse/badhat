@@ -26,7 +26,7 @@ return function($args) {
     $id = $args[0] ?? throw new \InvalidArgumentException('Post ID required');
     
     if ($_POST) {
-        csrf('_csrf', null, CHECK) || exit(out(403, 'Invalid token'));
+        csrf(CHECK, '_csrf') || exit(out(403, 'Invalid token'));
         qp("UPDATE posts SET title=?, body=? WHERE id=?", 
             [$_POST['title'], $_POST['body'], $id]);
         headers(ONE, 'Location', "/posts/$id");
@@ -157,7 +157,7 @@ return function($args) {
     if (!$_FILES) 
         return ['max_size' => ini_get('upload_max_filesize')];
     
-    csrf('_csrf', null, CHECK) || exit(out(403, 'Invalid token'));
+    csrf(CHECK, '_csrf') || exit(out(403, 'Invalid token'));
     
     $file = $_FILES['file'];
     $path = 'uploads/' . date('Y/m/') . uniqid() . '_' . basename($file['name']);
@@ -262,7 +262,7 @@ return function($args) {
         exit(out(302));
     }
     
-    csrf('_csrf', null, CHECK) || exit(out(403, 'Invalid token'));
+    csrf(CHECK, '_csrf') || exit(out(403, 'Invalid token'));
     
     $order = [
         'user'   => checkin(),
