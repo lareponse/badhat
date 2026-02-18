@@ -37,8 +37,8 @@ function csrf(int $ttl_behave, string $key, $param = null)
     if (CHECK & $behave) {
         $actual = is_string($param) ? $param : ($_POST[$key] ?? null);
         $actual                                                     || throw new \InvalidArgumentException(__FUNCTION__.":{$key}:token required");
-
-        return hash_equals($expect, $actual);                       // timing-safe comparison
+        unset($session[$key]);                                      // one-off usage, prevent token replay
+        return hash_equals($expect, $actual);
     }
 
     return $expect;
