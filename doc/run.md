@@ -5,8 +5,7 @@ Now you need to execute that file — without turning your call-site into a ritu
 
 `bad\run` is three verbs:
 
-- **loop()** — run many files in order
-- **loot()** — run one step (include + optional buffer + optional invoke)
+- **loop()** — run many files in order, sharing execution space
 - **boot()** — invoke what the file returned
 
 A file can do two things:
