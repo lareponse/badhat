@@ -43,7 +43,7 @@ function field_value(string $value, int $behave = 0): string | \DomainException
         if ($len === 0 || \strspn($value, RFC_OWS) === $len)      return or_throw($behave, __FUNCTION__, 'empty or OWS-only');
 
     if (isset($value[\strspn($value, RFC_VALUE_SAFE_BYTES)]))     return or_throw($behave, __FUNCTION__, 'invalid byte');
-    if (\strpbrk($value, RFC_CTL_NO_HTAB) !== false)              return or_throw($behave, __FUNCTION__, 'forbidden CTL');
+    // if (\strpbrk($value, RFC_CTL_NO_HTAB) !== false)              return or_throw($behave, __FUNCTION__, 'forbidden CTL');
     return $value;
 }
 
