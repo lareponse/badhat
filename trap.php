@@ -18,8 +18,8 @@ return function (int $behave = HND_ALL, ?string $request_id = null): callable {
 
     $request_id ??= (int)\getmypid() . '-' . \dechex(\hrtime(true) ?: (int)(\microtime(true) * 1e9));
 
-    $prev_err = false;
-    $prev_exc = false;
+    $prev_err = false;              // set_error_handler():?callabble
+    $prev_exc = false;              // set_exception_handler():?callabble
 
     (HND_ERR & $behave) && $prev_err = \set_error_handler(
         static function ($code, $message, $file, $line) use ($behave, $request_id): bool {
