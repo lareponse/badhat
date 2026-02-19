@@ -1,236 +1,152 @@
 # bad\trap
 
-PHP fails in three ways:
+Your logs say `PHP Fatal error: Uncaught TypeError`.
+They don't say which request. They never do.
 
-- **errors** (warnings, notices): noisy, but execution continues
-- **exceptions**: execution stops
-- **fatals**: execution stops hard
-
-None of them tell you *which request* caused the problem.
-
-So your logs look like this:
-
-```
-
-PHP Fatal error: Uncaught TypeError: ...
-
-````
-
-Which request? Which user? Good luck.
-
-> `bad\trap` takes over PHP’s error channel, tags everything with a request ID,
-> and gives you one place to decide what happens when things break.
+`bad\trap` tags every log line with a request ID and gives you one place to handle errors, exceptions, and fatal shutdowns.
 
 ---
 
-## 1) Install
+## Claim the channel
 
 ```php
 $install = require '/add/badhat/trap.php';
 $restore = $install();
-````
-
-That’s it.
-
-From this point on:
-
-* runtime errors go through your handler
-* uncaught exceptions go through your handler
-* fatal shutdowns go through your handler
-
-Every log line is tagged:
-
-```
-[req=1a2b3c4d-1234] ...
 ```
 
-One request. One ID. Grep works again.
+Done. Errors, exceptions, fatal shutdowns — all yours now.
+
+Every log line carries a tag:
+
+```
+[req=1234-a1b2c3d4] ...
+```
+
+Grep works again.
 
 ---
 
-## 2) Request ID
+## Choose what you catch
 
 ```php
-use const bad\trap\HND_ALL;
-
-// custom ID (used as-is)
-$restore = $install(HND_ALL, 'my-request-id');
+$restore = $install(HND_ERR | HND_EXC);   // errors + exceptions, not shutdown
+$restore = $install(HND_ALL);              // everything (default)
 ```
 
-If you don’t pass one, `bad\trap` generates:
-
-```
-dechex(start_time) . '-' . getmypid()
-```
-
-Default time source is microtime-based.
-Add `MONOTONIC_TIME` if you want `hrtime()` when available.
+What you don't claim, PHP keeps.
 
 ---
 
-## 3) What to catch
-
-The first argument is a bitmask of **handler flags**.
+## Choose what you see
 
 ```php
-use const bad\trap\{HND_ERR, HND_EXC, HND_SHUT, HND_ALL};
-
-$restore = $install(HND_ERR | HND_EXC); // errors + exceptions
-$restore = $install(HND_ALL);           // everything (default)
+$restore = $install(HND_ALL | LOG_WITH_TRACE);
 ```
 
-| Flag       | Catches               |
-| ---------- | --------------------- |
-| `HND_ERR`  | Runtime errors        |
-| `HND_EXC`  | Uncaught exceptions   |
-| `HND_SHUT` | Fatal shutdown errors |
-| `HND_ALL`  | All of the above      |
-
-**Story:**
-Claim the hooks you want. Leave the rest alone.
+Without `LOG_WITH_TRACE`: one line per failure.
+With it: one line, then a `FRAME` per stack level. Loud. Worth it in dev, think twice in prod.
 
 ---
 
-## 4) How much to log
+## Choose what survives a fatal
 
-By default, logs are one line per failure.
-
-Add traces when you need them:
+When the process dies, you probably have open output buffers.
 
 ```php
-use const bad\trap\MSG_WITH_TRACE;
-
-$restore = $install(HND_ALL | MSG_WITH_TRACE);
+$restore = $install(HND_ALL | FATAL_OB_CLEAN);    // prod: discard everything
+$restore = $install(HND_ALL | FATAL_OB_FLUSH);    // dev: dump what you have
 ```
 
-Example:
+OB cleanup fires on exceptions and shutdowns only — a warning doesn't wipe your buffers.
 
-```
-[req=1a2b3c4d-1234] FATAL (exception:InvalidArgumentException) Bad input in /app/api.php:18
-[req=1a2b3c4d-1234] TRACE
-#0 /app/api.php:23 validate()
-#1 /app/index.php:45 include()
-```
-
-Traces are expensive.
-Use them in dev. Think twice in prod.
+No HTTP status. That's `bad\http`'s job.
 
 ---
 
-## 5) What happens to output on fatal
-
-When execution dies, you probably have buffered output.
-
-Choose what to do with it:
+## Let PHP talk too
 
 ```php
-use const bad\trap\{FATAL_OB_FLUSH, FATAL_OB_CLEAN};
-
-// Dev: show what you have
-$restore = $install(HND_ALL | FATAL_OB_FLUSH);
-
-// Prod: discard everything
-$restore = $install(HND_ALL | FATAL_OB_CLEAN);
-```
-
-If you want the client to know something went wrong:
-
-```php
-use const bad\trap\FATAL_HTTP_500;
-
-$restore = $install(HND_ALL | FATAL_HTTP_500 | FATAL_OB_CLEAN);
-```
-
-**Story:**
-Prod hides the mess. Dev shows you everything.
-
----
-
-## 6) Let PHP talk too (optional)
-
-Sometimes you want your logs **and** PHP’s native output:
-
-```php
-use const bad\trap\ALLOW_INTERNAL;
-
 $restore = $install(HND_ERR | ALLOW_INTERNAL);
 ```
 
-Your handler logs. PHP’s handler runs too.
-
-Runtime errors only.
+Your handler logs. PHP's handler also runs. Errors only — exceptions and shutdowns are terminal anyway.
 
 ---
 
-## 7) Restore
-
-The installer returns a restore callable:
+## Name your request
 
 ```php
-$restore = $install();
-// ...
-$restore();
+$restore = $install(HND_ALL, 'order-7741');
 ```
 
-* error + exception handlers are restored
-* shutdown handlers **cannot** be removed
-
-If you nest installs, restore in reverse order.
+If you don't, trap generates `pid-dechex(hrtime)`.
 
 ---
 
-## Typical profiles
-
-### Production
+## Restore
 
 ```php
-$restore = $install(HND_ALL | FATAL_HTTP_500 | FATAL_OB_CLEAN);
+$restore();              // restore everything you claimed
+$restore(HND_ERR);       // give back errors, keep exceptions
 ```
 
-Clean failure. No traces. Proper status code.
+Default restores all. Pass a mask to restore selectively.
 
-### Development
-
-```php
-$restore = $install(
-    HND_ALL |
-    MSG_WITH_TRACE |
-    FATAL_OB_FLUSH |
-    ALLOW_INTERNAL
-);
-```
-
-See everything. Logs + output + traces.
+Shutdown handlers stick — PHP doesn't offer a way back.
 
 ---
 
-## Sharp edges
+## What hits the log
 
-* **You own the channel.** Nothing is shown unless you allow it.
-* **Traces are loud.** They double log volume.
-* **Shutdown sticks.** Once installed, it stays for the request lifetime.
-* **Restore is on you.** Especially in tests.
+Every line, same shape:
+
+```
+[req=ID] LABEL #CODE (file:line) [SOURCE MESSAGE]
+```
+
+| Label      | You see it when…                          |
+| ---------- | ----------------------------------------- |
+| `HND_ERR`  | a runtime error fires                     |
+| `HND_EXC`  | an exception escapes                      |
+| `HND_SHUT` | the process dies                          |
+| `PEEK`     | exception or shutdown (diagnostics line)  |
+| `FRAME`    | `LOG_WITH_TRACE` is set                   |
+
+`PEEK` tells you what the process looked like at death: elapsed ms, peak KiB, SAPI, include count, PID, OB depth, where headers were sent. Timing comes from `REQUEST_TIME_FLOAT` — absent in CLI, shows `-1ms`.
+
+Exception chains read left to right:
+
+```
+RuntimeException:query failed <- PDOException:SQLSTATE[42S02]
+```
+
+Messages are scrubbed (control chars → space) and capped at 4096 bytes.
+
+---
+
+## Profiles
+
+```php
+// prod: quiet death
+$restore = $install(HND_ALL | FATAL_OB_CLEAN);
+
+// dev: see everything
+$restore = $install(HND_ALL | LOG_WITH_TRACE | FATAL_OB_FLUSH | ALLOW_INTERNAL);
+```
 
 ---
 
 ## Reference
 
-### Handler flags
+| Flag             | Value | What it does                              |
+| ---------------- | ----: | ----------------------------------------- |
+| `HND_ERR`        |     1 | Claim runtime errors                      |
+| `HND_EXC`        |     2 | Claim uncaught exceptions                 |
+| `HND_SHUT`       |     4 | Claim fatal shutdown                      |
+| `HND_ALL`        |     7 | All three                                 |
+| `LOG_WITH_TRACE` |     8 | Emit stack frames after the main line     |
+| `ALLOW_INTERNAL` |    16 | Don't suppress PHP's own error handler    |
+| `FATAL_OB_FLUSH` |    32 | Flush all OB on exception/shutdown        |
+| `FATAL_OB_CLEAN` |    64 | Discard all OB on exception/shutdown      |
 
-| Flag       | Value |
-| ---------- | ----: |
-| `HND_ERR`  |     1 |
-| `HND_EXC`  |     2 |
-| `HND_SHUT` |     4 |
-| `HND_ALL`  |     7 |
-
-### Behavior flags
-
-| Flag             | Value |
-| ---------------- | ----: |
-| `MSG_WITH_TRACE` |     8 |
-| `ALLOW_INTERNAL` |    16 |
-| `FATAL_OB_FLUSH` |    32 |
-| `FATAL_OB_CLEAN` |    64 |
-| `FATAL_HTTP_500` |   128 |
-| `MONOTONIC_TIME` |   256 |
+`peek()` and `logladdy()` live in `bad\trap\`. Namespace-public, not API. Don't call them unless you mean it.
