@@ -47,6 +47,5 @@ function ERRMODE_SILENT(\PDO|\PDOStatement $source, string $action, ?\Throwable 
     $log = $base . ': ' . ($err[2] ?? '?');                          // may be sensitive
     $t && $log .= ' | ' . $t::class . '#' . (string)$t->getCode() . ': ' . $t->getMessage();
 
-    trigger_error(str_replace(["\r", "\n"], ' ', $log), E_USER_WARNING);
     return $base;
 }// returns sanitized base; log driver detail + throwable detail (may include sensitive info)
