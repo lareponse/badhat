@@ -49,7 +49,7 @@ function field_value(string $value, int $behave = 0): string | \DomainException
 
 function url_path(string $path, int $behave = 0): string | \DomainException
 {
-    if (\strpbrk($path, RFC_CTL_NO_HTAB . RFC_OWS) !== false)   return or_throw($behave, __FUNCTION__, 'forbidden CTL/SP/HTAB');
+    if (\strpbrk($path, RFC_CTL_NO_HTAB . RFC_OWS) !== false)       return or_throw($behave, __FUNCTION__, 'forbidden CTL/SP/HTAB');
     if (\strpos($path, "\\") !== false)                             return or_throw($behave, __FUNCTION__, 'backslash forbidden');
 
     $allowed_no_pct = RFC_U_PCHAR . "/";
