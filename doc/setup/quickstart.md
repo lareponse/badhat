@@ -47,12 +47,12 @@ require 'add/badhat/pdo.php';
 
 use function bad\map\{hook, seek, look};
 use function bad\http\{headers, out};
-use function bad\run\run;
+use function bad\run\loot;
 use function bad\pdo\db;
 
 use const bad\trap\HND_ALL;
 use const bad\map\REBASE;
-use const bad\run\{INVOKE, ABSORB, RESULT};
+use const bad\run\{INVOKE, BUFFER, RESULT};
 use const bad\http\ONE;
 
 // --------------------------------------------------
@@ -94,7 +94,7 @@ $route = seek($base, $key, '.php');
 
 if ($route) {
     [$file, $args] = $route;
-    $loot = run([$file], $args, INVOKE);
+    $loot = loot([$file], $args, INVOKE);
 }
 
 // --------------------------------------------------
@@ -104,7 +104,7 @@ if ($route) {
 $render = look($io . '/render/', $key, '.php', REBASE);
 
 if ($render) {
-    $loot = run([$render], $loot, ABSORB);
+    $loot = loot([$render], $loot, BUFFER | INVOKE);
 }
 
 // --------------------------------------------------
@@ -190,8 +190,8 @@ $users = $args['users'] ?? [];
 </form>
 
 <?php
-return function (array $args) {
-    $content = $args[count($args) - 1];
+return function (array $loot, array $args) {
+    $content = $loot[BUFFER] ?? '';
 
     return "<!DOCTYPE html>
 <html>

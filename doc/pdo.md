@@ -138,7 +138,7 @@ trans(function(\PDO $pdo) {
 
 ---
 
-## Errors & logging
+## Errors
 
 These helpers do not return `false`.
 
@@ -150,10 +150,7 @@ These helpers do not return `false`.
   * `\RuntimeException` on database failure
   * `\RuntimeException` with code **`0xBADC0DE`** if **your callable throws**
 
-On failures that originate from database operations, a warning is also emitted via `trigger_error(..., E_USER_WARNING)`.
-
-* The **exception message is sanitized** (safe-ish to show to users).
-* The **warning contains driver details** (and may include sensitive information).
+Exception messages are **sanitized**: they include the action and SQLSTATE but omit driver-specific detail. The full diagnostic (including driver messages and chained throwable info) is built internally but not emitted — if you need it logged, configure `PDO::ERRMODE_EXCEPTION` and catch `\PDOException` directly, or add your own error handler.
 
 ```php
 try {
@@ -162,7 +159,7 @@ try {
     });
 } catch (\RuntimeException $e) {
     if ($e->getCode() === 0xBADC0DE) {
-        // Your callable threw (details are in the E_USER_WARNING log).
+        // Your callable threw — $e->getMessage() is sanitized.
     }
 }
 ```
@@ -184,4 +181,3 @@ qp(
 ): \PDOStatement
 
 trans(callable $transaction, ?\PDO $pdo = null)
-```

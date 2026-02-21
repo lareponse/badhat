@@ -3,7 +3,7 @@
 
 set_include_path(__DIR__ . '/..' . PATH_SEPARATOR . get_include_path());
 
-$install = require 'add/badhat/error.php';
+$install = require 'add/badhat/trap.php';
 require 'add/badhat/map.php';
 require 'add/badhat/run.php';
 require 'add/badhat/http.php';
@@ -12,7 +12,7 @@ require 'add/badhat/auth.php';
 require 'add/badhat/csrf.php';
 
 use const bad\map\REBASE;
-use const bad\run\{INVOKE, ABSORB, RESULT};
+use const bad\run\{INVOKE, BUFFER, RESULT};
 use const bad\http\ONE;
 
 // --------------------------------------------------
@@ -25,8 +25,8 @@ session_start();
 
 $pdo = new PDO(
     getenv('DB_DSN')  ?: 'mysql:host=127.0.0.1;dbname=app;charset=utf8mb4',
-    getenv('DB_USER') ?: 'root',
-    getenv('DB_PASS') ?: '',
+    getenv('DB_USER') ?: 'cred_username',
+    getenv('DB_PASS') ?: 'cred_password',
     [
         PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
@@ -37,8 +37,9 @@ $pdo = new PDO(
 bad\pdo\db($pdo);
 
 // auth setup (optional)
-$stmt = bad\pdo\qp("SELECT password FROM users WHERE username = ?", []);
-bad\auth\checkin(bad\auth\SETUP, 'username', $stmt);
+$select = bad\pdo\qp("SELECT password FROM users WHERE username = ?", []);
+$update = bad\pdo\qp("UPDATE users SET last_login = NOW() WHERE username = ?", []);
+bad\auth\checkin(null, null, $update, $select);
 
 // --------------------------------------------------
 // Normalize request path
@@ -67,7 +68,7 @@ if ($route) {
 $render = bad\map\look($io_root . '/render/', $key, '.php', REBASE);
 
 if ($render) {
-    $loot = bad\run\loot([$render], $loot, ABSORB);
+    $loot = bad\run\loot([$render], $loot, BUFFER | INVOKE);
 }
 
 // --------------------------------------------------
