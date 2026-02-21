@@ -61,7 +61,7 @@ use const bad\http\QUIT;
 $file = look($base, $path, '.php');
 
 $file
-    ? loop([$file], [], INVOKE)
+    ? loot([$file], [], INVOKE)
     : out(QUIT | 404, 'Not Found');
 ```
 
@@ -88,7 +88,7 @@ if ($hit === null) {
 }
 
 [$file, $args] = $hit;
-loop([$file], $args, INVOKE);
+loot([$file], $args, INVOKE);
 ```
 
 Default behavior is **tail-seeking** (deepest-first).

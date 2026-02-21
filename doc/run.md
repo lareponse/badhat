@@ -1,209 +1,287 @@
 # bad\run
 
-You mapped a request to a file.
-Now you need to execute that file — without turning your call-site into a ritual of `include`, output buffers, and exception plumbing.
+You mapped a request to files.
+Now you need to **run them** without turning every call-site into a ceremony of `include`, output buffers, callable plumbing and try-catches.
 
-`bad\run` is two verbs:
 
-- **loop()** — run many files in order, sharing execution space
-- **boot()** — invoke what the file returned
+`bad\run` is wrapper around include, in a single verb:
 
-A file can do two things:
-
-1. **return** a value (data, a closure, a string, anything)
-2. **print** output (echo / templates)
-
-`bad\run` collects both into a single bag called **loot**.
-
-- `INC_RETURN` is the last return value (from include or invoke)
-- `INC_BUFFER` is the last captured output (when you BUFFER)
+No lifecycle.
+No context object.
+Just PHP + a bitmask.
 
 ---
 
-## 1) loop(): the call-site primitive
+## loot(): the only call-site
 
 ```php
-use function bad\run\loop;
-use const bad\run\{INVOKE, INC_RETURN};
+use function bad\run\loot;
+use const bad\run\{RESULT, BUFFER, INVOKE};
 
-$loot = loop([
-    __DIR__ . '/mw/auth.php',
-    __DIR__ . '/routes/home.php',
-], ['token' => 'ok'], INVOKE);
-
-$result = $loot[INC_RETURN] ?? null;
-```
-
-`loop()` returns the final loot bag.
-By default, each step receives the original `$args` you passed.
-
-If you want a real pipeline, add `RELOOT`: each next step receives the previous step's loot bag.
-
-```php
-use const bad\run\{INVOKE, RELOOT, INC_RETURN};
-
-$loot = loop([
-    __DIR__ . '/mw/auth.php',
-    __DIR__ . '/routes/home.php',
-    __DIR__ . '/views/home.php',
-], ['token' => 'ok'], INVOKE | RELOOT);
-
-echo (string)($loot[INC_RETURN] ?? '');
+$loot = loot('/path/to/handler.php', $args, INVOKE);
+$loot = loot(['/path/a.php', '/path/b.php'], $args, BUFFER);
 ```
 
 ### Signature
 
 ```php
-loop(array $file_paths, array $args = [], int $behave = 0, ?\Closure $ob = null): array
+loot(array|string $paths, mixed $args = [], int $behave = 0): array
 ```
 
-The optional `$ob` closure is a factory for output buffer guards — used internally and in advanced pipeline setups where you need custom buffer lifecycle management per step.
+Pass a single path string or an array of paths. They run in order.
+
+### Return value
+
+`loot()` returns the **loot array** from the last step.
+
+Three reserved slots may be present:
+
+| Slot     | Index | Contains |
+|----------|------:|----------|
+| `RESULT` |   `0` | Return value of include (or invoke, if `INVOKE`) |
+| `BUFFER` |   `1` | Captured output string (when `BUFFER` is set) |
+| `FAULTS` |   `2` | Array of collected `\Throwable`s (when `FAULTS` is set) |
 
 ---
 
-## 2) boot(): invoke what the file returned
+## Flags
 
-Most "handler files" return a closure.
-With `INVOKE`, `bad\run` invokes the returned value if it's acceptable.
+### BUFFER
 
-Default policy is strict: **Closure-only**.
-If you want "any callable", add `ANYCALL`.
+Capture output per file.
+
+- without `BUFFER`: the file prints normally
+- with `BUFFER`: output is captured into `$loot[BUFFER]`
 
 ```php
-use function bad\run\loop;
-use const bad\run\{INVOKE, ANYCALL, INC_RETURN};
+use const bad\run\{BUFFER};
 
-$loot = loop([__DIR__ . '/routes/users.php'], ['42'], INVOKE);
-// invokes only if routes/users.php returned a \Closure
-
-$loot = loop([__DIR__ . '/routes/users.php'], ['42'], INVOKE | ANYCALL);
-// invokes if it returned anything is_callable()
+$loot = loot('/views/hello.php', ['name' => 'World'], BUFFER);
+echo $loot[BUFFER] ?? '';
 ```
 
-### Callable input shape
+### SILENT
 
-By default, the callable receives **one argument**: the bag (array).
+Suppress output. Like `BUFFER` but discards instead of capturing.
+
+- `ob_start()` before include, `ob_end_clean()` after
+- nothing stored in loot
+- also suppresses invoke output when combined with `INVOKE`
 
 ```php
-// routes/users.php
-return function(array $bag) {
-    $id = $bag[0] ?? null;
+use const bad\run\SILENT;
+
+loot('/jobs/cleanup.php', [], SILENT);
+```
+
+### INVOKE
+
+If the file returned a callable, invoke it.
+
+The callable always receives two arguments:
+
+1. `$loot` — the current loot array (including `RESULT`, `BUFFER` if captured, `FAULTS` if enabled)
+2. `$args` — the original seed
+
+The invoked result overwrites `$loot[RESULT]`.
+
+```php
+use const bad\run\{INVOKE, RESULT};
+
+$loot = loot('/routes/user.php', ['id' => '42'], INVOKE);
+echo $loot[RESULT];
+```
+
+`routes/user.php`:
+
+```php
+return function(array $loot, array $args) {
+    return 'user:' . ($args['id'] ?? '');
+};
+```
+
+### SPREAD
+
+Controls how `$args` reaches the callable.
+
+- without `SPREAD`: `$callable($loot, $args)`
+- with `SPREAD`: `$callable($loot, ...$args)`
+
+```php
+use const bad\run\{INVOKE, SPREAD, RESULT};
+
+$loot = loot('/routes/user.php', ['42'], INVOKE | SPREAD);
+```
+
+`routes/user.php`:
+
+```php
+return function(array $loot, string $id) {
     return "user:$id";
 };
 ```
 
-If you want positional parameters, add `SPREAD`.
+### FAULTS
+
+Collect exceptions instead of throwing.
+
+- without `FAULTS`: first `\Throwable` from include, invoke, or OB guard stops execution
+- with `FAULTS`: exceptions are appended to `$loot[FAULTS]` and execution continues through the current step
 
 ```php
-// routes/users.php
-return function(string $id) {
-    return "user:$id";
+use const bad\run\{INVOKE, FAULTS, RESULT};
+
+$loot = loot('/routes/risky.php', [], INVOKE | FAULTS);
+
+if (!empty($loot[FAULTS])) {
+    // inspect, log, recover
+}
+```
+
+Faults from include, invoke, and OB guards all land in the same array.
+
+### RELOOT
+
+Retry-on-fault. Once.
+
+When a step faults (requires `FAULTS`), the same path is re-included one more time.
+The retry sees the previous faults in `$loot[FAULTS]` — the file can inspect what went wrong and adapt.
+
+If the retry also faults, execution moves to the next path. No infinite loop.
+
+```php
+use const bad\run\{INVOKE, FAULTS, RELOOT, RESULT};
+
+$loot = loot('/routes/fragile.php', [], INVOKE | FAULTS | RELOOT);
+```
+
+`routes/fragile.php`:
+
+```php
+if (!empty($loot[FAULTS] ?? [])) {
+    // we're on the retry pass — previous faults are visible
+    return ['fallback' => true];
+}
+
+// normal path that might throw
+return function(array $loot, $args) {
+    // ...
 };
 ```
 
-```php
-use const bad\run\{INVOKE, SPREAD, INC_RETURN};
+### OB_TRIM / OB_SAME
 
-$loot = loop([__DIR__ . '/routes/users.php'], ['42'], INVOKE | SPREAD);
-echo $loot[INC_RETURN];
+Buffer discipline flags. Checked after each step.
+
+- `OB_TRIM`: if the file leaked extra output buffers, clean them silently
+- `OB_SAME`: assert that `ob_get_level()` is unchanged after the step
+
+When the guard fails:
+
+- without `FAULTS`: throws `\RuntimeException`
+- with `FAULTS`: appends to `$loot[FAULTS]`
+
+```php
+use const bad\run\{INVOKE, OB_TRIM, OB_SAME};
+
+$loot = loot($files, $args, INVOKE | OB_TRIM | OB_SAME);
 ```
 
 ---
 
-## 3) Buffering: capture output when you need it
+## Callable contract
 
-Without `BUFFER`, output streams immediately.
-With it, output is captured per step into `INC_BUFFER`.
+Every invoked callable receives exactly two arguments:
 
 ```php
-use function bad\run\loop;
-use const bad\run\{BUFFER, INC_BUFFER};
-
-$loot = loop([__DIR__ . '/views/hello.php'], ['name' => 'World'], BUFFER);
-echo $loot[INC_BUFFER];
+function(array $loot, mixed $args): mixed
 ```
 
-### ABSORB: when output feeds the callable
-
-`ABSORB` is a handshake: buffer output, then invoke, and append the current capture to the callable's input.
+With `SPREAD`:
 
 ```php
-// views/page.php
-?><article><?= htmlspecialchars($loot['content'] ?? '') ?></article><?php
+function(array $loot, ...$args): mixed
+```
 
-return function(array $bag) {
-    $html = $bag[array_key_last($bag)] ?? '';
-    return "<!doctype html><html><body>$html</body></html>";
+`$loot` is always first. It contains whatever the include phase produced (`RESULT`, `BUFFER`, `FAULTS`).
+`$args` is always the original seed passed to `loot()`.
+
+---
+
+## Layout pattern (BUFFER + INVOKE)
+
+One file prints the body and returns a wrapper callable.
+The callable reads the captured buffer from `$loot[BUFFER]`.
+
+```php
+use const bad\run\{BUFFER, INVOKE, RESULT};
+
+$loot = loot('/views/page.php', ['title' => 'Hello'], BUFFER | INVOKE);
+echo $loot[RESULT] ?? '';
+```
+
+`views/page.php`:
+
+```php
+?><h1><?= htmlspecialchars($args['title'] ?? '') ?></h1><?php
+
+return function(array $loot, $args) {
+    $body = $loot[BUFFER] ?? '';
+    return "<!doctype html><html><body>$body</body></html>";
 };
-```
-
-```php
-use function bad\run\loop;
-use const bad\run\{ABSORB, INC_RETURN};
-
-$loot = loop([__DIR__ . '/views/page.php'], ['content' => 'Hello'], ABSORB);
-echo $loot[INC_RETURN];
 ```
 
 ---
 
-## 4) Fault rules (when things break)
+## Fault handling
 
-A step can fault on include or invoke.
-`loop()` stops on the first fault and throws.
-
-If you want "continue anyway", add `FAULT_AHEAD`.
+Default: fail-fast. First `\Throwable` propagates.
 
 ```php
-use const bad\run\{INVOKE, FAULT_AHEAD};
-
-$loot = loop([
-    __DIR__ . '/a.php',
-    __DIR__ . '/optional_metrics.php',
-    __DIR__ . '/b.php',
-], [], INVOKE | FAULT_AHEAD);
+try {
+    $loot = loot($files, $args, INVOKE);
+} catch (\Throwable $t) {
+    // your policy
+}
 ```
 
-If include faulted, invoke is normally vetoed.
-If you want "try invoke anyway", add `RESCUE_CALL`.
+With `FAULTS`: exceptions are collected, execution continues.
+With `FAULTS | RELOOT`: faulted step retries once, carrying previous faults.
 
 ---
 
 ## Reference
 
-### Behavior flags
+### Constants
 
-| Constant      | Value | Meaning                                                    |
-| ------------- | ----: | ---------------------------------------------------------- |
-| `BUFFER`      |   `1` | capture output per step into `INC_BUFFER`                  |
-| `INVOKE`      |   `2` | invoke returned value per step (if acceptable)             |
-| `ABSORB`      |   `7` | buffer + invoke + append current capture to callable input |
-| `SPREAD`      |   `8` | invoke callable with positional args (`...$args`)          |
-| `RESCUE_CALL` |  `16` | try invoke even if include faulted                         |
-| `ANYCALL`     |  `32` | accept any `is_callable()` (default: `\Closure` only)      |
-| `RELOOT`      |  `64` | pipe: next step input = previous step loot                 |
-| `FAULT_AHEAD` | `128` | pipe: keep going on fault (else: throw)                    |
+| Constant  | Value | Purpose |
+|-----------|------:|---------|
+| `RESULT`  |   `0` | Loot slot: return value |
+| `BUFFER`  |   `1` | Loot slot + flag: capture output |
+| `FAULTS`  |   `2` | Loot slot + flag: collect exceptions |
+| `SILENT`  |   `4` | Suppress output (no capture) |
+| `INVOKE`  |   `8` | Invoke callable return values |
+| `SPREAD`  |  `16` | Spread `$args` into callable |
+| `RELOOT`  |  `32` | Retry faulted step once |
+| `OB_TRIM` | `128` | Clean leaked output buffers |
+| `OB_SAME` | `256` | Assert buffer level unchanged |
 
-### Loot keys
+### Function
 
-| Constant     | Value | Contains                              |
-| ------------ | ----: | ------------------------------------- |
-| `INC_RETURN` |  `-1` | last return value (include or invoke) |
-| `INC_BUFFER` |  `-2` | last captured output (string)         |
+```php
+loot(array|string $paths, mixed $args = [], int $behave = 0): array
+```
 
 ### Fault shape
 
-When a fault occurs, `bad\run` normalizes it as `Exception` with code `0xBADC0DE`.
-The message tells you the phase and the file:
+All faults are the original `\Throwable` — no wrapping, no synthetic codes.
+OB guard faults are `\RuntimeException` with message `loot:ob:{$path}`.
 
-* `loop:include:/path/to/file.php`
-* `boot:invoke:/path/to/file.php`
+### OB guard
 
-The original throwable is kept as the previous exception.
+```php
+ob(int $behave = 0): \Closure
+```
 
----
-
-## Buffer cleanup
-
-Each step snapshots `ob_get_level()` and cleans up buffers opened inside the file/callable.
-If a step leaks nested buffers, they're dropped so the rest of the request doesn't inherit broken buffer state.
+Returns a closure that checks `ob_get_level()` against the level at creation time.
+Called internally by `loot()` when `OB_TRIM` or `OB_SAME` is set.

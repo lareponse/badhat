@@ -52,7 +52,7 @@ use function bad\pdo\db;
 
 use const bad\trap\HND_ALL;
 use const bad\map\REBASE;
-use const bad\run\{INVOKE, ABSORB, INC_RETURN};
+use const bad\run\{INVOKE, ABSORB, RESULT};
 use const bad\http\ONE;
 
 // --------------------------------------------------
@@ -111,9 +111,9 @@ if ($render) {
 // Output
 // --------------------------------------------------
 
-if (isset($loot[INC_RETURN]) && is_string($loot[INC_RETURN])) {
+if (isset($loot[RESULT]) && is_string($loot[RESULT])) {
     headers(ONE, 'Content-Type', 'text/html; charset=utf-8');
-    exit(out(200, $loot[INC_RETURN]));
+    exit(out(200, $loot[RESULT]));
 }
 
 exit(out(404, 'Not Found'));
