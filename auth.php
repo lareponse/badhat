@@ -2,81 +2,54 @@
 
 namespace bad\auth;
 
-const AUTH_SETUP  = 1;
-const AUTH_ENTER  = 2;
-const AUTH_LEAVE  = 4;
+const DUMMY_HASH = '$2y$12$8NidQXAmttzUc23lTnUDAuC.JoxuJtdG0NQTjhh3Y7C442uVQ4FTy';
 
-const AUTH_DUMMY_HASH = '$2y$12$8NidQXAmttzUc23lTnUDAuC.JoxuJtdG0NQTjhh3Y7C442uVQ4FTy';     // timing-safe: always run password_verify even if user missing
-
-function checkin(int $behave = 0, ?string $u = null, $p = null): ?string
+function checkin(?string $username = null, ?string $password = null, ?\PDOStatement $_update = null, ?\PDOStatement $_select = null): string
 {
-    static $username_field = null;
-    static $password_query = null;
+    static ?\PDOStatement $stm_update = null;
+    static ?\PDOStatement $stm_select = null;
 
-    if (AUTH_SETUP & $behave) {
-        $username_field = $u;
-        $password_query = $p;
-        return null;
+    if (isset($_update, $_select)){
+        !isset($stm_update, $stm_select)                            || throw new \BadFunctionCallException('checkin:already initialized');
+        $stm_update = $_update;
+        $stm_select = $_select;
     }
 
-    ($username_field && $password_query)                    || throw new \BadFunctionCallException(__FUNCTION__.':not initialized');
-    session_status() === PHP_SESSION_ACTIVE                 || throw new \LogicException(__FUNCTION__.':requires an active session');
+    isset($stm_update, $stm_select)                                 || throw new \BadFunctionCallException('checkin:not initialized');
+    (\session_status() === \PHP_SESSION_ACTIVE)                     || throw new \BadFunctionCallException('checkin:session not active');
 
-    try {
-        if(AUTH_LEAVE & $behave){
-            $_SESSION = [];
-            ini_get('session.use_cookies') && auth_session_cookie_destroy();
-            session_destroy()                               || throw new \RuntimeException(__FUNCTION__.':session_destroy failed');
-            return null;
+    if (isset($username, $password)){
+        $username !== '' && $password !== ''                        || throw new \BadFunctionCallException('checkin:empty credentials');
+        $stm_select->execute([$username])                           || throw new \RuntimeException('checkin:select failed');
+        $db_p = $stm_select->fetchColumn() ?: DUMMY_HASH;
+        $stm_select->closeCursor();
+
+        if (\password_verify($password, $db_p) && DUMMY_HASH !== $db_p){
+            \session_regenerate_id(true)                            || throw new \RuntimeException('checkin:session_regenerate_id failed');
+            $stm_update->execute([$username])                       || throw new \RuntimeException('checkin:update failed');
+            $stm_update->closeCursor();
+            $_SESSION[__NAMESPACE__][__FUNCTION__] = $username;
         }
-
-        if (AUTH_ENTER & $behave)
-            return auth_login($username_field, $password_query, $u, $p);
-
-        return $_SESSION[__NAMESPACE__][$username_field] ?? null;
-
-    } catch (\Error $e) {
-        throw new \BadFunctionCallException('Invalid parameters for AUTH action', 0xBADC0DE, $e);
-    }
-}
-
-function auth_login(string $username_field, \PDOStatement $password_query, string $u, string $p): ?string
-{
-    $user = isset($_POST[$u], $_POST[$p])
-        ? auth_verify($password_query, $_POST[$u], $_POST[$p])
-        : null;
-
-    if ($user !== null) {
-        session_regenerate_id(true)                         || throw new \RuntimeException(__FUNCTION__.':session_regenerate_id failed - fixation risk');
-        $_SESSION[__NAMESPACE__][$username_field] = $user;
     }
 
-    return $user;
+    return $_SESSION[__NAMESPACE__][__FUNCTION__] ?? '';
 }
 
-function auth_session_cookie_destroy()
+function checkout()
 {
-    $p = session_get_cookie_params();
-    $opts = [
-        'expires'  => 0,
-        'path'     => $p['path'] ?? '/',
-        'domain'   => $p['domain'] ?? '',
-        'secure'   => $p['secure'] ?? false,
-        'httponly' => $p['httponly'] ?? true,
-        'samesite' => $p['samesite'] ?? (ini_get('session.cookie_samesite') ?: 'Lax'),
-    ];
+    (\session_status() === \PHP_SESSION_ACTIVE)                     || throw new \BadFunctionCallException('checkout:session not active');
+    $_SESSION = [];
 
-    setcookie(session_name(), '', $opts) || trigger_error('session cookie destruction failed', E_USER_WARNING);
-}
-
-function auth_verify(\PDOStatement $password_query, string $user, string $pass): ?string
-{
-    $password_query->execute([$user]) || throw new \RuntimeException('Password query execution failed');
-
-    $db_password = $password_query->fetchColumn() ?: AUTH_DUMMY_HASH;
-    $password_query->closeCursor();
-
-    return (password_verify($pass, $db_password) && AUTH_DUMMY_HASH !== $db_password)
-        ? $user
-        : null;
+    if (\ini_get('session.use_cookies')) {
+        $p = \session_get_cookie_params();
+        \setcookie(\session_name(), '', [
+            'expires'  => \time()-211121,
+            'path'     => $p['path'] ?? '/',
+            'domain'   => $p['domain'] ?? '',
+            'secure'   => $p['secure'] ?? false,
+            'httponly' => $p['httponly'] ?? true,
+            'samesite' => $p['samesite'] ?? (\ini_get('session.cookie_samesite') ?: 'Lax'),
+        ])                                                          || \trigger_error('checkout:cookie destroy failed', \E_USER_WARNING);
+    }
+    \session_destroy()                                              || throw new \RuntimeException('checkout:session_destroy failed');
 }

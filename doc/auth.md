@@ -1,90 +1,82 @@
-# badhat\auth
+# bad\auth
 
 Your app needs login.
 
-Session-based, bitmask-driven. No classes, no middleware, no "authentication guards."
+Session-based. No classes, no middleware, no "authentication guards."
 
-> One function, three behaviors. Configure once, then enter, check, or leave.
+> Two functions. `checkin` authenticates and checks. `checkout` leaves.
 
 ---
 
-## 1) First, you configure
-
-Somewhere in bootstrap—before any login attempts:
+## 1) Authenticate
 
 ```php
 use function bad\auth\checkin;
-use const bad\auth\SETUP;
+use function bad\pdo\qp;
 
-$stmt = qp("SELECT password FROM users WHERE username = ?", []);
-checkin(SETUP, 'username', $stmt);
-```
+$select = qp("SELECT password FROM users WHERE username = ?", []);
+$update = qp("UPDATE users SET last_login = NOW() WHERE username = ?", []);
 
-Two things stored:
-- `'username'` — the session key where authenticated usernames live
-- `$stmt` — a prepared statement expecting one `?` for username, returning the password hash
+$user = checkin($_POST['username'], $_POST['password'], $update, $select);
 
-No connection happens. No query runs. Just setup.
-
----
-
-## 2) Then, you authenticate
-
-When the login form submits:
-
-```php
-use const bad\auth\ENTER;
-
-$user = checkin(ENTER, 'username', 'password');
-
-if ($user) {
+if ($user !== '') {
     header('Location: /dashboard');
     exit;
 }
-// login failed
+// login failed — $user is ''
 ```
 
-Parameters are POST field names. Reads `$_POST['username']` and `$_POST['password']`, verifies against the DB hash.
+Statements are stored on first call and reused for the request lifetime. You can also initialize them early in bootstrap and authenticate later:
+
+```php
+// bootstrap
+checkin(null, null, $update, $select);
+
+// later, in login route
+$user = checkin($_POST['username'], $_POST['password']);
+```
 
 On success:
+- Password verified against DB hash
 - Session ID regenerated (fixation defense)
+- Update statement executed (e.g. last_login timestamp)
 - Username stored in session
 - Returns the username
 
 On failure:
-- Returns `null`
+- Returns `''` (empty string)
 - Timing remains constant (dummy hash comparison when user missing)
 
 ---
 
-## 3) Check who's logged in
+## 2) Check who's logged in
 
 ```php
-$user = checkin();  // username string or null
+$user = checkin();  // username string or ''
 ```
 
-No flags, no parameters. Returns whatever's in the session, or `null`.
+No parameters. Returns whatever's in the session, or `''`.
 
 ---
 
-## 4) Protected routes
+## 3) Protected routes
 
 ```php
 // app/io/route/admin/dashboard.php
 return function($args) {
-    checkin() ?? (header('Location: /login') && exit);
+    checkin() !== '' || (header('Location: /login') && exit);
     return ['user' => checkin()];
 };
 ```
 
 ---
 
-## 5) Logout
+## 4) Logout
 
 ```php
-use const bad\auth\LEAVE;
+use function bad\auth\checkout;
 
-checkin(LEAVE);
+checkout();
 header('Location: /');
 exit;
 ```
@@ -94,58 +86,55 @@ What happens:
 - Session cookie destroyed (if `session.use_cookies` enabled)
 - `session_destroy()` called
 
-Returns `null`.
-
 ---
 
 ## Reference
 
 ### Constants
 
-| Constant | Value | Behavior |
-|----------|-------|----------|
-| `SETUP` | 1 | Store username field + password query |
-| `ENTER` | 2 | Authenticate via POST |
-| `LEAVE` | 4 | Destroy session |
-| `DUMMY_HASH` | bcrypt string | Timing-safe fallback |
+| Constant | Value | Purpose |
+|----------|-------|---------|
+| `DUMMY_HASH` | bcrypt string | Timing-safe fallback for missing users |
 
-### Function
+### Functions
 
 ```php
-checkin(int $behave = 0, ?string $u = null, $p = null): ?string
+checkin(?string $username = null, ?string $password = null, ?\PDOStatement $_update = null, ?\PDOStatement $_select = null): string
+checkout(): void
 ```
 
-| `$behave` | `$u` | `$p` | Returns |
-|-----------|------|------|---------|
-| `0` | ignored | ignored | Username from session, or `null` |
-| `SETUP` | Session key for username | PDOStatement | `null` |
-| `ENTER` | POST field: username | POST field: password | Username on success, `null` on failure |
-| `LEAVE` | ignored | ignored | `null` |
+#### `checkin()`
+
+| Arguments | Returns |
+|-----------|---------|
+| none | Username from session, or `''` |
+| `$username, $password` | Username on success, `''` on failure |
+| `$username, $password, $update, $select` | Same, initializing statements on first call |
+| `null, null, $update, $select` | `''` (init only) |
+
+Statements are stored once. Passing them again after initialization throws.
+
+#### `checkout()`
+
+Clears session, destroys cookie, calls `session_destroy()`.
 
 ### Throws
 
-### Throws
-
-| Exception | Code | When |
-|-----------|------|------|
-| `BadFunctionCallException` | `0` | `checkin()` called before `SETUP` |
-| `BadFunctionCallException` | `0xBADC0DE` | Invalid parameters for action (caught Error wrapped) |
-| `LogicException` | `0` | No active session |
-| `RuntimeException` | `0` | Password query execution failed |
-| `RuntimeException` | `0` | session_regenerate_id failed (fixation risk) |
-| `RuntimeException` | `0` | session_destroy failed |
-
-### Internal Functions
-
-```php
-auth_login(string $username_field, PDOStatement $password_query, string $u, string $p): ?string
-auth_session_cookie_destroy(): void
-auth_verify(PDOStatement $password_query, string $user, string $pass): ?string
-```
+| Function | Exception | When |
+|----------|-----------|------|
+| `checkin` | `BadFunctionCallException` | Not initialized (no statements, no session user) |
+| `checkin` | `BadFunctionCallException` | Session not active |
+| `checkin` | `BadFunctionCallException` | Empty username or password |
+| `checkin` | `BadFunctionCallException` | Already initialized (double init) |
+| `checkin` | `RuntimeException` | Select query execution failed |
+| `checkin` | `RuntimeException` | `session_regenerate_id` failed |
+| `checkin` | `RuntimeException` | Update query execution failed |
+| `checkout` | `BadFunctionCallException` | Session not active |
+| `checkout` | `RuntimeException` | `session_destroy` failed |
 
 ### Session Storage
 
-Authenticated username stored at `$_SESSION['bad\auth'][$username_field]`.
+Authenticated username stored at `$_SESSION['bad\auth']['bad\auth\checkin']`.
 
 ---
 
@@ -155,3 +144,5 @@ Authenticated username stored at `$_SESSION['bad\auth'][$username_field]`.
 - **Session fixation:** ID regenerated on successful login
 - **No plaintext:** Expects `password_hash()` output in DB
 - **Cookie cleanup:** Session cookie explicitly destroyed on logout with proper params
+- **Single init:** Statements can only be registered once per request
+```
