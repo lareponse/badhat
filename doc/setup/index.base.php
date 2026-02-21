@@ -12,7 +12,7 @@ require 'add/badhat/auth.php';
 require 'add/badhat/csrf.php';
 
 use const bad\map\REBASE;
-use const bad\run\{INVOKE, ABSORB, INC_RETURN};
+use const bad\run\{INVOKE, ABSORB, RESULT};
 use const bad\http\ONE;
 
 // --------------------------------------------------
@@ -57,7 +57,7 @@ $loot  = [];
 
 if ($route) {
     [$file, $args] = $route;
-    $loot = bad\run\loop([$file], $args, INVOKE);
+    $loot = bad\run\loot([$file], $args, INVOKE);
 }
 
 // --------------------------------------------------
@@ -67,16 +67,16 @@ if ($route) {
 $render = bad\map\look($io_root . '/render/', $key, '.php', REBASE);
 
 if ($render) {
-    $loot = bad\run\loop([$render], $loot, ABSORB);
+    $loot = bad\run\loot([$render], $loot, ABSORB);
 }
 
 // --------------------------------------------------
 // Output
 // --------------------------------------------------
 
-if (isset($loot[INC_RETURN]) && is_string($loot[INC_RETURN])) {
+if (isset($loot[RESULT]) && is_string($loot[RESULT])) {
     bad\http\headers(ONE, 'Content-Type', 'text/html; charset=utf-8');
-    exit(bad\http\out(200, $loot[INC_RETURN]));
+    exit(bad\http\out(200, $loot[RESULT]));
 }
 
 exit(bad\http\out(404, 'Not Found'));

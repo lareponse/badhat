@@ -51,7 +51,7 @@ use function bad\map\{hook, seek};
 use function bad\run\loop;
 use function bad\http\out;
 
-use const bad\run\{INVOKE, INC_RETURN};
+use const bad\run\{INVOKE, RESULT};
 use const bad\http\QUIT;
 
 $base = realpath(__DIR__ . '/routes') . '/';
@@ -60,9 +60,9 @@ $path = hook($_SERVER['REQUEST_URI'], "\0");
 [$file, $args] = seek($base, $path, '.php')
     ?? exit(out(QUIT | 404, 'Not Found'));
 
-$loot = loop([$file], $args, INVOKE);
+$loot = loot([$file], $args, INVOKE);
 
-exit(out(QUIT | 200, (string)($loot[INC_RETURN] ?? '')));
+exit(out(QUIT | 200, (string)($loot[RESULT] ?? '')));
 ```
 
 Three moves:
@@ -137,7 +137,7 @@ Call-site:
 use function bad\run\loop;
 use const bad\run\INVOKE;
 
-loop([__DIR__ . '/routes/api/users.php'], [], INVOKE);
+loot([__DIR__ . '/routes/api/users.php'], [], INVOKE);
 ```
 
 ---

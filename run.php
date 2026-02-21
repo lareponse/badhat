@@ -2,94 +2,108 @@
 
 namespace bad\run;
 
-const BUFFER      = 1;                                              // capture output (per step) into INC_BUFFER
-const INVOKE      = 2;                                              // invoke return value if callable (per step)
-const ABSORB      = 4 | BUFFER | INVOKE;                            // append captured output as extra arg (requires BUFFER+INVOKE)
-const SPREAD      = 8;                                              // invoke callable receives positional args (else: one bag arg)
+const RESULT  = 0;  // stores the return value of include
+const BUFFER  = 1;  // activate and stores buffered output
+const FAULTS  = 2;  // turns userland exceptions into stored "faults".
+const SILENT  = 4;
+const INVOKE  = 8;
+const SPREAD  = 16;
+const RELOOT  = 32; // On fault, re-include the same $path once. $loot[FAULTS] carries the previous fault so the file can inspect it
+const OB_TRIM = 128;
+const OB_SAME = 256;
 
-const RESCUE_CALL = 16;                                             // try invoke even if include faulted
-const ANYCALL     = 32;                                             // INVOKE accepts any callable (default: Closure-only)
-
-const RELOOT      = 64;                                             // pipe: next step input = previous step loot (else: always seed args)
-const FAULT_AHEAD = 128;                                            // pipe: keep going on fault (else: throw)
-
-const INC_RETURN  = -1;                                             // loot slot: last return value (include or invoke)
-const INC_BUFFER  = -2;                                             // loot slot: last captured output (string)
-
-function loop($file_paths, $args = [], int $behave = 0, ?\Closure $ob = null): array
+function loot(array|string $paths, $args = [], int $behave = 0): array
 {
-    $seed = $args;
-    $loot = $seed;
+    $single = \is_string($paths);
+    $loot  = [];
+    $path   = $single ? $paths : \reset($paths);
 
-    foreach ($file_paths as $file) {
+    \is_string($path)                                               || throw new \BadFunctionCallException('loot:path not a string');
+    if ($single) $paths = [];
+    
+    $looted = false;
+    $carry_faults = null;
 
-        $in   = (RELOOT & $behave) ? $loot : $seed;
-        $loot = $in;
-
-        $fault = null;
-
-        $include_ob_guard = $ob ? $ob() : null;
-
-        (BUFFER & $behave) && \ob_start();
-
-        try {
-            $loot[INC_RETURN] = include $file;
-        } catch (\Throwable $t) {
-            $fault = new \Exception(__FUNCTION__ . ":include:$file", 0xBADC0DE, $t);
-        } finally {
-            if (BUFFER & $behave)
-                $loot[INC_BUFFER] = (string)\ob_get_clean();
-
-            if ($include_ob_guard) {
-                try { $include_ob_guard(); }
-                catch (\Throwable $t) {
-                    $ob_fault = new \Exception(__FUNCTION__ . ":ob:include:$file", 0xBADC0DE, $t);
-                    $fault = $fault ? new \Exception(__FUNCTION__ . ":include+ob:$file", 0xBADC0DE, $fault) : $ob_fault;
-                }
+    do {
+        $loot = [];
+        if (FAULTS & $behave) {
+            $loot[FAULTS] = $carry_faults ?? [];
+            $carry_faults = null;
+        }
+                
+        $ob_guard = null;
+        if((OB_SAME | OB_TRIM) & $behave) 
+            $ob_guard = ob($behave);
+        
+        try 
+        {
+            ((BUFFER | SILENT) & $behave) && \ob_start();
+            $loot[RESULT] = include $path;
+        } 
+        catch (\Throwable $fault) 
+        {
+            (FAULTS & $behave)                                      || throw $fault;
+            $loot[FAULTS][] = $fault;
+        } 
+        finally 
+        {
+            $buffer = null;
+            if ((BUFFER | SILENT) & $behave) {
+                $buffer = (string)\ob_get_clean();
+                (BUFFER & $behave) && ($loot[BUFFER] = $buffer);
             }
         }
 
-        if (INVOKE & $behave) {
+        if ($ob_guard && !$ob_guard()) {
+            $fault = new \RuntimeException("loot:ob:$path");
+            (FAULTS & $behave)                                      || throw $fault;
+            $loot[FAULTS][] = $fault;
+        }
 
-            $invoke_ob_guard = $ob ? $ob() : null;
+        if (INVOKE & $behave  && \is_callable($loot[RESULT] ?? null)) {
+            try 
+            {
+                (SILENT & $behave) && \ob_start();
 
-            try {
-                $loot[INC_RETURN] = boot((string)$file, $loot[INC_RETURN] ?? null, $loot, $behave, $fault);
-            } finally {
-                if ($invoke_ob_guard) {
-                    try { $invoke_ob_guard(); }
-                    catch (\Throwable $t) {
-                        $ob_fault = new \Exception(__FUNCTION__ . ":ob:invoke:$file", 0xBADC0DE, $t);
-                        $fault = $fault ? new \Exception(__FUNCTION__ . ":invoke+ob:$file", 0xBADC0DE, $fault) : $ob_fault;
-                    }
-                }
+                $loot[RESULT] = (SPREAD & $behave && \is_array($args))
+                              ? $loot[RESULT]($loot, ...$args)
+                              : $loot[RESULT]($loot, $args);
+            } 
+            catch (\Throwable $fault) 
+            {
+                (FAULTS & $behave)                                  || throw $fault;
+                $loot[FAULTS][] = $fault;
+            } 
+            finally 
+            {
+                (SILENT & $behave) && \ob_end_clean();
             }
         }
 
-        if ($fault !== null && !(FAULT_AHEAD & $behave)) throw $fault;
-    }
+        if ((RELOOT & $behave) && !empty($loot[FAULTS]) && !$looted) {
+            $carry_faults = $loot[FAULTS];
+            $looted = true;
+        } else {
+            $looted = false;
+            $path = \next($paths);
+        }
+
+    } while ($path !== false);
 
     return $loot;
 }
 
-function boot(string $file, $callable, array $args, int $behave, ?\Throwable &$fault = null)
+function ob(int $behave = 0): \Closure
 {
-    if ($fault !== null && !(RESCUE_CALL & $behave)) return $callable;
-
-    $ok = ($callable instanceof \Closure)
-       || ((ANYCALL & $behave) && \is_callable($callable));
-
-    if (!$ok) return $callable;
-
-    $call_args = $args;
-
-    if (($behave & ABSORB) === ABSORB)
-        $call_args[] = (string)($args[INC_BUFFER] ?? '');
-
-    try {
-        return (SPREAD & $behave) ? $callable(...$call_args) : $callable($call_args);
-    } catch (\Throwable $t) {
-        $fault = new \Exception(__FUNCTION__ . ":invoke:$file", 0xBADC0DE, $t);
-        return $callable;
-    }
+    $base = \ob_get_level();
+    return static function () use ($behave, $base): bool {
+        $level = \ob_get_level();
+        if ($level > $base) {
+            if (!(OB_TRIM & $behave))                               return false;
+            for ($n = $level; $n > $base && $level > $base; --$n, $level = \ob_get_level())
+                if (\ob_end_clean() === false)                      return false;
+        }
+        if ((OB_SAME & $behave) && $level !== $base)                return false;
+        return true;
+    };
 }
