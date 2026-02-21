@@ -48,7 +48,7 @@ The filesystem is the router. Output buffering is the template engine. Bitmasks 
 
 ```php
 use function bad\map\{hook, seek};
-use function bad\run\loop;
+use function bad\run\loot;
 use function bad\http\out;
 
 use const bad\run\{INVOKE, RESULT};
@@ -69,7 +69,7 @@ Three moves:
 
 1. **hook** — turn a URL into a rootless path you can trust
 2. **seek** — map that path to an executable file (and leftover intent)
-3. **loop** — include + (optionally) invoke what the file returns
+3. **loot** — include + (optionally) invoke what the file returns
 
 ---
 
@@ -78,7 +78,7 @@ Three moves:
 Two files:
 
 - `map.php` — URL → path → file (+ args)
-- `run.php` — loop / loot / boot (include + invoke + buffer)
+- `run.php` — include + invoke + buffer
 
 Everything else is plumbing.
 
@@ -89,7 +89,7 @@ Everything else is plumbing.
 | Module      | Purpose                          |
 | ----------- | -------------------------------- |
 | `map.php`   | URL → path → file (+ args)       |
-| `run.php`   | loop / loot / boot               |
+| `run.php`   | include + invoke + buffer        |
 | `trap.php`  | handler installation             |
 | `pdo.php`   | query helper (no ORM)            |
 | `http.php`  | header staging + response output |
@@ -134,7 +134,7 @@ return function(array $bag) {
 Call-site:
 
 ```php
-use function bad\run\loop;
+use function bad\run\loot;
 use const bad\run\INVOKE;
 
 loot([__DIR__ . '/routes/api/users.php'], [], INVOKE);
@@ -166,4 +166,4 @@ git subtree add --prefix=add/badhat FETCH_HEAD --squash
     
 ## License
 
-MIT. No warranty. Ship it.
+BADHAT LICENSE. No warranty. Ship it.
