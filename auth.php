@@ -6,8 +6,8 @@ const DUMMY_HASH = '$2y$12$8NidQXAmttzUc23lTnUDAuC.JoxuJtdG0NQTjhh3Y7C442uVQ4FTy
 
 function checkin(?string $username = null, ?string $password = null, ?\PDOStatement $_update = null, ?\PDOStatement $_select = null): string
 {
-    static ?\PDOStatement $stm_update = null;
-    static ?\PDOStatement $stm_select = null;
+    static $stm_update = null;
+    static $stm_select = null;
 
     if (isset($_update, $_select)){
         !isset($stm_update, $stm_select)                            || throw new \BadFunctionCallException('checkin:already initialized');
