@@ -5,10 +5,13 @@ namespace bad\run;
 const RESULT  = 0;  // stores the return value of include
 const BUFFER  = 1;  // activate and stores buffered output
 const FAULTS  = 2;  // turns userland exceptions into stored "faults".
-const SILENT  = 4;
-const INVOKE  = 8;
-const SPREAD  = 16;
-const RELOOT  = 32; // On fault, re-include the same $path once. $loot[FAULTS] carries the previous fault so the file can inspect it
+
+const RELOOT  = 4; // On fault, re-include the same $path once. $loot[FAULTS] carries the previous fault so the file can inspect it
+const SILENT  = 8;
+
+const INVOKE  = 16;
+const SPREAD  = 32;
+
 const OB_TRIM = 128;
 const OB_SAME = 256;
 
@@ -34,17 +37,18 @@ function loot(array|string $paths, $args = [], int $behave = 0): array
         $ob_guard = null;
         if((OB_SAME | OB_TRIM) & $behave) 
             $ob_guard = ob($behave);
+
+        if((BUFFER | SILENT) & $behave) 
+            \ob_start();
         
         try 
         {
-            ((BUFFER | SILENT) & $behave) && \ob_start();
-            $loot[RESULT] = include $path;
+            ($loot[RESULT] = include $path) !== false               || throw new \RuntimeException("loot:return:$path");
         } 
         catch (\Throwable $fault) 
         {
-            (FAULTS & $behave)                                      || throw $fault;
-            $loot[FAULTS][] = $fault;
-        } 
+            (FAULTS & $behave) && ($loot[FAULTS][] = $fault)        || throw $fault;
+        }
         finally 
         {
             $buffer = null;
@@ -54,30 +58,12 @@ function loot(array|string $paths, $args = [], int $behave = 0): array
             }
         }
 
+        if (INVOKE & $behave  && \is_callable($loot[RESULT] ?? null))
+            $loot = boot($behave, $loot);
+
         if ($ob_guard && !$ob_guard()) {
-            $fault = new \RuntimeException("loot:ob:$path");
-            (FAULTS & $behave)                                      || throw $fault;
-            $loot[FAULTS][] = $fault;
-        }
-
-        if (INVOKE & $behave  && \is_callable($loot[RESULT] ?? null)) {
-            try 
-            {
-                (SILENT & $behave) && \ob_start();
-
-                $loot[RESULT] = (SPREAD & $behave && \is_array($args))
-                              ? $loot[RESULT]($loot, ...$args)
-                              : $loot[RESULT]($loot, $args);
-            } 
-            catch (\Throwable $fault) 
-            {
-                (FAULTS & $behave)                                  || throw $fault;
-                $loot[FAULTS][] = $fault;
-            } 
-            finally 
-            {
-                (SILENT & $behave) && \ob_end_clean();
-            }
+            $fault = new \RuntimeException("loot:invoke:ob:$path");
+            (FAULTS & $behave) && ($loot[FAULTS][] = $fault)        || throw $fault;
         }
 
         if ((RELOOT & $behave) && !empty($loot[FAULTS]) && !$looted) {
@@ -90,6 +76,28 @@ function loot(array|string $paths, $args = [], int $behave = 0): array
 
     } while ($path !== false);
 
+    return $loot;
+}
+
+function boot($behave, $loot)
+{
+    try 
+    {
+        (SILENT & $behave) && \ob_start();
+
+        $loot[RESULT] = (SPREAD & $behave && \is_array($args))
+                    ? $loot[RESULT]($loot, ...$args)
+                    : $loot[RESULT]($loot, $args);
+    } 
+    catch (\Throwable $fault) 
+    {
+        (FAULTS & $behave)                                  || throw $fault;
+        $loot[FAULTS][] = $fault;
+    } 
+    finally 
+    {
+        (SILENT & $behave) && \ob_end_clean();
+    }
     return $loot;
 }
 
