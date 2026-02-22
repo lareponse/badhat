@@ -12,9 +12,9 @@ Rendering a form:
 
 ```php
 use function bad\csrf\csrf;
-use const bad\csrf\SETUP;
+use const bad\csrf\TOKEN;
 
-$token = csrf(SETUP | 900, 'checkout');  // 15 minutes
+$token = csrf(TOKEN | 900, 'checkout');  // 15 minutes
 ```
 
 Token created, stored in session, returned for embedding.
@@ -76,7 +76,7 @@ The first parameter packs **TTL** (low 28 bits) and **flags** (high bits):
 
 | Flag | Value | Effect |
 |------|--------|--------|
-| `SETUP` | `1 << 28` | Create new token |
+| `TOKEN` | `1 << 28` | Create new token |
 | `CHECK` | `2 << 28` | Validate submitted token |
 
 **Maximum TTL:** `(1 << 28) - 1` = 268,435,455 seconds (~8.5 years)
@@ -84,7 +84,7 @@ The first parameter packs **TTL** (low 28 bits) and **flags** (high bits):
 Combine with bitwise OR:
 
 ```php
-csrf(SETUP | 300, 'key');     // create, 5 min TTL
+csrf(TOKEN | 300, 'key');     // create, 5 min TTL
 csrf(CHECK, 'key');           // validate
 ```
 
@@ -109,7 +109,7 @@ session_start();
 |----------|-------|
 | `TTL_BITS` | 28 |
 | `TTL_MASK` | `(1 << 28) - 1` |
-| `SETUP` | `1 << 28` |
+| `TOKEN` | `1 << 28` |
 | `CHECK` | `2 << 28` |
 
 ### Function
@@ -121,7 +121,7 @@ csrf(int $ttl_behave, string $key, $param = null): string|bool|null
 | `$ttl_behave` | `$param` | Returns |
 |-----------|----------|---------|
 | `0` | ignored | Token string, or `null` if expired |
-| `SETUP \| ttl` | ignored | Token string |
+| `TOKEN \| ttl` | ignored | Token string |
 | `CHECK` | Token string or `null` (uses `$_POST[$key]`) | `true` or `false` |
 
 ### Throws
@@ -129,10 +129,10 @@ csrf(int $ttl_behave, string $key, $param = null): string|bool|null
 | Exception | When |
 |-----------|------|
 | `InvalidArgumentException` | Empty key |
-| `InvalidArgumentException` | TTL not provided or zero when using SETUP |
+| `InvalidArgumentException` | TTL not provided or zero when using TOKEN |
 | `InvalidArgumentException` | Token required on CHECK but missing |
 | `LogicException` | No active session |
-| `BadFunctionCallException` | Token not initialized (retrieve or CHECK before SETUP) |
+| `BadFunctionCallException` | Token not initialized (retrieve or CHECK before TOKEN) |
 
 ### Storage
 
@@ -146,9 +146,9 @@ Tokens live in `$_SESSION['bad\csrf\csrf'][$key]` as `[$token, $expiry]`. Expire
 
 ```php
 // Render login page
-use const bad\csrf\SETUP;
+use const bad\csrf\TOKEN;
 
-$token = csrf(SETUP | 1800, 'login');  // 30 minutes
+$token = csrf(TOKEN | 1800, 'login');  // 30 minutes
 ?>
 <form method="post">
     <input name="username" required>
@@ -171,11 +171,11 @@ if ($_POST) {
 ### API endpoint with custom header
 
 ```php
-use const bad\csrf\{SETUP, CHECK};
+use const bad\csrf\{TOKEN, CHECK};
 
 // Generate token for client
 header('Content-Type: application/json');
-exit(json_encode(['csrf' => csrf(SETUP | 3600, 'api')]));
+exit(json_encode(['csrf' => csrf(TOKEN | 3600, 'api')]));
 ```
 
 ```php
@@ -188,9 +188,9 @@ $valid || exit(json_encode(['error' => 'Invalid CSRF token']));
 
 ```php
 // Shopping cart page
-use const bad\csrf\SETUP;
+use const bad\csrf\TOKEN;
 
-$token = csrf(SETUP | 900, 'checkout');  // 15 minutes
+$token = csrf(TOKEN | 900, 'checkout');  // 15 minutes
 ?>
 <form method="post" action="/checkout">
     <!-- cart items -->
