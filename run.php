@@ -59,7 +59,7 @@ function loot(array|string $paths, $args = [], int $behave = 0): array
         }
 
         if (INVOKE & $behave  && \is_callable($loot[RESULT] ?? null))
-            $loot = boot($behave, $loot);
+            $loot = boot($behave, $loot, $args);
 
         if ($ob_guard && !$ob_guard()) {
             $fault = new \RuntimeException("loot:invoke:ob:$path");
@@ -79,7 +79,7 @@ function loot(array|string $paths, $args = [], int $behave = 0): array
     return $loot;
 }
 
-function boot($behave, $loot)
+function boot($behave, $loot, $args)
 {
     try 
     {

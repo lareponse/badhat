@@ -52,7 +52,7 @@ A strict map says: *a file is a file*. If it’s not there, it’s not handled.
 
 ```php
 use function bad\map\look;
-use function bad\run\loop;
+use function bad\run\loot;
 use function bad\http\out;
 
 use const bad\run\INVOKE;
@@ -76,7 +76,7 @@ A progressive map says: *find the tightest handler, hand the rest as args*.
 
 ```php
 use function bad\map\seek;
-use function bad\run\loop;
+use function bad\run\loot;
 use function bad\http\out;
 
 use const bad\run\INVOKE;

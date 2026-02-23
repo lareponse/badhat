@@ -259,10 +259,10 @@ With `FAULTS | RELOOT`: faulted step retries once, carrying previous faults.
 | `RESULT`  |   `0` | Loot slot: return value |
 | `BUFFER`  |   `1` | Loot slot + flag: capture output |
 | `FAULTS`  |   `2` | Loot slot + flag: collect exceptions |
-| `SILENT`  |   `4` | Suppress output (no capture) |
-| `INVOKE`  |   `8` | Invoke callable return values |
-| `SPREAD`  |  `16` | Spread `$args` into callable |
-| `RELOOT`  |  `32` | Retry faulted step once |
+| `RELOOT`  |   `4` | Retry faulted step once |
+| `SILENT`  |   `8` | Suppress output (no capture) |
+| `INVOKE`  |  `16` | Invoke callable return values |
+| `SPREAD`  |  `32` | Spread `$args` into callable |
 | `OB_TRIM` | `128` | Clean leaked output buffers |
 | `OB_SAME` | `256` | Assert buffer level unchanged |
 
@@ -275,7 +275,7 @@ loot(array|string $paths, mixed $args = [], int $behave = 0): array
 ### Fault shape
 
 All faults are the original `\Throwable` — no wrapping, no synthetic codes.
-OB guard faults are `\RuntimeException` with message `loot:ob:{$path}`.
+OB guard faults are `\RuntimeException` with message `loot:invoke:ob:{$path}`.
 
 ### OB guard
 
