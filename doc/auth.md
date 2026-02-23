@@ -26,11 +26,14 @@ if ($user !== '') {
 // login failed — $user is ''
 ```
 
-Statements are stored on first call and reused for the request lifetime. You can also initialize them early in bootstrap and authenticate later:
+Statements are stored on first call and reused for the request lifetime. Only `$select` is required — `$update` is optional (skip it if you don't need last-login tracking).
 
 ```php
-// bootstrap
+// bootstrap (both statements)
 checkin(null, null, $update, $select);
+
+// or select-only
+checkin(null, null, null, $select);
 
 // later, in login route
 $user = checkin($_POST['username'], $_POST['password']);
@@ -39,7 +42,7 @@ $user = checkin($_POST['username'], $_POST['password']);
 On success:
 - Password verified against DB hash
 - Session ID regenerated (fixation defense)
-- Update statement executed (e.g. last_login timestamp)
+- Update statement executed if provided (e.g. last_login timestamp)
 - Username stored in session
 - Returns the username
 
@@ -110,9 +113,10 @@ checkout(): void
 | none | Username from session, or `''` |
 | `$username, $password` | Username on success, `''` on failure |
 | `$username, $password, $update, $select` | Same, initializing statements on first call |
-| `null, null, $update, $select` | `''` (init only) |
+| `null, null, $update, $select` | `''` (init only, both statements) |
+| `null, null, null, $select` | `''` (init only, select required, update skipped) |
 
-Statements are stored once. Passing them again after initialization throws.
+Each statement is stored independently. Passing one again after it's been stored throws. Only `$select` is required.
 
 #### `checkout()`
 
@@ -122,10 +126,10 @@ Clears session, destroys cookie, calls `session_destroy()`.
 
 | Function | Exception | When |
 |----------|-----------|------|
-| `checkin` | `BadFunctionCallException` | Not initialized (no statements, no session user) |
+| `checkin` | `BadFunctionCallException` | Select statement not initialized |
 | `checkin` | `BadFunctionCallException` | Session not active |
 | `checkin` | `BadFunctionCallException` | Empty username or password |
-| `checkin` | `BadFunctionCallException` | Already initialized (double init) |
+| `checkin` | `BadFunctionCallException` | Statement already initialized (double init, per-statement) |
 | `checkin` | `RuntimeException` | Select query execution failed |
 | `checkin` | `RuntimeException` | `session_regenerate_id` failed |
 | `checkin` | `RuntimeException` | Update query execution failed |
@@ -144,5 +148,4 @@ Authenticated username stored at `$_SESSION['bad\auth']['bad\auth\checkin']`.
 - **Session fixation:** ID regenerated on successful login
 - **No plaintext:** Expects `password_hash()` output in DB
 - **Cookie cleanup:** Session cookie explicitly destroyed on logout with proper params
-- **Single init:** Statements can only be registered once per request
-```
+- **Single init:** Each statement can only be registered once per request

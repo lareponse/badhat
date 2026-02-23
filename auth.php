@@ -9,13 +9,16 @@ function checkin(?string $username = null, ?string $password = null, ?\PDOStatem
     static $stm_update = null;
     static $stm_select = null;
 
-    if (isset($_update, $_select)){
-        !isset($stm_update, $stm_select)                            || throw new \BadFunctionCallException('checkin:already initialized');
-        $stm_update = $_update;
+    if(isset($_select)){
+        !isset($stm_select)                                         || throw new \BadFunctionCallException('checkin:pass:statement:present');
         $stm_select = $_select;
     }
+    if(isset($_update)){
+        !isset($stm_update)                                         || throw new \BadFunctionCallException('checkin:user:statement:present');
+        $stm_update = $_update;
+    }
 
-    isset($stm_update, $stm_select)                                 || throw new \BadFunctionCallException('checkin:not initialized');
+    isset($stm_select)                                              || throw new \BadFunctionCallException('checkin:password:statement:missing');
     (\session_status() === \PHP_SESSION_ACTIVE)                     || throw new \BadFunctionCallException('checkin:session not active');
 
     if (isset($username, $password)){
@@ -26,8 +29,10 @@ function checkin(?string $username = null, ?string $password = null, ?\PDOStatem
 
         if (\password_verify($password, $db_p) && DUMMY_HASH !== $db_p){
             \session_regenerate_id(true)                            || throw new \RuntimeException('checkin:session_regenerate_id failed');
-            $stm_update->execute([$username])                       || throw new \RuntimeException('checkin:update failed');
-            $stm_update->closeCursor();
+            if($stm_update){
+                $stm_update->execute([$username])                   || throw new \RuntimeException('checkin:update failed');
+                $stm_update->closeCursor();
+            }
             $_SESSION[__NAMESPACE__][__FUNCTION__] = $username;
         }
     }
