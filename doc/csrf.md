@@ -47,9 +47,9 @@ if (!$valid) {
 $valid = csrf(CHECK, 'checkout', $_SERVER['HTTP_X_CSRF_TOKEN']);
 ```
 
-Returns `true` if valid, `false` if mismatched. Returns `null` if expired (and cleans up). Throws if token missing entirely.
+Returns `true` if valid, `false` if mismatched or missing. Returns `null` if expired (and cleans up).
 
-Tokens are **single-use**: a successful `CHECK` removes the token from the session. Replay attempts will throw (not initialized).
+Tokens are **single-use on success**: a valid `CHECK` removes the token from the session. A failed check leaves the token intact — the user can retry.
 
 ---
 
@@ -122,15 +122,13 @@ csrf(int $ttl_behave, string $key, $param = null): string|bool|null
 |-----------|----------|---------|
 | `0` | ignored | Token string, or `null` if expired |
 | `TOKEN \| ttl` | ignored | Token string |
-| `CHECK` | Token string or `null` (uses `$_POST[$key]`) | `true` or `false` |
+| `CHECK` | Token string or `null` (uses `$_POST[$key]`) | `true`, `false`, or `null` (expired) |
 
 ### Throws
 
 | Exception | When |
 |-----------|------|
 | `InvalidArgumentException` | Empty key |
-| `InvalidArgumentException` | TTL not provided or zero when using TOKEN |
-| `InvalidArgumentException` | Token required on CHECK but missing |
 | `LogicException` | No active session |
 | `BadFunctionCallException` | Token not initialized (retrieve or CHECK before TOKEN) |
 

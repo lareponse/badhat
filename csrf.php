@@ -29,20 +29,21 @@ function csrf(int $ttl_behave, string $key, $param = null)
         $scoped[$key] = [$token, $now + $ttl];                      // [token, expiry]
         // dont return token, it will go through expire validation
     }
-    isset($scoped[$key][0], $scoped[$key][1])                       || throw new \BadFunctionCallException("csrf:{$key}:not initialized");
-    [$expect, $expire] = $scoped[$key];
 
-    if ($now >= $expire) {                                           // expired: cleanup and fail
+    isset($scoped[$key][0], $scoped[$key][1])                       || throw new \BadFunctionCallException("csrf:{$key}:not initialized");
+
+    if ($now >= $scoped[$key][1]) {                                 // expired: cleanup and fail
         unset($scoped[$key]);
         return null;
     }
 
     if (CHECK & $behave) {
         $actual = \is_string($param) ? $param : ($_POST[$key] ?? null);
-        $actual !== null                                            || throw new \InvalidArgumentException("csrf:{$key}:token required");
-        unset($scoped[$key]);                                       // one-off usage, prevent token replay
-        return \hash_equals($expect, $actual);
+        if($actual !== null && \hash_equals($scoped[$key][0], $actual)){
+            unset($scoped[$key]);
+            return true;
+        }
+        return false;
     }
-
-    return $expect;
+    return $scoped[$key][0];
 }// return token for form embedding
