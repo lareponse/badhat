@@ -146,6 +146,7 @@ headers(ONE, 'X-Legacy', 'clean');
 headers(REMOVE | EMIT | 200);
 ```
 
+> **headers() does not validate field names or values. Use `bad\rfc\field_name()` and `bad\rfc\field_value()` before staging untrusted input.**
 ---
 
 ## out()
