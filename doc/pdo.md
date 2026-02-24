@@ -150,7 +150,9 @@ These helpers do not return `false`.
   * `\RuntimeException` on database failure
   * `\RuntimeException` with code **`0xBADC0DE`** if **your callable throws**
 
-Exception messages are **sanitized**: they include the action and SQLSTATE but omit driver-specific detail. The full diagnostic (including driver messages and chained throwable info) is built internally but not emitted — if you need it logged, configure `PDO::ERRMODE_EXCEPTION` and catch `\PDOException` directly, or add your own error handler.
+Exception messages are **sanitized**: they include the action and SQLSTATE but omit driver-specific detail. Original throwables are not chained — callers receive only the redacted message.
+
+If you need full driver diagnostics, configure `PDO::ERRMODE_EXCEPTION` and catch `\PDOException` directly, or add your own error handler.
 
 ```php
 try {
@@ -163,8 +165,6 @@ try {
     }
 }
 ```
-
-> Note: if you configure PDO to throw (`ERRMODE_EXCEPTION`), you may see `\PDOException` directly.
 
 ---
 
