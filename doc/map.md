@@ -48,7 +48,7 @@ $path = hook('/a/%2G', '', E_THROW);    // throws
 
 ## 2) look(): strict mapping
 
-A strict map says: *a file is a file*. If it’s not there, it’s not handled.
+A strict map says: *a file is a file*. If it's not there, it's not handled.
 
 ```php
 use function bad\map\look;
@@ -114,7 +114,7 @@ Flags are opt-in story changes. Combine them with `|`.
 
 ### ASCEND — start at the front door
 
-Some apps want a gateway like `api.php` or `admin.php` to swallow what’s beneath.
+Some apps want a gateway like `api.php` or `admin.php` to swallow what's beneath.
 
 ```php
 use const bad\map\ASCEND;
