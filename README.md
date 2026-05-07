@@ -19,7 +19,7 @@ BADHAT is not a framework. It is a climate.
 
 It doesn't tell you what the application should be. It ensures that whatever you build remains in contact with reality: every transformation can be traced, every responsibility has an address, every effect has a cause you can point to.
 
-**737 lines of production PHP** (kernel + core modules) that turns PHP's implicit request flow into something you can control, audit, and depend on.
+**569 logical lines of production PHP** (737 total lines, ~23% comments/whitespace) across kernel + core modules. Turns PHP's implicit request flow into something you can control, audit, and depend on.
 
 **Maps**, not routes. **Loops**, not controllers. **Bitmasks**, not config files.
 
@@ -79,11 +79,11 @@ Edge cases handled:
 
 ## Kernel: two files doing heavy lifting
 
-| File     | Lines | Responsibility                                 |
-|----------|-------|------------------------------------------------|
-| `map.php`   | 89   | URL → path validation → file lookup + args      |
-| `run.php`   | 117  | include + optional invoke + output capture + fault handling + buffer nesting guards |
-| **Total kernel** | **206** | Core request→file→response mechanics |
+| File     | LOC | LLOC | Responsibility                                 |
+|----------|-----|------|------------------------------------------------|
+| `map.php`   | 89 | 70   | URL → path validation → file lookup + args      |
+| `run.php`   | 117 | 97  | include + optional invoke + output capture + fault handling + buffer nesting guards |
+| **Total kernel** | **206** | **167** | Core request→file→response mechanics |
 
 Both use bitmask flags to configure behavior — one `int` tells you what the engine will do.
 
@@ -91,17 +91,17 @@ Both use bitmask flags to configure behavior — one `int` tells you what the en
 
 ## Core modules: production-grade utilities
 
-| Module      | Lines | Purpose                                          |
-| ----------- | ----- | ------------------------------------------------ |
-| `http.php`  | 122   | Stateful header staging + response emission with status codes, list-mode formatting, entry-level locking |
-| `pdo.php`   | 73    | Query/prepare/execute wrapper with transaction support, error redaction (no query leaks) |
-| `auth.php`  | 59    | Constant-time password verification with timing-attack protection, session regeneration, logout |
-| `csrf.php`  | 48    | Token generation/validation with TTL, expiry cleanup, timing-safe comparison |
-| `trap.php`  | 114   | Error/exception/shutdown handler with request ID tracking, optional traces, control-char sanitization, OB management |
-| `rfc.php`   | 74    | RFC 9110/5234/3986 validators for field names, field values, URL paths with percent-encoding checks |
-| `dev.php`   | 41    | Development utilities: var_dump with backtraces (vd, vdh) |
-| **Total modules** | **531** | **Production + dev utilities** |
-| **Grand total** | **737** | **Kernel + all modules** |
+| Module      | LOC | LLOC | Purpose                                          |
+| ----------- | --- | ---- | ------------------------------------------------ |
+| `http.php`  | 122 | 92   | Stateful header staging + response emission with status codes, list-mode formatting, entry-level locking |
+| `pdo.php`   | 73  | 61   | Query/prepare/execute wrapper with transaction support, error redaction (no query leaks) |
+| `auth.php`  | 59  | 50   | Constant-time password verification with timing-attack protection, session regeneration, logout |
+| `csrf.php`  | 48  | 36   | Token generation/validation with TTL, expiry cleanup, timing-safe comparison |
+| `trap.php`  | 114 | 88   | Error/exception/shutdown handler with request ID tracking, optional traces, control-char sanitization, OB management |
+| `rfc.php`   | 74  | 59   | RFC 9110/5234/3986 validators for field names, field values, URL paths with percent-encoding checks |
+| `dev.php`   | 41  | 16   | Development utilities: var_dump with backtraces (vd, vdh) |
+| **Total modules** | **531** | **402** | **Production + dev utilities** |
+| **Grand total** | **737** | **569** | **Kernel + all modules** |
 
 All modules throw exceptions on invalid input (or return them, configurable).
 
