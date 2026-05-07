@@ -19,7 +19,7 @@ BADHAT is not a framework. It is a climate.
 
 It doesn't tell you what the application should be. It ensures that whatever you build remains in contact with reality: every transformation can be traced, every responsibility has an address, every effect has a cause you can point to.
 
-**~200 lines of production PHP** (across kernel + modules) that turns PHP's implicit request flow into something you can control, audit, and depend on.
+**737 lines of production PHP** (kernel + core modules) that turns PHP's implicit request flow into something you can control, audit, and depend on.
 
 **Maps**, not routes. **Loops**, not controllers. **Bitmasks**, not config files.
 
@@ -83,6 +83,7 @@ Edge cases handled:
 |----------|-------|------------------------------------------------|
 | `map.php`   | 89   | URL → path validation → file lookup + args      |
 | `run.php`   | 117  | include + optional invoke + output capture + fault handling + buffer nesting guards |
+| **Total kernel** | **206** | Core request→file→response mechanics |
 
 Both use bitmask flags to configure behavior — one `int` tells you what the engine will do.
 
@@ -98,6 +99,9 @@ Both use bitmask flags to configure behavior — one `int` tells you what the en
 | `csrf.php`  | 48    | Token generation/validation with TTL, expiry cleanup, timing-safe comparison |
 | `trap.php`  | 114   | Error/exception/shutdown handler with request ID tracking, optional traces, control-char sanitization, OB management |
 | `rfc.php`   | 74    | RFC 9110/5234/3986 validators for field names, field values, URL paths with percent-encoding checks |
+| `dev.php`   | 41    | Development utilities: var_dump with backtraces (vd, vdh) |
+| **Total modules** | **531** | **Production + dev utilities** |
+| **Grand total** | **737** | **Kernel + all modules** |
 
 All modules throw exceptions on invalid input (or return them, configurable).
 
