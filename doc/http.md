@@ -7,7 +7,7 @@ HTTP is the last mile.
 Now you need to do the boring part reliably:
 
 1. stage headers while your code is still thinking
-2. emit once, when you’re ready
+2. emit once, when you're ready
 
 `bad\http` is three tools:
 
@@ -60,7 +60,7 @@ headers(200);           // stage status only
 headers(EMIT | 200);    // stage status, then emit
 ```
 
-Status `0` means “don’t change”.
+Status `0` means “don't change”.
 
 ---
 

@@ -26,7 +26,7 @@ function vd(...$v)
     $frames && debug_print_backtrace(0, abs($frames));              // frame list: where vd() was called from
     echo str_repeat('-', 80) . PHP_EOL;                             // visual separator
     var_dump(...$v);                                                // payload dump
-    
+    echo PHP_EOL . PHP_EOL;
     $frames < 0 && die('bad\die');
 
     return $v[0] ?? null;                                           // (only meaningful for 1st value)
