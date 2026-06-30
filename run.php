@@ -28,15 +28,16 @@ function loot(array|string $paths, $args = [], int $behave = 0): array
     $carry_faults = null;
 
     do {
+        $loot = [];
         if (FAULTS & $behave) {
             $loot[FAULTS] = $carry_faults ?? [];
             $carry_faults = null;
         }
-            
+                
         $ob_guard = null;
         if((OB_SAME | OB_TRIM) & $behave) 
             $ob_guard = ob($behave);
-        
+
         if((BUFFER | SILENT) & $behave) 
             \ob_start();
         
