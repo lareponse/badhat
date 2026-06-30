@@ -5,7 +5,6 @@ namespace bad\http;
 const STATUS_BITS = 10;                                                                // low bits reserved for status code
 const STATUS_MASK = (1 << STATUS_BITS) - 1;                                            // extract status (0..1023)
 
-const STATUS    = 0;
 const ADD       = 1     << STATUS_BITS;                             //    [1024]       // list-mode: append another value (entry must start as list)
 const CSV       = 2     << STATUS_BITS;                             //    [2048]       // list-mode + emit as "v1, v2, v3" (entry must start as CSV list)
 const SSV       = 4     << STATUS_BITS;                             //    [4096]       // list-mode + emit as "v1; v2; v3" (entry must start as SSV list)
@@ -29,92 +28,107 @@ const CSP       = ADD | SSV;                                                    
 function out(int $behave, $body = null): int
 {
     $status = $behave & STATUS_MASK;
-    $len = ($body === null || $body === '' || ($status >= 100 && $status < 200) || $status === 204 || $status === 205  || $status === 304) ? 0 : \strlen($body);
+
+    $len = 0;
+    if ($body !== null && $body !== '' && ($status < 100 || $status >= 200) && $status !== 204 && $status !== 205 && $status !== 304)
+        $len = \strlen($body);
 
     headers(ONE, 'Content-Length', $len);
+
     $res = headers(EMIT | ($behave & ~QUIT));
 
     if($len)
         echo $body;
 
-    if (QUIT & $behave)                                                                exit($res < 0 ? 1 : 0);
+    if (QUIT & $behave)
+        exit($res < 0 ? 1 : 0);
 
     return $res;
 }
 
-function headers($status_behave = 0, $field = '', $value = '') : int
+function hop(string $location = '/', int $status = 302, bool $quit = true): int
+{// redirect; bad status falls back to 302, blank location falls back to /
+
+    if (\trim($location) === '')
+        $location = '/';
+
+    if (($status < 301 || $status > 303) && ($status < 307 || $status > 308))
+        $status = 302;
+
+    $res = headers(ONE, 'Location', $location);
+
+    return $res < 0 ? $res : out($status | ($quit ? QUIT : 0));
+}
+
+function headers($status_behave = 0, $field = '', $value = '') : int                   // stage/mutate/emit headers
 {
-    static $stage = [STATUS => 0]; // [status, meta]
+    static $stage = [];                                                                // staged headers: key => [field, value|[], meta]
+    static $last_status = 0;                                                           // staged status (kept until RESET/EMIT), LOCK bit may be OR'd in
 
-    $status = $status_behave & STATUS_MASK;
-    $behave = $status_behave & ~STATUS_MASK;
+    $status = $status_behave & STATUS_MASK;                                            // status code payload (0 means "no change")
+    $behave = $status_behave & ~STATUS_MASK;                                           // behavior flags (everything above status bits)
 
-    if ($status) {
-        if ($stage[STATUS] & LOCK) return -LOCK;
+    if ($status) {                                                                     // status payload present: stage it (subject to lock)
+        if ($last_status & LOCK)                                                       return -LOCK;
 
-        $stage[STATUS] = $status;
-        if (($behave & LOCK) && $field === '' && $value === '') {
-            $stage[STATUS] |= LOCK;
-        }
+        $last_status = $status;
+        if (($behave & LOCK) && $field === '' && $value === '')                        $last_status |= LOCK; // status-only call: lock it
     }
 
-    if (RESET & $behave) {
-        $emit_status = $stage[STATUS] & STATUS_MASK;
-        $emit_stage = $stage;
-        $stage = [STATUS => 0];
+    if (RESET & $behave) {                                                             // reset path (optionally capture previous stage for EMIT|RESET calls)
+        $emit_status = $last_status & STATUS_MASK;                                     // pick (already-staged-above) status
+        $last_status = 0;                                                              // if last_status was set, unset it
+        ($emit_stage = $stage) && ($stage = []);                                       // if stage is already empty, dont create a new empty array
     }
-    else if (DROP & $behave) {
-        $key = \strtolower($field);
-        if (isset($stage[$key])) {
-            if (LOCK & ($stage[$key][2] ?? 0)) return -(DROP | LOCK);
+    else if (DROP & $behave) {                                                         // drop one staged header by name
+        $key = \strtolower($field);                                                    // normalize lookup key
+        if (isset($stage[$key])){                                                      // only if present
+            if (LOCK & ($stage[$key][2] ?? 0))                                         return -(DROP|LOCK);
 
             \headers_sent() || \header_remove($stage[$key][0]);
-            unset($stage[$key]);
+            unset($stage[$key]);                                                       // remove from stage
         }
     }
-    else if ($field !== '') {
-        $key = \strtolower($field);
-        $ent = $stage[$key] ?? null;
+    else if ($field !== '') {                                                          // stage/mutate one header entry
+        $key = \strtolower($field);                                                    // normalize lookup key
+        $ent = $stage[$key] ?? null;                                                   // existing entry (or null)
 
-        if (LOCK & ($ent[2] ?? 0)) return -LOCK;
-        if ($key === 'set-cookie' && ((CSV & $behave) || !(COOKIE & $behave))) return -COOKIE;
+        if (LOCK & ($ent[2] ?? 0))                                                     return -LOCK;
+        if ($key === 'set-cookie' && ((CSV & $behave) || !(COOKIE & $behave)))         return -COOKIE;
 
-        $stage_value = $ent[1] ?? null;
+        $stage_value = $ent[1] ?? null;                                                // existing value (string|array|null)
 
-        if (((ADD | CSV | SSV) & $behave) && $ent && !\is_array($stage_value)) return -(ADD | CSV);
-        if ((CSV & $behave) && $ent && !(CSV & ($ent[2] ?? 0))) return -CSV;
-        if ((SSV & $behave) && $ent && !(SSV & ($ent[2] ?? 0))) return -SSV;
+        if (((ADD | CSV | SSV) & $behave) && $ent && !\is_array($stage_value))         return -(ADD | CSV);
+        if ((CSV & $behave) && $ent && !(CSV & ($ent[2] ?? 0)))                        return -CSV;
+        if ((SSV & $behave) && $ent && !(SSV & ($ent[2] ?? 0)))                        return -SSV;
 
-        if (((ADD | CSV | SSV) & $behave) || \is_array($stage_value)) {
-            $stage[$key] ??= [0 => $field, 1 => [], 2 => ($behave & META_MASK)];
-            $stage[$key][1][] = $value;
-        } else {
-            $stage[$key] = [0 => $field, 1 => $value, 2 => ($behave & META_MASK)];
+        if (((ADD | CSV | SSV) & $behave) || \is_array($stage_value)) {                // ensure list mode (ADD/CSV or already list)
+            $stage[$key] ??= [0 => $field, 1 => [], 2 => ($behave & META_MASK)];       // init entry in list mode with meta
+            $stage[$key][1][] = $value;                                                // append value
+        } else {                                                                       // scalar mode: overwrite
+            $stage[$key] = [0 => $field, 1 => $value, 2 => ($behave & META_MASK)];     // set single value + meta
         }
 
-        if (LOCK & $behave) $stage[$key][2] |= LOCK;
+        if (LOCK & $behave) $stage[$key][2] |= LOCK;                                   // lock entry after mutation
     }
 
-    if (EMIT & $behave) {
-        if (\headers_sent()) return -EMIT;
+    if (EMIT & $behave){                                                               // emit path (headers + status)
+        if (\headers_sent())                                                           return -EMIT;
 
-        $emit_status ??= $stage[STATUS] & STATUS_MASK;
+        $emit_status ??= $last_status & STATUS_MASK;                                   // strip LOCK bit before exposing as a status code
         $emit_stage  ??= $stage;
 
         $emit_remove = (bool)(REMOVE & $behave);
-        foreach ($emit_stage as $key => $ent) {
-            if ($key === STATUS)                continue;
+        foreach ($emit_stage as $ent){
+            if($emit_remove)                                                           \header_remove($ent[0]);
 
-            if ($emit_remove)                   \header_remove($ent[0]);
-
-            if (!\is_array($ent[1]))            \header($ent[0] . ': ' . $ent[1], true);
-            elseif (CSV & ($ent[2] ?? 0))       \header($ent[0] . ': ' . \implode(', ', $ent[1]), true);
-            elseif (SSV & ($ent[2] ?? 0))       \header($ent[0] . ': ' . \implode('; ', $ent[1]), true);
-            else foreach ($ent[1] as $v)        \header($ent[0] . ': ' . $v, false);
+            if     (!\is_array($ent[1]))                                               \header($ent[0] . ': ' . $ent[1], true);
+            elseif (CSV & ($ent[2] ?? 0))                                              \header($ent[0] . ': ' . \implode(', ', $ent[1]), true);
+            elseif (SSV & ($ent[2] ?? 0))                                              \header($ent[0] . ': ' . \implode('; ', $ent[1]), true);
+            else   foreach ($ent[1] as $v)                                             \header($ent[0] . ': ' . $v, false);
         }
 
-        if ($emit_status)                       \http_response_code($emit_status);
-
+        if($emit_status)                                                               \http_response_code($emit_status);
         return $emit_status;
     }
 
