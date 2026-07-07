@@ -1,6 +1,6 @@
 <?php
 
-namespace bad\bug;                                                // provides configurable, installable PHP error/exception/shutdown handlers with request-context logging, optional traces, and restoration
+namespace bad\bug;                                                 // provides configurable, installable PHP warning/error/exception/shutdown handlers with request-context logging, optional traces, and restoration
 
 const HND_ERR  = 1;                                                 // handle runtime PHP errors
 const HND_EXC  = 2;                                                 // handle uncaught exceptions
@@ -58,33 +58,15 @@ return function (int $behave = HND_ALL, ?string $request_id = null): callable {
     };
 };
 
-function peek()
-{
-    $time = -1;
-    if(isset($_SERVER['REQUEST_TIME_FLOAT'])){
-        $start = (float)($_SERVER['REQUEST_TIME_FLOAT'] ?? 0.0);
-        $time  = $start > 0 ? (int)((\microtime(true) - $start) * 1000) : -1;
-    }
-    $memo  = \memory_get_peak_usage(true) >> 10;
-    $incl  = \count(\get_included_files());
-    $pid   = (int)\getmypid();
-    $ob    = (int)\ob_get_level();
-
-    $hs_file = $hs_line = null;
-    $hs = \headers_sent($hs_file, $hs_line);
-    $hs_at = $hs ? (\basename($hs_file) . ':' . (int)$hs_line) : '-';
-
-    return "{$time}ms {$memo}KiB sapi=" . \PHP_SAPI . " inc={$incl} pid={$pid} ob={$ob} headers={$hs_at}";
-}
-
 function logladdy($behave, $request_id, $code, $message, $file = null, $line = null, $frames = null)
 {
     static $space = null;
     static $scrub = null;
     
     $space ??= \str_repeat(' ', \strlen(CTRL_CHARS));
+
     $scrub ??= static fn(string $s): string => \trim(\strtr($s, CTRL_CHARS, $space));
-    
+
     $code = (int)$code;
     $info = $scrub((string)$message);
     $file = $file ? $scrub((string)$file) : '-';
@@ -98,8 +80,25 @@ function logladdy($behave, $request_id, $code, $message, $file = null, $line = n
 
     \error_log(\sprintf($format, $prefix, $handle, $code, $file, $line, '-', $info));
 
-    if ((HND_SHUT | HND_EXC) & $behave)
-        \error_log(\sprintf($format, $prefix, 'PEEK', $code, $file, $line, '-', peek()));
+    if ((HND_SHUT | HND_EXC) & $behave){
+        $time = -1;
+        if (isset($_SERVER['REQUEST_TIME_FLOAT'])) {
+            $start = (float)$_SERVER['REQUEST_TIME_FLOAT'];
+            $time  = $start > 0 ? (int)((\microtime(true) - $start) * 1000) : -1;
+        }
+        $memo = \memory_get_peak_usage(true) >> 10;
+        $incl = \count(\get_included_files());
+        $pid  = (int)\getmypid();
+        $ob   = (int)\ob_get_level();
+
+        $hs_file = $hs_line = null;
+        $hs = \headers_sent($hs_file, $hs_line);
+        $hs_at = $hs ? (\basename((string)$hs_file) . ':' . (int)$hs_line) : '-';
+
+        $peek = "{$time}ms {$memo}KiB sapi=" . \PHP_SAPI . " inc={$incl} pid={$pid} ob={$ob} headers={$hs_at}";
+        
+        \error_log(\sprintf($format, $prefix, 'PEEK', $code, $file, $line, '-', $peek));
+    }
 
     if ($frames === null)
         $frames = (LOG_WITH_TRACE & $behave) ? \debug_backtrace(\DEBUG_BACKTRACE_IGNORE_ARGS) : [];
