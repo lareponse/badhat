@@ -90,7 +90,7 @@ Everything else is plumbing.
 | ----------- | -------------------------------- |
 | `map.php`   | URL → path → file (+ args)       |
 | `run.php`   | include + invoke + buffer        |
-| `trap.php`  | handler installation             |
+| `bug.php`  | handler installation             |
 | `pdo.php`   | query helper (no ORM)            |
 | `http.php`  | header staging + response output |
 | `auth.php`  | session login                    |

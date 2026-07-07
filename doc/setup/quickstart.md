@@ -39,7 +39,7 @@ Why this method:
 
 set_include_path(__DIR__ . '/..' . PATH_SEPARATOR . get_include_path());
 
-$install = require 'add/badhat/trap.php';
+$install = require 'add/badhat/bug.php';
 require 'add/badhat/map.php';
 require 'add/badhat/run.php';
 require 'add/badhat/http.php';
@@ -50,7 +50,7 @@ use function bad\http\{headers, out};
 use function bad\run\loot;
 use function bad\pdo\db;
 
-use const bad\trap\HND_ALL;
+use const bad\bug\HND_ALL;
 use const bad\map\REBASE;
 use const bad\run\{INVOKE, BUFFER, RESULT};
 use const bad\http\ONE;
@@ -220,11 +220,11 @@ myproject/
 ├── .env
 ├── add/badhat/
 │   ├── auth.php
+│   ├── bug.php
 │   ├── csrf.php
-│   ├── pdo.php
-│   ├── trap.php
 │   ├── http.php
 │   ├── map.php
+│   ├── pdo.php
 │   └── run.php
 ├── app/io/
 │   ├── route/users.php

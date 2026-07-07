@@ -1,16 +1,16 @@
-# bad\trap
+# bad\bug
 
 Your logs say `PHP Fatal error: Uncaught TypeError`.
 They don't say which request. They never do.
 
-`bad\trap` tags every log line with a request ID and gives you one place to handle errors, exceptions, and fatal shutdowns.
+`bad\bug` tags every log line with a request ID and gives you one place to handle errors, exceptions, and fatal shutdowns.
 
 ---
 
 ## Claim the channel
 
 ```php
-$install = require '/add/badhat/trap.php';
+$install = require '/add/badhat/bug.php';
 $restore = $install();
 ```
 
@@ -79,7 +79,7 @@ Your handler logs. PHP's handler also runs. Errors only — exceptions and shutd
 $restore = $install(HND_ALL, 'order-7741');
 ```
 
-If you don't, trap generates `pid-dechex(hrtime)`.
+If you don't, bad\bug generates `pid-dechex(hrtime)`.
 
 ---
 
@@ -149,4 +149,4 @@ $restore = $install(HND_ALL | LOG_WITH_TRACE | FATAL_OB_FLUSH | ALLOW_INTERNAL);
 | `FATAL_OB_FLUSH` |    32 | Flush all OB on exception/shutdown        |
 | `FATAL_OB_CLEAN` |    64 | Discard all OB on exception/shutdown      |
 
-`peek()` and `logladdy()` live in `bad\trap\`. Namespace-public, not API. Don't call them unless you mean it.
+`peek()` and `logladdy()` live in `bad\bug\`. Namespace-public, not API. Don't call them unless you mean it.
