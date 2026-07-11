@@ -32,16 +32,12 @@ $path = hook($_SERVER['REQUEST_URI'], "\0");
 // "/"                       → "" (empty string)
 ````
 
-On invalid input (bad percent-encoding, forbidden chars), it returns an `\InvalidArgumentException`.
-With `E_THROW`, it throws instead.
+On invalid input (bad percent-encoding, forbidden chars), it throws an `\InvalidArgumentException`.
+On success, it returns the extracted rootless path as a string.
 
 ```php
-use const bad\map\E_THROW;
-
-$path = hook('/a/%2G');                 // InvalidArgumentException (bad hex)
-$path = hook("/a/\0b", "\0");        // InvalidArgumentException (forbidden)
-
-$path = hook('/a/%2G', '', E_THROW);    // throws
+$path = hook('/a/%2G');          // throws InvalidArgumentException (bad hex)
+$path = hook("/a/\0b", "\0");    // throws InvalidArgumentException (forbidden)
 ```
 
 ---
@@ -153,10 +149,9 @@ The same fallback applies inside `seek()` when `REBASE` is set.
 | --------: | ----: | -------------------------------------------------------------- |
 |  `REBASE` |   `1` | allow `x/x.php` when `x.php` is missing                        |
 |  `ASCEND` |   `2` | search from the front (gateway-first)                          |
-| `E_THROW` | `256` | throw on invalid hook() input (instead of returning exception) |
 
 ### Functions
 
-* `hook($url, $reject = '', int $behave = 0): string|\InvalidArgumentException`
+* `hook($url, $reject = '', int $behave = 0): string`
 * `look($base, $path, $shim = '', $behave = 0): ?string`
 * `seek($base, $path, $shim = '', $behave = 0): ?array`
