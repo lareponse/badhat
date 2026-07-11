@@ -66,7 +66,7 @@ No parameters. Returns whatever's in the session, or `''`.
 
 ```php
 // app/io/route/admin/dashboard.php
-return function($args) {
+return function(array $loot, array $args) {
     checkin() !== '' || (header('Location: /login') && exit);
     return ['user' => checkin()];
 };
