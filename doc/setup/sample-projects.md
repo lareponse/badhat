@@ -17,7 +17,7 @@ use function bad\http\{headers, out};
 use const bad\csrf\CHECK;
 use const bad\http\ONE;
 
-return function($args) {
+return function(array $loot, array $args) {
     if (!checkin()) {
         headers(ONE, 'Location', '/login');
         exit(out(302));
@@ -52,7 +52,7 @@ use function bad\pdo\qp;
 use function bad\http\{headers, out};
 use const bad\http\ONE;
 
-return function($args) {
+return function(array $loot, array $args) {
     if (!checkin()) {
         headers(ONE, 'Location', '/login');
         exit(out(302));
@@ -87,7 +87,7 @@ use function bad\pdo\qp;
 use function bad\http\{headers, out};
 use const bad\http\ONE;
 
-return function($args) {
+return function(array $loot, array $args) {
     $action = $args[0] ?? 'list';
     $id = $args[1] ?? null;
     
@@ -114,7 +114,7 @@ return function($args) {
 
 use function bad\pdo\qp;
 
-return function($args) {
+return function(array $loot, array $args) {
     $range = $args[0] ?? '24h';
     $hours = $range === '24h' ? 24 : 168;
     
@@ -148,7 +148,7 @@ use function bad\http\{headers, out};
 use const bad\csrf\CHECK;
 use const bad\http\ONE;
 
-return function($args) {
+return function(array $loot, array $args) {
     if (!checkin()) {
         headers(ONE, 'Location', '/login');
         exit(out(302));
@@ -185,7 +185,7 @@ use function bad\pdo\qp;
 use function bad\http\{headers, out};
 use const bad\http\ONE;
 
-return function($args) {
+return function(array $loot, array $args) {
     headers(ONE, 'Content-Type', 'application/json');
     
     $device_id = $args[0] ?? exit(out(400, '{"error":"Device ID required"}'));
@@ -216,7 +216,7 @@ return function($args) {
 
 use function bad\pdo\{db, qp};
 
-return function($args) {
+return function(array $loot, array $args) {
     $tenant = resolve_tenant($_SERVER['HTTP_HOST']);
     
     // Switch to tenant database
@@ -256,7 +256,7 @@ use function bad\http\{headers, out};
 use const bad\csrf\CHECK;
 use const bad\http\ONE;
 
-return function($args) {
+return function(array $loot, array $args) {
     if (!checkin()) {
         headers(ONE, 'Location', '/login');
         exit(out(302));
