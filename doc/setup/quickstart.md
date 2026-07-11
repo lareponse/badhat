@@ -77,6 +77,9 @@ $pdo = new PDO(
 
 db($pdo);
 
+// This quickstart wires the shared DB connection used by qp().
+// It does not start a session or initialize bad\auth.
+
 // --------------------------------------------------
 // Normalize request path
 // --------------------------------------------------
@@ -126,7 +129,7 @@ exit(out(404, 'Not Found'));
 ```bash
 # .env (not tracked)
 cat > .env << 'EOF'
-DB_DSN_=sqlite:db.sqlite
+DB_DSN_=sqlite:../db.sqlite
 DB_USER_=
 DB_PASS_=
 EOF
@@ -138,7 +141,18 @@ cat > .gitignore << 'EOF'
 EOF
 ```
 
-*(Load `.env` however you want: shell export, systemd, Apache, etc. BADHAT does not care.)*
+*(Load `.env` however you want: shell export, systemd, Apache, etc. BADHAT does not care. Relative SQLite paths are resolved from the PHP process working directory; `sqlite:../db.sqlite` matches the dev command in section 9.)*
+
+The sample route below assumes a `users` table exists in the same database:
+
+```sql
+CREATE TABLE users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL
+);
+```
+
+Auth is not initialized by this quickstart. If a route calls `bad\auth\checkin()`, also require `add/badhat/auth.php`, call `session_start()`, and initialize the auth statements shown in [`doc/auth.md`](../auth.md).
 
 ---
 
@@ -152,7 +166,7 @@ use function bad\pdo\qp;
 use function bad\http\{headers, out};
 use const bad\http\ONE;
 
-return function (array $args) {
+return function (array $loot, array $args) {
 
     if ($_POST) {
         qp("INSERT INTO users (name) VALUES (?)", [$_POST['name']]);
@@ -174,7 +188,10 @@ return function (array $args) {
 <?php
 // app/io/render/users.php
 
-$users = $args['users'] ?? [];
+use const bad\run\{BUFFER, RESULT};
+
+$data = $args[RESULT] ?? [];
+$users = $data['users'] ?? [];
 ?>
 <h1>Users</h1>
 
