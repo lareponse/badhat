@@ -123,7 +123,7 @@ use function bad\pdo\qp;
 use function bad\http\{headers, out};
 use const bad\http\{ONE, QUIT};
 
-return function(array $bag) {
+return function(array $loot, array $args) {
     headers(ONE, 'Content-Type', 'application/json; charset=utf-8');
 
     $rows = qp('SELECT id, name FROM users')->fetchAll();
