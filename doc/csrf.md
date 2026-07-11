@@ -1,4 +1,4 @@
-# badhat\csrf
+# bad\csrf
 
 Tokens that expire and validate.
 
