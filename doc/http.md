@@ -9,10 +9,11 @@ Now you need to do the boring part reliably:
 1. stage headers while your code is still thinking
 2. emit once, when you're ready
 
-`bad\http` is three tools:
+`bad\http` is four tools:
 
 - **headers()** — stage/mutate/emit headers + status
 - **out()** — compute Content-Length, emit, optionally echo, optionally exit
+- **hop()** — redirect through `Location` + `out()`
 - **csp_nonce()** — per-request cached nonce for CSP
 
 No policy. No router. No framework voice.
@@ -184,6 +185,37 @@ No payload when:
 * status is `204`, `205`, `304`
 
 In those cases, `Content-Length` becomes `0` and nothing is echoed.
+
+---
+
+## hop()
+
+### Signature
+
+```php
+hop(string $location = '/', int $status = 302, bool $quit = true): int
+```
+
+`hop()` stages a `Location` header and emits a redirect response through `out()`.
+
+```php
+use function bad\http\hop;
+
+hop('/login');
+```
+
+Blank locations fall back to `/`. Invalid redirect statuses fall back to `302`.
+Allowed redirect statuses are `301`, `302`, `303`, `307`, and `308`.
+
+By default, `hop()` exits through `out(QUIT | status)`. Pass `false` as the third
+argument when the caller must keep control:
+
+```php
+$status = hop('/next', 303, false);
+```
+
+If staging `Location` is refused, `hop()` returns that negative refusal code and
+does not call `out()`.
 
 ---
 
