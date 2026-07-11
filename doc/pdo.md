@@ -152,7 +152,7 @@ These helpers do not return `false`.
 
 Exception messages are **sanitized**: they include the action and SQLSTATE but omit driver-specific detail. Original throwables are not chained — callers receive only the redacted message.
 
-If you need full driver diagnostics, configure `PDO::ERRMODE_EXCEPTION` and catch `\PDOException` directly, or add your own error handler.
+Because `qp()` wraps PDO failures as `\RuntimeException`, callers should not expect to catch the original raw `\PDOException` from `qp()`. If you need full driver diagnostics at a call site, use PDO directly there or add logging/error handling around the connection before handing it to these helpers.
 
 ```php
 try {
@@ -181,3 +181,4 @@ qp(
 ): \PDOStatement
 
 trans(callable $transaction, ?\PDO $pdo = null)
+```
