@@ -180,17 +180,17 @@ function rate(array &$buckets, string $key, int $limit, int $window, ?int $now =
     if ($bucket === null || $bucket['reset_at'] <= $now || $bucket['window'] !== $window)
         $bucket = ['count' => 0, 'reset_at' => $now + $window, 'window' => $window];
 
-    if ($bucket['count'] <= $limit)
-        ++$bucket['count'];                                           // cap naturally at limit + 1 while blocked
-
-    $buckets[$key] = $bucket;
-
-    if ($bucket['count'] > $limit)
+    if ($bucket['count'] >= $limit) {
+        $buckets[$key] = $bucket;                                     // blocked attempts do not grow stored state
         return result(false, 'rate:limited', [
             'limit'       => $limit,
             'reset_at'    => $bucket['reset_at'],
             'retry_after' => \max(1, $bucket['reset_at'] - $now),
         ]);
+    }
+
+    ++$bucket['count'];
+    $buckets[$key] = $bucket;
 
     return result(true, 'ok', [
         'limit'     => $limit,
