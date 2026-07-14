@@ -86,16 +86,17 @@ Everything else is plumbing.
 
 ## Core modules
 
-| Module      | Purpose                          |
-| ----------- | -------------------------------- |
-| `map.php`   | URL → path → file (+ args)       |
-| `run.php`   | include + invoke + buffer        |
-| `bug.php`  | handler installation             |
-| `pdo.php`   | query helper (no ORM)            |
-| `http.php`  | header staging + response output |
-| `auth.php`  | session login                    |
-| `csrf.php`  | token management                 |
-| `rfc.php`   | small RFC-shaped validators      |
+| Module      | Purpose                                      |
+| ----------- | -------------------------------------------- |
+| `map.php`   | URL → path → file (+ args)                   |
+| `run.php`   | include + invoke + buffer                    |
+| `bug.php`   | handler installation                         |
+| `pdo.php`   | query helper (no ORM)                        |
+| `http.php`  | header staging + response output             |
+| `auth.php`  | session login                                |
+| `csrf.php`  | single-use session token management          |
+| `form.php`  | signed form verification and keyed limits    |
+| `rfc.php`   | small RFC-shaped validators                  |
 
 ---
 
@@ -146,7 +147,7 @@ loot([__DIR__ . '/routes/api/users.php'], [], INVOKE);
 
 Six concerns that belong to infrastructure, external tools, or standalone libraries — not to a request lifecycle toolkit:
 
-1. **Infrastructure** — compression, TLS, rate limiting, static file serving, process management, log rotation. Your web server and OS handle this.
+1. **Infrastructure** — compression, TLS, coarse IP/global rate limiting, static file serving, process management, log rotation. Your web server and OS handle this.
 2. **Data abstraction** — ORM, cache wrappers, storage engine facades. Use PDO, APCu, phpredis directly.
 3. **External I/O** — HTTP client, mail, queues, sockets. Use cURL, PHPMailer, AMQP directly.
 4. **Rendering** — template engines, Markdown, PDF, image processing. Use PHP itself, league/commonmark, dompdf, GD directly.
